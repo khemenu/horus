@@ -1,0 +1,10 @@
+{
+	"[proto3]": {
+		"editor.formatOnSave": true
+	},
+	"protoc": {
+		"options": [
+			"--proto_path=${workspaceRoot}/pb",
+		]
+	}
+}

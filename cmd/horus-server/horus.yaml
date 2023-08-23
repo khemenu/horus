@@ -1,0 +1,28 @@
+rest:
+  host: 0.0.0.0
+  port:
+
+grpc:
+  host: 0.0.0.0
+  port:
+
+app:
+  domain: http://localhost:5173
+  prefix: /auth
+
+db:
+  driver:
+  source:
+
+providers:
+  google_oauth2:
+    client_id: 484771688548-v2pr0eifdflfufkl0062vikqbdaa0c66.apps.googleusercontent.com
+    client_secret: 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
+
+log:
+  format: text
+
+debug:
+  enabled: true
+  unsecured: true
+  use_mem_db: true

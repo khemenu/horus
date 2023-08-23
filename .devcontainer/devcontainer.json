@@ -1,0 +1,21 @@
+{
+	"name": "kepri-horus",
+	"build": {
+		"context": ".",
+		"dockerfile": "Dockerfile"
+	},
+	"runArgs": [
+		"--network=khepri",
+		"--name=horus"
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"golang.go",
+				"plex.vscode-protolint",
+				"zxh404.vscode-proto3",
+				"streetsidesoftware.code-spell-checker"
+			]
+		}
+	}
+}
