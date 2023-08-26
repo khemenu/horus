@@ -14,6 +14,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"khepri.dev/horus/store/ent/authorizer"
 	"khepri.dev/horus/store/ent/identity"
+	"khepri.dev/horus/store/ent/member"
+	"khepri.dev/horus/store/ent/membership"
+	"khepri.dev/horus/store/ent/org"
+	"khepri.dev/horus/store/ent/team"
 	"khepri.dev/horus/store/ent/token"
 	"khepri.dev/horus/store/ent/user"
 )
@@ -78,6 +82,10 @@ func checkColumn(table, column string) error {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			authorizer.Table: authorizer.ValidColumn,
 			identity.Table:   identity.ValidColumn,
+			member.Table:     member.ValidColumn,
+			membership.Table: membership.ValidColumn,
+			org.Table:        org.ValidColumn,
+			team.Table:       team.ValidColumn,
 			token.Table:      token.ValidColumn,
 			user.Table:       user.ValidColumn,
 		})

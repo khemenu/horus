@@ -10,8 +10,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"khepri.dev/horus/store/ent/authorizer"
 	"khepri.dev/horus/store/ent/identity"
+	"khepri.dev/horus/store/ent/member"
 	"khepri.dev/horus/store/ent/predicate"
 	"khepri.dev/horus/store/ent/token"
 	"khepri.dev/horus/store/ent/user"
@@ -85,6 +87,21 @@ func (uu *UserUpdate) SetAuthorizer(a *Authorizer) *UserUpdate {
 	return uu.SetAuthorizerID(a.ID)
 }
 
+// AddBelongIDs adds the "belongs" edge to the Member entity by IDs.
+func (uu *UserUpdate) AddBelongIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddBelongIDs(ids...)
+	return uu
+}
+
+// AddBelongs adds the "belongs" edges to the Member entity.
+func (uu *UserUpdate) AddBelongs(m ...*Member) *UserUpdate {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uu.AddBelongIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -136,6 +153,27 @@ func (uu *UserUpdate) RemoveIdentities(i ...*Identity) *UserUpdate {
 func (uu *UserUpdate) ClearAuthorizer() *UserUpdate {
 	uu.mutation.ClearAuthorizer()
 	return uu
+}
+
+// ClearBelongs clears all "belongs" edges to the Member entity.
+func (uu *UserUpdate) ClearBelongs() *UserUpdate {
+	uu.mutation.ClearBelongs()
+	return uu
+}
+
+// RemoveBelongIDs removes the "belongs" edge to Member entities by IDs.
+func (uu *UserUpdate) RemoveBelongIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveBelongIDs(ids...)
+	return uu
+}
+
+// RemoveBelongs removes "belongs" edges to Member entities.
+func (uu *UserUpdate) RemoveBelongs(m ...*Member) *UserUpdate {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uu.RemoveBelongIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -296,6 +334,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.BelongsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BelongsTable,
+			Columns: []string{user.BelongsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedBelongsIDs(); len(nodes) > 0 && !uu.mutation.BelongsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BelongsTable,
+			Columns: []string{user.BelongsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.BelongsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BelongsTable,
+			Columns: []string{user.BelongsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -371,6 +454,21 @@ func (uuo *UserUpdateOne) SetAuthorizer(a *Authorizer) *UserUpdateOne {
 	return uuo.SetAuthorizerID(a.ID)
 }
 
+// AddBelongIDs adds the "belongs" edge to the Member entity by IDs.
+func (uuo *UserUpdateOne) AddBelongIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddBelongIDs(ids...)
+	return uuo
+}
+
+// AddBelongs adds the "belongs" edges to the Member entity.
+func (uuo *UserUpdateOne) AddBelongs(m ...*Member) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uuo.AddBelongIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -422,6 +520,27 @@ func (uuo *UserUpdateOne) RemoveIdentities(i ...*Identity) *UserUpdateOne {
 func (uuo *UserUpdateOne) ClearAuthorizer() *UserUpdateOne {
 	uuo.mutation.ClearAuthorizer()
 	return uuo
+}
+
+// ClearBelongs clears all "belongs" edges to the Member entity.
+func (uuo *UserUpdateOne) ClearBelongs() *UserUpdateOne {
+	uuo.mutation.ClearBelongs()
+	return uuo
+}
+
+// RemoveBelongIDs removes the "belongs" edge to Member entities by IDs.
+func (uuo *UserUpdateOne) RemoveBelongIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveBelongIDs(ids...)
+	return uuo
+}
+
+// RemoveBelongs removes "belongs" edges to Member entities.
+func (uuo *UserUpdateOne) RemoveBelongs(m ...*Member) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uuo.RemoveBelongIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -605,6 +724,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(authorizer.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.BelongsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BelongsTable,
+			Columns: []string{user.BelongsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedBelongsIDs(); len(nodes) > 0 && !uuo.mutation.BelongsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BelongsTable,
+			Columns: []string{user.BelongsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.BelongsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BelongsTable,
+			Columns: []string{user.BelongsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

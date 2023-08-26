@@ -2,15 +2,19 @@ package log
 
 import (
 	"context"
+	"io"
 	"log/slog"
 )
 
 type logCtxKey struct{}
 
+// TODO: do nothing handler
+var discard = slog.New(slog.NewTextHandler(io.Discard, nil))
+
 func FromCtx(ctx context.Context) *slog.Logger {
 	l, ok := ctx.Value(logCtxKey{}).(*slog.Logger)
 	if !ok {
-		return slog.Default()
+		return discard
 	}
 
 	return l

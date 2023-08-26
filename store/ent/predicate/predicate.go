@@ -12,6 +12,18 @@ type Authorizer func(*sql.Selector)
 // Identity is the predicate function for identity builders.
 type Identity func(*sql.Selector)
 
+// Member is the predicate function for member builders.
+type Member func(*sql.Selector)
+
+// Membership is the predicate function for membership builders.
+type Membership func(*sql.Selector)
+
+// Org is the predicate function for org builders.
+type Org func(*sql.Selector)
+
+// Team is the predicate function for team builders.
+type Team func(*sql.Selector)
+
 // Token is the predicate function for token builders.
 type Token func(*sql.Selector)
 

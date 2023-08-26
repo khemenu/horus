@@ -13,7 +13,7 @@ import (
 	"khepri.dev/horus/store/ent/identity"
 )
 
-func _identity(identity *ent.Identity) *horus.Identity {
+func identity_(identity *ent.Identity) *horus.Identity {
 	return &horus.Identity{
 		IdentityInit: horus.IdentityInit{
 			Value:      identity.ID,
@@ -21,7 +21,7 @@ func _identity(identity *ent.Identity) *horus.Identity {
 			Kind:       horus.IdentityKind(identity.Kind),
 			VerifiedBy: horus.Verifier(identity.VerifiedBy),
 		},
-		OwnerId:   identity.OwnerID,
+		OwnerId:   horus.UserId(identity.OwnerID),
 		CreatedAt: identity.CreatedAt,
 	}
 }
@@ -41,7 +41,7 @@ func NewIdentityStore(client *ent.Client) (horus.IdentityStore, error) {
 func (s *identityStore) Create(ctx context.Context, input *horus.Identity) (*horus.Identity, error) {
 	res, err := s.client.Identity.Create().
 		SetID(input.Value).
-		SetOwnerID(input.OwnerId).
+		SetOwnerID(uuid.UUID(input.OwnerId)).
 		SetName(input.Name).
 		SetKind(string(input.Kind)).
 		SetVerifiedBy(string(input.VerifiedBy)).
@@ -59,7 +59,7 @@ func (s *identityStore) Create(ctx context.Context, input *horus.Identity) (*hor
 	}
 
 	log.FromCtx(ctx).Info("new identity")
-	return _identity(res), nil
+	return identity_(res), nil
 }
 
 func (s *identityStore) GetByValue(ctx context.Context, value string) (*horus.Identity, error) {
@@ -72,12 +72,12 @@ func (s *identityStore) GetByValue(ctx context.Context, value string) (*horus.Id
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return _identity(res), nil
+	return identity_(res), nil
 }
 
-func (s *identityStore) GetAllByOwner(ctx context.Context, owner_id uuid.UUID) (map[string]*horus.Identity, error) {
+func (s *identityStore) GetAllByOwner(ctx context.Context, owner_id horus.UserId) (map[string]*horus.Identity, error) {
 	res, err := s.client.Identity.Query().
-		Where(identity.OwnerID(owner_id)).
+		Where(identity.OwnerID(uuid.UUID(owner_id))).
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
@@ -85,7 +85,7 @@ func (s *identityStore) GetAllByOwner(ctx context.Context, owner_id uuid.UUID) (
 
 	rst := map[string]*horus.Identity{}
 	for _, v := range res {
-		rst[v.ID] = _identity(v)
+		rst[v.ID] = identity_(v)
 	}
 
 	return rst, nil
@@ -106,5 +106,5 @@ func (s *identityStore) Update(ctx context.Context, input *horus.Identity) (*hor
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return _identity(res), nil
+	return identity_(res), nil
 }

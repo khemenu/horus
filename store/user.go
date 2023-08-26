@@ -11,9 +11,9 @@ import (
 	"khepri.dev/horus/store/ent/user"
 )
 
-func _user(v *ent.User) *horus.User {
+func user_(v *ent.User) *horus.User {
 	return &horus.User{
-		Id:        v.ID,
+		Id:        horus.UserId(v.ID),
 		Alias:     v.Alias,
 		CreatedAt: v.CreatedAt,
 	}
@@ -74,12 +74,12 @@ func (s *userStore) New(ctx context.Context) (*horus.User, error) {
 	}
 
 	log.FromCtx(ctx).Info("new user", "id", res.ID)
-	return _user(res), nil
+	return user_(res), nil
 }
 
-func (s *userStore) GetById(ctx context.Context, id uuid.UUID) (*horus.User, error) {
+func (s *userStore) GetById(ctx context.Context, id horus.UserId) (*horus.User, error) {
 	res, err := s.client.User.Query().
-		Where(user.ID(id)).
+		Where(user.ID(uuid.UUID(id))).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -89,7 +89,7 @@ func (s *userStore) GetById(ctx context.Context, id uuid.UUID) (*horus.User, err
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return _user(res), nil
+	return user_(res), nil
 }
 
 func (s *userStore) GetByAlias(ctx context.Context, alias string) (*horus.User, error) {
@@ -104,5 +104,5 @@ func (s *userStore) GetByAlias(ctx context.Context, alias string) (*horus.User, 
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return _user(res), nil
+	return user_(res), nil
 }

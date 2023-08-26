@@ -12,10 +12,10 @@ import (
 	"khepri.dev/horus/store/ent/token"
 )
 
-func _token(token *ent.Token) *horus.Token {
+func token_(token *ent.Token) *horus.Token {
 	return &horus.Token{
 		Value:     token.ID,
-		OwnerId:   token.OwnerID,
+		OwnerId:   horus.UserId(token.OwnerID),
 		Name:      token.Name,
 		Type:      horus.TokenType(token.Type),
 		CreatedAt: token.CreatedAt,
@@ -68,7 +68,7 @@ func (s *tokenStore) Issue(ctx context.Context, init horus.TokenInit) (*horus.To
 		now := time.Now().UTC()
 		res, err = s.client.Token.Create().
 			SetID(opaque).
-			SetOwnerID(init.OwnerId).
+			SetOwnerID(uuid.UUID(init.OwnerId)).
 			SetType(string(init.Type)).
 			SetCreatedAt(now).
 			SetExpiredAt(now.Add(init.Duration)).
@@ -83,7 +83,7 @@ func (s *tokenStore) Issue(ctx context.Context, init horus.TokenInit) (*horus.To
 	}
 
 	log.FromCtx(ctx).Info("new token", "value", res.ID[0:8])
-	return _token(res), nil
+	return token_(res), nil
 }
 
 func (s *tokenStore) GetByValue(ctx context.Context, value string, token_type horus.TokenType) (*horus.Token, error) {
@@ -102,7 +102,7 @@ func (s *tokenStore) GetByValue(ctx context.Context, value string, token_type ho
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return _token(res), nil
+	return token_(res), nil
 }
 
 func (s *tokenStore) Revoke(ctx context.Context, value string) error {

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"khepri.dev/horus"
@@ -128,7 +129,7 @@ func (suite *TokenStoreTestSuite) TestRevokeAll() {
 		user, err := suite.Users().New(ctx)
 		require.NoError(err)
 
-		err = store.RevokeAll(ctx, user.Id)
+		err = store.RevokeAll(ctx, uuid.UUID(user.Id))
 		require.NoError(err)
 	})
 
@@ -154,7 +155,7 @@ func (suite *TokenStoreTestSuite) TestRevokeAll() {
 		qux, err := suite.Tokens().Issue(ctx, init)
 		require.NoError(err)
 
-		err = store.RevokeAll(ctx, user.Id)
+		err = store.RevokeAll(ctx, uuid.UUID(user.Id))
 		require.NoError(err)
 
 		_, err = store.GetByValue(ctx, foo.Value, horus.RefreshToken)

@@ -15,7 +15,7 @@ var (
 )
 
 type TokenInit struct {
-	OwnerId uuid.UUID
+	OwnerId UserId
 
 	Type     TokenType
 	Name     string
@@ -24,7 +24,7 @@ type TokenInit struct {
 
 type Token struct {
 	Value   string
-	OwnerId uuid.UUID
+	OwnerId UserId
 
 	Type TokenType
 	Name string

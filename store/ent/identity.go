@@ -31,8 +31,9 @@ type Identity struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the IdentityQuery when eager-loading is set.
-	Edges        IdentityEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges           IdentityEdges `json:"edges"`
+	member_contacts *uuid.UUID
+	selectValues    sql.SelectValues
 }
 
 // IdentityEdges holds the relations/edges for other nodes in the graph.
@@ -68,6 +69,8 @@ func (*Identity) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case identity.FieldOwnerID:
 			values[i] = new(uuid.UUID)
+		case identity.ForeignKeys[0]: // member_contacts
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -118,6 +121,13 @@ func (i *Identity) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field created_at", values[j])
 			} else if value.Valid {
 				i.CreatedAt = value.Time
+			}
+		case identity.ForeignKeys[0]:
+			if value, ok := values[j].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field member_contacts", values[j])
+			} else if value.Valid {
+				i.member_contacts = new(uuid.UUID)
+				*i.member_contacts = *value.S.(*uuid.UUID)
 			}
 		default:
 			i.selectValues.Set(columns[j], values[j])

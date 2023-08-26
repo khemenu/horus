@@ -16,6 +16,14 @@ type Tx struct {
 	Authorizer *AuthorizerClient
 	// Identity is the client for interacting with the Identity builders.
 	Identity *IdentityClient
+	// Member is the client for interacting with the Member builders.
+	Member *MemberClient
+	// Membership is the client for interacting with the Membership builders.
+	Membership *MembershipClient
+	// Org is the client for interacting with the Org builders.
+	Org *OrgClient
+	// Team is the client for interacting with the Team builders.
+	Team *TeamClient
 	// Token is the client for interacting with the Token builders.
 	Token *TokenClient
 	// User is the client for interacting with the User builders.
@@ -153,6 +161,10 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Authorizer = NewAuthorizerClient(tx.config)
 	tx.Identity = NewIdentityClient(tx.config)
+	tx.Member = NewMemberClient(tx.config)
+	tx.Membership = NewMembershipClient(tx.config)
+	tx.Org = NewOrgClient(tx.config)
+	tx.Team = NewTeamClient(tx.config)
 	tx.Token = NewTokenClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }

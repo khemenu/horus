@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"google.golang.org/protobuf/encoding/protojson"
 	"khepri.dev/horus"
 	"khepri.dev/horus/frame"
@@ -179,7 +178,7 @@ func (s *restServer) SignOut(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, `{"msg":"live long and prosper"}`)
 }
 
-func (s *restServer) resetRefreshToken(w http.ResponseWriter, r *http.Request, user_id uuid.UUID) (*horus.Token, bool) {
+func (s *restServer) resetRefreshToken(w http.ResponseWriter, r *http.Request, user_id horus.UserId) (*horus.Token, bool) {
 	refresh_token, err := s.Tokens().Issue(r.Context(), horus.TokenInit{
 		OwnerId:  user_id,
 		Type:     horus.RefreshToken,
@@ -206,7 +205,7 @@ func (s *restServer) resetRefreshToken(w http.ResponseWriter, r *http.Request, u
 	return refresh_token, true
 }
 
-func (s *restServer) resetAccessToken(w http.ResponseWriter, r *http.Request, user_id uuid.UUID) (*horus.Token, bool) {
+func (s *restServer) resetAccessToken(w http.ResponseWriter, r *http.Request, user_id horus.UserId) (*horus.Token, bool) {
 	access_token, err := s.Tokens().Issue(r.Context(), horus.TokenInit{
 		OwnerId:  user_id,
 		Type:     horus.AccessToken,

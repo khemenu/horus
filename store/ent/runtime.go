@@ -8,7 +8,11 @@ import (
 	"github.com/google/uuid"
 	"khepri.dev/horus/store/ent/authorizer"
 	"khepri.dev/horus/store/ent/identity"
+	"khepri.dev/horus/store/ent/member"
+	"khepri.dev/horus/store/ent/membership"
+	"khepri.dev/horus/store/ent/org"
 	"khepri.dev/horus/store/ent/schema"
+	"khepri.dev/horus/store/ent/team"
 	"khepri.dev/horus/store/ent/token"
 	"khepri.dev/horus/store/ent/user"
 )
@@ -45,6 +49,60 @@ func init() {
 	identityDescID := identityFields[0].Descriptor()
 	// identity.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	identity.IDValidator = identityDescID.Validators[0].(func(string) error)
+	memberFields := schema.Member{}.Fields()
+	_ = memberFields
+	// memberDescName is the schema descriptor for name field.
+	memberDescName := memberFields[4].Descriptor()
+	// member.DefaultName holds the default value on creation for the name field.
+	member.DefaultName = memberDescName.Default.(string)
+	// member.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	member.NameValidator = memberDescName.Validators[0].(func(string) error)
+	// memberDescCreatedAt is the schema descriptor for created_at field.
+	memberDescCreatedAt := memberFields[5].Descriptor()
+	// member.DefaultCreatedAt holds the default value on creation for the created_at field.
+	member.DefaultCreatedAt = memberDescCreatedAt.Default.(func() time.Time)
+	// memberDescID is the schema descriptor for id field.
+	memberDescID := memberFields[0].Descriptor()
+	// member.DefaultID holds the default value on creation for the id field.
+	member.DefaultID = memberDescID.Default.(func() uuid.UUID)
+	membershipFields := schema.Membership{}.Fields()
+	_ = membershipFields
+	// membershipDescCreatedAt is the schema descriptor for created_at field.
+	membershipDescCreatedAt := membershipFields[3].Descriptor()
+	// membership.DefaultCreatedAt holds the default value on creation for the created_at field.
+	membership.DefaultCreatedAt = membershipDescCreatedAt.Default.(func() time.Time)
+	orgFields := schema.Org{}.Fields()
+	_ = orgFields
+	// orgDescName is the schema descriptor for name field.
+	orgDescName := orgFields[1].Descriptor()
+	// org.DefaultName holds the default value on creation for the name field.
+	org.DefaultName = orgDescName.Default.(string)
+	// org.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	org.NameValidator = orgDescName.Validators[0].(func(string) error)
+	// orgDescCreatedAt is the schema descriptor for created_at field.
+	orgDescCreatedAt := orgFields[2].Descriptor()
+	// org.DefaultCreatedAt holds the default value on creation for the created_at field.
+	org.DefaultCreatedAt = orgDescCreatedAt.Default.(func() time.Time)
+	// orgDescID is the schema descriptor for id field.
+	orgDescID := orgFields[0].Descriptor()
+	// org.DefaultID holds the default value on creation for the id field.
+	org.DefaultID = orgDescID.Default.(func() uuid.UUID)
+	teamFields := schema.Team{}.Fields()
+	_ = teamFields
+	// teamDescName is the schema descriptor for name field.
+	teamDescName := teamFields[2].Descriptor()
+	// team.DefaultName holds the default value on creation for the name field.
+	team.DefaultName = teamDescName.Default.(string)
+	// team.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	team.NameValidator = teamDescName.Validators[0].(func(string) error)
+	// teamDescCreatedAt is the schema descriptor for created_at field.
+	teamDescCreatedAt := teamFields[3].Descriptor()
+	// team.DefaultCreatedAt holds the default value on creation for the created_at field.
+	team.DefaultCreatedAt = teamDescCreatedAt.Default.(func() time.Time)
+	// teamDescID is the schema descriptor for id field.
+	teamDescID := teamFields[0].Descriptor()
+	// team.DefaultID holds the default value on creation for the id field.
+	team.DefaultID = teamDescID.Default.(func() uuid.UUID)
 	tokenFields := schema.Token{}.Fields()
 	_ = tokenFields
 	// tokenDescType is the schema descriptor for type field.

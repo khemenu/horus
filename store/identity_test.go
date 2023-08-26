@@ -79,7 +79,7 @@ func (suite *IdentityStoreTestSuite) TestCreate() {
 	suite.RunWithStore("owner must be exist", func(require *require.Assertions, ctx context.Context, store horus.IdentityStore) {
 		_, err := store.Create(ctx, &horus.Identity{
 			IdentityInit: init_ra,
-			OwnerId:      uuid.New(),
+			OwnerId:      horus.UserId(uuid.New()),
 		})
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
@@ -143,7 +143,7 @@ func (suite *IdentityStoreTestSuite) TestGetAllByOwner() {
 	})
 
 	suite.RunWithStore("not exist", func(require *require.Assertions, ctx context.Context, store horus.IdentityStore) {
-		identities, err := store.GetAllByOwner(ctx, uuid.New())
+		identities, err := store.GetAllByOwner(ctx, horus.UserId(uuid.New()))
 		require.NoError(err)
 		require.Empty(identities)
 	})

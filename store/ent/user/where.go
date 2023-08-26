@@ -240,6 +240,29 @@ func HasAuthorizerWith(preds ...predicate.Authorizer) predicate.User {
 	})
 }
 
+// HasBelongs applies the HasEdge predicate on the "belongs" edge.
+func HasBelongs() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, BelongsTable, BelongsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBelongsWith applies the HasEdge predicate on the "belongs" edge with a given conditions (other predicates).
+func HasBelongsWith(preds ...predicate.Member) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newBelongsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(func(s *sql.Selector) {

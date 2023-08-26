@@ -25,6 +25,8 @@ const (
 	EdgeIdentities = "identities"
 	// EdgeAuthorizer holds the string denoting the authorizer edge name in mutations.
 	EdgeAuthorizer = "authorizer"
+	// EdgeBelongs holds the string denoting the belongs edge name in mutations.
+	EdgeBelongs = "belongs"
 	// TokenFieldID holds the string denoting the ID field of the Token.
 	TokenFieldID = "value"
 	// Table holds the table name of the user in the database.
@@ -50,6 +52,13 @@ const (
 	AuthorizerInverseTable = "authorizers"
 	// AuthorizerColumn is the table column denoting the authorizer relation/edge.
 	AuthorizerColumn = "owner_id"
+	// BelongsTable is the table that holds the belongs relation/edge.
+	BelongsTable = "members"
+	// BelongsInverseTable is the table name for the Member entity.
+	// It exists in this package in order to avoid circular dependency with the "member" package.
+	BelongsInverseTable = "members"
+	// BelongsColumn is the table column denoting the belongs relation/edge.
+	BelongsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -128,6 +137,20 @@ func ByAuthorizerField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAuthorizerStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByBelongsCount orders the results by belongs count.
+func ByBelongsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBelongsStep(), opts...)
+	}
+}
+
+// ByBelongs orders the results by belongs terms.
+func ByBelongs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBelongsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newTokensStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -147,5 +170,12 @@ func newAuthorizerStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AuthorizerInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2O, false, AuthorizerTable, AuthorizerColumn),
+	)
+}
+func newBelongsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BelongsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, BelongsTable, BelongsColumn),
 	)
 }

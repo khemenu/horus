@@ -24,6 +24,7 @@ type IdentityQuery struct {
 	inters     []Interceptor
 	predicates []predicate.Identity
 	withOwner  *UserQuery
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -369,11 +370,15 @@ func (iq *IdentityQuery) prepareQuery(ctx context.Context) error {
 func (iq *IdentityQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Identity, error) {
 	var (
 		nodes       = []*Identity{}
+		withFKs     = iq.withFKs
 		_spec       = iq.querySpec()
 		loadedTypes = [1]bool{
 			iq.withOwner != nil,
 		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, identity.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Identity).scanValues(nil, columns)
 	}

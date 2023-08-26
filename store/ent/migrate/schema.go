@@ -41,6 +41,7 @@ var (
 		{Name: "kind", Type: field.TypeString},
 		{Name: "verified_by", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "member_contacts", Type: field.TypeUUID, Nullable: true},
 		{Name: "owner_id", Type: field.TypeUUID},
 	}
 	// IdentitiesTable holds the schema information for the "identities" table.
@@ -50,9 +51,111 @@ var (
 		PrimaryKey: []*schema.Column{IdentitiesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "identities_users_identities",
+				Symbol:     "identities_members_contacts",
 				Columns:    []*schema.Column{IdentitiesColumns[5]},
+				RefColumns: []*schema.Column{MembersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "identities_users_identities",
+				Columns:    []*schema.Column{IdentitiesColumns[6]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// MembersColumns holds the columns for the "members" table.
+	MembersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"owner", "member"}},
+		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "org_id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// MembersTable holds the schema information for the "members" table.
+	MembersTable = &schema.Table{
+		Name:       "members",
+		Columns:    MembersColumns,
+		PrimaryKey: []*schema.Column{MembersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "members_orgs_members",
+				Columns:    []*schema.Column{MembersColumns[4]},
+				RefColumns: []*schema.Column{OrgsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "members_users_belongs",
+				Columns:    []*schema.Column{MembersColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "member_org_id_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{MembersColumns[4], MembersColumns[5]},
+			},
+		},
+	}
+	// MembershipsColumns holds the columns for the "memberships" table.
+	MembershipsColumns = []*schema.Column{
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"owner", "member"}},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "team_id", Type: field.TypeUUID},
+		{Name: "member_id", Type: field.TypeUUID},
+	}
+	// MembershipsTable holds the schema information for the "memberships" table.
+	MembershipsTable = &schema.Table{
+		Name:       "memberships",
+		Columns:    MembershipsColumns,
+		PrimaryKey: []*schema.Column{MembershipsColumns[2], MembershipsColumns[3]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "memberships_teams_team",
+				Columns:    []*schema.Column{MembershipsColumns[2]},
+				RefColumns: []*schema.Column{TeamsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "memberships_members_member",
+				Columns:    []*schema.Column{MembershipsColumns[3]},
+				RefColumns: []*schema.Column{MembersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// OrgsColumns holds the columns for the "orgs" table.
+	OrgsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// OrgsTable holds the schema information for the "orgs" table.
+	OrgsTable = &schema.Table{
+		Name:       "orgs",
+		Columns:    OrgsColumns,
+		PrimaryKey: []*schema.Column{OrgsColumns[0]},
+	}
+	// TeamsColumns holds the columns for the "teams" table.
+	TeamsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "org_id", Type: field.TypeUUID},
+	}
+	// TeamsTable holds the schema information for the "teams" table.
+	TeamsTable = &schema.Table{
+		Name:       "teams",
+		Columns:    TeamsColumns,
+		PrimaryKey: []*schema.Column{TeamsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "teams_orgs_teams",
+				Columns:    []*schema.Column{TeamsColumns[3]},
+				RefColumns: []*schema.Column{OrgsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
@@ -96,6 +199,10 @@ var (
 	Tables = []*schema.Table{
 		AuthorizersTable,
 		IdentitiesTable,
+		MembersTable,
+		MembershipsTable,
+		OrgsTable,
+		TeamsTable,
 		TokensTable,
 		UsersTable,
 	}
@@ -104,6 +211,12 @@ var (
 func init() {
 	AuthorizersTable.ForeignKeys[0].RefTable = IdentitiesTable
 	AuthorizersTable.ForeignKeys[1].RefTable = UsersTable
-	IdentitiesTable.ForeignKeys[0].RefTable = UsersTable
+	IdentitiesTable.ForeignKeys[0].RefTable = MembersTable
+	IdentitiesTable.ForeignKeys[1].RefTable = UsersTable
+	MembersTable.ForeignKeys[0].RefTable = OrgsTable
+	MembersTable.ForeignKeys[1].RefTable = UsersTable
+	MembershipsTable.ForeignKeys[0].RefTable = TeamsTable
+	MembershipsTable.ForeignKeys[1].RefTable = MembersTable
+	TeamsTable.ForeignKeys[0].RefTable = OrgsTable
 	TokensTable.ForeignKeys[0].RefTable = UsersTable
 }

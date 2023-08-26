@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"khepri.dev/horus/store/ent/authorizer"
 	"khepri.dev/horus/store/ent/identity"
+	"khepri.dev/horus/store/ent/member"
 	"khepri.dev/horus/store/ent/predicate"
 	"khepri.dev/horus/store/ent/token"
 	"khepri.dev/horus/store/ent/user"
@@ -29,6 +30,7 @@ type UserQuery struct {
 	withTokens     *TokenQuery
 	withIdentities *IdentityQuery
 	withAuthorizer *AuthorizerQuery
+	withBelongs    *MemberQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -124,6 +126,28 @@ func (uq *UserQuery) QueryAuthorizer() *AuthorizerQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(authorizer.Table, authorizer.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, user.AuthorizerTable, user.AuthorizerColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryBelongs chains the current query on the "belongs" edge.
+func (uq *UserQuery) QueryBelongs() *MemberQuery {
+	query := (&MemberClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(member.Table, member.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.BelongsTable, user.BelongsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -326,6 +350,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		withTokens:     uq.withTokens.Clone(),
 		withIdentities: uq.withIdentities.Clone(),
 		withAuthorizer: uq.withAuthorizer.Clone(),
+		withBelongs:    uq.withBelongs.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -362,6 +387,17 @@ func (uq *UserQuery) WithAuthorizer(opts ...func(*AuthorizerQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withAuthorizer = query
+	return uq
+}
+
+// WithBelongs tells the query-builder to eager-load the nodes that are connected to
+// the "belongs" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithBelongs(opts ...func(*MemberQuery)) *UserQuery {
+	query := (&MemberClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withBelongs = query
 	return uq
 }
 
@@ -443,10 +479,11 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			uq.withTokens != nil,
 			uq.withIdentities != nil,
 			uq.withAuthorizer != nil,
+			uq.withBelongs != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -484,6 +521,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if query := uq.withAuthorizer; query != nil {
 		if err := uq.loadAuthorizer(ctx, query, nodes, nil,
 			func(n *User, e *Authorizer) { n.Edges.Authorizer = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withBelongs; query != nil {
+		if err := uq.loadBelongs(ctx, query, nodes,
+			func(n *User) { n.Edges.Belongs = []*Member{} },
+			func(n *User, e *Member) { n.Edges.Belongs = append(n.Edges.Belongs, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -530,6 +574,7 @@ func (uq *UserQuery) loadIdentities(ctx context.Context, query *IdentityQuery, n
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(identity.FieldOwnerID)
 	}
@@ -572,6 +617,36 @@ func (uq *UserQuery) loadAuthorizer(ctx context.Context, query *AuthorizerQuery,
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "owner_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadBelongs(ctx context.Context, query *MemberQuery, nodes []*User, init func(*User), assign func(*User, *Member)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(member.FieldUserID)
+	}
+	query.Where(predicate.Member(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.BelongsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

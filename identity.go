@@ -3,8 +3,6 @@ package horus
 import (
 	"context"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type IdentityKind string
@@ -23,7 +21,7 @@ type IdentityInit struct {
 
 type Identity struct {
 	IdentityInit
-	OwnerId uuid.UUID
+	OwnerId UserId
 
 	CreatedAt time.Time
 }
@@ -31,6 +29,6 @@ type Identity struct {
 type IdentityStore interface {
 	Create(ctx context.Context, input *Identity) (*Identity, error)
 	GetByValue(ctx context.Context, value string) (*Identity, error)
-	GetAllByOwner(ctx context.Context, owner_id uuid.UUID) (map[string]*Identity, error)
+	GetAllByOwner(ctx context.Context, owner_id UserId) (map[string]*Identity, error)
 	Update(ctx context.Context, input *Identity) (*Identity, error)
 }

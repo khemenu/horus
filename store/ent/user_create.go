@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"khepri.dev/horus/store/ent/authorizer"
 	"khepri.dev/horus/store/ent/identity"
+	"khepri.dev/horus/store/ent/member"
 	"khepri.dev/horus/store/ent/token"
 	"khepri.dev/horus/store/ent/user"
 )
@@ -105,6 +106,21 @@ func (uc *UserCreate) SetNillableAuthorizerID(id *int) *UserCreate {
 // SetAuthorizer sets the "authorizer" edge to the Authorizer entity.
 func (uc *UserCreate) SetAuthorizer(a *Authorizer) *UserCreate {
 	return uc.SetAuthorizerID(a.ID)
+}
+
+// AddBelongIDs adds the "belongs" edge to the Member entity by IDs.
+func (uc *UserCreate) AddBelongIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddBelongIDs(ids...)
+	return uc
+}
+
+// AddBelongs adds the "belongs" edges to the Member entity.
+func (uc *UserCreate) AddBelongs(m ...*Member) *UserCreate {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uc.AddBelongIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -244,6 +260,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(authorizer.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.BelongsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BelongsTable,
+			Columns: []string{user.BelongsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

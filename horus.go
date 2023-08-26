@@ -50,6 +50,11 @@ type Stores interface {
 	Users() UserStore
 	Tokens() TokenStore
 	Identities() IdentityStore
+
+	Orgs() OrgStore
+	Teams() TeamStore
+	Members() MemberStore
+	Memberships() MembershipStore
 }
 
 type Services interface {

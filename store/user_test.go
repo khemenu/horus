@@ -58,7 +58,7 @@ func (suite *UserStoreTestSuite) TestGetById() {
 	})
 
 	suite.RunWithStore("not exist", func(require *require.Assertions, ctx context.Context, store horus.UserStore) {
-		_, err := store.GetById(ctx, uuid.New())
+		_, err := store.GetById(ctx, horus.UserId(uuid.New()))
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 }

@@ -37,9 +37,11 @@ type UserEdges struct {
 	Identities []*Identity `json:"identities,omitempty"`
 	// Authorizer holds the value of the authorizer edge.
 	Authorizer *Authorizer `json:"authorizer,omitempty"`
+	// Belongs holds the value of the belongs edge.
+	Belongs []*Member `json:"belongs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // TokensOrErr returns the Tokens value or an error if the edge
@@ -71,6 +73,15 @@ func (e UserEdges) AuthorizerOrErr() (*Authorizer, error) {
 		return e.Authorizer, nil
 	}
 	return nil, &NotLoadedError{edge: "authorizer"}
+}
+
+// BelongsOrErr returns the Belongs value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) BelongsOrErr() ([]*Member, error) {
+	if e.loadedTypes[3] {
+		return e.Belongs, nil
+	}
+	return nil, &NotLoadedError{edge: "belongs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -143,6 +154,11 @@ func (u *User) QueryIdentities() *IdentityQuery {
 // QueryAuthorizer queries the "authorizer" edge of the User entity.
 func (u *User) QueryAuthorizer() *AuthorizerQuery {
 	return NewUserClient(u.config).QueryAuthorizer(u)
+}
+
+// QueryBelongs queries the "belongs" edge of the User entity.
+func (u *User) QueryBelongs() *MemberQuery {
+	return NewUserClient(u.config).QueryBelongs(u)
 }
 
 // Update returns a builder for updating this User.

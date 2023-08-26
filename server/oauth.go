@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 	"khepri.dev/horus"
 )
@@ -114,7 +113,7 @@ func (s *restServer) OauthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user_id uuid.UUID
+	var user_id horus.UserId
 	if identity_registered, err := s.Identities().GetByValue(r.Context(), identity.Value); err != nil {
 		if !errors.Is(err, horus.ErrNotExist) {
 			http.Error(w, "failed to get identity from store", http.StatusInternalServerError)

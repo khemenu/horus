@@ -25,5 +25,6 @@ func (User) Edges() []ent.Edge {
 		edge.To("tokens", Token.Type),
 		edge.To("identities", Identity.Type),
 		edge.To("authorizer", Authorizer.Type).Unique(),
+		edge.To("belongs", Member.Type),
 	}
 }
