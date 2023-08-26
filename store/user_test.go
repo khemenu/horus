@@ -21,15 +21,14 @@ func TestUserStoreSqlite(t *testing.T) {
 }
 
 func (s *UserStoreTestSuite) TestNew() {
-	s.RunWithStores(
-		"alias collision eventually fail",
-		func(ctx context.Context, stores horus.Stores) {
+	s.Run("alias collision eventually fail",
+		func(ctx context.Context) {
 			require := s.Require()
 
-			_, err := stores.Users().New(ctx)
+			_, err := s.Users().New(ctx)
 			require.NoError(err)
 
-			_, err = stores.Users().New(ctx)
+			_, err = s.Users().New(ctx)
 			require.Error(err)
 		},
 		withConfig(&store.Config{
@@ -39,41 +38,41 @@ func (s *UserStoreTestSuite) TestNew() {
 }
 
 func (s *UserStoreTestSuite) TestGetById() {
-	s.RunWithStores("exists", func(ctx context.Context, stores horus.Stores) {
+	s.Run("exists", func(ctx context.Context) {
 		require := s.Require()
 
-		expected, err := stores.Users().New(ctx)
+		expected, err := s.Users().New(ctx)
 		require.NoError(err)
 
-		actual, err := stores.Users().GetById(ctx, expected.Id)
+		actual, err := s.Users().GetById(ctx, expected.Id)
 		require.NoError(err)
 		require.Equal(expected, actual)
 	})
 
-	s.RunWithStores("not exists", func(ctx context.Context, stores horus.Stores) {
+	s.Run("not exists", func(ctx context.Context) {
 		require := s.Require()
 
-		_, err := stores.Users().GetById(ctx, horus.UserId(uuid.New()))
+		_, err := s.Users().GetById(ctx, horus.UserId(uuid.New()))
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 }
 
 func (s *UserStoreTestSuite) TestGetByAlias() {
-	s.RunWithStores("exists", func(ctx context.Context, stores horus.Stores) {
+	s.Run("exists", func(ctx context.Context) {
 		require := s.Require()
 
-		expected, err := stores.Users().New(ctx)
+		expected, err := s.Users().New(ctx)
 		require.NoError(err)
 
-		actual, err := stores.Users().GetByAlias(ctx, expected.Alias)
+		actual, err := s.Users().GetByAlias(ctx, expected.Alias)
 		require.NoError(err)
 		require.Equal(expected, actual)
 	})
 
-	s.RunWithStores("not exist", func(ctx context.Context, stores horus.Stores) {
+	s.Run("not exist", func(ctx context.Context) {
 		require := s.Require()
 
-		_, err := stores.Users().GetByAlias(ctx, "not exist")
+		_, err := s.Users().GetByAlias(ctx, "not exist")
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 }

@@ -33,13 +33,14 @@ func withConfig(conf *store.Config) suiteOption {
 
 type SuiteWithStores struct {
 	suite.Suite
+	horus.Stores
 
 	driver_name string
 	source_name string
 }
 
-func (s *SuiteWithStores) RunWithStores(name string, sub func(ctx context.Context, stores horus.Stores), opts ...suiteOption) {
-	s.Run(name, func() {
+func (s *SuiteWithStores) Run(name string, sub func(ctx context.Context), opts ...suiteOption) {
+	s.Suite.Run(name, func() {
 		conf := suiteConfig{}
 		for _, opt := range opts {
 			opt(&conf)
@@ -51,7 +52,8 @@ func (s *SuiteWithStores) RunWithStores(name string, sub func(ctx context.Contex
 		stores, err := store.NewStores(client, conf.store_conf)
 		require.NoError(s.T(), err)
 
-		sub(context.Background(), stores)
+		s.Stores = stores
+		sub(context.Background())
 	})
 }
 
@@ -61,13 +63,13 @@ type SuiteWithStoresUser struct {
 	user *horus.User
 }
 
-func (s *SuiteWithStoresUser) RunWithStores(name string, sub func(ctx context.Context, stores horus.Stores), opts ...suiteOption) {
-	s.SuiteWithStores.RunWithStores(name, func(ctx context.Context, stores horus.Stores) {
-		user, err := stores.Users().New(ctx)
+func (s *SuiteWithStoresUser) Run(name string, sub func(ctx context.Context), opts ...suiteOption) {
+	s.SuiteWithStores.Run(name, func(ctx context.Context) {
+		user, err := s.Users().New(ctx)
 		s.Require().NoError(err)
 
 		s.user = user
-		sub(ctx, stores)
+		sub(ctx)
 	}, opts...)
 }
 
@@ -79,21 +81,21 @@ type SuiteWithStoresOrg struct {
 	owner *horus.Member
 }
 
-func (s *SuiteWithStoresOrg) RunWithStores(name string, sub func(ctx context.Context, stores horus.Stores), opts ...suiteOption) {
-	s.SuiteWithStores.RunWithStores(name, func(ctx context.Context, stores horus.Stores) {
+func (s *SuiteWithStoresOrg) Run(name string, sub func(ctx context.Context), opts ...suiteOption) {
+	s.SuiteWithStores.Run(name, func(ctx context.Context) {
 		require := s.Require()
 
 		var err error
 
-		s.user, err = stores.Users().New(ctx)
+		s.user, err = s.Users().New(ctx)
 		require.NoError(err)
 
-		s.org, err = stores.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		s.org, err = s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
 		require.NoError(err)
 
-		s.owner, err = stores.Members().GetByUserIdFromOrg(ctx, s.org.Id, s.user.Id)
+		s.owner, err = s.Members().GetByUserIdFromOrg(ctx, s.org.Id, s.user.Id)
 		require.NoError(err)
 
-		sub(ctx, stores)
+		sub(ctx)
 	}, opts...)
 }

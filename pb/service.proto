@@ -8,13 +8,27 @@ option go_package = "khepri.dev/horus/pb";
 
 //
 service Horus {
-	//
-	rpc Status(StatusReq) returns (StatusRes) {};
+	// Creates organization.
+	rpc NewOrg(NewOrgReq) returns (NewOrgRes) {};
+	// Lists organizations the user belongs to.
+	rpc ListOrgs(ListOrgsReq) returns (ListOrgsRes) {};
+	// Updates orgnataion info.
+	rpc UpdateOrg(UpdateOrgReq) returns (UpdateOrgRes) {};
 }
 
-message StatusReq {}
-message StatusRes {
-	string user_alias = 1; //
-
-	string session_expired_at = 3; //
+message NewOrgReq {}
+message NewOrgRes {
+	bytes org_id = 1; // Created organization ID.
 }
+
+message ListOrgsReq {}
+message ListOrgsRes {
+	// List of organizations the user belongs to.
+	repeated Org orgs = 1;
+}
+
+message ListOrgsReq {
+	// Organization to update.
+	Org org = 1;
+}
+message ListOrgsRes {}

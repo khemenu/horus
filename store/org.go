@@ -6,8 +6,10 @@ import (
 
 	"github.com/google/uuid"
 	"khepri.dev/horus"
+	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/log"
 	"khepri.dev/horus/store/ent"
+	"khepri.dev/horus/store/ent/member"
 	"khepri.dev/horus/store/ent/org"
 )
 
@@ -56,6 +58,33 @@ func (s *orgStore) GetById(ctx context.Context, org_id horus.OrgId) (*horus.Org,
 		}
 
 		return nil, fmt.Errorf("query: %w", err)
+	}
+
+	return org_(res), nil
+}
+
+func (s *orgStore) GetAllByUserId(ctx context.Context, user_id horus.UserId) ([]*horus.Org, error) {
+	res, err := s.client.Member.Query().
+		Where(member.UserID(uuid.UUID(user_id))).
+		QueryOrg().
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("query: %w", err)
+	}
+
+	return fx.MapV(res, org_), nil
+}
+
+func (s *orgStore) UpdateById(ctx context.Context, org *horus.Org) (*horus.Org, error) {
+	res, err := s.client.Org.UpdateOneID(uuid.UUID(org.Id)).
+		SetName(org.Name).
+		Save(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, horus.ErrNotExist
+		}
+
+		return nil, fmt.Errorf("save: %w", err)
 	}
 
 	return org_(res), nil

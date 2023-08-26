@@ -17,3 +17,8 @@ message Identity {
 
 	string verified_by = 3; //
 }
+
+message Org {
+	bytes  id   = 1; // Unique ID.
+	string name = 2; // Display name; it is not unique.
+}

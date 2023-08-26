@@ -23,13 +23,13 @@ func TestMemberStoreSqlite(t *testing.T) {
 }
 
 func (s *MemberStoreTestSuite) TestNew() {
-	s.RunWithStores("with an org that does not exist", func(ctx context.Context, stores horus.Stores) {
+	s.Run("with an org that does not exist", func(ctx context.Context) {
 		require := s.Require()
 
-		user, err := stores.Users().New(ctx)
+		user, err := s.Users().New(ctx)
 		require.NoError(err)
 
-		_, err = stores.Members().New(ctx, horus.MemberInit{
+		_, err = s.Members().New(ctx, horus.MemberInit{
 			OrgId:  horus.OrgId(uuid.New()),
 			UserId: user.Id,
 			Role:   horus.RoleOrgMember,
@@ -37,10 +37,10 @@ func (s *MemberStoreTestSuite) TestNew() {
 		require.Error(err, horus.ErrNotExist)
 	})
 
-	s.RunWithStores("with a user that does not exist", func(ctx context.Context, stores horus.Stores) {
+	s.Run("with a user that does not exist", func(ctx context.Context) {
 		require := s.Require()
 
-		_, err := stores.Members().New(ctx, horus.MemberInit{
+		_, err := s.Members().New(ctx, horus.MemberInit{
 			OrgId:  s.org.Id,
 			UserId: horus.UserId(uuid.New()),
 			Role:   horus.RoleOrgMember,
@@ -48,10 +48,10 @@ func (s *MemberStoreTestSuite) TestNew() {
 		require.Error(err, horus.ErrNotExist)
 	})
 
-	s.RunWithStores("with a user that already a member", func(ctx context.Context, stores horus.Stores) {
+	s.Run("with a user that already a member", func(ctx context.Context) {
 		require := s.Require()
 
-		_, err := stores.Members().New(ctx, horus.MemberInit{
+		_, err := s.Members().New(ctx, horus.MemberInit{
 			OrgId:  s.org.Id,
 			UserId: s.user.Id,
 			Role:   horus.RoleOrgMember,
@@ -59,13 +59,13 @@ func (s *MemberStoreTestSuite) TestNew() {
 		require.ErrorIs(err, horus.ErrExist)
 	})
 
-	s.RunWithStores("with an org and a user that exists", func(ctx context.Context, stores horus.Stores) {
+	s.Run("with an org and a user that exists", func(ctx context.Context) {
 		require := s.Require()
 
-		user, err := stores.Users().New(ctx)
+		user, err := s.Users().New(ctx)
 		require.NoError(err)
 
-		member, err := stores.Members().New(ctx, horus.MemberInit{
+		member, err := s.Members().New(ctx, horus.MemberInit{
 			OrgId:  s.org.Id,
 			UserId: user.Id,
 			Role:   horus.RoleOrgMember,
@@ -78,58 +78,58 @@ func (s *MemberStoreTestSuite) TestNew() {
 }
 
 func (s *MemberStoreTestSuite) TestGetByUserIdFromOrg() {
-	s.RunWithStores("from an org that does not exist", func(ctx context.Context, stores horus.Stores) {
+	s.Run("from an org that does not exist", func(ctx context.Context) {
 		require := s.Require()
 
-		_, err := stores.Members().GetByUserIdFromOrg(ctx, horus.OrgId(uuid.New()), s.user.Id)
+		_, err := s.Members().GetByUserIdFromOrg(ctx, horus.OrgId(uuid.New()), s.user.Id)
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 
-	s.RunWithStores("with a member that does not exist", func(ctx context.Context, stores horus.Stores) {
+	s.Run("with a member that does not exist", func(ctx context.Context) {
 		require := s.Require()
 
-		_, err := stores.Members().GetByUserIdFromOrg(ctx, s.org.Id, horus.UserId(uuid.New()))
+		_, err := s.Members().GetByUserIdFromOrg(ctx, s.org.Id, horus.UserId(uuid.New()))
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 
-	s.RunWithStores("from an org with member that exists", func(ctx context.Context, stores horus.Stores) {
+	s.Run("from an org with member that exists", func(ctx context.Context) {
 		require := s.Require()
 
-		member, err := stores.Members().GetByUserIdFromOrg(ctx, s.org.Id, s.user.Id)
+		member, err := s.Members().GetByUserIdFromOrg(ctx, s.org.Id, s.user.Id)
 		require.NoError(err)
 		require.Equal(member.Role, horus.RoleOrgOwner)
 
-		user, err := stores.Users().GetById(ctx, member.UserId)
+		user, err := s.Users().GetById(ctx, member.UserId)
 		require.NoError(err)
 		require.Equal(s.user, user)
 	})
 }
 
 func (s *MemberStoreTestSuite) TestGetAllByOrgId() {
-	s.RunWithStores("with org that does not exist", func(ctx context.Context, stores horus.Stores) {
+	s.Run("with org that does not exist", func(ctx context.Context) {
 		require := s.Require()
 
-		_, err := stores.Members().GetAllByOrgId(ctx, horus.OrgId(uuid.New()))
+		_, err := s.Members().GetAllByOrgId(ctx, horus.OrgId(uuid.New()))
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 
-	s.RunWithStores("with org that exists", func(ctx context.Context, stores horus.Stores) {
+	s.Run("with org that exists", func(ctx context.Context) {
 		require := s.Require()
 
-		owner, err := stores.Members().GetByUserIdFromOrg(ctx, s.org.Id, s.user.Id)
+		owner, err := s.Members().GetByUserIdFromOrg(ctx, s.org.Id, s.user.Id)
 		require.NoError(err)
 
-		user, err := stores.Users().New(ctx)
+		user, err := s.Users().New(ctx)
 		require.NoError(err)
 
-		member, err := stores.Members().New(ctx, horus.MemberInit{
+		member, err := s.Members().New(ctx, horus.MemberInit{
 			OrgId:  s.org.Id,
 			UserId: user.Id,
 			Role:   horus.RoleOrgMember,
 		})
 		require.NoError(err)
 
-		members, err := stores.Members().GetAllByOrgId(ctx, s.org.Id)
+		members, err := s.Members().GetAllByOrgId(ctx, s.org.Id)
 		require.NoError(err)
 		require.ElementsMatch([]*horus.Member{owner, member}, members)
 	})

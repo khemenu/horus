@@ -28,4 +28,6 @@ type OrgInit struct {
 type OrgStore interface {
 	New(ctx context.Context, init OrgInit) (*Org, error)
 	GetById(ctx context.Context, org_id OrgId) (*Org, error)
+	GetAllByUserId(ctx context.Context, user_id UserId) ([]*Org, error)
+	UpdateById(ctx context.Context, org *Org) (*Org, error)
 }
