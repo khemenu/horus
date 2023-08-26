@@ -24,31 +24,7 @@ func token_(token *ent.Token) *horus.Token {
 }
 
 type tokenStore struct {
-	client    *ent.Client
-	token_gen horus.Generator
-}
-
-type TokenStoreOption func(s *tokenStore) error
-
-func WithTokenGenerator(generator horus.Generator) TokenStoreOption {
-	return func(s *tokenStore) error {
-		s.token_gen = generator
-		return nil
-	}
-}
-
-func NewTokenStore(client *ent.Client, opts ...TokenStoreOption) (horus.TokenStore, error) {
-	s := &tokenStore{
-		client:    client,
-		token_gen: horus.DefaultOpaqueTokenGenerator,
-	}
-	for _, opt := range opts {
-		if err := opt(s); err != nil {
-			return nil, err
-		}
-	}
-
-	return s, nil
+	*stores
 }
 
 func (s *tokenStore) Issue(ctx context.Context, init horus.TokenInit) (*horus.Token, error) {
@@ -60,7 +36,7 @@ func (s *tokenStore) Issue(ctx context.Context, init horus.TokenInit) (*horus.To
 	)
 	for i := 0; i < MaxRetry; i++ {
 		var opaque string
-		opaque, err = s.token_gen.New()
+		opaque, err = s.conf.TokenGenerator.New()
 		if err != nil {
 			return nil, fmt.Errorf("generate opaque token: %w", err)
 		}
@@ -123,12 +99,12 @@ func (s *tokenStore) Revoke(ctx context.Context, value string) error {
 	return nil
 }
 
-func (s *tokenStore) RevokeAll(ctx context.Context, owner_id uuid.UUID) error {
+func (s *tokenStore) RevokeAll(ctx context.Context, owner_id horus.UserId) error {
 	now := time.Now()
 
 	_, err := s.client.Token.Update().
 		Where(token.And(
-			token.OwnerID(owner_id),
+			token.OwnerID(uuid.UUID(owner_id)),
 			token.ExpiredAtGTE(time.Now()),
 		)).
 		SetExpiredAt(now).

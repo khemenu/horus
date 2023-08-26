@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"khepri.dev/horus"
 	"khepri.dev/horus/store/ent/identity"
 	"khepri.dev/horus/store/ent/user"
 )
@@ -21,12 +22,12 @@ type Identity struct {
 	ID string `json:"id,omitempty"`
 	// OwnerID holds the value of the "owner_id" field.
 	OwnerID uuid.UUID `json:"owner_id,omitempty"`
+	// Kind holds the value of the "kind" field.
+	Kind horus.IdentityKind `json:"kind,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
-	// Kind holds the value of the "kind" field.
-	Kind string `json:"kind,omitempty"`
 	// VerifiedBy holds the value of the "verified_by" field.
-	VerifiedBy string `json:"verified_by,omitempty"`
+	VerifiedBy horus.Verifier `json:"verified_by,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -63,7 +64,7 @@ func (*Identity) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case identity.FieldID, identity.FieldName, identity.FieldKind, identity.FieldVerifiedBy:
+		case identity.FieldID, identity.FieldKind, identity.FieldName, identity.FieldVerifiedBy:
 			values[i] = new(sql.NullString)
 		case identity.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -98,23 +99,23 @@ func (i *Identity) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				i.OwnerID = *value
 			}
+		case identity.FieldKind:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field kind", values[j])
+			} else if value.Valid {
+				i.Kind = horus.IdentityKind(value.String)
+			}
 		case identity.FieldName:
 			if value, ok := values[j].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[j])
 			} else if value.Valid {
 				i.Name = value.String
 			}
-		case identity.FieldKind:
-			if value, ok := values[j].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field kind", values[j])
-			} else if value.Valid {
-				i.Kind = value.String
-			}
 		case identity.FieldVerifiedBy:
 			if value, ok := values[j].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field verified_by", values[j])
 			} else if value.Valid {
-				i.VerifiedBy = value.String
+				i.VerifiedBy = horus.Verifier(value.String)
 			}
 		case identity.FieldCreatedAt:
 			if value, ok := values[j].(*sql.NullTime); !ok {
@@ -173,14 +174,14 @@ func (i *Identity) String() string {
 	builder.WriteString("owner_id=")
 	builder.WriteString(fmt.Sprintf("%v", i.OwnerID))
 	builder.WriteString(", ")
+	builder.WriteString("kind=")
+	builder.WriteString(fmt.Sprintf("%v", i.Kind))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(i.Name)
 	builder.WriteString(", ")
-	builder.WriteString("kind=")
-	builder.WriteString(i.Kind)
-	builder.WriteString(", ")
 	builder.WriteString("verified_by=")
-	builder.WriteString(i.VerifiedBy)
+	builder.WriteString(fmt.Sprintf("%v", i.VerifiedBy))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(i.CreatedAt.Format(time.ANSIC))

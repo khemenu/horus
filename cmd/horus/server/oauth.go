@@ -107,22 +107,28 @@ func (s *restServer) OauthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	identity, err := provider.Identity(r.Context(), token)
+	identity_init, err := provider.Identity(r.Context(), token)
 	if err != nil {
 		http.Error(w, "failed to resolve identity", http.StatusInternalServerError)
 		return
 	}
 
 	var user_id horus.UserId
-	if identity_registered, err := s.Identities().GetByValue(r.Context(), identity.Value); err != nil {
+	if identity_registered, err := s.Identities().GetByValue(r.Context(), identity_init.Value); err != nil {
 		if !errors.Is(err, horus.ErrNotExist) {
 			http.Error(w, "failed to get identity from store", http.StatusInternalServerError)
 			return
 		}
 
-		user, err := s.Auth().SignUp(r.Context(), identity)
+		identity, err := s.Identities().New(r.Context(), &identity_init)
 		if err != nil {
 			http.Error(w, "failed to sign up", http.StatusInternalServerError)
+			return
+		}
+
+		user, err := s.Users().GetById(r.Context(), identity.OwnerId)
+		if err != nil {
+			http.Error(w, "failed to get details of created identity", http.StatusInternalServerError)
 			return
 		}
 

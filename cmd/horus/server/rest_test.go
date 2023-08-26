@@ -12,16 +12,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
 	"khepri.dev/horus"
-	"khepri.dev/horus/horustest"
+	"khepri.dev/horus/cmd/horus/server"
 	"khepri.dev/horus/pb"
-	"khepri.dev/horus/server"
 )
 
 func WithHorusHttpHandler(conf *server.RestServerConfig, f func(require *require.Assertions, h horus.Horus, handler http.Handler)) func(t *testing.T) {
 	if conf == nil {
 		conf = &server.RestServerConfig{}
 	}
-	return horustest.WithHorus(conf.Config, func(require *require.Assertions, h horus.Horus) {
+	return WithHorus(conf.Config, func(require *require.Assertions, h horus.Horus) {
 		s, err := server.NewRestServer(h, conf)
 		require.NoError(err)
 

@@ -24,18 +24,10 @@ func membership_(v *ent.Membership) *horus.Membership {
 }
 
 type membershipStore struct {
-	client *ent.Client
+	*stores
 }
 
-func NewMembershipStore(client *ent.Client) (horus.MembershipStore, error) {
-	s := &membershipStore{
-		client: client,
-	}
-
-	return s, nil
-}
-
-func newMembership(ctx context.Context, client *ent.Client, init horus.MembershipInit) (*horus.Membership, error) {
+func (s *membershipStore) new(ctx context.Context, client *ent.Client, init horus.MembershipInit) (*horus.Membership, error) {
 	res, err := client.Membership.Create().
 		SetTeamID(uuid.UUID(init.TeamId)).
 		SetMemberID(uuid.UUID(init.MemberId)).
@@ -60,7 +52,7 @@ func newMembership(ctx context.Context, client *ent.Client, init horus.Membershi
 }
 
 func (s *membershipStore) New(ctx context.Context, init horus.MembershipInit) (*horus.Membership, error) {
-	return newMembership(ctx, s.client, init)
+	return s.new(ctx, s.client, init)
 }
 
 func (s *membershipStore) GetById(ctx context.Context, team_id horus.TeamId, member_id horus.MemberId) (*horus.Membership, error) {

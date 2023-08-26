@@ -6,114 +6,108 @@ import (
 
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"khepri.dev/horus"
-	"khepri.dev/horus/store/ent"
 )
 
 type TeamStoreTestSuite struct {
-	SuiteWithClient
-
-	user  *horus.User
-	org   *horus.Org
-	owner *horus.Member
-}
-
-func (suite *TeamStoreTestSuite) RunWithStore(name string, sub func(require *require.Assertions, ctx context.Context, store horus.TeamStore)) {
-	suite.RunWithClient(name, func(require *require.Assertions, ctx context.Context, client *ent.Client) {
-		var err error
-		suite.user, err = suite.Users().New(ctx)
-		require.NoError(err)
-
-		suite.org, err = suite.Orgs().New(ctx, horus.OrgInit{OwnerId: suite.user.Id})
-		require.NoError(err)
-
-		suite.owner, err = suite.Members().GetByUserIdFromOrg(ctx, suite.org.Id, suite.user.Id)
-		require.NoError(err)
-
-		sub(require, ctx, suite.Teams())
-	})
+	SuiteWithStoresOrg
 }
 
 func TestTeamStoreSqlite(t *testing.T) {
 	suite.Run(t, &TeamStoreTestSuite{
-		SuiteWithClient: NewSuiteWithClientSqlite(),
+		SuiteWithStoresOrg: SuiteWithStoresOrg{
+			SuiteWithStores: NewSuiteWithSqliteStores(),
+		},
 	})
 }
 
-func (suite *TeamStoreTestSuite) TestNew() {
-	suite.RunWithStore("with an org that does not exist", func(require *require.Assertions, ctx context.Context, store horus.TeamStore) {
-		_, err := store.New(ctx, horus.TeamInit{
+func (s *TeamStoreTestSuite) TestNew() {
+	s.RunWithStores("with an org that does not exist", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		_, err := stores.Teams().New(ctx, horus.TeamInit{
 			OrgId:   horus.OrgId(uuid.New()),
-			OwnerId: suite.owner.Id,
+			OwnerId: s.owner.Id,
 			Name:    "A",
 		})
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 
-	suite.RunWithStore("with a user that does not exist", func(require *require.Assertions, ctx context.Context, store horus.TeamStore) {
-		_, err := store.New(ctx, horus.TeamInit{
-			OrgId:   suite.org.Id,
+	s.RunWithStores("with a user that does not exist", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		_, err := stores.Teams().New(ctx, horus.TeamInit{
+			OrgId:   s.org.Id,
 			OwnerId: horus.MemberId(uuid.New()),
 			Name:    "A",
 		})
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 
-	suite.RunWithStore("with an org and a user that exists", func(require *require.Assertions, ctx context.Context, store horus.TeamStore) {
-		team, err := store.New(ctx, horus.TeamInit{
-			OrgId:   suite.org.Id,
-			OwnerId: suite.owner.Id,
+	s.RunWithStores("with an org and a user that exists", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		team, err := stores.Teams().New(ctx, horus.TeamInit{
+			OrgId:   s.org.Id,
+			OwnerId: s.owner.Id,
 			Name:    "A",
 		})
 		require.NoError(err)
-		require.Equal(suite.org.Id, team.OrgId)
+		require.Equal(s.org.Id, team.OrgId)
 		require.Equal("A", team.Name)
 
-		membership, err := suite.Memberships().GetById(ctx, team.Id, suite.owner.Id)
+		membership, err := stores.Memberships().GetById(ctx, team.Id, s.owner.Id)
 		require.NoError(err)
 		require.Equal(team.Id, membership.TeamId)
-		require.Equal(suite.owner.Id, membership.MemberId)
+		require.Equal(s.owner.Id, membership.MemberId)
 		require.Equal(horus.RoleTeamOwner, membership.Role)
 	})
 }
 
-func (suite *TeamStoreTestSuite) TestGetById() {
-	suite.RunWithStore("not exist", func(require *require.Assertions, ctx context.Context, store horus.TeamStore) {
-		_, err := store.GetById(ctx, horus.TeamId(uuid.New()))
+func (s *TeamStoreTestSuite) TestGetById() {
+	s.RunWithStores("not exist", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		_, err := stores.Teams().GetById(ctx, horus.TeamId(uuid.New()))
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 
-	suite.RunWithStore("exists", func(require *require.Assertions, ctx context.Context, store horus.TeamStore) {
-		expected, err := store.New(ctx, horus.TeamInit{
-			OrgId:   suite.org.Id,
-			OwnerId: suite.owner.Id,
+	s.RunWithStores("exists", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		expected, err := stores.Teams().New(ctx, horus.TeamInit{
+			OrgId:   s.org.Id,
+			OwnerId: s.owner.Id,
 			Name:    "A",
 		})
 		require.NoError(err)
 
-		actual, err := store.GetById(ctx, expected.Id)
+		actual, err := stores.Teams().GetById(ctx, expected.Id)
 		require.NoError(err)
 		require.Equal(expected, actual)
 	})
 }
 
-func (suite *TeamStoreTestSuite) TestGetAllByOrgId() {
-	suite.RunWithStore("not exist", func(require *require.Assertions, ctx context.Context, store horus.TeamStore) {
-		teams, err := store.GetAllByOrgId(ctx, horus.OrgId(uuid.New()))
+func (s *TeamStoreTestSuite) TestGetAllByOrgId() {
+	s.RunWithStores("not exist", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		teams, err := stores.Teams().GetAllByOrgId(ctx, horus.OrgId(uuid.New()))
 		require.NoError(err)
 		require.Empty(teams)
 	})
 
-	suite.RunWithStore("exists", func(require *require.Assertions, ctx context.Context, store horus.TeamStore) {
-		a, err := store.New(ctx, horus.TeamInit{OrgId: suite.org.Id, OwnerId: suite.owner.Id, Name: "A"})
+	s.RunWithStores("exists", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		a, err := stores.Teams().New(ctx, horus.TeamInit{OrgId: s.org.Id, OwnerId: s.owner.Id, Name: "A"})
 		require.NoError(err)
 
-		b, err := store.New(ctx, horus.TeamInit{OrgId: suite.org.Id, OwnerId: suite.owner.Id, Name: "B"})
+		b, err := stores.Teams().New(ctx, horus.TeamInit{OrgId: s.org.Id, OwnerId: s.owner.Id, Name: "B"})
 		require.NoError(err)
 
-		teams, err := store.GetAllByOrgId(ctx, suite.org.Id)
+		teams, err := stores.Teams().GetAllByOrgId(ctx, s.org.Id)
 		require.NoError(err)
 		require.ElementsMatch([]*horus.Team{a, b}, teams)
 	})

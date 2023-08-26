@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"khepri.dev/horus"
 	"khepri.dev/horus/store/ent/identity"
 	"khepri.dev/horus/store/ent/predicate"
 )
@@ -42,8 +43,8 @@ func (iu *IdentityUpdate) SetNillableName(s *string) *IdentityUpdate {
 }
 
 // SetVerifiedBy sets the "verified_by" field.
-func (iu *IdentityUpdate) SetVerifiedBy(s string) *IdentityUpdate {
-	iu.mutation.SetVerifiedBy(s)
+func (iu *IdentityUpdate) SetVerifiedBy(h horus.Verifier) *IdentityUpdate {
+	iu.mutation.SetVerifiedBy(h)
 	return iu
 }
 
@@ -82,7 +83,7 @@ func (iu *IdentityUpdate) ExecX(ctx context.Context) {
 // check runs all checks and user-defined validators on the builder.
 func (iu *IdentityUpdate) check() error {
 	if v, ok := iu.mutation.VerifiedBy(); ok {
-		if err := identity.VerifiedByValidator(v); err != nil {
+		if err := identity.VerifiedByValidator(string(v)); err != nil {
 			return &ValidationError{Name: "verified_by", err: fmt.Errorf(`ent: validator failed for field "Identity.verified_by": %w`, err)}
 		}
 	}
@@ -145,8 +146,8 @@ func (iuo *IdentityUpdateOne) SetNillableName(s *string) *IdentityUpdateOne {
 }
 
 // SetVerifiedBy sets the "verified_by" field.
-func (iuo *IdentityUpdateOne) SetVerifiedBy(s string) *IdentityUpdateOne {
-	iuo.mutation.SetVerifiedBy(s)
+func (iuo *IdentityUpdateOne) SetVerifiedBy(h horus.Verifier) *IdentityUpdateOne {
+	iuo.mutation.SetVerifiedBy(h)
 	return iuo
 }
 
@@ -198,7 +199,7 @@ func (iuo *IdentityUpdateOne) ExecX(ctx context.Context) {
 // check runs all checks and user-defined validators on the builder.
 func (iuo *IdentityUpdateOne) check() error {
 	if v, ok := iuo.mutation.VerifiedBy(); ok {
-		if err := identity.VerifiedByValidator(v); err != nil {
+		if err := identity.VerifiedByValidator(string(v)); err != nil {
 			return &ValidationError{Name: "verified_by", err: fmt.Errorf(`ent: validator failed for field "Identity.verified_by": %w`, err)}
 		}
 	}

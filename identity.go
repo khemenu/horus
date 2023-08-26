@@ -11,23 +11,28 @@ const (
 	IdentityEmail = IdentityKind("email")
 )
 
-type IdentityInit struct {
-	Kind  IdentityKind
-	Value string
-	Name  string
+type Identity struct {
+	OwnerId UserId
+	Kind    IdentityKind
+	Value   string
+	Name    string
 
 	VerifiedBy Verifier
-}
-
-type Identity struct {
-	IdentityInit
-	OwnerId UserId
 
 	CreatedAt time.Time
 }
 
+type IdentityInit struct {
+	OwnerId UserId
+	Kind    IdentityKind
+	Value   string
+	Name    string
+
+	VerifiedBy Verifier
+}
+
 type IdentityStore interface {
-	Create(ctx context.Context, input *Identity) (*Identity, error)
+	New(ctx context.Context, input *IdentityInit) (*Identity, error)
 	GetByValue(ctx context.Context, value string) (*Identity, error)
 	GetAllByOwner(ctx context.Context, owner_id UserId) (map[string]*Identity, error)
 	Update(ctx context.Context, input *Identity) (*Identity, error)

@@ -9,9 +9,18 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"khepri.dev/horus"
-	"khepri.dev/horus/horustest"
-	"khepri.dev/horus/server"
+	"khepri.dev/horus/cmd/horus/server"
+	"khepri.dev/horus/provider"
 )
+
+func WithFakeOauth2(f func(provider horus.OauthProvider)) func(t *testing.T) {
+	return func(t *testing.T) {
+		provider, server := provider.FakeOauth2()
+		defer server.Close()
+
+		f(provider)
+	}
+}
 
 func TestOauth(t *testing.T) {
 	t.Run("redirect without provider id", WithHorusHttpHandler(nil, func(require *require.Assertions, h horus.Horus, handler http.Handler) {
@@ -22,7 +31,7 @@ func TestOauth(t *testing.T) {
 		require.HTTPStatusCode(handler.ServeHTTP, http.MethodGet, "/auth/oauth/redirect?provider_id=not-exist", nil, http.StatusUnprocessableEntity)
 	}))
 
-	t.Run("redirect with known provider id", horustest.WithFakeOauth2(func(provider horus.OauthProvider) {
+	t.Run("redirect with known provider id", WithFakeOauth2(func(provider horus.OauthProvider) {
 		conf := server.RestServerConfig{
 			Providers: []horus.Provider{provider},
 		}
@@ -47,7 +56,7 @@ func TestOauth(t *testing.T) {
 		require.HTTPStatusCode(handler.ServeHTTP, http.MethodGet, "/auth/oauth/callback", nil, http.StatusUnprocessableEntity)
 	}))
 
-	t.Run("callback with unknown provider id", horustest.WithFakeOauth2(func(provider horus.OauthProvider) {
+	t.Run("callback with unknown provider id", WithFakeOauth2(func(provider horus.OauthProvider) {
 		conf := server.RestServerConfig{
 			Providers: []horus.Provider{provider},
 		}
@@ -66,7 +75,7 @@ func TestOauth(t *testing.T) {
 		})(t)
 	}))
 
-	t.Run("callback with valid state", horustest.WithFakeOauth2(func(provider horus.OauthProvider) {
+	t.Run("callback with valid state", WithFakeOauth2(func(provider horus.OauthProvider) {
 		conf := server.RestServerConfig{
 			Providers: []horus.Provider{provider},
 		}

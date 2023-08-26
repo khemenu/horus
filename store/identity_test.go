@@ -5,166 +5,153 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"khepri.dev/horus"
-	"khepri.dev/horus/store/ent"
 )
 
 type IdentityStoreTestSuite struct {
-	SuiteWithClient
-}
-
-var (
-	init_ra = horus.IdentityInit{
-		Value:      "ra@khepri.dev",
-		Kind:       horus.IdentityEmail,
-		VerifiedBy: horus.VerifierGoogleOauth2,
-	}
-	init_atum = horus.IdentityInit{
-		Value:      "atum@khepri.dev",
-		Kind:       horus.IdentityEmail,
-		VerifiedBy: horus.VerifierGoogleOauth2,
-	}
-)
-
-func (suite *IdentityStoreTestSuite) RunWithStore(name string, sub func(require *require.Assertions, ctx context.Context, store horus.IdentityStore)) {
-	suite.RunWithClient(name, func(require *require.Assertions, ctx context.Context, client *ent.Client) {
-		sub(require, ctx, suite.Identities())
-	})
-}
-
-func (suite *IdentityStoreTestSuite) CreateUser(ctx context.Context) *horus.User {
-	rst, err := suite.Users().New(ctx)
-	require.NoError(suite.T(), err)
-
-	return rst
-}
-
-func (suite *IdentityStoreTestSuite) CreateIdentity(ctx context.Context, init horus.IdentityInit) *horus.Identity {
-	user := suite.CreateUser(ctx)
-
-	rst, err := suite.Identities().Create(ctx, &horus.Identity{
-		IdentityInit: init,
-		OwnerId:      user.Id,
-	})
-	require.NoError(suite.T(), err)
-
-	return rst
+	SuiteWithStoresUser
 }
 
 func TestIdentityStoreSqlite(t *testing.T) {
 	suite.Run(t, &IdentityStoreTestSuite{
-		SuiteWithClient: NewSuiteWithClientSqlite(),
+		SuiteWithStoresUser{
+			SuiteWithStores: NewSuiteWithSqliteStores(),
+		},
 	})
 }
 
-func (suite *IdentityStoreTestSuite) TestCreate() {
-	suite.RunWithStore("user can have multiple identity", func(require *require.Assertions, ctx context.Context, store horus.IdentityStore) {
-		user := suite.CreateUser(ctx)
+func (s *IdentityStoreTestSuite) InitAmun() *horus.IdentityInit {
+	return &horus.IdentityInit{
+		OwnerId:    s.user.Id,
+		Kind:       horus.IdentityEmail,
+		Value:      "amun@khepri.dev",
+		VerifiedBy: horus.VerifierGoogleOauth2,
+	}
+}
 
-		_, err := store.Create(ctx, &horus.Identity{
-			IdentityInit: init_ra,
-			OwnerId:      user.Id,
-		})
+func (s *IdentityStoreTestSuite) InitAtum() *horus.IdentityInit {
+	return &horus.IdentityInit{
+		OwnerId:    s.user.Id,
+		Kind:       horus.IdentityEmail,
+		Value:      "atum@khepri.dev",
+		VerifiedBy: horus.VerifierGoogleOauth2,
+	}
+}
+
+func (s *IdentityStoreTestSuite) TestNew() {
+	s.RunWithStores("user can have multiple identity", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		_, err := stores.Identities().New(ctx, s.InitAmun())
 		require.NoError(err)
 
-		_, err = store.Create(ctx, &horus.Identity{
-			IdentityInit: init_atum,
-			OwnerId:      user.Id,
-		})
+		_, err = stores.Identities().New(ctx, s.InitAtum())
 		require.NoError(err)
 	})
 
-	suite.RunWithStore("owner must be exist", func(require *require.Assertions, ctx context.Context, store horus.IdentityStore) {
-		_, err := store.Create(ctx, &horus.Identity{
-			IdentityInit: init_ra,
-			OwnerId:      horus.UserId(uuid.New()),
-		})
+	s.RunWithStores("owner must be exist", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		init := s.InitAmun()
+		init.OwnerId = horus.UserId(uuid.New())
+
+		_, err := stores.Identities().New(ctx, init)
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 
-	suite.RunWithStore("value is unique across users", func(require *require.Assertions, ctx context.Context, store horus.IdentityStore) {
-		user1 := suite.CreateUser(ctx)
-		user2 := suite.CreateUser(ctx)
+	s.RunWithStores("value must be unique across users", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
 
-		_, err := store.Create(ctx, &horus.Identity{
-			IdentityInit: init_ra,
-			OwnerId:      user1.Id,
-		})
+		init := s.InitAmun()
+		_, err := stores.Identities().New(ctx, init)
 		require.NoError(err)
 
-		_, err = store.Create(ctx, &horus.Identity{
-			IdentityInit: init_ra,
-			OwnerId:      user2.Id,
-		})
+		other, err := stores.Users().New(ctx)
+		require.NoError(err)
+
+		init.OwnerId = other.Id
+		_, err = stores.Identities().New(ctx, init)
 		require.ErrorIs(err, horus.ErrExist)
+	})
+
+	s.RunWithStores("new user is created if owner ID not given", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		init := s.InitAmun()
+		init.OwnerId = horus.UserId(uuid.Nil)
+		identity, err := stores.Identities().New(ctx, init)
+		require.NoError(err)
+
+		_, err = stores.Users().GetById(ctx, identity.OwnerId)
+		require.NoError(err)
 	})
 }
 
-func (suite *IdentityStoreTestSuite) TestGetByValue() {
-	suite.RunWithStore("exists", func(require *require.Assertions, ctx context.Context, store horus.IdentityStore) {
-		expected := suite.CreateIdentity(ctx, init_ra)
+func (s *IdentityStoreTestSuite) TestGetByValue() {
+	s.RunWithStores("exists", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
 
-		actual, err := store.GetByValue(ctx, expected.Value)
+		expected, err := stores.Identities().New(ctx, s.InitAmun())
+		require.NoError(err)
+
+		actual, err := stores.Identities().GetByValue(ctx, expected.Value)
 		require.NoError(err)
 		require.Equal(expected, actual)
 	})
 
-	suite.RunWithStore("not exist", func(require *require.Assertions, ctx context.Context, store horus.IdentityStore) {
-		_, err := store.GetByValue(ctx, "not exist")
+	s.RunWithStores("not exist", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		_, err := stores.Identities().GetByValue(ctx, "not exist")
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 }
 
-func (suite *IdentityStoreTestSuite) TestGetAllByOwner() {
-	suite.RunWithStore("exists", func(require *require.Assertions, ctx context.Context, store horus.IdentityStore) {
-		user := suite.CreateUser(ctx)
+func (s *IdentityStoreTestSuite) TestGetAllByOwner() {
+	s.RunWithStores("exists", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
 
-		ra, err := store.Create(ctx, &horus.Identity{
-			IdentityInit: init_ra,
-			OwnerId:      user.Id,
-		})
+		amun, err := stores.Identities().New(ctx, s.InitAmun())
 		require.NoError(err)
 
-		atum, err := store.Create(ctx, &horus.Identity{
-			IdentityInit: init_atum,
-			OwnerId:      user.Id,
-		})
+		atum, err := stores.Identities().New(ctx, s.InitAtum())
 		require.NoError(err)
 
-		identities, err := store.GetAllByOwner(ctx, user.Id)
+		identities, err := stores.Identities().GetAllByOwner(ctx, s.user.Id)
 		require.NoError(err)
-
 		require.Equal(map[string]*horus.Identity{
-			ra.Value:   ra,
+			amun.Value: amun,
 			atum.Value: atum,
 		}, identities)
 	})
 
-	suite.RunWithStore("not exist", func(require *require.Assertions, ctx context.Context, store horus.IdentityStore) {
-		identities, err := store.GetAllByOwner(ctx, horus.UserId(uuid.New()))
+	s.RunWithStores("not exist not an error", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		identities, err := stores.Identities().GetAllByOwner(ctx, horus.UserId(uuid.New()))
 		require.NoError(err)
 		require.Empty(identities)
 	})
 }
 
-func (suite *IdentityStoreTestSuite) TestUpdate() {
-	suite.RunWithStore("exists", func(require *require.Assertions, ctx context.Context, store horus.IdentityStore) {
-		expected := suite.CreateIdentity(ctx, init_ra)
+func (s *IdentityStoreTestSuite) TestUpdate() {
+	s.RunWithStores("exists", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		expected, err := stores.Identities().New(ctx, s.InitAmun())
+		require.NoError(err)
 
 		expected.VerifiedBy = "something else"
-		actual, err := store.Update(ctx, expected)
+		actual, err := stores.Identities().Update(ctx, expected)
 		require.NoError(err)
 		require.Equal(expected, actual)
 	})
 
-	suite.RunWithStore("not exist", func(require *require.Assertions, ctx context.Context, store horus.IdentityStore) {
-		_, err := store.Update(ctx, &horus.Identity{
-			IdentityInit: horus.IdentityInit{
-				Value: "not exist",
-			},
-		})
+	s.RunWithStores("not exist", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		_, err := stores.Identities().Update(ctx, &horus.Identity{Value: "not exist"})
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 }

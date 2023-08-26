@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"khepri.dev/horus"
-	"khepri.dev/horus/frame"
+	"khepri.dev/horus/cmd/horus/server/frame"
 	"khepri.dev/horus/pb"
 )
 

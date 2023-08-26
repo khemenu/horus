@@ -13,38 +13,30 @@ import (
 	"khepri.dev/horus/store/ent/identity"
 )
 
-func identity_(identity *ent.Identity) *horus.Identity {
+func identity_(v *ent.Identity) *horus.Identity {
 	return &horus.Identity{
-		IdentityInit: horus.IdentityInit{
-			Value:      identity.ID,
-			Name:       identity.Name,
-			Kind:       horus.IdentityKind(identity.Kind),
-			VerifiedBy: horus.Verifier(identity.VerifiedBy),
-		},
-		OwnerId:   horus.UserId(identity.OwnerID),
-		CreatedAt: identity.CreatedAt,
+		OwnerId: horus.UserId(v.OwnerID),
+		Kind:    v.Kind,
+		Value:   v.ID,
+		Name:    v.Name,
+
+		VerifiedBy: v.VerifiedBy,
+
+		CreatedAt: v.CreatedAt,
 	}
 }
 
 type identityStore struct {
-	client *ent.Client
+	*stores
 }
 
-func NewIdentityStore(client *ent.Client) (horus.IdentityStore, error) {
-	s := &identityStore{
-		client: client,
-	}
-
-	return s, nil
-}
-
-func (s *identityStore) Create(ctx context.Context, input *horus.Identity) (*horus.Identity, error) {
-	res, err := s.client.Identity.Create().
-		SetID(input.Value).
-		SetOwnerID(uuid.UUID(input.OwnerId)).
-		SetName(input.Name).
-		SetKind(string(input.Kind)).
-		SetVerifiedBy(string(input.VerifiedBy)).
+func (s *identityStore) new(ctx context.Context, client *ent.Client, init *horus.IdentityInit) (*horus.Identity, error) {
+	res, err := client.Identity.Create().
+		SetOwnerID(uuid.UUID(init.OwnerId)).
+		SetKind(init.Kind).
+		SetID(init.Value).
+		SetName(init.Name).
+		SetVerifiedBy(init.VerifiedBy).
 		Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
@@ -60,6 +52,24 @@ func (s *identityStore) Create(ctx context.Context, input *horus.Identity) (*hor
 
 	log.FromCtx(ctx).Info("new identity")
 	return identity_(res), nil
+}
+
+func (s *identityStore) New(ctx context.Context, init *horus.IdentityInit) (*horus.Identity, error) {
+	if init.OwnerId != horus.UserId(uuid.Nil) {
+		return s.new(ctx, s.client, init)
+	}
+
+	return withTx(ctx, s.client, func(tx *ent.Tx) (*horus.Identity, error) {
+		client := tx.Client()
+
+		owner, err := s.users.new(ctx, client)
+		if err != nil {
+			return nil, fmt.Errorf("new user: %w", err)
+		}
+
+		init.OwnerId = owner.Id
+		return s.new(ctx, client, init)
+	})
 }
 
 func (s *identityStore) GetByValue(ctx context.Context, value string) (*horus.Identity, error) {
@@ -95,7 +105,7 @@ func (s *identityStore) Update(ctx context.Context, input *horus.Identity) (*hor
 	query := s.client.Identity.UpdateOneID(input.Value).
 		SetName(input.Name)
 	if input.VerifiedBy != "" {
-		query.SetVerifiedBy(string(input.VerifiedBy))
+		query.SetVerifiedBy(input.VerifiedBy)
 	}
 	res, err := query.Save(ctx)
 	if err != nil {

@@ -15,22 +15,21 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 	"khepri.dev/horus"
-	"khepri.dev/horus/horustest"
+	"khepri.dev/horus/cmd/horus/server"
 	"khepri.dev/horus/pb"
-	"khepri.dev/horus/server"
 )
 
 func WithHorusGrpc(conf *server.GrpcServerConfig, f func(require *require.Assertions, ctx context.Context, h horus.Horus, client pb.HorusClient)) func(t *testing.T) {
 	if conf == nil {
 		conf = &server.GrpcServerConfig{}
 	}
-	return horustest.WithHorus(conf.Config, func(require *require.Assertions, h horus.Horus) {
+	return WithHorus(conf.Config, func(require *require.Assertions, h horus.Horus) {
 		ctx := context.Background()
 
 		horus_server, err := server.NewGrpcServer(h, conf)
 		require.NoError(err)
 
-		user, err := h.Auth().SignUp(ctx, horus.IdentityInit{
+		identity, err := h.Identities().New(ctx, &horus.IdentityInit{
 			Kind:       horus.IdentityEmail,
 			Value:      "ra@khepri.dev",
 			VerifiedBy: "horus",
@@ -38,7 +37,7 @@ func WithHorusGrpc(conf *server.GrpcServerConfig, f func(require *require.Assert
 		require.NoError(err)
 
 		access_token, err := h.Tokens().Issue(ctx, horus.TokenInit{
-			OwnerId:  user.Id,
+			OwnerId:  identity.OwnerId,
 			Type:     horus.AccessToken,
 			Duration: time.Hour,
 		})

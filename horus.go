@@ -1,7 +1,6 @@
 package horus
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -38,11 +37,8 @@ func (c *Config) Normalize() error {
 
 type Horus interface {
 	Stores
-	Services
 
 	Verify(next http.HandlerFunc) http.HandlerFunc
-	// VerifyF(next http.HandlerFunc) http.Handler
-
 	Config() *Config
 }
 
@@ -55,12 +51,4 @@ type Stores interface {
 	Teams() TeamStore
 	Members() MemberStore
 	Memberships() MembershipStore
-}
-
-type Services interface {
-	Auth() AuthService
-}
-
-type AuthService interface {
-	SignUp(ctx context.Context, init IdentityInit) (*User, error)
 }

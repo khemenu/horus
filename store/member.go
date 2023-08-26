@@ -27,15 +27,7 @@ func member_(v *ent.Member) *horus.Member {
 }
 
 type memberStore struct {
-	client *ent.Client
-}
-
-func NewMemberStore(client *ent.Client) (horus.MemberStore, error) {
-	s := &memberStore{
-		client: client,
-	}
-
-	return s, nil
+	*stores
 }
 
 func newMember(ctx context.Context, client *ent.Client, init horus.MemberInit) (*horus.Member, error) {

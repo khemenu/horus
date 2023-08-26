@@ -16,10 +16,10 @@ const (
 	FieldID = "id"
 	// FieldOwnerID holds the string denoting the owner_id field in the database.
 	FieldOwnerID = "owner_id"
-	// FieldName holds the string denoting the name field in the database.
-	FieldName = "name"
 	// FieldKind holds the string denoting the kind field in the database.
 	FieldKind = "kind"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// FieldVerifiedBy holds the string denoting the verified_by field in the database.
 	FieldVerifiedBy = "verified_by"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -41,8 +41,8 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldOwnerID,
-	FieldName,
 	FieldKind,
+	FieldName,
 	FieldVerifiedBy,
 	FieldCreatedAt,
 }
@@ -69,10 +69,10 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// DefaultName holds the default value on creation for the "name" field.
-	DefaultName string
 	// KindValidator is a validator for the "kind" field. It is called by the builders before save.
 	KindValidator func(string) error
+	// DefaultName holds the default value on creation for the "name" field.
+	DefaultName string
 	// VerifiedByValidator is a validator for the "verified_by" field. It is called by the builders before save.
 	VerifiedByValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -94,14 +94,14 @@ func ByOwnerID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldOwnerID, opts...).ToFunc()
 }
 
-// ByName orders the results by the name field.
-func ByName(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldName, opts...).ToFunc()
-}
-
 // ByKind orders the results by the kind field.
 func ByKind(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldKind, opts...).ToFunc()
+}
+
+// ByName orders the results by the name field.
+func ByName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
 // ByVerifiedBy orders the results by the verified_by field.

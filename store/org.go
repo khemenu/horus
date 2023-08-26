@@ -21,15 +21,7 @@ func org_(v *ent.Org) *horus.Org {
 }
 
 type orgStore struct {
-	client *ent.Client
-}
-
-func NewOrgStore(client *ent.Client) (horus.OrgStore, error) {
-	s := &orgStore{
-		client: client,
-	}
-
-	return s, nil
+	*stores
 }
 
 func (s *orgStore) New(ctx context.Context, init horus.OrgInit) (*horus.Org, error) {

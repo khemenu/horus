@@ -11,7 +11,7 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"khepri.dev/horus"
-	"khepri.dev/horus/frame"
+	"khepri.dev/horus/cmd/horus/server/frame"
 	"khepri.dev/horus/log"
 	"khepri.dev/horus/pb"
 )

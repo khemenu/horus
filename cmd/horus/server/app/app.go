@@ -1,4 +1,4 @@
-package service
+package app
 
 import (
 	"errors"
@@ -6,12 +6,11 @@ import (
 	"net/http"
 
 	"khepri.dev/horus"
-	"khepri.dev/horus/frame"
+	"khepri.dev/horus/cmd/horus/server/frame"
 )
 
-type horus_ struct {
+type app struct {
 	horus.Stores
-	horus.Services
 
 	conf *horus.Config
 }
@@ -24,20 +23,17 @@ func NewHorus(stores horus.Stores, conf *horus.Config) (horus.Horus, error) {
 		return nil, fmt.Errorf("invalid config: %w", err)
 	}
 
-	return &horus_{
+	return &app{
 		Stores: stores,
-		Services: &services{
-			auth: &authService{stores: stores},
-		},
-		conf: conf,
+		conf:   conf,
 	}, nil
 }
 
-func (h *horus_) Config() *horus.Config {
+func (h *app) Config() *horus.Config {
 	return h.conf
 }
 
-func (h *horus_) Verify(next http.HandlerFunc) http.HandlerFunc {
+func (h *app) Verify(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if _, ok := frame.FromCtx(r.Context()); ok {
 			next.ServeHTTP(w, r)

@@ -26,15 +26,7 @@ func team_(v *ent.Team) *horus.Team {
 }
 
 type teamStore struct {
-	client *ent.Client
-}
-
-func NewTeamStore(client *ent.Client) (horus.TeamStore, error) {
-	s := &teamStore{
-		client: client,
-	}
-
-	return s, nil
+	*stores
 }
 
 func (s *teamStore) New(ctx context.Context, init horus.TeamInit) (*horus.Team, error) {
@@ -53,7 +45,7 @@ func (s *teamStore) New(ctx context.Context, init horus.TeamInit) (*horus.Team, 
 			return nil, fmt.Errorf("save: %w", err)
 		}
 
-		_, err = newMembership(ctx, tx.Client(), horus.MembershipInit{
+		_, err = s.memberships.new(ctx, tx.Client(), horus.MembershipInit{
 			TeamId:   horus.TeamId(team.ID),
 			MemberId: init.OwnerId,
 			Role:     horus.RoleTeamOwner,

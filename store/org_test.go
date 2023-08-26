@@ -6,43 +6,48 @@ import (
 
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"khepri.dev/horus"
-	"khepri.dev/horus/store/ent"
 )
 
 type OrgStoreTestSuite struct {
-	SuiteWithClient
-}
+	SuiteWithStores
 
-func (suite *OrgStoreTestSuite) RunWithStore(name string, sub func(require *require.Assertions, ctx context.Context, store horus.OrgStore)) {
-	suite.RunWithClient(name, func(require *require.Assertions, ctx context.Context, client *ent.Client) {
-		sub(require, ctx, suite.Orgs())
-	})
+	user *horus.User
 }
 
 func TestOrgStoreSqlite(t *testing.T) {
 	suite.Run(t, &OrgStoreTestSuite{
-		NewSuiteWithClientSqlite(),
+		SuiteWithStores: NewSuiteWithSqliteStores(),
 	})
 }
 
-func (suite *OrgStoreTestSuite) TestNew() {
-	suite.RunWithStore("with an owner that does not exist", func(require *require.Assertions, ctx context.Context, store horus.OrgStore) {
-		_, err := store.New(ctx, horus.OrgInit{
+func (s *OrgStoreTestSuite) RunWithStores(name string, sub func(ctx context.Context, stores horus.Stores), opts ...suiteOption) {
+	s.SuiteWithStores.RunWithStores(name, func(ctx context.Context, stores horus.Stores) {
+		user, err := stores.Users().New(ctx)
+		s.Require().NoError(err)
+
+		s.user = user
+		sub(ctx, stores)
+	})
+}
+
+func (s *OrgStoreTestSuite) TestNew() {
+	s.RunWithStores("with an owner that does not exist", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		_, err := stores.Orgs().New(ctx, horus.OrgInit{
 			OwnerId: horus.UserId(uuid.New()),
 			Name:    "khepri",
 		})
 		require.Error(err, horus.ErrNotExist)
 	})
 
-	suite.RunWithStore("with an owner that exists", func(require *require.Assertions, ctx context.Context, store horus.OrgStore) {
-		user, err := suite.Users().New(ctx)
-		require.NoError(err)
+	s.RunWithStores("with an owner that exists", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
 
-		org, err := store.New(ctx, horus.OrgInit{
-			OwnerId: user.Id,
+		org, err := stores.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: s.user.Id,
 			Name:    "Khepri",
 		})
 		require.NoError(err)
@@ -50,20 +55,21 @@ func (suite *OrgStoreTestSuite) TestNew() {
 	})
 }
 
-func (suite *OrgStoreTestSuite) TestGetById() {
-	suite.RunWithStore("not exist", func(require *require.Assertions, ctx context.Context, store horus.OrgStore) {
-		_, err := store.GetById(ctx, horus.OrgId(uuid.New()))
+func (s *OrgStoreTestSuite) TestGetById() {
+	s.RunWithStores("not exist", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		_, err := stores.Orgs().GetById(ctx, horus.OrgId(uuid.New()))
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 
-	suite.RunWithStore("exists", func(require *require.Assertions, ctx context.Context, store horus.OrgStore) {
-		user, err := suite.Users().New(ctx)
+	s.RunWithStores("exists", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		expected, err := stores.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
 		require.NoError(err)
 
-		expected, err := store.New(ctx, horus.OrgInit{OwnerId: user.Id})
-		require.NoError(err)
-
-		actual, err := store.GetById(ctx, expected.Id)
+		actual, err := stores.Orgs().GetById(ctx, expected.Id)
 		require.NoError(err)
 		require.Equal(expected, actual)
 	})

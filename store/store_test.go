@@ -3,6 +3,7 @@ package store_test
 import (
 	"context"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"khepri.dev/horus"
@@ -11,67 +12,88 @@ import (
 	"khepri.dev/horus/store/ent/enttest"
 )
 
-type storesWrapper struct {
-	horus.Stores
-
-	users      horus.UserStore
-	tokens     horus.TokenStore
-	identities horus.IdentityStore
-}
-
-func (s *storesWrapper) Users() horus.UserStore {
-	if s.users != nil {
-		return s.users
-	}
-
-	return s.Stores.Users()
-}
-
-func (s *storesWrapper) Tokens() horus.TokenStore {
-	if s.tokens != nil {
-		return s.tokens
-	}
-
-	return s.Stores.Tokens()
-}
-
-func (s *storesWrapper) Identities() horus.IdentityStore {
-	if s.identities != nil {
-		return s.identities
-	}
-
-	return s.Stores.Identities()
-}
-
-type SuiteWithClient struct {
-	suite.Suite
-	horus.Stores
-
-	driver_name string
-	source_name string
-}
-
-func NewSuiteWithClientSqlite() SuiteWithClient {
-	return SuiteWithClient{
+func NewSuiteWithSqliteStores() SuiteWithStores {
+	return SuiteWithStores{
 		driver_name: "sqlite3",
 		source_name: "file:ent?mode=memory&cache=shared&_fk=1",
 	}
 }
 
-func (s *SuiteWithClient) RunWithClient(name string, sub func(require *require.Assertions, ctx context.Context, client *ent.Client)) {
+type suiteConfig struct {
+	store_conf *store.Config
+}
+
+type suiteOption func(opts *suiteConfig)
+
+func withConfig(conf *store.Config) suiteOption {
+	return func(opts *suiteConfig) {
+		opts.store_conf = conf
+	}
+}
+
+type SuiteWithStores struct {
+	suite.Suite
+
+	driver_name string
+	source_name string
+}
+
+func (s *SuiteWithStores) RunWithStores(name string, sub func(ctx context.Context, stores horus.Stores), opts ...suiteOption) {
 	s.Run(name, func() {
-		var (
-			require = require.New(s.T())
-			ctx     = context.Background()
-		)
+		conf := suiteConfig{}
+		for _, opt := range opts {
+			opt(&conf)
+		}
 
 		client := enttest.Open(s.T(), s.driver_name, s.source_name, enttest.WithOptions(ent.Log(s.T().Log)))
 		defer client.Close()
 
-		stores, err := store.NewStores(client)
+		stores, err := store.NewStores(client, conf.store_conf)
+		require.NoError(s.T(), err)
+
+		sub(context.Background(), stores)
+	})
+}
+
+type SuiteWithStoresUser struct {
+	SuiteWithStores
+
+	user *horus.User
+}
+
+func (s *SuiteWithStoresUser) RunWithStores(name string, sub func(ctx context.Context, stores horus.Stores), opts ...suiteOption) {
+	s.SuiteWithStores.RunWithStores(name, func(ctx context.Context, stores horus.Stores) {
+		user, err := stores.Users().New(ctx)
+		s.Require().NoError(err)
+
+		s.user = user
+		sub(ctx, stores)
+	}, opts...)
+}
+
+type SuiteWithStoresOrg struct {
+	SuiteWithStores
+
+	user  *horus.User
+	org   *horus.Org
+	owner *horus.Member
+}
+
+func (s *SuiteWithStoresOrg) RunWithStores(name string, sub func(ctx context.Context, stores horus.Stores), opts ...suiteOption) {
+	s.SuiteWithStores.RunWithStores(name, func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		var err error
+
+		s.user, err = stores.Users().New(ctx)
 		require.NoError(err)
 
-		s.Stores = stores
-		sub(require, ctx, client)
-	})
+		s.org, err = stores.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		require.NoError(err)
+
+		s.owner, err = stores.Members().GetByUserIdFromOrg(ctx, s.org.Id, s.user.Id)
+		require.NoError(err)
+
+		sub(ctx, stores)
+	}, opts...)
 }

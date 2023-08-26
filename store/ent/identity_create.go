@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"khepri.dev/horus"
 	"khepri.dev/horus/store/ent/identity"
 	"khepri.dev/horus/store/ent/user"
 )
@@ -28,6 +29,12 @@ func (ic *IdentityCreate) SetOwnerID(u uuid.UUID) *IdentityCreate {
 	return ic
 }
 
+// SetKind sets the "kind" field.
+func (ic *IdentityCreate) SetKind(hk horus.IdentityKind) *IdentityCreate {
+	ic.mutation.SetKind(hk)
+	return ic
+}
+
 // SetName sets the "name" field.
 func (ic *IdentityCreate) SetName(s string) *IdentityCreate {
 	ic.mutation.SetName(s)
@@ -42,15 +49,9 @@ func (ic *IdentityCreate) SetNillableName(s *string) *IdentityCreate {
 	return ic
 }
 
-// SetKind sets the "kind" field.
-func (ic *IdentityCreate) SetKind(s string) *IdentityCreate {
-	ic.mutation.SetKind(s)
-	return ic
-}
-
 // SetVerifiedBy sets the "verified_by" field.
-func (ic *IdentityCreate) SetVerifiedBy(s string) *IdentityCreate {
-	ic.mutation.SetVerifiedBy(s)
+func (ic *IdentityCreate) SetVerifiedBy(h horus.Verifier) *IdentityCreate {
+	ic.mutation.SetVerifiedBy(h)
 	return ic
 }
 
@@ -129,22 +130,22 @@ func (ic *IdentityCreate) check() error {
 	if _, ok := ic.mutation.OwnerID(); !ok {
 		return &ValidationError{Name: "owner_id", err: errors.New(`ent: missing required field "Identity.owner_id"`)}
 	}
-	if _, ok := ic.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Identity.name"`)}
-	}
 	if _, ok := ic.mutation.Kind(); !ok {
 		return &ValidationError{Name: "kind", err: errors.New(`ent: missing required field "Identity.kind"`)}
 	}
 	if v, ok := ic.mutation.Kind(); ok {
-		if err := identity.KindValidator(v); err != nil {
+		if err := identity.KindValidator(string(v)); err != nil {
 			return &ValidationError{Name: "kind", err: fmt.Errorf(`ent: validator failed for field "Identity.kind": %w`, err)}
 		}
+	}
+	if _, ok := ic.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Identity.name"`)}
 	}
 	if _, ok := ic.mutation.VerifiedBy(); !ok {
 		return &ValidationError{Name: "verified_by", err: errors.New(`ent: missing required field "Identity.verified_by"`)}
 	}
 	if v, ok := ic.mutation.VerifiedBy(); ok {
-		if err := identity.VerifiedByValidator(v); err != nil {
+		if err := identity.VerifiedByValidator(string(v)); err != nil {
 			return &ValidationError{Name: "verified_by", err: fmt.Errorf(`ent: validator failed for field "Identity.verified_by": %w`, err)}
 		}
 	}
@@ -194,13 +195,13 @@ func (ic *IdentityCreate) createSpec() (*Identity, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = id
 	}
-	if value, ok := ic.mutation.Name(); ok {
-		_spec.SetField(identity.FieldName, field.TypeString, value)
-		_node.Name = value
-	}
 	if value, ok := ic.mutation.Kind(); ok {
 		_spec.SetField(identity.FieldKind, field.TypeString, value)
 		_node.Kind = value
+	}
+	if value, ok := ic.mutation.Name(); ok {
+		_spec.SetField(identity.FieldName, field.TypeString, value)
+		_node.Name = value
 	}
 	if value, ok := ic.mutation.VerifiedBy(); ok {
 		_spec.SetField(identity.FieldVerifiedBy, field.TypeString, value)

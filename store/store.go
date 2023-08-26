@@ -14,15 +14,23 @@ func NewSqliteMemClient() (*ent.Client, error) {
 	return ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 }
 
-type stores struct {
-	users      horus.UserStore
-	tokens     horus.TokenStore
-	identities horus.IdentityStore
+type Config struct {
+	UserAliasGenerator horus.Generator
+	TokenGenerator     horus.Generator
+}
 
-	orgs        horus.OrgStore
-	teams       horus.TeamStore
-	members     horus.MemberStore
-	memberships horus.MembershipStore
+type stores struct {
+	conf   Config
+	client *ent.Client
+
+	users      *userStore
+	tokens     *tokenStore
+	identities *identityStore
+
+	orgs        *orgStore
+	teams       *teamStore
+	members     *memberStore
+	memberships *membershipStore
 }
 
 func (s *stores) Users() horus.UserStore {
@@ -53,21 +61,22 @@ func (s *stores) Memberships() horus.MembershipStore {
 	return s.memberships
 }
 
-func NewStores(client *ent.Client) (horus.Stores, error) {
-	errs := []error{}
+func NewStores(client *ent.Client, conf *Config) (horus.Stores, error) {
 	rst := &stores{
-		users:       fx.CollectErr(NewUserStore(client)).To(&errs),
-		tokens:      fx.CollectErr(NewTokenStore(client)).To(&errs),
-		identities:  fx.CollectErr(NewIdentityStore(client)).To(&errs),
-		orgs:        fx.CollectErr(NewOrgStore(client)).To(&errs),
-		teams:       fx.CollectErr(NewTeamStore(client)).To(&errs),
-		members:     fx.CollectErr(NewMemberStore(client)).To(&errs),
-		memberships: fx.CollectErr(NewMembershipStore(client)).To(&errs),
+		conf:   *fx.Fallback(conf, &Config{}),
+		client: client,
 	}
 
-	if len(errs) > 0 {
-		return nil, errors.Join(errs...)
-	}
+	fx.Default(&rst.conf.UserAliasGenerator, horus.DefaultUserAliasGenerator)
+	fx.Default(&rst.conf.TokenGenerator, horus.DefaultOpaqueTokenGenerator)
+
+	rst.users = &userStore{rst}
+	rst.tokens = &tokenStore{rst}
+	rst.identities = &identityStore{rst}
+	rst.orgs = &orgStore{rst}
+	rst.teams = &teamStore{rst}
+	rst.members = &memberStore{rst}
+	rst.memberships = &membershipStore{rst}
 
 	return rst, nil
 }

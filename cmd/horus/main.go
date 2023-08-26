@@ -8,7 +8,7 @@ import (
 	"os/signal"
 
 	_ "github.com/mattn/go-sqlite3"
-	"khepri.dev/horus/service"
+	"khepri.dev/horus/cmd/horus/server/app"
 	"khepri.dev/horus/store"
 	"khepri.dev/horus/store/ent"
 )
@@ -45,12 +45,12 @@ func run(conf *Config) error {
 		return fmt.Errorf("create schema: %w", err)
 	}
 
-	stores, err := store.NewStores(client)
+	stores, err := store.NewStores(client, nil)
 	if err != nil {
 		return fmt.Errorf("create stores: %w", err)
 	}
 
-	horus, err := service.NewHorus(stores, conf.toHorusConf())
+	horus, err := app.NewHorus(stores, conf.toHorusConf())
 	if err != nil {
 		return fmt.Errorf("create horus: %w", err)
 	}

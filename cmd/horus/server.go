@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"khepri.dev/horus"
-	"khepri.dev/horus/server"
+	"khepri.dev/horus/cmd/horus/server"
 )
 
 type Server struct {

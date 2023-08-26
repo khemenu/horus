@@ -29,7 +29,6 @@ func (Membership) Edges() []ent.Edge {
 	}
 }
 
-// Annotations of the User.
 func (Membership) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		field.ID("team_id", "member_id"),

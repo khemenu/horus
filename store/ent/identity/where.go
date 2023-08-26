@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
+	"khepri.dev/horus"
 	"khepri.dev/horus/store/ent/predicate"
 )
 
@@ -71,19 +72,21 @@ func OwnerID(v uuid.UUID) predicate.Identity {
 	return predicate.Identity(sql.FieldEQ(FieldOwnerID, v))
 }
 
+// Kind applies equality check predicate on the "kind" field. It's identical to KindEQ.
+func Kind(v horus.IdentityKind) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldEQ(FieldKind, vc))
+}
+
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.Identity {
 	return predicate.Identity(sql.FieldEQ(FieldName, v))
 }
 
-// Kind applies equality check predicate on the "kind" field. It's identical to KindEQ.
-func Kind(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldEQ(FieldKind, v))
-}
-
 // VerifiedBy applies equality check predicate on the "verified_by" field. It's identical to VerifiedByEQ.
-func VerifiedBy(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldEQ(FieldVerifiedBy, v))
+func VerifiedBy(v horus.Verifier) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldEQ(FieldVerifiedBy, vc))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -109,6 +112,90 @@ func OwnerIDIn(vs ...uuid.UUID) predicate.Identity {
 // OwnerIDNotIn applies the NotIn predicate on the "owner_id" field.
 func OwnerIDNotIn(vs ...uuid.UUID) predicate.Identity {
 	return predicate.Identity(sql.FieldNotIn(FieldOwnerID, vs...))
+}
+
+// KindEQ applies the EQ predicate on the "kind" field.
+func KindEQ(v horus.IdentityKind) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldEQ(FieldKind, vc))
+}
+
+// KindNEQ applies the NEQ predicate on the "kind" field.
+func KindNEQ(v horus.IdentityKind) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldNEQ(FieldKind, vc))
+}
+
+// KindIn applies the In predicate on the "kind" field.
+func KindIn(vs ...horus.IdentityKind) predicate.Identity {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Identity(sql.FieldIn(FieldKind, v...))
+}
+
+// KindNotIn applies the NotIn predicate on the "kind" field.
+func KindNotIn(vs ...horus.IdentityKind) predicate.Identity {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Identity(sql.FieldNotIn(FieldKind, v...))
+}
+
+// KindGT applies the GT predicate on the "kind" field.
+func KindGT(v horus.IdentityKind) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldGT(FieldKind, vc))
+}
+
+// KindGTE applies the GTE predicate on the "kind" field.
+func KindGTE(v horus.IdentityKind) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldGTE(FieldKind, vc))
+}
+
+// KindLT applies the LT predicate on the "kind" field.
+func KindLT(v horus.IdentityKind) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldLT(FieldKind, vc))
+}
+
+// KindLTE applies the LTE predicate on the "kind" field.
+func KindLTE(v horus.IdentityKind) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldLTE(FieldKind, vc))
+}
+
+// KindContains applies the Contains predicate on the "kind" field.
+func KindContains(v horus.IdentityKind) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldContains(FieldKind, vc))
+}
+
+// KindHasPrefix applies the HasPrefix predicate on the "kind" field.
+func KindHasPrefix(v horus.IdentityKind) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldHasPrefix(FieldKind, vc))
+}
+
+// KindHasSuffix applies the HasSuffix predicate on the "kind" field.
+func KindHasSuffix(v horus.IdentityKind) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldHasSuffix(FieldKind, vc))
+}
+
+// KindEqualFold applies the EqualFold predicate on the "kind" field.
+func KindEqualFold(v horus.IdentityKind) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldEqualFold(FieldKind, vc))
+}
+
+// KindContainsFold applies the ContainsFold predicate on the "kind" field.
+func KindContainsFold(v horus.IdentityKind) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldContainsFold(FieldKind, vc))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -176,134 +263,88 @@ func NameContainsFold(v string) predicate.Identity {
 	return predicate.Identity(sql.FieldContainsFold(FieldName, v))
 }
 
-// KindEQ applies the EQ predicate on the "kind" field.
-func KindEQ(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldEQ(FieldKind, v))
-}
-
-// KindNEQ applies the NEQ predicate on the "kind" field.
-func KindNEQ(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldNEQ(FieldKind, v))
-}
-
-// KindIn applies the In predicate on the "kind" field.
-func KindIn(vs ...string) predicate.Identity {
-	return predicate.Identity(sql.FieldIn(FieldKind, vs...))
-}
-
-// KindNotIn applies the NotIn predicate on the "kind" field.
-func KindNotIn(vs ...string) predicate.Identity {
-	return predicate.Identity(sql.FieldNotIn(FieldKind, vs...))
-}
-
-// KindGT applies the GT predicate on the "kind" field.
-func KindGT(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldGT(FieldKind, v))
-}
-
-// KindGTE applies the GTE predicate on the "kind" field.
-func KindGTE(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldGTE(FieldKind, v))
-}
-
-// KindLT applies the LT predicate on the "kind" field.
-func KindLT(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldLT(FieldKind, v))
-}
-
-// KindLTE applies the LTE predicate on the "kind" field.
-func KindLTE(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldLTE(FieldKind, v))
-}
-
-// KindContains applies the Contains predicate on the "kind" field.
-func KindContains(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldContains(FieldKind, v))
-}
-
-// KindHasPrefix applies the HasPrefix predicate on the "kind" field.
-func KindHasPrefix(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldHasPrefix(FieldKind, v))
-}
-
-// KindHasSuffix applies the HasSuffix predicate on the "kind" field.
-func KindHasSuffix(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldHasSuffix(FieldKind, v))
-}
-
-// KindEqualFold applies the EqualFold predicate on the "kind" field.
-func KindEqualFold(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldEqualFold(FieldKind, v))
-}
-
-// KindContainsFold applies the ContainsFold predicate on the "kind" field.
-func KindContainsFold(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldContainsFold(FieldKind, v))
-}
-
 // VerifiedByEQ applies the EQ predicate on the "verified_by" field.
-func VerifiedByEQ(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldEQ(FieldVerifiedBy, v))
+func VerifiedByEQ(v horus.Verifier) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldEQ(FieldVerifiedBy, vc))
 }
 
 // VerifiedByNEQ applies the NEQ predicate on the "verified_by" field.
-func VerifiedByNEQ(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldNEQ(FieldVerifiedBy, v))
+func VerifiedByNEQ(v horus.Verifier) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldNEQ(FieldVerifiedBy, vc))
 }
 
 // VerifiedByIn applies the In predicate on the "verified_by" field.
-func VerifiedByIn(vs ...string) predicate.Identity {
-	return predicate.Identity(sql.FieldIn(FieldVerifiedBy, vs...))
+func VerifiedByIn(vs ...horus.Verifier) predicate.Identity {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Identity(sql.FieldIn(FieldVerifiedBy, v...))
 }
 
 // VerifiedByNotIn applies the NotIn predicate on the "verified_by" field.
-func VerifiedByNotIn(vs ...string) predicate.Identity {
-	return predicate.Identity(sql.FieldNotIn(FieldVerifiedBy, vs...))
+func VerifiedByNotIn(vs ...horus.Verifier) predicate.Identity {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Identity(sql.FieldNotIn(FieldVerifiedBy, v...))
 }
 
 // VerifiedByGT applies the GT predicate on the "verified_by" field.
-func VerifiedByGT(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldGT(FieldVerifiedBy, v))
+func VerifiedByGT(v horus.Verifier) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldGT(FieldVerifiedBy, vc))
 }
 
 // VerifiedByGTE applies the GTE predicate on the "verified_by" field.
-func VerifiedByGTE(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldGTE(FieldVerifiedBy, v))
+func VerifiedByGTE(v horus.Verifier) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldGTE(FieldVerifiedBy, vc))
 }
 
 // VerifiedByLT applies the LT predicate on the "verified_by" field.
-func VerifiedByLT(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldLT(FieldVerifiedBy, v))
+func VerifiedByLT(v horus.Verifier) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldLT(FieldVerifiedBy, vc))
 }
 
 // VerifiedByLTE applies the LTE predicate on the "verified_by" field.
-func VerifiedByLTE(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldLTE(FieldVerifiedBy, v))
+func VerifiedByLTE(v horus.Verifier) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldLTE(FieldVerifiedBy, vc))
 }
 
 // VerifiedByContains applies the Contains predicate on the "verified_by" field.
-func VerifiedByContains(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldContains(FieldVerifiedBy, v))
+func VerifiedByContains(v horus.Verifier) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldContains(FieldVerifiedBy, vc))
 }
 
 // VerifiedByHasPrefix applies the HasPrefix predicate on the "verified_by" field.
-func VerifiedByHasPrefix(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldHasPrefix(FieldVerifiedBy, v))
+func VerifiedByHasPrefix(v horus.Verifier) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldHasPrefix(FieldVerifiedBy, vc))
 }
 
 // VerifiedByHasSuffix applies the HasSuffix predicate on the "verified_by" field.
-func VerifiedByHasSuffix(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldHasSuffix(FieldVerifiedBy, v))
+func VerifiedByHasSuffix(v horus.Verifier) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldHasSuffix(FieldVerifiedBy, vc))
 }
 
 // VerifiedByEqualFold applies the EqualFold predicate on the "verified_by" field.
-func VerifiedByEqualFold(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldEqualFold(FieldVerifiedBy, v))
+func VerifiedByEqualFold(v horus.Verifier) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldEqualFold(FieldVerifiedBy, vc))
 }
 
 // VerifiedByContainsFold applies the ContainsFold predicate on the "verified_by" field.
-func VerifiedByContainsFold(v string) predicate.Identity {
-	return predicate.Identity(sql.FieldContainsFold(FieldVerifiedBy, v))
+func VerifiedByContainsFold(v horus.Verifier) predicate.Identity {
+	vc := string(v)
+	return predicate.Identity(sql.FieldContainsFold(FieldVerifiedBy, vc))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

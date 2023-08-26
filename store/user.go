@@ -20,34 +20,10 @@ func user_(v *ent.User) *horus.User {
 }
 
 type userStore struct {
-	client    *ent.Client
-	alias_gen horus.Generator
+	*stores
 }
 
-type UserStoreOption func(s *userStore) error
-
-func WithCustomUserAlias(generator horus.Generator) UserStoreOption {
-	return func(s *userStore) error {
-		s.alias_gen = generator
-		return nil
-	}
-}
-
-func NewUserStore(client *ent.Client, opts ...UserStoreOption) (horus.UserStore, error) {
-	s := &userStore{
-		client:    client,
-		alias_gen: horus.DefaultUserAliasGenerator,
-	}
-	for _, opt := range opts {
-		if err := opt(s); err != nil {
-			return nil, err
-		}
-	}
-
-	return s, nil
-}
-
-func (s *userStore) New(ctx context.Context) (*horus.User, error) {
+func (s *userStore) new(ctx context.Context, client *ent.Client) (*horus.User, error) {
 	const MaxRetry = 3
 
 	var (
@@ -56,12 +32,12 @@ func (s *userStore) New(ctx context.Context) (*horus.User, error) {
 	)
 	for i := 0; i < MaxRetry; i++ {
 		var alias string
-		alias, err = s.alias_gen.New()
+		alias, err = s.conf.UserAliasGenerator.New()
 		if err != nil {
 			return nil, fmt.Errorf("generate alias: %w", err)
 		}
 
-		res, err = s.client.User.Create().
+		res, err = client.User.Create().
 			SetAlias(alias).
 			Save(ctx)
 
@@ -75,6 +51,10 @@ func (s *userStore) New(ctx context.Context) (*horus.User, error) {
 
 	log.FromCtx(ctx).Info("new user", "id", res.ID)
 	return user_(res), nil
+}
+
+func (s *userStore) New(ctx context.Context) (*horus.User, error) {
+	return s.users.new(ctx, s.client)
 }
 
 func (s *userStore) GetById(ctx context.Context, id horus.UserId) (*horus.User, error) {

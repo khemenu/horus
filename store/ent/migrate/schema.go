@@ -37,8 +37,8 @@ var (
 	// IdentitiesColumns holds the columns for the "identities" table.
 	IdentitiesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
-		{Name: "name", Type: field.TypeString, Default: ""},
 		{Name: "kind", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString, Default: ""},
 		{Name: "verified_by", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "member_contacts", Type: field.TypeUUID, Nullable: true},

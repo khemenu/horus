@@ -5,169 +5,157 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"khepri.dev/horus"
-	"khepri.dev/horus/store"
-	"khepri.dev/horus/store/ent"
 )
 
 type TokenStoreTestSuite struct {
-	SuiteWithClient
-}
-
-func (suite *TokenStoreTestSuite) RunWithStore(name string, sub func(require *require.Assertions, ctx context.Context, store horus.TokenStore), opts ...store.TokenStoreOption) {
-	suite.RunWithClient(name, func(require *require.Assertions, ctx context.Context, client *ent.Client) {
-		if len(opts) > 0 {
-			store, err := store.NewTokenStore(client, opts...)
-			suite.Stores = &storesWrapper{tokens: store}
-			require.NoError(err)
-		}
-
-		sub(require, ctx, suite.Tokens())
-	})
+	SuiteWithStoresUser
 }
 
 func TestTokenStoreSqlite(t *testing.T) {
 	suite.Run(t, &TokenStoreTestSuite{
-		SuiteWithClient: NewSuiteWithClientSqlite(),
+		SuiteWithStoresUser{
+			SuiteWithStores: NewSuiteWithSqliteStores(),
+		},
 	})
 }
 
-func (suite *TokenStoreTestSuite) TestGetByValue() {
-	suite.RunWithStore("exists if the token is not expired", func(require *require.Assertions, ctx context.Context, store horus.TokenStore) {
-		user, err := suite.Users().New(ctx)
-		require.NoError(err)
+func (s *TokenStoreTestSuite) TestGetByValue() {
+	s.RunWithStores("exists if the token is not expired", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
 
-		expected, err := store.Issue(ctx, horus.TokenInit{
-			OwnerId:  user.Id,
+		expected, err := stores.Tokens().Issue(ctx, horus.TokenInit{
+			OwnerId:  s.user.Id,
 			Type:     horus.AccessToken,
 			Duration: time.Hour,
 		})
 		require.NoError(err)
 		require.Equal(time.Hour, expected.Duration())
 
-		actual, err := store.GetByValue(ctx, expected.Value, horus.AccessToken)
+		actual, err := stores.Tokens().GetByValue(ctx, expected.Value, horus.AccessToken)
 		require.NoError(err)
 		require.Equal(expected, actual)
 	})
 
-	suite.RunWithStore("not exist", func(require *require.Assertions, ctx context.Context, store horus.TokenStore) {
-		_, err := store.GetByValue(ctx, "not exist", horus.AccessToken)
+	s.RunWithStores("not exist", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		_, err := stores.Tokens().GetByValue(ctx, "not exist", horus.AccessToken)
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 
-	suite.RunWithStore("not exist if the token is invalid", func(require *require.Assertions, ctx context.Context, store horus.TokenStore) {
-		_, err := store.GetByValue(ctx, "", horus.AccessToken)
+	s.RunWithStores("not exist if the token is invalid", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		_, err := stores.Tokens().GetByValue(ctx, "", horus.AccessToken)
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 
-	suite.RunWithStore("not exist if the token type is not matched", func(require *require.Assertions, ctx context.Context, store horus.TokenStore) {
-		user, err := suite.Users().New(ctx)
-		require.NoError(err)
+	s.RunWithStores("not exist if the token type is not matched", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
 
-		token, err := store.Issue(ctx, horus.TokenInit{
-			OwnerId:  user.Id,
+		token, err := stores.Tokens().Issue(ctx, horus.TokenInit{
+			OwnerId:  s.user.Id,
 			Type:     horus.AccessToken,
 			Duration: time.Hour,
 		})
 		require.NoError(err)
 
-		_, err = store.GetByValue(ctx, token.Value, horus.RefreshToken)
+		_, err = stores.Tokens().GetByValue(ctx, token.Value, horus.RefreshToken)
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 
-	suite.RunWithStore("not exist if the token is expired", func(require *require.Assertions, ctx context.Context, store horus.TokenStore) {
-		user, err := suite.Users().New(ctx)
-		require.NoError(err)
+	s.RunWithStores("not exist if the token is expired", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
 
-		token, err := store.Issue(ctx, horus.TokenInit{
-			OwnerId:  user.Id,
+		token, err := stores.Tokens().Issue(ctx, horus.TokenInit{
+			OwnerId:  s.user.Id,
 			Type:     horus.AccessToken,
 			Duration: -time.Hour,
 		})
 		require.NoError(err)
 
-		_, err = store.GetByValue(ctx, token.Value, horus.AccessToken)
+		_, err = stores.Tokens().GetByValue(ctx, token.Value, horus.AccessToken)
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 }
 
-func (suite *TokenStoreTestSuite) TestRevoke() {
-	suite.RunWithStore("revoked token cannot be get", func(require *require.Assertions, ctx context.Context, store horus.TokenStore) {
-		user, err := suite.Users().New(ctx)
-		require.NoError(err)
+func (s *TokenStoreTestSuite) TestRevoke() {
+	s.RunWithStores("revoked token cannot be get", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
 
-		token, err := store.Issue(ctx, horus.TokenInit{
-			OwnerId:  user.Id,
+		token, err := stores.Tokens().Issue(ctx, horus.TokenInit{
+			OwnerId:  s.user.Id,
 			Type:     horus.AccessToken,
 			Duration: time.Hour,
 		})
 		require.NoError(err)
 
-		err = store.Revoke(ctx, token.Value)
+		err = stores.Tokens().Revoke(ctx, token.Value)
 		require.NoError(err)
 
-		_, err = store.GetByValue(ctx, token.Value, horus.AccessToken)
+		_, err = stores.Tokens().GetByValue(ctx, token.Value, horus.AccessToken)
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 
-	suite.RunWithStore("not exist not an error", func(require *require.Assertions, ctx context.Context, store horus.TokenStore) {
-		err := store.Revoke(ctx, "not exist")
+	s.RunWithStores("not exist not an error", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		err := stores.Tokens().Revoke(ctx, "not exist")
 		require.NoError(err)
 	})
 
-	suite.RunWithStore("invalid value is not an error", func(require *require.Assertions, ctx context.Context, store horus.TokenStore) {
-		err := store.Revoke(ctx, "")
+	s.RunWithStores("invalid value is not an error", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
+
+		err := stores.Tokens().Revoke(ctx, "")
 		require.NoError(err)
 	})
 }
 
-func (suite *TokenStoreTestSuite) TestRevokeAll() {
-	suite.RunWithStore("not exist not an error", func(require *require.Assertions, ctx context.Context, store horus.TokenStore) {
-		user, err := suite.Users().New(ctx)
-		require.NoError(err)
+func (s *TokenStoreTestSuite) TestRevokeAll() {
+	s.RunWithStores("not exist not an error", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
 
-		err = store.RevokeAll(ctx, uuid.UUID(user.Id))
+		err := stores.Tokens().RevokeAll(ctx, s.user.Id)
 		require.NoError(err)
 	})
 
-	suite.RunWithStore("all tokens are revoked", func(require *require.Assertions, ctx context.Context, store horus.TokenStore) {
-		user, err := suite.Users().New(ctx)
-		require.NoError(err)
+	s.RunWithStores("all tokens are revoked", func(ctx context.Context, stores horus.Stores) {
+		require := s.Require()
 
 		init := horus.TokenInit{
-			OwnerId:  user.Id,
+			OwnerId:  s.user.Id,
 			Type:     horus.RefreshToken,
 			Duration: time.Hour,
 		}
-		foo, err := suite.Tokens().Issue(ctx, init)
+		foo, err := stores.Tokens().Issue(ctx, init)
 		require.NoError(err)
 
-		bar, err := suite.Tokens().Issue(ctx, init)
+		bar, err := stores.Tokens().Issue(ctx, init)
 		require.NoError(err)
 
 		init.Type = horus.AccessToken
-		baz, err := suite.Tokens().Issue(ctx, init)
+		baz, err := stores.Tokens().Issue(ctx, init)
 		require.NoError(err)
 
-		qux, err := suite.Tokens().Issue(ctx, init)
+		qux, err := stores.Tokens().Issue(ctx, init)
 		require.NoError(err)
 
-		err = store.RevokeAll(ctx, uuid.UUID(user.Id))
+		err = stores.Tokens().RevokeAll(ctx, s.user.Id)
 		require.NoError(err)
 
-		_, err = store.GetByValue(ctx, foo.Value, horus.RefreshToken)
+		_, err = stores.Tokens().GetByValue(ctx, foo.Value, horus.RefreshToken)
 		require.ErrorIs(err, horus.ErrNotExist)
 
-		_, err = store.GetByValue(ctx, bar.Value, horus.RefreshToken)
+		_, err = stores.Tokens().GetByValue(ctx, bar.Value, horus.RefreshToken)
 		require.ErrorIs(err, horus.ErrNotExist)
 
-		_, err = store.GetByValue(ctx, baz.Value, horus.AccessToken)
+		_, err = stores.Tokens().GetByValue(ctx, baz.Value, horus.AccessToken)
 		require.ErrorIs(err, horus.ErrNotExist)
 
-		_, err = store.GetByValue(ctx, qux.Value, horus.AccessToken)
+		_, err = stores.Tokens().GetByValue(ctx, qux.Value, horus.AccessToken)
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 }

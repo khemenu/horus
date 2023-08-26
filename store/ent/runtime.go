@@ -29,14 +29,14 @@ func init() {
 	authorizer.PrimaryIDValidator = authorizerDescPrimaryID.Validators[0].(func(string) error)
 	identityFields := schema.Identity{}.Fields()
 	_ = identityFields
-	// identityDescName is the schema descriptor for name field.
-	identityDescName := identityFields[2].Descriptor()
-	// identity.DefaultName holds the default value on creation for the name field.
-	identity.DefaultName = identityDescName.Default.(string)
 	// identityDescKind is the schema descriptor for kind field.
-	identityDescKind := identityFields[3].Descriptor()
+	identityDescKind := identityFields[2].Descriptor()
 	// identity.KindValidator is a validator for the "kind" field. It is called by the builders before save.
 	identity.KindValidator = identityDescKind.Validators[0].(func(string) error)
+	// identityDescName is the schema descriptor for name field.
+	identityDescName := identityFields[3].Descriptor()
+	// identity.DefaultName holds the default value on creation for the name field.
+	identity.DefaultName = identityDescName.Default.(string)
 	// identityDescVerifiedBy is the schema descriptor for verified_by field.
 	identityDescVerifiedBy := identityFields[4].Descriptor()
 	// identity.VerifiedByValidator is a validator for the "verified_by" field. It is called by the builders before save.

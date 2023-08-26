@@ -10,8 +10,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 	"khepri.dev/horus"
+	"khepri.dev/horus/cmd/horus/server"
 	"khepri.dev/horus/provider"
-	"khepri.dev/horus/server"
 )
 
 func defaultV[T comparable](target *T, v T) {

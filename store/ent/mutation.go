@@ -527,9 +527,9 @@ type IdentityMutation struct {
 	op            Op
 	typ           string
 	id            *string
+	kind          *horus.IdentityKind
 	name          *string
-	kind          *string
-	verified_by   *string
+	verified_by   *horus.Verifier
 	created_at    *time.Time
 	clearedFields map[string]struct{}
 	owner         *uuid.UUID
@@ -679,6 +679,42 @@ func (m *IdentityMutation) ResetOwnerID() {
 	m.owner = nil
 }
 
+// SetKind sets the "kind" field.
+func (m *IdentityMutation) SetKind(hk horus.IdentityKind) {
+	m.kind = &hk
+}
+
+// Kind returns the value of the "kind" field in the mutation.
+func (m *IdentityMutation) Kind() (r horus.IdentityKind, exists bool) {
+	v := m.kind
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKind returns the old "kind" field's value of the Identity entity.
+// If the Identity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IdentityMutation) OldKind(ctx context.Context) (v horus.IdentityKind, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKind is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKind requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKind: %w", err)
+	}
+	return oldValue.Kind, nil
+}
+
+// ResetKind resets all changes to the "kind" field.
+func (m *IdentityMutation) ResetKind() {
+	m.kind = nil
+}
+
 // SetName sets the "name" field.
 func (m *IdentityMutation) SetName(s string) {
 	m.name = &s
@@ -715,49 +751,13 @@ func (m *IdentityMutation) ResetName() {
 	m.name = nil
 }
 
-// SetKind sets the "kind" field.
-func (m *IdentityMutation) SetKind(s string) {
-	m.kind = &s
-}
-
-// Kind returns the value of the "kind" field in the mutation.
-func (m *IdentityMutation) Kind() (r string, exists bool) {
-	v := m.kind
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldKind returns the old "kind" field's value of the Identity entity.
-// If the Identity object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *IdentityMutation) OldKind(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldKind is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldKind requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldKind: %w", err)
-	}
-	return oldValue.Kind, nil
-}
-
-// ResetKind resets all changes to the "kind" field.
-func (m *IdentityMutation) ResetKind() {
-	m.kind = nil
-}
-
 // SetVerifiedBy sets the "verified_by" field.
-func (m *IdentityMutation) SetVerifiedBy(s string) {
-	m.verified_by = &s
+func (m *IdentityMutation) SetVerifiedBy(h horus.Verifier) {
+	m.verified_by = &h
 }
 
 // VerifiedBy returns the value of the "verified_by" field in the mutation.
-func (m *IdentityMutation) VerifiedBy() (r string, exists bool) {
+func (m *IdentityMutation) VerifiedBy() (r horus.Verifier, exists bool) {
 	v := m.verified_by
 	if v == nil {
 		return
@@ -768,7 +768,7 @@ func (m *IdentityMutation) VerifiedBy() (r string, exists bool) {
 // OldVerifiedBy returns the old "verified_by" field's value of the Identity entity.
 // If the Identity object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *IdentityMutation) OldVerifiedBy(ctx context.Context) (v string, err error) {
+func (m *IdentityMutation) OldVerifiedBy(ctx context.Context) (v horus.Verifier, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldVerifiedBy is only allowed on UpdateOne operations")
 	}
@@ -887,11 +887,11 @@ func (m *IdentityMutation) Fields() []string {
 	if m.owner != nil {
 		fields = append(fields, identity.FieldOwnerID)
 	}
-	if m.name != nil {
-		fields = append(fields, identity.FieldName)
-	}
 	if m.kind != nil {
 		fields = append(fields, identity.FieldKind)
+	}
+	if m.name != nil {
+		fields = append(fields, identity.FieldName)
 	}
 	if m.verified_by != nil {
 		fields = append(fields, identity.FieldVerifiedBy)
@@ -909,10 +909,10 @@ func (m *IdentityMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case identity.FieldOwnerID:
 		return m.OwnerID()
-	case identity.FieldName:
-		return m.Name()
 	case identity.FieldKind:
 		return m.Kind()
+	case identity.FieldName:
+		return m.Name()
 	case identity.FieldVerifiedBy:
 		return m.VerifiedBy()
 	case identity.FieldCreatedAt:
@@ -928,10 +928,10 @@ func (m *IdentityMutation) OldField(ctx context.Context, name string) (ent.Value
 	switch name {
 	case identity.FieldOwnerID:
 		return m.OldOwnerID(ctx)
-	case identity.FieldName:
-		return m.OldName(ctx)
 	case identity.FieldKind:
 		return m.OldKind(ctx)
+	case identity.FieldName:
+		return m.OldName(ctx)
 	case identity.FieldVerifiedBy:
 		return m.OldVerifiedBy(ctx)
 	case identity.FieldCreatedAt:
@@ -952,6 +952,13 @@ func (m *IdentityMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetOwnerID(v)
 		return nil
+	case identity.FieldKind:
+		v, ok := value.(horus.IdentityKind)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKind(v)
+		return nil
 	case identity.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -959,15 +966,8 @@ func (m *IdentityMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
-	case identity.FieldKind:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetKind(v)
-		return nil
 	case identity.FieldVerifiedBy:
-		v, ok := value.(string)
+		v, ok := value.(horus.Verifier)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -1032,11 +1032,11 @@ func (m *IdentityMutation) ResetField(name string) error {
 	case identity.FieldOwnerID:
 		m.ResetOwnerID()
 		return nil
-	case identity.FieldName:
-		m.ResetName()
-		return nil
 	case identity.FieldKind:
 		m.ResetKind()
+		return nil
+	case identity.FieldName:
+		m.ResetName()
 		return nil
 	case identity.FieldVerifiedBy:
 		m.ResetVerifiedBy()
