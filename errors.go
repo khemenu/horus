@@ -5,6 +5,7 @@ import (
 )
 
 var (
-	ErrExist    = errors.New("already exist")
-	ErrNotExist = errors.New("not exist")
+	ErrExist              = errors.New("already exist")
+	ErrNotExist           = errors.New("not exist")
+	ErrFailedPrecondition = errors.New("failed precondition")
 )

@@ -15,7 +15,7 @@ import (
 	"khepri.dev/horus/store/ent/team"
 )
 
-func team_(v *ent.Team) *horus.Team {
+func fromEntTeam(v *ent.Team) *horus.Team {
 	return &horus.Team{
 		Id:    horus.TeamId(v.ID),
 		OrgId: horus.OrgId(v.OrgID),
@@ -55,7 +55,7 @@ func (s *teamStore) New(ctx context.Context, init horus.TeamInit) (*horus.Team, 
 		}
 
 		log.FromCtx(ctx).Info("new team", "id", org.ID)
-		return team_(team), nil
+		return fromEntTeam(team), nil
 	})
 }
 
@@ -71,7 +71,7 @@ func (s *teamStore) GetById(ctx context.Context, team_id horus.TeamId) (*horus.T
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return team_(res), nil
+	return fromEntTeam(res), nil
 }
 
 func (s *teamStore) GetAllByOrgId(ctx context.Context, org_id horus.OrgId) ([]*horus.Team, error) {
@@ -82,5 +82,5 @@ func (s *teamStore) GetAllByOrgId(ctx context.Context, org_id horus.OrgId) ([]*h
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return fx.MapV(res, team_), nil
+	return fx.MapV(res, fromEntTeam), nil
 }

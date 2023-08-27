@@ -14,14 +14,18 @@ import (
 	"khepri.dev/horus/pb"
 )
 
-func to_org_(v *horus.Org) *pb.Org {
+func toPbOrg(v *horus.Org) *pb.Org {
 	return &pb.Org{
 		Id:   v.Id[:],
 		Name: v.Name,
 	}
 }
 
-func from_org_(v *pb.Org) *horus.Org {
+func fromPbOrg(v *pb.Org) *horus.Org {
+	if v == nil {
+		return nil
+	}
+
 	return &horus.Org{
 		Id:   horus.OrgId(v.Id),
 		Name: v.Name,
@@ -37,7 +41,7 @@ func (s *grpcServer) NewOrg(ctx context.Context, req *pb.NewOrgReq) (*pb.NewOrgR
 	}
 
 	return &pb.NewOrgRes{
-		Org: to_org_(org),
+		Org: toPbOrg(org),
 	}, nil
 }
 
@@ -50,14 +54,14 @@ func (s *grpcServer) ListOrgs(ctx context.Context, req *pb.ListOrgsReq) (*pb.Lis
 	}
 
 	return &pb.ListOrgsRes{
-		Orgs: fx.MapV(orgs, to_org_),
+		Orgs: fx.MapV(orgs, toPbOrg),
 	}, nil
 }
 
 func (s *grpcServer) UpdateOrg(ctx context.Context, req *pb.UpdateOrgReq) (*pb.UpdateOrgRes, error) {
 	user := s.mustUser(ctx)
 
-	org_id, err := uuid.FromBytes(req.Org.Id)
+	org_id, err := uuid.FromBytes(req.Org.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid organization ID")
 	}
@@ -74,7 +78,7 @@ func (s *grpcServer) UpdateOrg(ctx context.Context, req *pb.UpdateOrgReq) (*pb.U
 		return nil, status.Errorf(codes.PermissionDenied, codes.PermissionDenied.String())
 	}
 
-	_, err = s.Horus.Orgs().UpdateById(ctx, from_org_(req.Org))
+	_, err = s.Horus.Orgs().UpdateById(ctx, fromPbOrg(req.Org))
 	if err != nil {
 		return nil, grpcInternalErr(ctx, err)
 	}
@@ -198,4 +202,50 @@ func (s *grpcServer) LeaveOrg(ctx context.Context, req *pb.LeaveOrgReq) (*pb.Lea
 	}
 
 	return &pb.LeaveOrgRes{}, nil
+}
+
+func (s *grpcServer) SetRoleOrg(ctx context.Context, req *pb.SetRoleOrgReq) (*pb.SetRoleOrgRes, error) {
+	user := s.mustUser(ctx)
+
+	member_id, err := uuid.FromBytes(req.MemberId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid member ID")
+	}
+	if fromPbRoleOrg(req.Role) == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid role")
+	}
+
+	member, err := s.Members().GetById(ctx, horus.MemberId(member_id))
+	if err != nil {
+		if errors.Is(err, horus.ErrNotExist) {
+			return nil, grpcStatusWithCode(codes.NotFound)
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("get target member details: %w", err))
+	}
+
+	me, err := s.Members().GetByUserIdFromOrg(ctx, member.OrgId, user.Id)
+	if err != nil {
+		if errors.Is(err, horus.ErrNotExist) {
+			// Target member does not visible to me, so it is not found.
+			return nil, grpcStatusWithCode(codes.NotFound)
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("get my member details: %w", err))
+	}
+	if me.Role != horus.RoleOrgOwner {
+		return nil, grpcStatusWithCode(codes.PermissionDenied)
+	}
+
+	member.Role = fromPbRoleOrg(req.GetRole())
+	_, err = s.Members().UpdateById(ctx, member)
+	if err != nil {
+		if errors.Is(err, horus.ErrFailedPrecondition) {
+			return nil, status.Errorf(codes.FailedPrecondition, err.Error())
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("update a member: %w", err))
+	}
+
+	return &pb.SetRoleOrgRes{}, nil
 }

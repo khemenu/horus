@@ -13,7 +13,7 @@ import (
 	"khepri.dev/horus/store/ent/identity"
 )
 
-func identity_(v *ent.Identity) *horus.Identity {
+func fromEntIdentity(v *ent.Identity) *horus.Identity {
 	return &horus.Identity{
 		OwnerId: horus.UserId(v.OwnerID),
 		Kind:    v.Kind,
@@ -51,7 +51,7 @@ func (s *identityStore) new(ctx context.Context, client *ent.Client, init *horus
 	}
 
 	log.FromCtx(ctx).Info("new identity")
-	return identity_(res), nil
+	return fromEntIdentity(res), nil
 }
 
 func (s *identityStore) New(ctx context.Context, init *horus.IdentityInit) (*horus.Identity, error) {
@@ -82,7 +82,7 @@ func (s *identityStore) GetByValue(ctx context.Context, value string) (*horus.Id
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return identity_(res), nil
+	return fromEntIdentity(res), nil
 }
 
 func (s *identityStore) GetAllByOwner(ctx context.Context, owner_id horus.UserId) (map[string]*horus.Identity, error) {
@@ -95,7 +95,7 @@ func (s *identityStore) GetAllByOwner(ctx context.Context, owner_id horus.UserId
 
 	rst := map[string]*horus.Identity{}
 	for _, v := range res {
-		rst[v.ID] = identity_(v)
+		rst[v.ID] = fromEntIdentity(v)
 	}
 
 	return rst, nil
@@ -116,5 +116,5 @@ func (s *identityStore) Update(ctx context.Context, input *horus.Identity) (*hor
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return identity_(res), nil
+	return fromEntIdentity(res), nil
 }

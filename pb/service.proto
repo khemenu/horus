@@ -20,6 +20,8 @@ service Horus {
 	rpc JoinOrg(JoinOrgReq) returns (JoinOrgRes) {};
 	// Leaves an organization.
 	rpc LeaveOrg(LeaveOrgReq) returns (LeaveOrgRes) {};
+	// Set role of the member for the orgnization.
+	rpc SetRoleOrg(SetRoleOrgReq) returns (SetRoleOrgRes) {};
 }
 
 message NewOrgReq {}
@@ -54,3 +56,9 @@ message LeaveOrgReq {
 	bytes org_id = 1; // Organization to leave.
 }
 message LeaveOrgRes {}
+
+message SetRoleOrgReq {
+	bytes   member_id = 1; // ID of the member to change the role.
+	RoleOrg role      = 2; // Role to be changed.
+}
+message SetRoleOrgRes {}

@@ -77,6 +77,23 @@ func (s *MemberStoreTestSuite) TestNew() {
 	})
 }
 
+func (s *MemberStoreTestSuite) TestGetById() {
+	s.Run("member that does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		_, err := s.Members().GetById(ctx, horus.MemberId(uuid.New()))
+		require.ErrorIs(err, horus.ErrNotExist)
+	})
+
+	s.Run("member that exists", func(ctx context.Context) {
+		require := s.Require()
+
+		member, err := s.Members().GetById(ctx, s.owner.Id)
+		require.NoError(err)
+		require.Equal(member.Role, horus.RoleOrgOwner)
+	})
+}
+
 func (s *MemberStoreTestSuite) TestGetByUserIdFromOrg() {
 	s.Run("from an org that does not exist", func(ctx context.Context) {
 		require := s.Require()
@@ -156,6 +173,20 @@ func (s *MemberStoreTestSuite) TestUpdateById() {
 		})
 		require.NoError(err)
 		require.Equal("foo", updated.Name)
+	})
+
+	s.Run("sole owner to member", func(ctx context.Context) {
+		require := s.Require()
+
+		_, err := s.Members().UpdateById(ctx, &horus.Member{
+			Id:   s.owner.Id,
+			Role: horus.RoleOrgMember,
+		})
+		require.ErrorIs(err, horus.ErrFailedPrecondition)
+
+		owner, err := s.Members().GetById(ctx, s.owner.Id)
+		require.NoError(err)
+		require.Equal(horus.RoleOrgOwner, owner.Role)
 	})
 }
 

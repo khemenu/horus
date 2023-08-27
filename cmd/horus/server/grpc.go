@@ -116,3 +116,25 @@ func grpcInternalErr(ctx context.Context, err error) error {
 func grpcStatusWithCode(code codes.Code) error {
 	return status.Error(code, code.String())
 }
+
+func to_role_org(v horus.RoleOrg) pb.RoleOrg {
+	switch v {
+	case horus.RoleOrgOwner:
+		return pb.RoleOrg_ROLE_ORG_OWNER
+	case horus.RoleOrgMember:
+		return pb.RoleOrg_ROLE_ORG_MEMBER
+	}
+
+	return pb.RoleOrg_ROLE_ORG_UNSPECIFIED
+}
+
+func fromPbRoleOrg(v pb.RoleOrg) horus.RoleOrg {
+	switch v {
+	case pb.RoleOrg_ROLE_ORG_OWNER:
+		return horus.RoleOrgOwner
+	case pb.RoleOrg_ROLE_ORG_MEMBER:
+		return horus.RoleOrgMember
+	}
+
+	return ""
+}

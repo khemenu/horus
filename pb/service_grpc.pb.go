@@ -27,6 +27,7 @@ const (
 	Horus_InviteUser_FullMethodName = "/khepri.horus.Horus/InviteUser"
 	Horus_JoinOrg_FullMethodName    = "/khepri.horus.Horus/JoinOrg"
 	Horus_LeaveOrg_FullMethodName   = "/khepri.horus.Horus/LeaveOrg"
+	Horus_SetRoleOrg_FullMethodName = "/khepri.horus.Horus/SetRoleOrg"
 )
 
 // HorusClient is the client API for Horus service.
@@ -45,6 +46,8 @@ type HorusClient interface {
 	JoinOrg(ctx context.Context, in *JoinOrgReq, opts ...grpc.CallOption) (*JoinOrgRes, error)
 	// Leaves an organization.
 	LeaveOrg(ctx context.Context, in *LeaveOrgReq, opts ...grpc.CallOption) (*LeaveOrgRes, error)
+	// Set role of the member for the orgnization.
+	SetRoleOrg(ctx context.Context, in *SetRoleOrgReq, opts ...grpc.CallOption) (*SetRoleOrgRes, error)
 }
 
 type horusClient struct {
@@ -109,6 +112,15 @@ func (c *horusClient) LeaveOrg(ctx context.Context, in *LeaveOrgReq, opts ...grp
 	return out, nil
 }
 
+func (c *horusClient) SetRoleOrg(ctx context.Context, in *SetRoleOrgReq, opts ...grpc.CallOption) (*SetRoleOrgRes, error) {
+	out := new(SetRoleOrgRes)
+	err := c.cc.Invoke(ctx, Horus_SetRoleOrg_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // HorusServer is the server API for Horus service.
 // All implementations must embed UnimplementedHorusServer
 // for forward compatibility
@@ -125,6 +137,8 @@ type HorusServer interface {
 	JoinOrg(context.Context, *JoinOrgReq) (*JoinOrgRes, error)
 	// Leaves an organization.
 	LeaveOrg(context.Context, *LeaveOrgReq) (*LeaveOrgRes, error)
+	// Set role of the member for the orgnization.
+	SetRoleOrg(context.Context, *SetRoleOrgReq) (*SetRoleOrgRes, error)
 	mustEmbedUnimplementedHorusServer()
 }
 
@@ -149,6 +163,9 @@ func (UnimplementedHorusServer) JoinOrg(context.Context, *JoinOrgReq) (*JoinOrgR
 }
 func (UnimplementedHorusServer) LeaveOrg(context.Context, *LeaveOrgReq) (*LeaveOrgRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LeaveOrg not implemented")
+}
+func (UnimplementedHorusServer) SetRoleOrg(context.Context, *SetRoleOrgReq) (*SetRoleOrgRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetRoleOrg not implemented")
 }
 func (UnimplementedHorusServer) mustEmbedUnimplementedHorusServer() {}
 
@@ -271,6 +288,24 @@ func _Horus_LeaveOrg_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Horus_SetRoleOrg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetRoleOrgReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HorusServer).SetRoleOrg(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Horus_SetRoleOrg_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HorusServer).SetRoleOrg(ctx, req.(*SetRoleOrgReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Horus_ServiceDesc is the grpc.ServiceDesc for Horus service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -301,6 +336,10 @@ var Horus_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LeaveOrg",
 			Handler:    _Horus_LeaveOrg_Handler,
+		},
+		{
+			MethodName: "SetRoleOrg",
+			Handler:    _Horus_SetRoleOrg_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

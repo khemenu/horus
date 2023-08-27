@@ -68,6 +68,106 @@ func (IdentityKind) EnumDescriptor() ([]byte, []int) {
 	return file_common_proto_rawDescGZIP(), []int{0}
 }
 
+// Member role for organization.
+type RoleOrg int32
+
+const (
+	RoleOrg_ROLE_ORG_UNSPECIFIED RoleOrg = 0  //
+	RoleOrg_ROLE_ORG_OWNER       RoleOrg = 10 //
+	RoleOrg_ROLE_ORG_MEMBER      RoleOrg = 20 //
+)
+
+// Enum value maps for RoleOrg.
+var (
+	RoleOrg_name = map[int32]string{
+		0:  "ROLE_ORG_UNSPECIFIED",
+		10: "ROLE_ORG_OWNER",
+		20: "ROLE_ORG_MEMBER",
+	}
+	RoleOrg_value = map[string]int32{
+		"ROLE_ORG_UNSPECIFIED": 0,
+		"ROLE_ORG_OWNER":       10,
+		"ROLE_ORG_MEMBER":      20,
+	}
+)
+
+func (x RoleOrg) Enum() *RoleOrg {
+	p := new(RoleOrg)
+	*p = x
+	return p
+}
+
+func (x RoleOrg) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RoleOrg) Descriptor() protoreflect.EnumDescriptor {
+	return file_common_proto_enumTypes[1].Descriptor()
+}
+
+func (RoleOrg) Type() protoreflect.EnumType {
+	return &file_common_proto_enumTypes[1]
+}
+
+func (x RoleOrg) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RoleOrg.Descriptor instead.
+func (RoleOrg) EnumDescriptor() ([]byte, []int) {
+	return file_common_proto_rawDescGZIP(), []int{1}
+}
+
+// Member role for organization.
+type RoleTeam int32
+
+const (
+	RoleTeam_ROLE_TEAM_UNSPECIFIED RoleTeam = 0  //
+	RoleTeam_ROLE_TEAM_OWNER       RoleTeam = 10 //
+	RoleTeam_ROLE_TEAM_MEMBER      RoleTeam = 20 //
+)
+
+// Enum value maps for RoleTeam.
+var (
+	RoleTeam_name = map[int32]string{
+		0:  "ROLE_TEAM_UNSPECIFIED",
+		10: "ROLE_TEAM_OWNER",
+		20: "ROLE_TEAM_MEMBER",
+	}
+	RoleTeam_value = map[string]int32{
+		"ROLE_TEAM_UNSPECIFIED": 0,
+		"ROLE_TEAM_OWNER":       10,
+		"ROLE_TEAM_MEMBER":      20,
+	}
+)
+
+func (x RoleTeam) Enum() *RoleTeam {
+	p := new(RoleTeam)
+	*p = x
+	return p
+}
+
+func (x RoleTeam) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RoleTeam) Descriptor() protoreflect.EnumDescriptor {
+	return file_common_proto_enumTypes[2].Descriptor()
+}
+
+func (RoleTeam) Type() protoreflect.EnumType {
+	return &file_common_proto_enumTypes[2]
+}
+
+func (x RoleTeam) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RoleTeam.Descriptor instead.
+func (RoleTeam) EnumDescriptor() ([]byte, []int) {
+	return file_common_proto_rawDescGZIP(), []int{2}
+}
+
 type Status struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -265,7 +365,17 @@ var file_common_proto_rawDesc = []byte{
 	0x64, 0x12, 0x1d, 0x0a, 0x19, 0x49, 0x44, 0x45, 0x4e, 0x54, 0x49, 0x54, 0x59, 0x5f, 0x4b, 0x49,
 	0x4e, 0x44, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00,
 	0x12, 0x16, 0x0a, 0x12, 0x49, 0x44, 0x45, 0x4e, 0x54, 0x49, 0x54, 0x59, 0x5f, 0x4b, 0x49, 0x4e,
-	0x44, 0x5f, 0x4d, 0x41, 0x49, 0x4c, 0x10, 0x01, 0x42, 0x15, 0x5a, 0x13, 0x6b, 0x68, 0x65, 0x70,
+	0x44, 0x5f, 0x4d, 0x41, 0x49, 0x4c, 0x10, 0x01, 0x2a, 0x4c, 0x0a, 0x07, 0x52, 0x6f, 0x6c, 0x65,
+	0x4f, 0x72, 0x67, 0x12, 0x18, 0x0a, 0x14, 0x52, 0x4f, 0x4c, 0x45, 0x5f, 0x4f, 0x52, 0x47, 0x5f,
+	0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x12, 0x0a,
+	0x0e, 0x52, 0x4f, 0x4c, 0x45, 0x5f, 0x4f, 0x52, 0x47, 0x5f, 0x4f, 0x57, 0x4e, 0x45, 0x52, 0x10,
+	0x0a, 0x12, 0x13, 0x0a, 0x0f, 0x52, 0x4f, 0x4c, 0x45, 0x5f, 0x4f, 0x52, 0x47, 0x5f, 0x4d, 0x45,
+	0x4d, 0x42, 0x45, 0x52, 0x10, 0x14, 0x2a, 0x50, 0x0a, 0x08, 0x52, 0x6f, 0x6c, 0x65, 0x54, 0x65,
+	0x61, 0x6d, 0x12, 0x19, 0x0a, 0x15, 0x52, 0x4f, 0x4c, 0x45, 0x5f, 0x54, 0x45, 0x41, 0x4d, 0x5f,
+	0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x13, 0x0a,
+	0x0f, 0x52, 0x4f, 0x4c, 0x45, 0x5f, 0x54, 0x45, 0x41, 0x4d, 0x5f, 0x4f, 0x57, 0x4e, 0x45, 0x52,
+	0x10, 0x0a, 0x12, 0x14, 0x0a, 0x10, 0x52, 0x4f, 0x4c, 0x45, 0x5f, 0x54, 0x45, 0x41, 0x4d, 0x5f,
+	0x4d, 0x45, 0x4d, 0x42, 0x45, 0x52, 0x10, 0x14, 0x42, 0x15, 0x5a, 0x13, 0x6b, 0x68, 0x65, 0x70,
 	0x72, 0x69, 0x2e, 0x64, 0x65, 0x76, 0x2f, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2f, 0x70, 0x62, 0x62,
 	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
@@ -282,13 +392,15 @@ func file_common_proto_rawDescGZIP() []byte {
 	return file_common_proto_rawDescData
 }
 
-var file_common_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_common_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
 var file_common_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_common_proto_goTypes = []interface{}{
 	(IdentityKind)(0), // 0: khepri.horus.IdentityKind
-	(*Status)(nil),    // 1: khepri.horus.Status
-	(*Identity)(nil),  // 2: khepri.horus.Identity
-	(*Org)(nil),       // 3: khepri.horus.Org
+	(RoleOrg)(0),      // 1: khepri.horus.RoleOrg
+	(RoleTeam)(0),     // 2: khepri.horus.RoleTeam
+	(*Status)(nil),    // 3: khepri.horus.Status
+	(*Identity)(nil),  // 4: khepri.horus.Identity
+	(*Org)(nil),       // 5: khepri.horus.Org
 }
 var file_common_proto_depIdxs = []int32{
 	0, // 0: khepri.horus.Identity.kind:type_name -> khepri.horus.IdentityKind
@@ -347,7 +459,7 @@ func file_common_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_common_proto_rawDesc,
-			NumEnums:      1,
+			NumEnums:      3,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,

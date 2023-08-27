@@ -11,7 +11,7 @@ import (
 	"khepri.dev/horus/store/ent/user"
 )
 
-func user_(v *ent.User) *horus.User {
+func fromEntUser(v *ent.User) *horus.User {
 	return &horus.User{
 		Id:        horus.UserId(v.ID),
 		Alias:     v.Alias,
@@ -50,7 +50,7 @@ func (s *userStore) new(ctx context.Context, client *ent.Client) (*horus.User, e
 	}
 
 	log.FromCtx(ctx).Info("new user", "id", res.ID)
-	return user_(res), nil
+	return fromEntUser(res), nil
 }
 
 func (s *userStore) New(ctx context.Context) (*horus.User, error) {
@@ -69,7 +69,7 @@ func (s *userStore) GetById(ctx context.Context, id horus.UserId) (*horus.User, 
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return user_(res), nil
+	return fromEntUser(res), nil
 }
 
 func (s *userStore) GetByAlias(ctx context.Context, alias string) (*horus.User, error) {
@@ -84,5 +84,5 @@ func (s *userStore) GetByAlias(ctx context.Context, alias string) (*horus.User, 
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return user_(res), nil
+	return fromEntUser(res), nil
 }

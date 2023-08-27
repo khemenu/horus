@@ -14,7 +14,7 @@ import (
 	"khepri.dev/horus/store/ent/member"
 )
 
-func member_(v *ent.Member) *horus.Member {
+func fromEntMember(v *ent.Member) *horus.Member {
 	return &horus.Member{
 		Id:     horus.MemberId(v.ID),
 		OrgId:  horus.OrgId(v.OrgID),
@@ -52,11 +52,26 @@ func newMember(ctx context.Context, client *ent.Client, init horus.MemberInit) (
 	}
 
 	log.FromCtx(ctx).Info("new user", "id", res.ID)
-	return member_(res), nil
+	return fromEntMember(res), nil
 }
 
 func (s *memberStore) New(ctx context.Context, init horus.MemberInit) (*horus.Member, error) {
 	return newMember(ctx, s.client, init)
+}
+
+func (s *memberStore) GetById(ctx context.Context, member_id horus.MemberId) (*horus.Member, error) {
+	res, err := s.client.Member.Query().
+		Where(member.ID(uuid.UUID(member_id))).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, horus.ErrNotExist
+		}
+
+		return nil, fmt.Errorf("query: %w", err)
+	}
+
+	return fromEntMember(res), nil
 }
 
 func (s *memberStore) GetByUserIdFromOrg(ctx context.Context, org_id horus.OrgId, user_id horus.UserId) (*horus.Member, error) {
@@ -74,7 +89,7 @@ func (s *memberStore) GetByUserIdFromOrg(ctx context.Context, org_id horus.OrgId
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return member_(res), nil
+	return fromEntMember(res), nil
 }
 
 func (s *memberStore) GetAllByOrgId(ctx context.Context, org_id horus.OrgId) ([]*horus.Member, error) {
@@ -91,23 +106,37 @@ func (s *memberStore) GetAllByOrgId(ctx context.Context, org_id horus.OrgId) ([]
 		return nil, horus.ErrNotExist
 	}
 
-	return fx.MapV(res, member_), nil
+	return fx.MapV(res, fromEntMember), nil
 }
 
-func (s *memberStore) UpdateById(ctx context.Context, member *horus.Member) (*horus.Member, error) {
-	res, err := s.client.Member.UpdateOneID(uuid.UUID(member.Id)).
-		SetName(member.Name).
-		SetRole(member.Role).
-		Save(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, horus.ErrNotExist
+func (s *memberStore) UpdateById(ctx context.Context, member_ *horus.Member) (*horus.Member, error) {
+	return withTx(ctx, s.client, func(tx *ent.Tx) (*horus.Member, error) {
+		res, err := tx.Member.UpdateOneID(uuid.UUID(member_.Id)).
+			SetName(member_.Name).
+			SetRole(member_.Role).
+			Save(ctx)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return nil, horus.ErrNotExist
+			}
+
+			return nil, fmt.Errorf("save: %w", err)
 		}
 
-		return nil, fmt.Errorf("save: %w", err)
-	}
+		cnt, err := tx.Member.
+			QueryOrg(res).
+			QueryMembers().
+			Where(member.RoleEQ(horus.RoleOrgOwner)).
+			Count(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("cnt: %w", err)
+		}
+		if cnt == 0 {
+			return nil, fmt.Errorf("%w: organization must have at least one owner", horus.ErrFailedPrecondition)
+		}
 
-	return member_(res), nil
+		return fromEntMember(res), nil
+	})
 }
 
 func (s *memberStore) DeleteById(ctx context.Context, member_id horus.MemberId) error {

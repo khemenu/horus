@@ -10,6 +10,20 @@ enum IdentityKind {
 	IDENTITY_KIND_MAIL        = 1; //
 }
 
+// Member role for organization.
+enum RoleOrg {
+	ROLE_ORG_UNSPECIFIED = 0;  //
+	ROLE_ORG_OWNER       = 10; //
+	ROLE_ORG_MEMBER      = 20; //
+}
+
+// Member role for organization.
+enum RoleTeam {
+	ROLE_TEAM_UNSPECIFIED = 0;  //
+	ROLE_TEAM_OWNER       = 10; //
+	ROLE_TEAM_MEMBER      = 20; //
+}
+
 message Status {
 	string user_alias = 1; // Alias of user ID.
 

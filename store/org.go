@@ -13,7 +13,7 @@ import (
 	"khepri.dev/horus/store/ent/org"
 )
 
-func org_(v *ent.Org) *horus.Org {
+func fromEntOrg(v *ent.Org) *horus.Org {
 	return &horus.Org{
 		Id:   horus.OrgId(v.ID),
 		Name: v.Name,
@@ -44,7 +44,7 @@ func (s *orgStore) New(ctx context.Context, init horus.OrgInit) (*horus.Org, err
 		}
 
 		log.FromCtx(ctx).Info("new org", "id", org.ID)
-		return org_(org), nil
+		return fromEntOrg(org), nil
 	})
 }
 
@@ -60,7 +60,7 @@ func (s *orgStore) GetById(ctx context.Context, org_id horus.OrgId) (*horus.Org,
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return org_(res), nil
+	return fromEntOrg(res), nil
 }
 
 func (s *orgStore) GetAllByUserId(ctx context.Context, user_id horus.UserId) ([]*horus.Org, error) {
@@ -72,7 +72,7 @@ func (s *orgStore) GetAllByUserId(ctx context.Context, user_id horus.UserId) ([]
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return fx.MapV(res, org_), nil
+	return fx.MapV(res, fromEntOrg), nil
 }
 
 func (s *orgStore) UpdateById(ctx context.Context, org *horus.Org) (*horus.Org, error) {
@@ -87,5 +87,5 @@ func (s *orgStore) UpdateById(ctx context.Context, org *horus.Org) (*horus.Org, 
 		return nil, fmt.Errorf("save: %w", err)
 	}
 
-	return org_(res), nil
+	return fromEntOrg(res), nil
 }

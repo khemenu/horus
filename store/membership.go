@@ -13,7 +13,7 @@ import (
 	"khepri.dev/horus/store/ent/membership"
 )
 
-func membership_(v *ent.Membership) *horus.Membership {
+func fromEntMembership(v *ent.Membership) *horus.Membership {
 	return &horus.Membership{
 		TeamId:   horus.TeamId(v.TeamID),
 		MemberId: horus.MemberId(v.MemberID),
@@ -48,7 +48,7 @@ func (s *membershipStore) new(ctx context.Context, client *ent.Client, init horu
 	}
 
 	log.FromCtx(ctx).Info("new membership", "team", init.TeamId, "member", init.MemberId)
-	return membership_(res), nil
+	return fromEntMembership(res), nil
 }
 
 func (s *membershipStore) New(ctx context.Context, init horus.MembershipInit) (*horus.Membership, error) {
@@ -70,5 +70,5 @@ func (s *membershipStore) GetById(ctx context.Context, team_id horus.TeamId, mem
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return membership_(res), nil
+	return fromEntMembership(res), nil
 }

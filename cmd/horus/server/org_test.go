@@ -365,3 +365,144 @@ func TestLeaveOrg(t *testing.T) {
 		require.Equal(codes.FailedPrecondition, s.Code())
 	}))
 }
+
+func TestSetOrgRole(t *testing.T) {
+	t.Run("invalid argument", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		require.NoError(err)
+
+		other, err := h.Users().New(ctx)
+		require.NoError(err)
+
+		other_member, err := h.Members().New(ctx, horus.MemberInit{
+			OrgId:  org.Id,
+			UserId: other.Id,
+			Role:   horus.RoleOrgOwner,
+		})
+		require.NoError(err)
+
+		testCases := []struct {
+			desc string
+			req  *pb.SetRoleOrgReq
+		}{
+			{
+				desc: "invalid ID",
+				req: &pb.SetRoleOrgReq{
+					MemberId: []byte{42},
+					Role:     pb.RoleOrg_ROLE_ORG_MEMBER,
+				},
+			},
+			{
+				desc: "invalid role",
+				req: &pb.SetRoleOrgReq{
+					MemberId: other_member.Id[:],
+					Role:     42,
+				},
+			},
+		}
+		for _, tC := range testCases {
+			t.Log(tC.desc)
+			_, err := h.client.SetRoleOrg(ctx, tC.req)
+			s, ok := status.FromError(err)
+			require.True(ok)
+			require.Equal(codes.InvalidArgument, s.Code(), s.Message())
+		}
+	}))
+
+	t.Run("not a member", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		id := uuid.New()
+		_, err := h.client.SetRoleOrg(ctx, &pb.SetRoleOrgReq{
+			MemberId: id[:],
+			Role:     pb.RoleOrg_ROLE_ORG_OWNER,
+		})
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.NotFound, s.Code())
+	}))
+
+	t.Run("as a member", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		other, err := h.Users().New(ctx)
+		require.NoError(err)
+
+		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		require.NoError(err)
+
+		me, err := h.Members().New(ctx, horus.MemberInit{
+			OrgId:  org.Id,
+			UserId: h.user.Id,
+			Role:   horus.RoleOrgMember,
+		})
+		require.NoError(err)
+
+		_, err = h.client.SetRoleOrg(ctx, &pb.SetRoleOrgReq{
+			MemberId: me.Id[:],
+			Role:     pb.RoleOrg_ROLE_ORG_OWNER,
+		})
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.PermissionDenied, s.Code())
+	}))
+
+	t.Run("as an owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		other, err := h.Users().New(ctx)
+		require.NoError(err)
+
+		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		require.NoError(err)
+
+		me, err := h.Members().New(ctx, horus.MemberInit{
+			OrgId:  org.Id,
+			UserId: h.user.Id,
+			Role:   horus.RoleOrgOwner,
+		})
+		require.NoError(err)
+
+		_, err = h.client.SetRoleOrg(ctx, &pb.SetRoleOrgReq{
+			MemberId: me.Id[:],
+			Role:     pb.RoleOrg_ROLE_ORG_MEMBER,
+		})
+		require.NoError(err)
+
+		me, err = h.Members().GetById(ctx, me.Id)
+		require.NoError(err)
+		require.Equal(horus.RoleOrgMember, me.Role)
+	}))
+
+	t.Run("member of another org", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		other, err := h.Users().New(ctx)
+		require.NoError(err)
+
+		other_org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		require.NoError(err)
+
+		other_owner, err := h.Members().GetByUserIdFromOrg(ctx, other_org.Id, other.Id)
+		require.NoError(err)
+
+		_, err = h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		require.NoError(err)
+
+		_, err = h.client.SetRoleOrg(ctx, &pb.SetRoleOrgReq{
+			MemberId: other_owner.Id[:],
+			Role:     pb.RoleOrg_ROLE_ORG_MEMBER,
+		})
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.NotFound, s.Code())
+	}))
+
+	t.Run("as a sole owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		require.NoError(err)
+
+		me, err := h.Members().GetByUserIdFromOrg(ctx, org.Id, h.user.Id)
+		require.NoError(err)
+
+		_, err = h.client.SetRoleOrg(ctx, &pb.SetRoleOrgReq{
+			MemberId: me.Id[:],
+			Role:     pb.RoleOrg_ROLE_ORG_MEMBER,
+		})
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.FailedPrecondition, s.Code())
+	}))
+}

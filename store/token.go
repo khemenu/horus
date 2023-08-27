@@ -12,7 +12,7 @@ import (
 	"khepri.dev/horus/store/ent/token"
 )
 
-func token_(token *ent.Token) *horus.Token {
+func fromEntToken(token *ent.Token) *horus.Token {
 	return &horus.Token{
 		Value:     token.ID,
 		OwnerId:   horus.UserId(token.OwnerID),
@@ -59,7 +59,7 @@ func (s *tokenStore) Issue(ctx context.Context, init horus.TokenInit) (*horus.To
 	}
 
 	log.FromCtx(ctx).Info("new token", "value", res.ID[0:8])
-	return token_(res), nil
+	return fromEntToken(res), nil
 }
 
 func (s *tokenStore) GetByValue(ctx context.Context, value string, token_type horus.TokenType) (*horus.Token, error) {
@@ -78,7 +78,7 @@ func (s *tokenStore) GetByValue(ctx context.Context, value string, token_type ho
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	return token_(res), nil
+	return fromEntToken(res), nil
 }
 
 func (s *tokenStore) Revoke(ctx context.Context, value string) error {
