@@ -21,14 +21,21 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Horus_Status_FullMethodName = "/khepri.horus.Horus/Status"
+	Horus_NewOrg_FullMethodName    = "/khepri.horus.Horus/NewOrg"
+	Horus_ListOrgs_FullMethodName  = "/khepri.horus.Horus/ListOrgs"
+	Horus_UpdateOrg_FullMethodName = "/khepri.horus.Horus/UpdateOrg"
 )
 
 // HorusClient is the client API for Horus service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type HorusClient interface {
-	Status(ctx context.Context, in *StatusReq, opts ...grpc.CallOption) (*StatusRes, error)
+	// Creates organization.
+	NewOrg(ctx context.Context, in *NewOrgReq, opts ...grpc.CallOption) (*NewOrgRes, error)
+	// Lists organizations the user belongs to.
+	ListOrgs(ctx context.Context, in *ListOrgsReq, opts ...grpc.CallOption) (*ListOrgsRes, error)
+	// Updates orgnataion info.
+	UpdateOrg(ctx context.Context, in *UpdateOrgReq, opts ...grpc.CallOption) (*UpdateOrgRes, error)
 }
 
 type horusClient struct {
@@ -39,9 +46,27 @@ func NewHorusClient(cc grpc.ClientConnInterface) HorusClient {
 	return &horusClient{cc}
 }
 
-func (c *horusClient) Status(ctx context.Context, in *StatusReq, opts ...grpc.CallOption) (*StatusRes, error) {
-	out := new(StatusRes)
-	err := c.cc.Invoke(ctx, Horus_Status_FullMethodName, in, out, opts...)
+func (c *horusClient) NewOrg(ctx context.Context, in *NewOrgReq, opts ...grpc.CallOption) (*NewOrgRes, error) {
+	out := new(NewOrgRes)
+	err := c.cc.Invoke(ctx, Horus_NewOrg_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *horusClient) ListOrgs(ctx context.Context, in *ListOrgsReq, opts ...grpc.CallOption) (*ListOrgsRes, error) {
+	out := new(ListOrgsRes)
+	err := c.cc.Invoke(ctx, Horus_ListOrgs_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *horusClient) UpdateOrg(ctx context.Context, in *UpdateOrgReq, opts ...grpc.CallOption) (*UpdateOrgRes, error) {
+	out := new(UpdateOrgRes)
+	err := c.cc.Invoke(ctx, Horus_UpdateOrg_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +77,12 @@ func (c *horusClient) Status(ctx context.Context, in *StatusReq, opts ...grpc.Ca
 // All implementations must embed UnimplementedHorusServer
 // for forward compatibility
 type HorusServer interface {
-	Status(context.Context, *StatusReq) (*StatusRes, error)
+	// Creates organization.
+	NewOrg(context.Context, *NewOrgReq) (*NewOrgRes, error)
+	// Lists organizations the user belongs to.
+	ListOrgs(context.Context, *ListOrgsReq) (*ListOrgsRes, error)
+	// Updates orgnataion info.
+	UpdateOrg(context.Context, *UpdateOrgReq) (*UpdateOrgRes, error)
 	mustEmbedUnimplementedHorusServer()
 }
 
@@ -60,8 +90,14 @@ type HorusServer interface {
 type UnimplementedHorusServer struct {
 }
 
-func (UnimplementedHorusServer) Status(context.Context, *StatusReq) (*StatusRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Status not implemented")
+func (UnimplementedHorusServer) NewOrg(context.Context, *NewOrgReq) (*NewOrgRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NewOrg not implemented")
+}
+func (UnimplementedHorusServer) ListOrgs(context.Context, *ListOrgsReq) (*ListOrgsRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListOrgs not implemented")
+}
+func (UnimplementedHorusServer) UpdateOrg(context.Context, *UpdateOrgReq) (*UpdateOrgRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrg not implemented")
 }
 func (UnimplementedHorusServer) mustEmbedUnimplementedHorusServer() {}
 
@@ -76,20 +112,56 @@ func RegisterHorusServer(s grpc.ServiceRegistrar, srv HorusServer) {
 	s.RegisterService(&Horus_ServiceDesc, srv)
 }
 
-func _Horus_Status_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StatusReq)
+func _Horus_NewOrg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NewOrgReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HorusServer).Status(ctx, in)
+		return srv.(HorusServer).NewOrg(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Horus_Status_FullMethodName,
+		FullMethod: Horus_NewOrg_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HorusServer).Status(ctx, req.(*StatusReq))
+		return srv.(HorusServer).NewOrg(ctx, req.(*NewOrgReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Horus_ListOrgs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListOrgsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HorusServer).ListOrgs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Horus_ListOrgs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HorusServer).ListOrgs(ctx, req.(*ListOrgsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Horus_UpdateOrg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateOrgReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HorusServer).UpdateOrg(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Horus_UpdateOrg_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HorusServer).UpdateOrg(ctx, req.(*UpdateOrgReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -102,8 +174,16 @@ var Horus_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*HorusServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Status",
-			Handler:    _Horus_Status_Handler,
+			MethodName: "NewOrg",
+			Handler:    _Horus_NewOrg_Handler,
+		},
+		{
+			MethodName: "ListOrgs",
+			Handler:    _Horus_ListOrgs_Handler,
+		},
+		{
+			MethodName: "UpdateOrg",
+			Handler:    _Horus_UpdateOrg_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

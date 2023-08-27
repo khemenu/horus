@@ -10,6 +10,12 @@ enum IdentityKind {
 	IDENTITY_KIND_EMAIL       = 1; //
 }
 
+message Status {
+	string user_alias = 1; // Alias of user ID.
+
+	string session_expired_at = 3; //
+}
+
 //
 message Identity {
 	IdentityKind kind  = 2; //

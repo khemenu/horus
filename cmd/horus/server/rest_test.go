@@ -103,7 +103,7 @@ func TestAuth(t *testing.T) {
 		body, err := io.ReadAll(res.Body)
 		require.NoError(err)
 
-		msg := pb.StatusRes{}
+		msg := pb.Status{}
 		err = protojson.Unmarshal(body, &msg)
 		require.NoError(err)
 	}))
@@ -146,7 +146,7 @@ func TestAuth(t *testing.T) {
 		body, err := io.ReadAll(res.Body)
 		require.NoError(err)
 
-		msg := pb.StatusRes{}
+		msg := pb.Status{}
 		err = protojson.Unmarshal(body, &msg)
 		require.NoError(err)
 	}))

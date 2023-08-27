@@ -233,7 +233,7 @@ func (s *restServer) resetAccessToken(w http.ResponseWriter, r *http.Request, us
 }
 
 func (s *restServer) status(w http.ResponseWriter, access_token *horus.Token) {
-	rst, err := protojson.Marshal(&pb.StatusRes{
+	rst, err := protojson.Marshal(&pb.Status{
 		SessionExpiredAt: access_token.ExpiredAt.Format(time.RFC3339),
 	})
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -91,20 +90,25 @@ func (s *grpcServer) UnaryInterceptor(ctx context.Context, req any, info *grpc.U
 	}
 
 	f := frame.NewFrame(s.Horus, access_token)
+	if _, err := f.User(ctx); err != nil {
+		return nil, status.Error(codes.Internal, "get user details")
+	}
+
 	ctx = frame.WithCtx(ctx, f)
 	return handler(ctx, req)
 }
 
-func (h *grpcServer) Status(ctx context.Context, _ *pb.StatusReq) (*pb.StatusRes, error) {
+func (s *grpcServer) mustUser(ctx context.Context) *horus.User {
 	frame := frame.MustFromCtx(ctx)
 
 	user, err := frame.User(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Internal, "get user details")
+		panic(err)
 	}
 
-	return &pb.StatusRes{
-		UserAlias:        user.Alias,
-		SessionExpiredAt: frame.ExpiredAt().Format(time.RFC3339),
-	}, nil
+	return user
+}
+
+func grpcInternalErr(ctx context.Context, err error) error {
+	return status.Error(codes.Internal, fmt.Sprintf("%s: %s", codes.Internal.String(), err.Error()))
 }

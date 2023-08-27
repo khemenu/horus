@@ -22,14 +22,14 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type StatusReq struct {
+type NewOrgReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *StatusReq) Reset() {
-	*x = StatusReq{}
+func (x *NewOrgReq) Reset() {
+	*x = NewOrgReq{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_service_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -37,13 +37,13 @@ func (x *StatusReq) Reset() {
 	}
 }
 
-func (x *StatusReq) String() string {
+func (x *NewOrgReq) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*StatusReq) ProtoMessage() {}
+func (*NewOrgReq) ProtoMessage() {}
 
-func (x *StatusReq) ProtoReflect() protoreflect.Message {
+func (x *NewOrgReq) ProtoReflect() protoreflect.Message {
 	mi := &file_service_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -55,22 +55,21 @@ func (x *StatusReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use StatusReq.ProtoReflect.Descriptor instead.
-func (*StatusReq) Descriptor() ([]byte, []int) {
+// Deprecated: Use NewOrgReq.ProtoReflect.Descriptor instead.
+func (*NewOrgReq) Descriptor() ([]byte, []int) {
 	return file_service_proto_rawDescGZIP(), []int{0}
 }
 
-type StatusRes struct {
+type NewOrgRes struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	UserAlias        string `protobuf:"bytes,1,opt,name=user_alias,json=userAlias,proto3" json:"user_alias,omitempty"`                        //
-	SessionExpiredAt string `protobuf:"bytes,3,opt,name=session_expired_at,json=sessionExpiredAt,proto3" json:"session_expired_at,omitempty"` //
+	Org *Org `protobuf:"bytes,1,opt,name=org,proto3" json:"org,omitempty"` // Created organization ID.
 }
 
-func (x *StatusRes) Reset() {
-	*x = StatusRes{}
+func (x *NewOrgRes) Reset() {
+	*x = NewOrgRes{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_service_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -78,13 +77,13 @@ func (x *StatusRes) Reset() {
 	}
 }
 
-func (x *StatusRes) String() string {
+func (x *NewOrgRes) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*StatusRes) ProtoMessage() {}
+func (*NewOrgRes) ProtoMessage() {}
 
-func (x *StatusRes) ProtoReflect() protoreflect.Message {
+func (x *NewOrgRes) ProtoReflect() protoreflect.Message {
 	mi := &file_service_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -96,23 +95,188 @@ func (x *StatusRes) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use StatusRes.ProtoReflect.Descriptor instead.
-func (*StatusRes) Descriptor() ([]byte, []int) {
+// Deprecated: Use NewOrgRes.ProtoReflect.Descriptor instead.
+func (*NewOrgRes) Descriptor() ([]byte, []int) {
 	return file_service_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *StatusRes) GetUserAlias() string {
+func (x *NewOrgRes) GetOrg() *Org {
 	if x != nil {
-		return x.UserAlias
+		return x.Org
 	}
-	return ""
+	return nil
 }
 
-func (x *StatusRes) GetSessionExpiredAt() string {
-	if x != nil {
-		return x.SessionExpiredAt
+type ListOrgsReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *ListOrgsReq) Reset() {
+	*x = ListOrgsReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
 	}
-	return ""
+}
+
+func (x *ListOrgsReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListOrgsReq) ProtoMessage() {}
+
+func (x *ListOrgsReq) ProtoReflect() protoreflect.Message {
+	mi := &file_service_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListOrgsReq.ProtoReflect.Descriptor instead.
+func (*ListOrgsReq) Descriptor() ([]byte, []int) {
+	return file_service_proto_rawDescGZIP(), []int{2}
+}
+
+type ListOrgsRes struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// List of organizations the user belongs to.
+	Orgs []*Org `protobuf:"bytes,1,rep,name=orgs,proto3" json:"orgs,omitempty"`
+}
+
+func (x *ListOrgsRes) Reset() {
+	*x = ListOrgsRes{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListOrgsRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListOrgsRes) ProtoMessage() {}
+
+func (x *ListOrgsRes) ProtoReflect() protoreflect.Message {
+	mi := &file_service_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListOrgsRes.ProtoReflect.Descriptor instead.
+func (*ListOrgsRes) Descriptor() ([]byte, []int) {
+	return file_service_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ListOrgsRes) GetOrgs() []*Org {
+	if x != nil {
+		return x.Orgs
+	}
+	return nil
+}
+
+type UpdateOrgReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Organization to update.
+	Org *Org `protobuf:"bytes,1,opt,name=org,proto3" json:"org,omitempty"`
+}
+
+func (x *UpdateOrgReq) Reset() {
+	*x = UpdateOrgReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UpdateOrgReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateOrgReq) ProtoMessage() {}
+
+func (x *UpdateOrgReq) ProtoReflect() protoreflect.Message {
+	mi := &file_service_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateOrgReq.ProtoReflect.Descriptor instead.
+func (*UpdateOrgReq) Descriptor() ([]byte, []int) {
+	return file_service_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *UpdateOrgReq) GetOrg() *Org {
+	if x != nil {
+		return x.Org
+	}
+	return nil
+}
+
+type UpdateOrgRes struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *UpdateOrgRes) Reset() {
+	*x = UpdateOrgRes{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UpdateOrgRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateOrgRes) ProtoMessage() {}
+
+func (x *UpdateOrgRes) ProtoReflect() protoreflect.Message {
+	mi := &file_service_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateOrgRes.ProtoReflect.Descriptor instead.
+func (*UpdateOrgRes) Descriptor() ([]byte, []int) {
+	return file_service_proto_rawDescGZIP(), []int{5}
 }
 
 var File_service_proto protoreflect.FileDescriptor
@@ -120,20 +284,35 @@ var File_service_proto protoreflect.FileDescriptor
 var file_service_proto_rawDesc = []byte{
 	0x0a, 0x0d, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12,
 	0x0c, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x1a, 0x0c, 0x63,
-	0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x0b, 0x0a, 0x09, 0x53,
-	0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x71, 0x22, 0x58, 0x0a, 0x09, 0x53, 0x74, 0x61, 0x74,
-	0x75, 0x73, 0x52, 0x65, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x61, 0x6c,
-	0x69, 0x61, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x75, 0x73, 0x65, 0x72, 0x41,
-	0x6c, 0x69, 0x61, 0x73, 0x12, 0x2c, 0x0a, 0x12, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f,
-	0x65, 0x78, 0x70, 0x69, 0x72, 0x65, 0x64, 0x5f, 0x61, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x10, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x64,
-	0x41, 0x74, 0x32, 0x45, 0x0a, 0x05, 0x48, 0x6f, 0x72, 0x75, 0x73, 0x12, 0x3c, 0x0a, 0x06, 0x53,
-	0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x17, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68,
-	0x6f, 0x72, 0x75, 0x73, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x17,
-	0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x53, 0x74,
-	0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x73, 0x22, 0x00, 0x42, 0x15, 0x5a, 0x13, 0x6b, 0x68, 0x65,
-	0x70, 0x72, 0x69, 0x2e, 0x64, 0x65, 0x76, 0x2f, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2f, 0x70, 0x62,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x0b, 0x0a, 0x09, 0x4e,
+	0x65, 0x77, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x71, 0x22, 0x30, 0x0a, 0x09, 0x4e, 0x65, 0x77, 0x4f,
+	0x72, 0x67, 0x52, 0x65, 0x73, 0x12, 0x23, 0x0a, 0x03, 0x6f, 0x72, 0x67, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x11, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75,
+	0x73, 0x2e, 0x4f, 0x72, 0x67, 0x52, 0x03, 0x6f, 0x72, 0x67, 0x22, 0x0d, 0x0a, 0x0b, 0x4c, 0x69,
+	0x73, 0x74, 0x4f, 0x72, 0x67, 0x73, 0x52, 0x65, 0x71, 0x22, 0x34, 0x0a, 0x0b, 0x4c, 0x69, 0x73,
+	0x74, 0x4f, 0x72, 0x67, 0x73, 0x52, 0x65, 0x73, 0x12, 0x25, 0x0a, 0x04, 0x6f, 0x72, 0x67, 0x73,
+	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e,
+	0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x4f, 0x72, 0x67, 0x52, 0x04, 0x6f, 0x72, 0x67, 0x73, 0x22,
+	0x33, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x71, 0x12,
+	0x23, 0x0a, 0x03, 0x6f, 0x72, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x6b,
+	0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x4f, 0x72, 0x67, 0x52,
+	0x03, 0x6f, 0x72, 0x67, 0x22, 0x0e, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4f, 0x72,
+	0x67, 0x52, 0x65, 0x73, 0x32, 0xd0, 0x01, 0x0a, 0x05, 0x48, 0x6f, 0x72, 0x75, 0x73, 0x12, 0x3c,
+	0x0a, 0x06, 0x4e, 0x65, 0x77, 0x4f, 0x72, 0x67, 0x12, 0x17, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72,
+	0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x4e, 0x65, 0x77, 0x4f, 0x72, 0x67, 0x52, 0x65,
+	0x71, 0x1a, 0x17, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73,
+	0x2e, 0x4e, 0x65, 0x77, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x73, 0x22, 0x00, 0x12, 0x42, 0x0a, 0x08,
+	0x4c, 0x69, 0x73, 0x74, 0x4f, 0x72, 0x67, 0x73, 0x12, 0x19, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72,
+	0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4f, 0x72, 0x67, 0x73,
+	0x52, 0x65, 0x71, 0x1a, 0x19, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72,
+	0x75, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4f, 0x72, 0x67, 0x73, 0x52, 0x65, 0x73, 0x22, 0x00,
+	0x12, 0x45, 0x0a, 0x09, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4f, 0x72, 0x67, 0x12, 0x1a, 0x2e,
+	0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x55, 0x70, 0x64,
+	0x61, 0x74, 0x65, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x71, 0x1a, 0x1a, 0x2e, 0x6b, 0x68, 0x65, 0x70,
+	0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4f,
+	0x72, 0x67, 0x52, 0x65, 0x73, 0x22, 0x00, 0x42, 0x15, 0x5a, 0x13, 0x6b, 0x68, 0x65, 0x70, 0x72,
+	0x69, 0x2e, 0x64, 0x65, 0x76, 0x2f, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2f, 0x70, 0x62, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -148,19 +327,31 @@ func file_service_proto_rawDescGZIP() []byte {
 	return file_service_proto_rawDescData
 }
 
-var file_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_service_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_service_proto_goTypes = []interface{}{
-	(*StatusReq)(nil), // 0: khepri.horus.StatusReq
-	(*StatusRes)(nil), // 1: khepri.horus.StatusRes
+	(*NewOrgReq)(nil),    // 0: khepri.horus.NewOrgReq
+	(*NewOrgRes)(nil),    // 1: khepri.horus.NewOrgRes
+	(*ListOrgsReq)(nil),  // 2: khepri.horus.ListOrgsReq
+	(*ListOrgsRes)(nil),  // 3: khepri.horus.ListOrgsRes
+	(*UpdateOrgReq)(nil), // 4: khepri.horus.UpdateOrgReq
+	(*UpdateOrgRes)(nil), // 5: khepri.horus.UpdateOrgRes
+	(*Org)(nil),          // 6: khepri.horus.Org
 }
 var file_service_proto_depIdxs = []int32{
-	0, // 0: khepri.horus.Horus.Status:input_type -> khepri.horus.StatusReq
-	1, // 1: khepri.horus.Horus.Status:output_type -> khepri.horus.StatusRes
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	6, // 0: khepri.horus.NewOrgRes.org:type_name -> khepri.horus.Org
+	6, // 1: khepri.horus.ListOrgsRes.orgs:type_name -> khepri.horus.Org
+	6, // 2: khepri.horus.UpdateOrgReq.org:type_name -> khepri.horus.Org
+	0, // 3: khepri.horus.Horus.NewOrg:input_type -> khepri.horus.NewOrgReq
+	2, // 4: khepri.horus.Horus.ListOrgs:input_type -> khepri.horus.ListOrgsReq
+	4, // 5: khepri.horus.Horus.UpdateOrg:input_type -> khepri.horus.UpdateOrgReq
+	1, // 6: khepri.horus.Horus.NewOrg:output_type -> khepri.horus.NewOrgRes
+	3, // 7: khepri.horus.Horus.ListOrgs:output_type -> khepri.horus.ListOrgsRes
+	5, // 8: khepri.horus.Horus.UpdateOrg:output_type -> khepri.horus.UpdateOrgRes
+	6, // [6:9] is the sub-list for method output_type
+	3, // [3:6] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_service_proto_init() }
@@ -171,7 +362,7 @@ func file_service_proto_init() {
 	file_common_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_service_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StatusReq); i {
+			switch v := v.(*NewOrgReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -183,7 +374,55 @@ func file_service_proto_init() {
 			}
 		}
 		file_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StatusRes); i {
+			switch v := v.(*NewOrgRes); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_service_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListOrgsReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_service_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListOrgsRes); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_service_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdateOrgReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_service_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdateOrgRes); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -201,7 +440,7 @@ func file_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_service_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

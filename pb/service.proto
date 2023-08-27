@@ -18,7 +18,7 @@ service Horus {
 
 message NewOrgReq {}
 message NewOrgRes {
-	bytes org_id = 1; // Created organization ID.
+	Org org = 1; // Created organization ID.
 }
 
 message ListOrgsReq {}
@@ -27,8 +27,8 @@ message ListOrgsRes {
 	repeated Org orgs = 1;
 }
 
-message ListOrgsReq {
+message UpdateOrgReq {
 	// Organization to update.
 	Org org = 1;
 }
-message ListOrgsRes {}
+message UpdateOrgRes {}
