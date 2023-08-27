@@ -9,13 +9,28 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 	"khepri.dev/horus"
 	"khepri.dev/horus/cmd/horus/server"
+	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/pb"
 )
+
+type horusGrpcConfig struct {
+	server_config *server.GrpcServerConfig
+}
+
+type horusGrpcOption func(opts *horusGrpcConfig)
+
+func withGrpcServerConfig(conf *server.GrpcServerConfig) horusGrpcOption {
+	return func(opts *horusGrpcConfig) {
+		opts.server_config = conf
+	}
+}
 
 type horusGrpc struct {
 	horus.Horus
@@ -58,14 +73,17 @@ func (h *horusGrpc) WithNewIdentity(ctx context.Context, init *horus.IdentityIni
 	}
 }
 
-func WithHorusGrpc(conf *server.GrpcServerConfig, f func(require *require.Assertions, ctx context.Context, h *horusGrpc)) func(t *testing.T) {
-	if conf == nil {
-		conf = &server.GrpcServerConfig{}
+func WithHorusGrpc(f func(require *require.Assertions, ctx context.Context, h *horusGrpc), opts ...horusGrpcOption) func(t *testing.T) {
+	conf := &horusGrpcConfig{}
+	for _, opt := range opts {
+		opt(conf)
 	}
-	return WithHorus(conf.Config, func(require *require.Assertions, h horus.Horus) {
+	fx.Default(&conf.server_config, &server.GrpcServerConfig{})
+
+	return WithHorus(conf.server_config.Config, func(require *require.Assertions, h horus.Horus) {
 		ctx := context.Background()
 
-		horus_server, err := server.NewGrpcServer(h, conf)
+		horus_server, err := server.NewGrpcServer(h, conf.server_config)
 		require.NoError(err)
 
 		lis := bufconn.Listen(2 << 20)
@@ -114,32 +132,20 @@ func WithHorusGrpc(conf *server.GrpcServerConfig, f func(require *require.Assert
 	})
 }
 
-// func TestGrpcInterceptor(t *testing.T) {
-// 	t.Run("without access token", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h horus.Horus, client pb.HorusClient) {
-// 		ctx = metadata.NewOutgoingContext(ctx, metadata.MD{})
+func TestGrpcInterceptor(t *testing.T) {
+	t.Run("without access token", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		ctx = metadata.NewOutgoingContext(ctx, metadata.MD{})
 
-// 		_, err := client.Status(ctx, &pb.StatusReq{})
-// 		require.Equal(codes.InvalidArgument, status.Code(err))
-// 	}))
+		_, err := h.client.NewOrg(ctx, &pb.NewOrgReq{})
+		require.Equal(codes.InvalidArgument, status.Code(err))
+	}))
 
-// 	t.Run("with invalid access token", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h horus.Horus, client pb.HorusClient) {
-// 		ctx = metadata.NewOutgoingContext(ctx, metadata.MD{
-// 			horus.CookieNameAccessToken: []string{"invalid"},
-// 		})
+	t.Run("with invalid access token", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		ctx = metadata.NewOutgoingContext(ctx, metadata.MD{
+			horus.CookieNameAccessToken: []string{"invalid"},
+		})
 
-// 		_, err := client.Status(ctx, &pb.StatusReq{})
-// 		require.Equal(codes.Unauthenticated, status.Code(err))
-// 	}))
-// }
-
-// func TestGrpcStatus(t *testing.T) {
-// 	WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h horus.Horus, client pb.HorusClient) {
-// 		res, err := client.Status(ctx, &pb.StatusReq{})
-// 		require.NoError(err)
-// 		require.NotEmpty(res.UserAlias)
-
-// 		expired_at, err := time.Parse(time.RFC3339, res.SessionExpiredAt)
-// 		require.NoError(err)
-// 		require.True(time.Now().Before(expired_at))
-// 	})(t)
-// }
+		_, err := h.client.NewOrg(ctx, &pb.NewOrgReq{})
+		require.Equal(codes.Unauthenticated, status.Code(err))
+	}))
+}

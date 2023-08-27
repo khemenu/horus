@@ -14,13 +14,13 @@ import (
 )
 
 func TestListOrg(t *testing.T) {
-	t.Run("org does not exist", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("org does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		res, err := h.client.ListOrgs(ctx, &pb.ListOrgsReq{})
 		require.NoError(err)
 		require.Empty(res.Orgs)
 	}))
 
-	t.Run("org exists", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("org exists", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		org1, err := h.client.NewOrg(ctx, &pb.NewOrgReq{})
 		require.NoError(err)
 
@@ -38,14 +38,14 @@ func TestListOrg(t *testing.T) {
 }
 
 func TestUpdateOrg(t *testing.T) {
-	t.Run("invalid org ID", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("invalid org ID", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		_, err := h.client.UpdateOrg(ctx, &pb.UpdateOrgReq{Org: &pb.Org{Id: []byte{42}}})
 		s, ok := status.FromError(err)
 		require.True(ok)
 		require.Equal(codes.InvalidArgument, s.Code())
 	}))
 
-	t.Run("org does not exist", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("org does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		id := uuid.New()
 		_, err := h.client.UpdateOrg(ctx, &pb.UpdateOrgReq{Org: &pb.Org{Id: id[:]}})
 		s, ok := status.FromError(err)
@@ -53,7 +53,7 @@ func TestUpdateOrg(t *testing.T) {
 		require.Equal(codes.NotFound, s.Code())
 	}))
 
-	t.Run("as an owner", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("as an owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		org, err := h.client.NewOrg(ctx, &pb.NewOrgReq{})
 		require.NoError(err)
 
@@ -64,7 +64,7 @@ func TestUpdateOrg(t *testing.T) {
 		require.NoError(err)
 	}))
 
-	t.Run("as a member", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("as a member", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		owner, err := h.Users().New(ctx)
 		require.NoError(err)
 
@@ -88,7 +88,7 @@ func TestUpdateOrg(t *testing.T) {
 }
 
 func TestInviteUser(t *testing.T) {
-	t.Run("invalid argument", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("invalid argument", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
 		require.NoError(err)
 
@@ -136,7 +136,7 @@ func TestInviteUser(t *testing.T) {
 		}
 	}))
 
-	t.Run("only owner can invite a user", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("only owner can invite a user", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		owner, err := h.Users().New(ctx)
 		require.NoError(err)
 
@@ -174,7 +174,7 @@ func TestInviteUser(t *testing.T) {
 		}
 	}))
 
-	t.Run("user that does not exist", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("user that does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
 		require.NoError(err)
 
@@ -193,7 +193,7 @@ func TestInviteUser(t *testing.T) {
 		require.Equal(horus.Unverified, identity.VerifiedBy)
 	}))
 
-	t.Run("user already a member", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("user already a member", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
 		require.NoError(err)
 
@@ -211,7 +211,7 @@ func TestInviteUser(t *testing.T) {
 }
 
 func TestJoinOrg(t *testing.T) {
-	t.Run("invalid argument", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("invalid argument", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		_, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
 		require.NoError(err)
 
@@ -235,7 +235,7 @@ func TestJoinOrg(t *testing.T) {
 		}
 	}))
 
-	t.Run("already a member", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("already a member", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
 		require.NoError(err)
 
@@ -243,7 +243,7 @@ func TestJoinOrg(t *testing.T) {
 		require.NoError(err)
 	}))
 
-	t.Run("not invited", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("not invited", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
@@ -256,7 +256,7 @@ func TestJoinOrg(t *testing.T) {
 		require.Equal(codes.PermissionDenied, s.Code())
 	}))
 
-	t.Run("invited", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("invited", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		other := h.WithNewIdentity(ctx, &horus.IdentityInit{
 			Kind:  horus.IdentityMail,
 			Value: "other@khepri.dev",
@@ -284,7 +284,7 @@ func TestJoinOrg(t *testing.T) {
 }
 
 func TestLeaveOrg(t *testing.T) {
-	t.Run("not a member", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("not a member", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
@@ -308,7 +308,7 @@ func TestLeaveOrg(t *testing.T) {
 			role: horus.RoleOrgInvitee,
 		},
 	} {
-		t.Run(tC.desc, WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		t.Run(tC.desc, WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 			other, err := h.Users().New(ctx)
 			require.NoError(err)
 
@@ -327,7 +327,7 @@ func TestLeaveOrg(t *testing.T) {
 		}))
 	}
 
-	t.Run("as a member", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("as a member", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
@@ -345,7 +345,7 @@ func TestLeaveOrg(t *testing.T) {
 		require.NoError(err)
 	}))
 
-	t.Run("as an owner", WithHorusGrpc(nil, func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+	t.Run("as an owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
