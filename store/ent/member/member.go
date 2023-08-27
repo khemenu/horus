@@ -114,7 +114,7 @@ var (
 // RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
 func RoleValidator(r horus.RoleOrg) error {
 	switch r {
-	case "owner", "member":
+	case "owner", "member", "invitee":
 		return nil
 	default:
 		return fmt.Errorf("member: invalid enum value for role field: %q", r)

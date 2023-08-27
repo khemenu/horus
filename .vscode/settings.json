@@ -1,6 +1,7 @@
 {
 	"files.exclude": {
 		"**/.git": true,
+		"pb/*.pb.go": true,
 		"store/ent/{[!s],?[!c]}*": true
 	},
 	"[proto3]": {

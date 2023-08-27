@@ -279,6 +279,269 @@ func (*UpdateOrgRes) Descriptor() ([]byte, []int) {
 	return file_service_proto_rawDescGZIP(), []int{5}
 }
 
+type InviteUserReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	OrgId    []byte    `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"` // Organization to be invited.
+	Identity *Identity `protobuf:"bytes,2,opt,name=identity,proto3" json:"identity,omitempty"`        // Identity of the user to invite.
+}
+
+func (x *InviteUserReq) Reset() {
+	*x = InviteUserReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *InviteUserReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InviteUserReq) ProtoMessage() {}
+
+func (x *InviteUserReq) ProtoReflect() protoreflect.Message {
+	mi := &file_service_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InviteUserReq.ProtoReflect.Descriptor instead.
+func (*InviteUserReq) Descriptor() ([]byte, []int) {
+	return file_service_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *InviteUserReq) GetOrgId() []byte {
+	if x != nil {
+		return x.OrgId
+	}
+	return nil
+}
+
+func (x *InviteUserReq) GetIdentity() *Identity {
+	if x != nil {
+		return x.Identity
+	}
+	return nil
+}
+
+type InviteUserRes struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *InviteUserRes) Reset() {
+	*x = InviteUserRes{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *InviteUserRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InviteUserRes) ProtoMessage() {}
+
+func (x *InviteUserRes) ProtoReflect() protoreflect.Message {
+	mi := &file_service_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InviteUserRes.ProtoReflect.Descriptor instead.
+func (*InviteUserRes) Descriptor() ([]byte, []int) {
+	return file_service_proto_rawDescGZIP(), []int{7}
+}
+
+type JoinOrgReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	OrgId []byte `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"` // Organization to join.
+}
+
+func (x *JoinOrgReq) Reset() {
+	*x = JoinOrgReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *JoinOrgReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JoinOrgReq) ProtoMessage() {}
+
+func (x *JoinOrgReq) ProtoReflect() protoreflect.Message {
+	mi := &file_service_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JoinOrgReq.ProtoReflect.Descriptor instead.
+func (*JoinOrgReq) Descriptor() ([]byte, []int) {
+	return file_service_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *JoinOrgReq) GetOrgId() []byte {
+	if x != nil {
+		return x.OrgId
+	}
+	return nil
+}
+
+type JoinOrgRes struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *JoinOrgRes) Reset() {
+	*x = JoinOrgRes{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *JoinOrgRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JoinOrgRes) ProtoMessage() {}
+
+func (x *JoinOrgRes) ProtoReflect() protoreflect.Message {
+	mi := &file_service_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JoinOrgRes.ProtoReflect.Descriptor instead.
+func (*JoinOrgRes) Descriptor() ([]byte, []int) {
+	return file_service_proto_rawDescGZIP(), []int{9}
+}
+
+type LeaveOrgReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	OrgId []byte `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"` // Organization to leave.
+}
+
+func (x *LeaveOrgReq) Reset() {
+	*x = LeaveOrgReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LeaveOrgReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LeaveOrgReq) ProtoMessage() {}
+
+func (x *LeaveOrgReq) ProtoReflect() protoreflect.Message {
+	mi := &file_service_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LeaveOrgReq.ProtoReflect.Descriptor instead.
+func (*LeaveOrgReq) Descriptor() ([]byte, []int) {
+	return file_service_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *LeaveOrgReq) GetOrgId() []byte {
+	if x != nil {
+		return x.OrgId
+	}
+	return nil
+}
+
+type LeaveOrgRes struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *LeaveOrgRes) Reset() {
+	*x = LeaveOrgRes{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_service_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LeaveOrgRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LeaveOrgRes) ProtoMessage() {}
+
+func (x *LeaveOrgRes) ProtoReflect() protoreflect.Message {
+	mi := &file_service_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LeaveOrgRes.ProtoReflect.Descriptor instead.
+func (*LeaveOrgRes) Descriptor() ([]byte, []int) {
+	return file_service_proto_rawDescGZIP(), []int{11}
+}
+
 var File_service_proto protoreflect.FileDescriptor
 
 var file_service_proto_rawDesc = []byte{
@@ -297,22 +560,48 @@ var file_service_proto_rawDesc = []byte{
 	0x23, 0x0a, 0x03, 0x6f, 0x72, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x6b,
 	0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x4f, 0x72, 0x67, 0x52,
 	0x03, 0x6f, 0x72, 0x67, 0x22, 0x0e, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4f, 0x72,
-	0x67, 0x52, 0x65, 0x73, 0x32, 0xd0, 0x01, 0x0a, 0x05, 0x48, 0x6f, 0x72, 0x75, 0x73, 0x12, 0x3c,
-	0x0a, 0x06, 0x4e, 0x65, 0x77, 0x4f, 0x72, 0x67, 0x12, 0x17, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72,
-	0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x4e, 0x65, 0x77, 0x4f, 0x72, 0x67, 0x52, 0x65,
-	0x71, 0x1a, 0x17, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73,
-	0x2e, 0x4e, 0x65, 0x77, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x73, 0x22, 0x00, 0x12, 0x42, 0x0a, 0x08,
-	0x4c, 0x69, 0x73, 0x74, 0x4f, 0x72, 0x67, 0x73, 0x12, 0x19, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72,
+	0x67, 0x52, 0x65, 0x73, 0x22, 0x5a, 0x0a, 0x0d, 0x49, 0x6e, 0x76, 0x69, 0x74, 0x65, 0x55, 0x73,
+	0x65, 0x72, 0x52, 0x65, 0x71, 0x12, 0x15, 0x0a, 0x06, 0x6f, 0x72, 0x67, 0x5f, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x6f, 0x72, 0x67, 0x49, 0x64, 0x12, 0x32, 0x0a, 0x08,
+	0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16,
+	0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x49, 0x64,
+	0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x52, 0x08, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79,
+	0x22, 0x0f, 0x0a, 0x0d, 0x49, 0x6e, 0x76, 0x69, 0x74, 0x65, 0x55, 0x73, 0x65, 0x72, 0x52, 0x65,
+	0x73, 0x22, 0x23, 0x0a, 0x0a, 0x4a, 0x6f, 0x69, 0x6e, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x71, 0x12,
+	0x15, 0x0a, 0x06, 0x6f, 0x72, 0x67, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x05, 0x6f, 0x72, 0x67, 0x49, 0x64, 0x22, 0x0c, 0x0a, 0x0a, 0x4a, 0x6f, 0x69, 0x6e, 0x4f, 0x72,
+	0x67, 0x52, 0x65, 0x73, 0x22, 0x24, 0x0a, 0x0b, 0x4c, 0x65, 0x61, 0x76, 0x65, 0x4f, 0x72, 0x67,
+	0x52, 0x65, 0x71, 0x12, 0x15, 0x0a, 0x06, 0x6f, 0x72, 0x67, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x05, 0x6f, 0x72, 0x67, 0x49, 0x64, 0x22, 0x0d, 0x0a, 0x0b, 0x4c, 0x65,
+	0x61, 0x76, 0x65, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x73, 0x32, 0x9f, 0x03, 0x0a, 0x05, 0x48, 0x6f,
+	0x72, 0x75, 0x73, 0x12, 0x3c, 0x0a, 0x06, 0x4e, 0x65, 0x77, 0x4f, 0x72, 0x67, 0x12, 0x17, 0x2e,
+	0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x4e, 0x65, 0x77,
+	0x4f, 0x72, 0x67, 0x52, 0x65, 0x71, 0x1a, 0x17, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e,
+	0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x4e, 0x65, 0x77, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x73, 0x22,
+	0x00, 0x12, 0x42, 0x0a, 0x08, 0x4c, 0x69, 0x73, 0x74, 0x4f, 0x72, 0x67, 0x73, 0x12, 0x19, 0x2e,
+	0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x4c, 0x69, 0x73,
+	0x74, 0x4f, 0x72, 0x67, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x19, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72,
 	0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4f, 0x72, 0x67, 0x73,
-	0x52, 0x65, 0x71, 0x1a, 0x19, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72,
-	0x75, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4f, 0x72, 0x67, 0x73, 0x52, 0x65, 0x73, 0x22, 0x00,
-	0x12, 0x45, 0x0a, 0x09, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4f, 0x72, 0x67, 0x12, 0x1a, 0x2e,
-	0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x71, 0x1a, 0x1a, 0x2e, 0x6b, 0x68, 0x65, 0x70,
-	0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4f,
-	0x72, 0x67, 0x52, 0x65, 0x73, 0x22, 0x00, 0x42, 0x15, 0x5a, 0x13, 0x6b, 0x68, 0x65, 0x70, 0x72,
-	0x69, 0x2e, 0x64, 0x65, 0x76, 0x2f, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2f, 0x70, 0x62, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x52, 0x65, 0x73, 0x22, 0x00, 0x12, 0x45, 0x0a, 0x09, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4f,
+	0x72, 0x67, 0x12, 0x1a, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75,
+	0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x71, 0x1a, 0x1a,
+	0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x55, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x73, 0x22, 0x00, 0x12, 0x48, 0x0a, 0x0a,
+	0x49, 0x6e, 0x76, 0x69, 0x74, 0x65, 0x55, 0x73, 0x65, 0x72, 0x12, 0x1b, 0x2e, 0x6b, 0x68, 0x65,
+	0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x49, 0x6e, 0x76, 0x69, 0x74, 0x65,
+	0x55, 0x73, 0x65, 0x72, 0x52, 0x65, 0x71, 0x1a, 0x1b, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69,
+	0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x49, 0x6e, 0x76, 0x69, 0x74, 0x65, 0x55, 0x73, 0x65,
+	0x72, 0x52, 0x65, 0x73, 0x22, 0x00, 0x12, 0x3f, 0x0a, 0x07, 0x4a, 0x6f, 0x69, 0x6e, 0x4f, 0x72,
+	0x67, 0x12, 0x18, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73,
+	0x2e, 0x4a, 0x6f, 0x69, 0x6e, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x71, 0x1a, 0x18, 0x2e, 0x6b, 0x68,
+	0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x4a, 0x6f, 0x69, 0x6e, 0x4f,
+	0x72, 0x67, 0x52, 0x65, 0x73, 0x22, 0x00, 0x12, 0x42, 0x0a, 0x08, 0x4c, 0x65, 0x61, 0x76, 0x65,
+	0x4f, 0x72, 0x67, 0x12, 0x19, 0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72,
+	0x75, 0x73, 0x2e, 0x4c, 0x65, 0x61, 0x76, 0x65, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x71, 0x1a, 0x19,
+	0x2e, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x4c, 0x65,
+	0x61, 0x76, 0x65, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x73, 0x22, 0x00, 0x42, 0x15, 0x5a, 0x13, 0x6b,
+	0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x64, 0x65, 0x76, 0x2f, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2f,
+	0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -327,31 +616,45 @@ func file_service_proto_rawDescGZIP() []byte {
 	return file_service_proto_rawDescData
 }
 
-var file_service_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_service_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_service_proto_goTypes = []interface{}{
-	(*NewOrgReq)(nil),    // 0: khepri.horus.NewOrgReq
-	(*NewOrgRes)(nil),    // 1: khepri.horus.NewOrgRes
-	(*ListOrgsReq)(nil),  // 2: khepri.horus.ListOrgsReq
-	(*ListOrgsRes)(nil),  // 3: khepri.horus.ListOrgsRes
-	(*UpdateOrgReq)(nil), // 4: khepri.horus.UpdateOrgReq
-	(*UpdateOrgRes)(nil), // 5: khepri.horus.UpdateOrgRes
-	(*Org)(nil),          // 6: khepri.horus.Org
+	(*NewOrgReq)(nil),     // 0: khepri.horus.NewOrgReq
+	(*NewOrgRes)(nil),     // 1: khepri.horus.NewOrgRes
+	(*ListOrgsReq)(nil),   // 2: khepri.horus.ListOrgsReq
+	(*ListOrgsRes)(nil),   // 3: khepri.horus.ListOrgsRes
+	(*UpdateOrgReq)(nil),  // 4: khepri.horus.UpdateOrgReq
+	(*UpdateOrgRes)(nil),  // 5: khepri.horus.UpdateOrgRes
+	(*InviteUserReq)(nil), // 6: khepri.horus.InviteUserReq
+	(*InviteUserRes)(nil), // 7: khepri.horus.InviteUserRes
+	(*JoinOrgReq)(nil),    // 8: khepri.horus.JoinOrgReq
+	(*JoinOrgRes)(nil),    // 9: khepri.horus.JoinOrgRes
+	(*LeaveOrgReq)(nil),   // 10: khepri.horus.LeaveOrgReq
+	(*LeaveOrgRes)(nil),   // 11: khepri.horus.LeaveOrgRes
+	(*Org)(nil),           // 12: khepri.horus.Org
+	(*Identity)(nil),      // 13: khepri.horus.Identity
 }
 var file_service_proto_depIdxs = []int32{
-	6, // 0: khepri.horus.NewOrgRes.org:type_name -> khepri.horus.Org
-	6, // 1: khepri.horus.ListOrgsRes.orgs:type_name -> khepri.horus.Org
-	6, // 2: khepri.horus.UpdateOrgReq.org:type_name -> khepri.horus.Org
-	0, // 3: khepri.horus.Horus.NewOrg:input_type -> khepri.horus.NewOrgReq
-	2, // 4: khepri.horus.Horus.ListOrgs:input_type -> khepri.horus.ListOrgsReq
-	4, // 5: khepri.horus.Horus.UpdateOrg:input_type -> khepri.horus.UpdateOrgReq
-	1, // 6: khepri.horus.Horus.NewOrg:output_type -> khepri.horus.NewOrgRes
-	3, // 7: khepri.horus.Horus.ListOrgs:output_type -> khepri.horus.ListOrgsRes
-	5, // 8: khepri.horus.Horus.UpdateOrg:output_type -> khepri.horus.UpdateOrgRes
-	6, // [6:9] is the sub-list for method output_type
-	3, // [3:6] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	12, // 0: khepri.horus.NewOrgRes.org:type_name -> khepri.horus.Org
+	12, // 1: khepri.horus.ListOrgsRes.orgs:type_name -> khepri.horus.Org
+	12, // 2: khepri.horus.UpdateOrgReq.org:type_name -> khepri.horus.Org
+	13, // 3: khepri.horus.InviteUserReq.identity:type_name -> khepri.horus.Identity
+	0,  // 4: khepri.horus.Horus.NewOrg:input_type -> khepri.horus.NewOrgReq
+	2,  // 5: khepri.horus.Horus.ListOrgs:input_type -> khepri.horus.ListOrgsReq
+	4,  // 6: khepri.horus.Horus.UpdateOrg:input_type -> khepri.horus.UpdateOrgReq
+	6,  // 7: khepri.horus.Horus.InviteUser:input_type -> khepri.horus.InviteUserReq
+	8,  // 8: khepri.horus.Horus.JoinOrg:input_type -> khepri.horus.JoinOrgReq
+	10, // 9: khepri.horus.Horus.LeaveOrg:input_type -> khepri.horus.LeaveOrgReq
+	1,  // 10: khepri.horus.Horus.NewOrg:output_type -> khepri.horus.NewOrgRes
+	3,  // 11: khepri.horus.Horus.ListOrgs:output_type -> khepri.horus.ListOrgsRes
+	5,  // 12: khepri.horus.Horus.UpdateOrg:output_type -> khepri.horus.UpdateOrgRes
+	7,  // 13: khepri.horus.Horus.InviteUser:output_type -> khepri.horus.InviteUserRes
+	9,  // 14: khepri.horus.Horus.JoinOrg:output_type -> khepri.horus.JoinOrgRes
+	11, // 15: khepri.horus.Horus.LeaveOrg:output_type -> khepri.horus.LeaveOrgRes
+	10, // [10:16] is the sub-list for method output_type
+	4,  // [4:10] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_service_proto_init() }
@@ -433,6 +736,78 @@ func file_service_proto_init() {
 				return nil
 			}
 		}
+		file_service_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*InviteUserReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_service_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*InviteUserRes); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_service_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*JoinOrgReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_service_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*JoinOrgRes); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_service_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LeaveOrgReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_service_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LeaveOrgRes); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -440,7 +815,7 @@ func file_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_service_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

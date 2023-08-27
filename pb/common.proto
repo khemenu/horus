@@ -7,7 +7,7 @@ option go_package = "khepri.dev/horus/pb";
 //
 enum IdentityKind {
 	IDENTITY_KIND_UNSPECIFIED = 0; //
-	IDENTITY_KIND_EMAIL       = 1; //
+	IDENTITY_KIND_MAIL        = 1; //
 }
 
 message Status {
@@ -18,8 +18,8 @@ message Status {
 
 //
 message Identity {
-	IdentityKind kind  = 2; //
-	string       value = 1; //
+	IdentityKind kind  = 1; //
+	string       value = 2; //
 
 	string verified_by = 3; //
 }

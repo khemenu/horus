@@ -20,8 +20,42 @@ import (
 type horusGrpc struct {
 	horus.Horus
 
-	user   *horus.User
-	client pb.HorusClient
+	require *require.Assertions
+	ctx     context.Context
+	client  pb.HorusClient
+
+	user     *horus.User
+	identity *horus.Identity
+}
+
+func (h *horusGrpc) WithNewIdentity(ctx context.Context, init *horus.IdentityInit) *horusGrpc {
+	if init.VerifiedBy == "" {
+		init.VerifiedBy = "horus"
+	}
+
+	identity, err := h.Identities().New(ctx, init)
+	h.require.NoError(err)
+
+	user, err := h.Users().GetById(ctx, identity.OwnerId)
+	h.require.NoError(err)
+
+	access_token, err := h.Tokens().Issue(ctx, horus.TokenInit{
+		OwnerId:  identity.OwnerId,
+		Type:     horus.AccessToken,
+		Duration: time.Hour,
+	})
+	h.require.NoError(err)
+
+	return &horusGrpc{
+		Horus: h.Horus,
+
+		require: h.require,
+		ctx:     metadata.NewOutgoingContext(ctx, metadata.Pairs(horus.CookieNameAccessToken, access_token.Value)),
+		client:  h.client,
+
+		user:     user,
+		identity: identity,
+	}
 }
 
 func WithHorusGrpc(conf *server.GrpcServerConfig, f func(require *require.Assertions, ctx context.Context, h *horusGrpc)) func(t *testing.T) {
@@ -32,24 +66,6 @@ func WithHorusGrpc(conf *server.GrpcServerConfig, f func(require *require.Assert
 		ctx := context.Background()
 
 		horus_server, err := server.NewGrpcServer(h, conf)
-		require.NoError(err)
-
-		user, err := h.Users().New(ctx)
-		require.NoError(err)
-
-		identity, err := h.Identities().New(ctx, &horus.IdentityInit{
-			OwnerId:    user.Id,
-			Kind:       horus.IdentityEmail,
-			Value:      "ra@khepri.dev",
-			VerifiedBy: "horus",
-		})
-		require.NoError(err)
-
-		access_token, err := h.Tokens().Issue(ctx, horus.TokenInit{
-			OwnerId:  identity.OwnerId,
-			Type:     horus.AccessToken,
-			Duration: time.Hour,
-		})
 		require.NoError(err)
 
 		lis := bufconn.Listen(2 << 20)
@@ -79,12 +95,22 @@ func WithHorusGrpc(conf *server.GrpcServerConfig, f func(require *require.Assert
 		}()
 
 		defer s.GracefulStop()
-		ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs(horus.CookieNameAccessToken, access_token.Value))
-		f(require, ctx, &horusGrpc{
-			Horus:  h,
-			user:   user,
-			client: pb.NewHorusClient(conn),
+
+		hg := &horusGrpc{
+			Horus: h,
+
+			require: require,
+			ctx:     ctx,
+			client:  pb.NewHorusClient(conn),
+		}
+
+		hg = hg.WithNewIdentity(ctx, &horus.IdentityInit{
+			Kind:       horus.IdentityMail,
+			Value:      "ra@khepri.dev",
+			VerifiedBy: "horus",
 		})
+
+		f(require, hg.ctx, hg)
 	})
 }
 

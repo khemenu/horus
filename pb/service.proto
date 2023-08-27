@@ -14,6 +14,12 @@ service Horus {
 	rpc ListOrgs(ListOrgsReq) returns (ListOrgsRes) {};
 	// Updates orgnataion info.
 	rpc UpdateOrg(UpdateOrgReq) returns (UpdateOrgRes) {};
+	// Invites a user to the organization.
+	rpc InviteUser(InviteUserReq) returns (InviteUserRes) {};
+	// Joins an organization.
+	rpc JoinOrg(JoinOrgReq) returns (JoinOrgRes) {};
+	// Leaves an organization.
+	rpc LeaveOrg(LeaveOrgReq) returns (LeaveOrgRes) {};
 }
 
 message NewOrgReq {}
@@ -32,3 +38,19 @@ message UpdateOrgReq {
 	Org org = 1;
 }
 message UpdateOrgRes {}
+
+message InviteUserReq {
+	bytes    org_id   = 1; // Organization to be invited.
+	Identity identity = 2; // Identity of the user to invite.
+}
+message InviteUserRes {}
+
+message JoinOrgReq {
+	bytes org_id = 1; // Organization to join.
+}
+message JoinOrgRes {}
+
+message LeaveOrgReq {
+	bytes org_id = 1; // Organization to leave.
+}
+message LeaveOrgRes {}

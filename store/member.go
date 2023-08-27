@@ -93,3 +93,44 @@ func (s *memberStore) GetAllByOrgId(ctx context.Context, org_id horus.OrgId) ([]
 
 	return fx.MapV(res, member_), nil
 }
+
+func (s *memberStore) UpdateById(ctx context.Context, member *horus.Member) (*horus.Member, error) {
+	res, err := s.client.Member.UpdateOneID(uuid.UUID(member.Id)).
+		SetName(member.Name).
+		SetRole(member.Role).
+		Save(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, horus.ErrNotExist
+		}
+
+		return nil, fmt.Errorf("save: %w", err)
+	}
+
+	return member_(res), nil
+}
+
+func (s *memberStore) DeleteById(ctx context.Context, member_id horus.MemberId) error {
+	err := s.client.Member.DeleteOneID(uuid.UUID(member_id)).Exec(ctx)
+	if err != nil {
+		if !ent.IsNotFound(err) {
+			return fmt.Errorf("save: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *memberStore) DeleteByUserIdFromOrg(ctx context.Context, org_id horus.OrgId, user_id horus.UserId) error {
+	_, err := s.client.Member.Delete().
+		Where(member.And(
+			member.OrgID(uuid.UUID(org_id)),
+			member.UserID(uuid.UUID(user_id)),
+		)).
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("save: %w", err)
+	}
+
+	return nil
+}

@@ -8,7 +8,7 @@ import (
 type IdentityKind string
 
 const (
-	IdentityEmail = IdentityKind("email")
+	IdentityMail IdentityKind = "mail"
 )
 
 type Identity struct {

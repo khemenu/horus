@@ -67,7 +67,7 @@ var (
 	// MembersColumns holds the columns for the "members" table.
 	MembersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"owner", "member"}},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"owner", "member", "invitee"}},
 		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "org_id", Type: field.TypeUUID},
@@ -102,7 +102,7 @@ var (
 	}
 	// MembershipsColumns holds the columns for the "memberships" table.
 	MembershipsColumns = []*schema.Column{
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"owner", "member"}},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"owner", "member", "invitee"}},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "team_id", Type: field.TypeUUID},
 		{Name: "member_id", Type: field.TypeUUID},
@@ -123,7 +123,7 @@ var (
 				Symbol:     "memberships_members_member",
 				Columns:    []*schema.Column{MembershipsColumns[3]},
 				RefColumns: []*schema.Column{MembersColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}

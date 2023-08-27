@@ -60,7 +60,7 @@ func (p *googleOauthProvider) Identity(ctx context.Context, token *oauth2.Token)
 	return horus.IdentityInit{
 		Value: id_token.Email,
 
-		Kind:       horus.IdentityEmail,
+		Kind:       horus.IdentityMail,
 		VerifiedBy: p.id,
 	}, nil
 }

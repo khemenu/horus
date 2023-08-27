@@ -36,4 +36,7 @@ type MemberStore interface {
 	New(ctx context.Context, init MemberInit) (*Member, error)
 	GetByUserIdFromOrg(ctx context.Context, org_id OrgId, user_id UserId) (*Member, error)
 	GetAllByOrgId(ctx context.Context, org_id OrgId) ([]*Member, error)
+	UpdateById(ctx context.Context, member *Member) (*Member, error)
+	DeleteById(ctx context.Context, member_id MemberId) error
+	DeleteByUserIdFromOrg(ctx context.Context, org_id OrgId, user_id UserId) error
 }

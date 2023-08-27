@@ -97,7 +97,7 @@ func (s *OrgStoreTestSuite) TestGetAllByUserId() {
 	})
 }
 
-func (s *OrgStoreTestSuite) TestUpdateByUserId() {
+func (s *OrgStoreTestSuite) TestUpdateById() {
 	s.Run("org does not exist", func(ctx context.Context) {
 		require := s.Require()
 

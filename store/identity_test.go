@@ -24,7 +24,7 @@ func TestIdentityStoreSqlite(t *testing.T) {
 func (s *IdentityStoreTestSuite) InitAmun() *horus.IdentityInit {
 	return &horus.IdentityInit{
 		OwnerId:    s.user.Id,
-		Kind:       horus.IdentityEmail,
+		Kind:       horus.IdentityMail,
 		Value:      "amun@khepri.dev",
 		VerifiedBy: horus.VerifierGoogleOauth2,
 	}
@@ -33,7 +33,7 @@ func (s *IdentityStoreTestSuite) InitAmun() *horus.IdentityInit {
 func (s *IdentityStoreTestSuite) InitAtum() *horus.IdentityInit {
 	return &horus.IdentityInit{
 		OwnerId:    s.user.Id,
-		Kind:       horus.IdentityEmail,
+		Kind:       horus.IdentityMail,
 		Value:      "atum@khepri.dev",
 		VerifiedBy: horus.VerifierGoogleOauth2,
 	}

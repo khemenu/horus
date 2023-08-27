@@ -134,3 +134,94 @@ func (s *MemberStoreTestSuite) TestGetAllByOrgId() {
 		require.ElementsMatch([]*horus.Member{owner, member}, members)
 	})
 }
+
+func (s *MemberStoreTestSuite) TestUpdateById() {
+	s.Run("member does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		_, err := s.Members().UpdateById(ctx, &horus.Member{
+			Id:   horus.MemberId(uuid.New()),
+			Role: horus.RoleOrgMember,
+		})
+		require.ErrorIs(err, horus.ErrNotExist)
+	})
+
+	s.Run("member exists", func(ctx context.Context) {
+		require := s.Require()
+
+		updated, err := s.Members().UpdateById(ctx, &horus.Member{
+			Id:   s.owner.Id,
+			Role: horus.RoleOrgOwner,
+			Name: "foo",
+		})
+		require.NoError(err)
+		require.Equal("foo", updated.Name)
+	})
+}
+
+func (s *MemberStoreTestSuite) TestDeleteById() {
+	s.Run("member does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		err := s.Members().DeleteById(ctx, horus.MemberId(uuid.New()))
+		require.NoError(err)
+	})
+
+	s.Run("member exists", func(ctx context.Context) {
+		require := s.Require()
+
+		err := s.Members().DeleteById(ctx, s.owner.Id)
+		require.NoError(err)
+	})
+
+	s.Run("membership is also deleted", func(ctx context.Context) {
+		require := s.Require()
+
+		team, err := s.Teams().New(ctx, horus.TeamInit{
+			OrgId:   s.org.Id,
+			OwnerId: s.owner.Id,
+		})
+		require.NoError(err)
+
+		err = s.Members().DeleteById(ctx, s.owner.Id)
+		require.NoError(err)
+
+		_, err = s.Teams().GetById(ctx, team.Id)
+		require.NoError(err)
+
+		_, err = s.Memberships().GetById(ctx, team.Id, s.owner.Id)
+		require.ErrorIs(horus.ErrNotExist, err)
+	})
+}
+
+func (s *MemberStoreTestSuite) TestDeleteByUserIdFromOrg() {
+	testCases := []struct {
+		desc    string
+		org_id  horus.OrgId
+		user_id horus.UserId
+	}{
+		{
+			desc:    "org does not exist",
+			org_id:  horus.OrgId(uuid.New()),
+			user_id: s.owner.UserId,
+		},
+		{
+			desc:    "user does not exist",
+			org_id:  s.owner.OrgId,
+			user_id: horus.UserId(uuid.New()),
+		},
+		{
+			desc:    "member exists",
+			org_id:  s.owner.OrgId,
+			user_id: s.owner.UserId,
+		},
+	}
+	for _, tC := range testCases {
+		s.Run(tC.desc, func(ctx context.Context) {
+			require := s.Require()
+
+			err := s.Members().DeleteByUserIdFromOrg(ctx, horus.OrgId(uuid.New()), s.owner.UserId)
+			require.NoError(err)
+		})
+	}
+}

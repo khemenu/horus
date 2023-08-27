@@ -112,3 +112,7 @@ func (s *grpcServer) mustUser(ctx context.Context) *horus.User {
 func grpcInternalErr(ctx context.Context, err error) error {
 	return status.Error(codes.Internal, fmt.Sprintf("%s: %s", codes.Internal.String(), err.Error()))
 }
+
+func grpcStatusWithCode(code codes.Code) error {
+	return status.Error(code, code.String())
+}

@@ -39,7 +39,7 @@ func FakeOauth2() (horus.OauthProvider, *httptest.Server) {
 func (p *fakeOauthProvider) Identity(ctx context.Context, token *oauth2.Token) (horus.IdentityInit, error) {
 	return horus.IdentityInit{
 		Value:      "ra@example,com",
-		Kind:       horus.IdentityEmail,
+		Kind:       horus.IdentityMail,
 		VerifiedBy: p.id,
 	}, nil
 }
