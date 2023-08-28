@@ -17,7 +17,9 @@ type TeamStoreTestSuite struct {
 func TestTeamStoreSqlite(t *testing.T) {
 	suite.Run(t, &TeamStoreTestSuite{
 		SuiteWithStoresOrg: SuiteWithStoresOrg{
-			SuiteWithStores: NewSuiteWithSqliteStores(),
+			SuiteWithStoresUser: SuiteWithStoresUser{
+				SuiteWithStores: NewSuiteWithSqliteStores(),
+			},
 		},
 	})
 }

@@ -112,7 +112,7 @@ func (s *grpcServer) InviteUser(ctx context.Context, req *pb.InviteUserReq) (*pb
 		return nil, grpcStatusWithCode(codes.PermissionDenied)
 	}
 
-	identity, err := s.Identities().GetByValue(ctx, req.Identity.Value)
+	identity, err := s.Identities().GetByValue(ctx, horus.IdentityValue(req.Identity.Value))
 	if err != nil {
 		if !errors.Is(err, horus.ErrNotExist) {
 			return nil, grpcInternalErr(ctx, fmt.Errorf("get identity details: %w", err))
@@ -120,7 +120,7 @@ func (s *grpcServer) InviteUser(ctx context.Context, req *pb.InviteUserReq) (*pb
 
 		identity, err = s.Identities().New(ctx, &horus.IdentityInit{
 			Kind:       horus.IdentityMail,
-			Value:      req.Identity.Value,
+			Value:      horus.IdentityValue(req.Identity.Value),
 			VerifiedBy: horus.Unverified,
 		})
 		if err != nil {

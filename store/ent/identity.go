@@ -32,18 +32,19 @@ type Identity struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the IdentityQuery when eager-loading is set.
-	Edges           IdentityEdges `json:"edges"`
-	member_contacts *uuid.UUID
-	selectValues    sql.SelectValues
+	Edges        IdentityEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // IdentityEdges holds the relations/edges for other nodes in the graph.
 type IdentityEdges struct {
 	// Owner holds the value of the owner edge.
 	Owner *User `json:"owner,omitempty"`
+	// Member holds the value of the member edge.
+	Member []*Member `json:"member,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // OwnerOrErr returns the Owner value or an error if the edge
@@ -59,6 +60,15 @@ func (e IdentityEdges) OwnerOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "owner"}
 }
 
+// MemberOrErr returns the Member value or an error if the edge
+// was not loaded in eager-loading.
+func (e IdentityEdges) MemberOrErr() ([]*Member, error) {
+	if e.loadedTypes[1] {
+		return e.Member, nil
+	}
+	return nil, &NotLoadedError{edge: "member"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Identity) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -70,8 +80,6 @@ func (*Identity) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case identity.FieldOwnerID:
 			values[i] = new(uuid.UUID)
-		case identity.ForeignKeys[0]: // member_contacts
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -123,13 +131,6 @@ func (i *Identity) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				i.CreatedAt = value.Time
 			}
-		case identity.ForeignKeys[0]:
-			if value, ok := values[j].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field member_contacts", values[j])
-			} else if value.Valid {
-				i.member_contacts = new(uuid.UUID)
-				*i.member_contacts = *value.S.(*uuid.UUID)
-			}
 		default:
 			i.selectValues.Set(columns[j], values[j])
 		}
@@ -146,6 +147,11 @@ func (i *Identity) Value(name string) (ent.Value, error) {
 // QueryOwner queries the "owner" edge of the Identity entity.
 func (i *Identity) QueryOwner() *UserQuery {
 	return NewIdentityClient(i.config).QueryOwner(i)
+}
+
+// QueryMember queries the "member" edge of the Identity entity.
+func (i *Identity) QueryMember() *MemberQuery {
+	return NewIdentityClient(i.config).QueryMember(i)
 }
 
 // Update returns a builder for updating this Identity.

@@ -17,7 +17,7 @@ func fromEntIdentity(v *ent.Identity) *horus.Identity {
 	return &horus.Identity{
 		OwnerId: horus.UserId(v.OwnerID),
 		Kind:    v.Kind,
-		Value:   v.ID,
+		Value:   horus.IdentityValue(v.ID),
 		Name:    v.Name,
 
 		VerifiedBy: v.VerifiedBy,
@@ -34,7 +34,7 @@ func (s *identityStore) new(ctx context.Context, client *ent.Client, init *horus
 	res, err := client.Identity.Create().
 		SetOwnerID(uuid.UUID(init.OwnerId)).
 		SetKind(init.Kind).
-		SetID(init.Value).
+		SetID(string(init.Value)).
 		SetName(init.Name).
 		SetVerifiedBy(init.VerifiedBy).
 		Save(ctx)
@@ -72,8 +72,8 @@ func (s *identityStore) New(ctx context.Context, init *horus.IdentityInit) (*hor
 	})
 }
 
-func (s *identityStore) GetByValue(ctx context.Context, value string) (*horus.Identity, error) {
-	res, err := s.client.Identity.Get(ctx, value)
+func (s *identityStore) GetByValue(ctx context.Context, identity_value horus.IdentityValue) (*horus.Identity, error) {
+	res, err := s.client.Identity.Get(ctx, string(identity_value))
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, horus.ErrNotExist
@@ -85,7 +85,7 @@ func (s *identityStore) GetByValue(ctx context.Context, value string) (*horus.Id
 	return fromEntIdentity(res), nil
 }
 
-func (s *identityStore) GetAllByOwner(ctx context.Context, owner_id horus.UserId) (map[string]*horus.Identity, error) {
+func (s *identityStore) GetAllByOwner(ctx context.Context, owner_id horus.UserId) (map[horus.IdentityValue]*horus.Identity, error) {
 	res, err := s.client.Identity.Query().
 		Where(identity.OwnerID(uuid.UUID(owner_id))).
 		All(ctx)
@@ -93,16 +93,16 @@ func (s *identityStore) GetAllByOwner(ctx context.Context, owner_id horus.UserId
 		return nil, fmt.Errorf("query: %w", err)
 	}
 
-	rst := map[string]*horus.Identity{}
+	rst := map[horus.IdentityValue]*horus.Identity{}
 	for _, v := range res {
-		rst[v.ID] = fromEntIdentity(v)
+		rst[horus.IdentityValue(v.ID)] = fromEntIdentity(v)
 	}
 
 	return rst, nil
 }
 
 func (s *identityStore) Update(ctx context.Context, input *horus.Identity) (*horus.Identity, error) {
-	query := s.client.Identity.UpdateOneID(input.Value).
+	query := s.client.Identity.UpdateOneID(string(input.Value)).
 		SetName(input.Name)
 	if input.VerifiedBy != "" {
 		query.SetVerifiedBy(input.VerifiedBy)

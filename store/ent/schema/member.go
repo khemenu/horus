@@ -29,7 +29,7 @@ func (Member) Edges() []ent.Edge {
 		edge.From("user", User.Type).Ref("belongs").Field("user_id").Immutable().Unique().Required(),
 		edge.From("org", Org.Type).Ref("members").Field("org_id").Immutable().Unique().Required(),
 		edge.From("teams", Team.Type).Ref("members").Through("memberships", Membership.Type),
-		edge.To("contacts", Identity.Type),
+		edge.To("identities", Identity.Type),
 	}
 }
 

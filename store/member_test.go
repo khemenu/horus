@@ -17,7 +17,9 @@ type MemberStoreTestSuite struct {
 func TestMemberStoreSqlite(t *testing.T) {
 	suite.Run(t, &MemberStoreTestSuite{
 		SuiteWithStoresOrg: SuiteWithStoresOrg{
-			SuiteWithStores: NewSuiteWithSqliteStores(),
+			SuiteWithStoresUser: SuiteWithStoresUser{
+				SuiteWithStores: NewSuiteWithSqliteStores(),
+			},
 		},
 	})
 }
@@ -91,6 +93,32 @@ func (s *MemberStoreTestSuite) TestGetById() {
 		member, err := s.Members().GetById(ctx, s.owner.Id)
 		require.NoError(err)
 		require.Equal(member.Role, horus.RoleOrgOwner)
+	})
+
+	s.Run("with identities", func(ctx context.Context) {
+		require := s.Require()
+
+		amun, err := s.Identities().New(ctx, s.InitAmun())
+		require.NoError(err)
+
+		atum, err := s.Identities().New(ctx, s.InitAtum())
+		require.NoError(err)
+
+		err = s.Members().AddIdentity(ctx, s.owner.Id, amun.Value)
+		require.NoError(err)
+
+		err = s.Members().AddIdentity(ctx, s.owner.Id, atum.Value)
+		require.NoError(err)
+
+		member, err := s.Members().GetById(ctx, s.owner.Id)
+		require.NoError(err)
+		require.Equal(
+			map[string]*horus.Identity{
+				string(amun.Value): amun,
+				string(atum.Value): atum,
+			},
+			member.Identities,
+		)
 	})
 }
 
@@ -187,6 +215,55 @@ func (s *MemberStoreTestSuite) TestUpdateById() {
 		owner, err := s.Members().GetById(ctx, s.owner.Id)
 		require.NoError(err)
 		require.Equal(horus.RoleOrgOwner, owner.Role)
+	})
+}
+
+func (s *MemberStoreTestSuite) TestAddIdentity() {
+	s.Run("member does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		identity, err := s.Identities().New(ctx, s.InitAmun())
+		require.NoError(err)
+
+		err = s.Members().AddIdentity(ctx, horus.MemberId(uuid.New()), identity.Value)
+		require.ErrorIs(err, horus.ErrNotExist)
+	})
+
+	s.Run("identity does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		err := s.Members().AddIdentity(ctx, s.owner.Id, "not exists")
+		require.ErrorIs(err, horus.ErrNotExist)
+	})
+
+	s.Run("member and identity both exists", func(ctx context.Context) {
+		require := s.Require()
+
+		identity, err := s.Identities().New(ctx, s.InitAmun())
+		require.NoError(err)
+
+		err = s.Members().AddIdentity(ctx, s.owner.Id, identity.Value)
+		require.NoError(err)
+	})
+
+	s.Run("different owner", func(ctx context.Context) {
+		require := s.Require()
+
+		other, err := s.Users().New(ctx)
+		require.NoError(err)
+
+		other_member, err := s.Members().New(ctx, horus.MemberInit{
+			OrgId:  s.org.Id,
+			UserId: other.Id,
+			Role:   horus.RoleOrgMember,
+		})
+		require.NoError(err)
+
+		identity, err := s.Identities().New(ctx, s.InitAmun())
+		require.NoError(err)
+
+		err = s.Members().AddIdentity(ctx, other_member.Id, identity.Value)
+		require.ErrorIs(err, horus.ErrInvalidArgument)
 	})
 }
 

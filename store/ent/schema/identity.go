@@ -26,5 +26,6 @@ func (Identity) Fields() []ent.Field {
 func (Identity) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("owner", User.Type).Ref("identities").Field("owner_id").Immutable().Unique().Required(),
+		edge.From("member", Member.Type).Ref("identities"),
 	}
 }

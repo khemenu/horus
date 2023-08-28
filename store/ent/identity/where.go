@@ -410,6 +410,29 @@ func HasOwnerWith(preds ...predicate.User) predicate.Identity {
 	})
 }
 
+// HasMember applies the HasEdge predicate on the "member" edge.
+func HasMember() predicate.Identity {
+	return predicate.Identity(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, MemberTable, MemberPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMemberWith applies the HasEdge predicate on the "member" edge with a given conditions (other predicates).
+func HasMemberWith(preds ...predicate.Member) predicate.Identity {
+	return predicate.Identity(func(s *sql.Selector) {
+		step := newMemberStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Identity) predicate.Identity {
 	return predicate.Identity(func(s *sql.Selector) {

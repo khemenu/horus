@@ -41,7 +41,6 @@ var (
 		{Name: "name", Type: field.TypeString, Default: ""},
 		{Name: "verified_by", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
-		{Name: "member_contacts", Type: field.TypeUUID, Nullable: true},
 		{Name: "owner_id", Type: field.TypeUUID},
 	}
 	// IdentitiesTable holds the schema information for the "identities" table.
@@ -51,14 +50,8 @@ var (
 		PrimaryKey: []*schema.Column{IdentitiesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "identities_members_contacts",
-				Columns:    []*schema.Column{IdentitiesColumns[5]},
-				RefColumns: []*schema.Column{MembersColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
 				Symbol:     "identities_users_identities",
-				Columns:    []*schema.Column{IdentitiesColumns[6]},
+				Columns:    []*schema.Column{IdentitiesColumns[5]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -195,6 +188,31 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
+	// MemberIdentitiesColumns holds the columns for the "member_identities" table.
+	MemberIdentitiesColumns = []*schema.Column{
+		{Name: "member_id", Type: field.TypeUUID},
+		{Name: "identity_id", Type: field.TypeString},
+	}
+	// MemberIdentitiesTable holds the schema information for the "member_identities" table.
+	MemberIdentitiesTable = &schema.Table{
+		Name:       "member_identities",
+		Columns:    MemberIdentitiesColumns,
+		PrimaryKey: []*schema.Column{MemberIdentitiesColumns[0], MemberIdentitiesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "member_identities_member_id",
+				Columns:    []*schema.Column{MemberIdentitiesColumns[0]},
+				RefColumns: []*schema.Column{MembersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "member_identities_identity_id",
+				Columns:    []*schema.Column{MemberIdentitiesColumns[1]},
+				RefColumns: []*schema.Column{IdentitiesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AuthorizersTable,
@@ -205,18 +223,20 @@ var (
 		TeamsTable,
 		TokensTable,
 		UsersTable,
+		MemberIdentitiesTable,
 	}
 )
 
 func init() {
 	AuthorizersTable.ForeignKeys[0].RefTable = IdentitiesTable
 	AuthorizersTable.ForeignKeys[1].RefTable = UsersTable
-	IdentitiesTable.ForeignKeys[0].RefTable = MembersTable
-	IdentitiesTable.ForeignKeys[1].RefTable = UsersTable
+	IdentitiesTable.ForeignKeys[0].RefTable = UsersTable
 	MembersTable.ForeignKeys[0].RefTable = OrgsTable
 	MembersTable.ForeignKeys[1].RefTable = UsersTable
 	MembershipsTable.ForeignKeys[0].RefTable = TeamsTable
 	MembershipsTable.ForeignKeys[1].RefTable = MembersTable
 	TeamsTable.ForeignKeys[0].RefTable = OrgsTable
 	TokensTable.ForeignKeys[0].RefTable = UsersTable
+	MemberIdentitiesTable.ForeignKeys[0].RefTable = MembersTable
+	MemberIdentitiesTable.ForeignKeys[1].RefTable = IdentitiesTable
 }

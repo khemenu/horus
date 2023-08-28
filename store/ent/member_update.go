@@ -66,19 +66,19 @@ func (mu *MemberUpdate) AddTeams(t ...*Team) *MemberUpdate {
 	return mu.AddTeamIDs(ids...)
 }
 
-// AddContactIDs adds the "contacts" edge to the Identity entity by IDs.
-func (mu *MemberUpdate) AddContactIDs(ids ...string) *MemberUpdate {
-	mu.mutation.AddContactIDs(ids...)
+// AddIdentityIDs adds the "identities" edge to the Identity entity by IDs.
+func (mu *MemberUpdate) AddIdentityIDs(ids ...string) *MemberUpdate {
+	mu.mutation.AddIdentityIDs(ids...)
 	return mu
 }
 
-// AddContacts adds the "contacts" edges to the Identity entity.
-func (mu *MemberUpdate) AddContacts(i ...*Identity) *MemberUpdate {
+// AddIdentities adds the "identities" edges to the Identity entity.
+func (mu *MemberUpdate) AddIdentities(i ...*Identity) *MemberUpdate {
 	ids := make([]string, len(i))
 	for j := range i {
 		ids[j] = i[j].ID
 	}
-	return mu.AddContactIDs(ids...)
+	return mu.AddIdentityIDs(ids...)
 }
 
 // Mutation returns the MemberMutation object of the builder.
@@ -107,25 +107,25 @@ func (mu *MemberUpdate) RemoveTeams(t ...*Team) *MemberUpdate {
 	return mu.RemoveTeamIDs(ids...)
 }
 
-// ClearContacts clears all "contacts" edges to the Identity entity.
-func (mu *MemberUpdate) ClearContacts() *MemberUpdate {
-	mu.mutation.ClearContacts()
+// ClearIdentities clears all "identities" edges to the Identity entity.
+func (mu *MemberUpdate) ClearIdentities() *MemberUpdate {
+	mu.mutation.ClearIdentities()
 	return mu
 }
 
-// RemoveContactIDs removes the "contacts" edge to Identity entities by IDs.
-func (mu *MemberUpdate) RemoveContactIDs(ids ...string) *MemberUpdate {
-	mu.mutation.RemoveContactIDs(ids...)
+// RemoveIdentityIDs removes the "identities" edge to Identity entities by IDs.
+func (mu *MemberUpdate) RemoveIdentityIDs(ids ...string) *MemberUpdate {
+	mu.mutation.RemoveIdentityIDs(ids...)
 	return mu
 }
 
-// RemoveContacts removes "contacts" edges to Identity entities.
-func (mu *MemberUpdate) RemoveContacts(i ...*Identity) *MemberUpdate {
+// RemoveIdentities removes "identities" edges to Identity entities.
+func (mu *MemberUpdate) RemoveIdentities(i ...*Identity) *MemberUpdate {
 	ids := make([]string, len(i))
 	for j := range i {
 		ids[j] = i[j].ID
 	}
-	return mu.RemoveContactIDs(ids...)
+	return mu.RemoveIdentityIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -251,12 +251,12 @@ func (mu *MemberUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge.Target.Fields = specE.Fields
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if mu.mutation.ContactsCleared() {
+	if mu.mutation.IdentitiesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   member.ContactsTable,
-			Columns: []string{member.ContactsColumn},
+			Table:   member.IdentitiesTable,
+			Columns: member.IdentitiesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(identity.FieldID, field.TypeString),
@@ -264,12 +264,12 @@ func (mu *MemberUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mu.mutation.RemovedContactsIDs(); len(nodes) > 0 && !mu.mutation.ContactsCleared() {
+	if nodes := mu.mutation.RemovedIdentitiesIDs(); len(nodes) > 0 && !mu.mutation.IdentitiesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   member.ContactsTable,
-			Columns: []string{member.ContactsColumn},
+			Table:   member.IdentitiesTable,
+			Columns: member.IdentitiesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(identity.FieldID, field.TypeString),
@@ -280,12 +280,12 @@ func (mu *MemberUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mu.mutation.ContactsIDs(); len(nodes) > 0 {
+	if nodes := mu.mutation.IdentitiesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   member.ContactsTable,
-			Columns: []string{member.ContactsColumn},
+			Table:   member.IdentitiesTable,
+			Columns: member.IdentitiesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(identity.FieldID, field.TypeString),
@@ -351,19 +351,19 @@ func (muo *MemberUpdateOne) AddTeams(t ...*Team) *MemberUpdateOne {
 	return muo.AddTeamIDs(ids...)
 }
 
-// AddContactIDs adds the "contacts" edge to the Identity entity by IDs.
-func (muo *MemberUpdateOne) AddContactIDs(ids ...string) *MemberUpdateOne {
-	muo.mutation.AddContactIDs(ids...)
+// AddIdentityIDs adds the "identities" edge to the Identity entity by IDs.
+func (muo *MemberUpdateOne) AddIdentityIDs(ids ...string) *MemberUpdateOne {
+	muo.mutation.AddIdentityIDs(ids...)
 	return muo
 }
 
-// AddContacts adds the "contacts" edges to the Identity entity.
-func (muo *MemberUpdateOne) AddContacts(i ...*Identity) *MemberUpdateOne {
+// AddIdentities adds the "identities" edges to the Identity entity.
+func (muo *MemberUpdateOne) AddIdentities(i ...*Identity) *MemberUpdateOne {
 	ids := make([]string, len(i))
 	for j := range i {
 		ids[j] = i[j].ID
 	}
-	return muo.AddContactIDs(ids...)
+	return muo.AddIdentityIDs(ids...)
 }
 
 // Mutation returns the MemberMutation object of the builder.
@@ -392,25 +392,25 @@ func (muo *MemberUpdateOne) RemoveTeams(t ...*Team) *MemberUpdateOne {
 	return muo.RemoveTeamIDs(ids...)
 }
 
-// ClearContacts clears all "contacts" edges to the Identity entity.
-func (muo *MemberUpdateOne) ClearContacts() *MemberUpdateOne {
-	muo.mutation.ClearContacts()
+// ClearIdentities clears all "identities" edges to the Identity entity.
+func (muo *MemberUpdateOne) ClearIdentities() *MemberUpdateOne {
+	muo.mutation.ClearIdentities()
 	return muo
 }
 
-// RemoveContactIDs removes the "contacts" edge to Identity entities by IDs.
-func (muo *MemberUpdateOne) RemoveContactIDs(ids ...string) *MemberUpdateOne {
-	muo.mutation.RemoveContactIDs(ids...)
+// RemoveIdentityIDs removes the "identities" edge to Identity entities by IDs.
+func (muo *MemberUpdateOne) RemoveIdentityIDs(ids ...string) *MemberUpdateOne {
+	muo.mutation.RemoveIdentityIDs(ids...)
 	return muo
 }
 
-// RemoveContacts removes "contacts" edges to Identity entities.
-func (muo *MemberUpdateOne) RemoveContacts(i ...*Identity) *MemberUpdateOne {
+// RemoveIdentities removes "identities" edges to Identity entities.
+func (muo *MemberUpdateOne) RemoveIdentities(i ...*Identity) *MemberUpdateOne {
 	ids := make([]string, len(i))
 	for j := range i {
 		ids[j] = i[j].ID
 	}
-	return muo.RemoveContactIDs(ids...)
+	return muo.RemoveIdentityIDs(ids...)
 }
 
 // Where appends a list predicates to the MemberUpdate builder.
@@ -566,12 +566,12 @@ func (muo *MemberUpdateOne) sqlSave(ctx context.Context) (_node *Member, err err
 		edge.Target.Fields = specE.Fields
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if muo.mutation.ContactsCleared() {
+	if muo.mutation.IdentitiesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   member.ContactsTable,
-			Columns: []string{member.ContactsColumn},
+			Table:   member.IdentitiesTable,
+			Columns: member.IdentitiesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(identity.FieldID, field.TypeString),
@@ -579,12 +579,12 @@ func (muo *MemberUpdateOne) sqlSave(ctx context.Context) (_node *Member, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := muo.mutation.RemovedContactsIDs(); len(nodes) > 0 && !muo.mutation.ContactsCleared() {
+	if nodes := muo.mutation.RemovedIdentitiesIDs(); len(nodes) > 0 && !muo.mutation.IdentitiesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   member.ContactsTable,
-			Columns: []string{member.ContactsColumn},
+			Table:   member.IdentitiesTable,
+			Columns: member.IdentitiesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(identity.FieldID, field.TypeString),
@@ -595,12 +595,12 @@ func (muo *MemberUpdateOne) sqlSave(ctx context.Context) (_node *Member, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := muo.mutation.ContactsIDs(); len(nodes) > 0 {
+	if nodes := muo.mutation.IdentitiesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   member.ContactsTable,
-			Columns: []string{member.ContactsColumn},
+			Table:   member.IdentitiesTable,
+			Columns: member.IdentitiesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(identity.FieldID, field.TypeString),

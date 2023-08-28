@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -12,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"khepri.dev/horus/store/ent/identity"
+	"khepri.dev/horus/store/ent/member"
 	"khepri.dev/horus/store/ent/predicate"
 	"khepri.dev/horus/store/ent/user"
 )
@@ -24,7 +26,7 @@ type IdentityQuery struct {
 	inters     []Interceptor
 	predicates []predicate.Identity
 	withOwner  *UserQuery
-	withFKs    bool
+	withMember *MemberQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,6 +78,28 @@ func (iq *IdentityQuery) QueryOwner() *UserQuery {
 			sqlgraph.From(identity.Table, identity.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, identity.OwnerTable, identity.OwnerColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMember chains the current query on the "member" edge.
+func (iq *IdentityQuery) QueryMember() *MemberQuery {
+	query := (&MemberClient{config: iq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := iq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := iq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(identity.Table, identity.FieldID, selector),
+			sqlgraph.To(member.Table, member.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, identity.MemberTable, identity.MemberPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
 		return fromU, nil
@@ -276,6 +300,7 @@ func (iq *IdentityQuery) Clone() *IdentityQuery {
 		inters:     append([]Interceptor{}, iq.inters...),
 		predicates: append([]predicate.Identity{}, iq.predicates...),
 		withOwner:  iq.withOwner.Clone(),
+		withMember: iq.withMember.Clone(),
 		// clone intermediate query.
 		sql:  iq.sql.Clone(),
 		path: iq.path,
@@ -290,6 +315,17 @@ func (iq *IdentityQuery) WithOwner(opts ...func(*UserQuery)) *IdentityQuery {
 		opt(query)
 	}
 	iq.withOwner = query
+	return iq
+}
+
+// WithMember tells the query-builder to eager-load the nodes that are connected to
+// the "member" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *IdentityQuery) WithMember(opts ...func(*MemberQuery)) *IdentityQuery {
+	query := (&MemberClient{config: iq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	iq.withMember = query
 	return iq
 }
 
@@ -370,15 +406,12 @@ func (iq *IdentityQuery) prepareQuery(ctx context.Context) error {
 func (iq *IdentityQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Identity, error) {
 	var (
 		nodes       = []*Identity{}
-		withFKs     = iq.withFKs
 		_spec       = iq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			iq.withOwner != nil,
+			iq.withMember != nil,
 		}
 	)
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, identity.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Identity).scanValues(nil, columns)
 	}
@@ -400,6 +433,13 @@ func (iq *IdentityQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ide
 	if query := iq.withOwner; query != nil {
 		if err := iq.loadOwner(ctx, query, nodes, nil,
 			func(n *Identity, e *User) { n.Edges.Owner = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := iq.withMember; query != nil {
+		if err := iq.loadMember(ctx, query, nodes,
+			func(n *Identity) { n.Edges.Member = []*Member{} },
+			func(n *Identity, e *Member) { n.Edges.Member = append(n.Edges.Member, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -431,6 +471,67 @@ func (iq *IdentityQuery) loadOwner(ctx context.Context, query *UserQuery, nodes 
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (iq *IdentityQuery) loadMember(ctx context.Context, query *MemberQuery, nodes []*Identity, init func(*Identity), assign func(*Identity, *Member)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[string]*Identity)
+	nids := make(map[uuid.UUID]map[*Identity]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(identity.MemberTable)
+		s.Join(joinT).On(s.C(member.FieldID), joinT.C(identity.MemberPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(identity.MemberPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(identity.MemberPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullString)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := values[0].(*sql.NullString).String
+				inValue := *values[1].(*uuid.UUID)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Identity]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Member](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "member" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
 		}
 	}
 	return nil

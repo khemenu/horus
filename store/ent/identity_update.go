@@ -10,8 +10,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"khepri.dev/horus"
 	"khepri.dev/horus/store/ent/identity"
+	"khepri.dev/horus/store/ent/member"
 	"khepri.dev/horus/store/ent/predicate"
 )
 
@@ -48,9 +50,45 @@ func (iu *IdentityUpdate) SetVerifiedBy(h horus.Verifier) *IdentityUpdate {
 	return iu
 }
 
+// AddMemberIDs adds the "member" edge to the Member entity by IDs.
+func (iu *IdentityUpdate) AddMemberIDs(ids ...uuid.UUID) *IdentityUpdate {
+	iu.mutation.AddMemberIDs(ids...)
+	return iu
+}
+
+// AddMember adds the "member" edges to the Member entity.
+func (iu *IdentityUpdate) AddMember(m ...*Member) *IdentityUpdate {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return iu.AddMemberIDs(ids...)
+}
+
 // Mutation returns the IdentityMutation object of the builder.
 func (iu *IdentityUpdate) Mutation() *IdentityMutation {
 	return iu.mutation
+}
+
+// ClearMember clears all "member" edges to the Member entity.
+func (iu *IdentityUpdate) ClearMember() *IdentityUpdate {
+	iu.mutation.ClearMember()
+	return iu
+}
+
+// RemoveMemberIDs removes the "member" edge to Member entities by IDs.
+func (iu *IdentityUpdate) RemoveMemberIDs(ids ...uuid.UUID) *IdentityUpdate {
+	iu.mutation.RemoveMemberIDs(ids...)
+	return iu
+}
+
+// RemoveMember removes "member" edges to Member entities.
+func (iu *IdentityUpdate) RemoveMember(m ...*Member) *IdentityUpdate {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return iu.RemoveMemberIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -111,6 +149,51 @@ func (iu *IdentityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := iu.mutation.VerifiedBy(); ok {
 		_spec.SetField(identity.FieldVerifiedBy, field.TypeString, value)
 	}
+	if iu.mutation.MemberCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   identity.MemberTable,
+			Columns: identity.MemberPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedMemberIDs(); len(nodes) > 0 && !iu.mutation.MemberCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   identity.MemberTable,
+			Columns: identity.MemberPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.MemberIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   identity.MemberTable,
+			Columns: identity.MemberPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{identity.Label}
@@ -151,9 +234,45 @@ func (iuo *IdentityUpdateOne) SetVerifiedBy(h horus.Verifier) *IdentityUpdateOne
 	return iuo
 }
 
+// AddMemberIDs adds the "member" edge to the Member entity by IDs.
+func (iuo *IdentityUpdateOne) AddMemberIDs(ids ...uuid.UUID) *IdentityUpdateOne {
+	iuo.mutation.AddMemberIDs(ids...)
+	return iuo
+}
+
+// AddMember adds the "member" edges to the Member entity.
+func (iuo *IdentityUpdateOne) AddMember(m ...*Member) *IdentityUpdateOne {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return iuo.AddMemberIDs(ids...)
+}
+
 // Mutation returns the IdentityMutation object of the builder.
 func (iuo *IdentityUpdateOne) Mutation() *IdentityMutation {
 	return iuo.mutation
+}
+
+// ClearMember clears all "member" edges to the Member entity.
+func (iuo *IdentityUpdateOne) ClearMember() *IdentityUpdateOne {
+	iuo.mutation.ClearMember()
+	return iuo
+}
+
+// RemoveMemberIDs removes the "member" edge to Member entities by IDs.
+func (iuo *IdentityUpdateOne) RemoveMemberIDs(ids ...uuid.UUID) *IdentityUpdateOne {
+	iuo.mutation.RemoveMemberIDs(ids...)
+	return iuo
+}
+
+// RemoveMember removes "member" edges to Member entities.
+func (iuo *IdentityUpdateOne) RemoveMember(m ...*Member) *IdentityUpdateOne {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return iuo.RemoveMemberIDs(ids...)
 }
 
 // Where appends a list predicates to the IdentityUpdate builder.
@@ -243,6 +362,51 @@ func (iuo *IdentityUpdateOne) sqlSave(ctx context.Context) (_node *Identity, err
 	}
 	if value, ok := iuo.mutation.VerifiedBy(); ok {
 		_spec.SetField(identity.FieldVerifiedBy, field.TypeString, value)
+	}
+	if iuo.mutation.MemberCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   identity.MemberTable,
+			Columns: identity.MemberPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedMemberIDs(); len(nodes) > 0 && !iuo.mutation.MemberCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   identity.MemberTable,
+			Columns: identity.MemberPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.MemberIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   identity.MemberTable,
+			Columns: identity.MemberPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Identity{config: iuo.config}
 	_spec.Assign = _node.assignValues

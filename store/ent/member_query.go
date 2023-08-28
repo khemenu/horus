@@ -31,7 +31,7 @@ type MemberQuery struct {
 	withUser        *UserQuery
 	withOrg         *OrgQuery
 	withTeams       *TeamQuery
-	withContacts    *IdentityQuery
+	withIdentities  *IdentityQuery
 	withMemberships *MembershipQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -135,8 +135,8 @@ func (mq *MemberQuery) QueryTeams() *TeamQuery {
 	return query
 }
 
-// QueryContacts chains the current query on the "contacts" edge.
-func (mq *MemberQuery) QueryContacts() *IdentityQuery {
+// QueryIdentities chains the current query on the "identities" edge.
+func (mq *MemberQuery) QueryIdentities() *IdentityQuery {
 	query := (&IdentityClient{config: mq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := mq.prepareQuery(ctx); err != nil {
@@ -149,7 +149,7 @@ func (mq *MemberQuery) QueryContacts() *IdentityQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(member.Table, member.FieldID, selector),
 			sqlgraph.To(identity.Table, identity.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, member.ContactsTable, member.ContactsColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, member.IdentitiesTable, member.IdentitiesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
 		return fromU, nil
@@ -374,7 +374,7 @@ func (mq *MemberQuery) Clone() *MemberQuery {
 		withUser:        mq.withUser.Clone(),
 		withOrg:         mq.withOrg.Clone(),
 		withTeams:       mq.withTeams.Clone(),
-		withContacts:    mq.withContacts.Clone(),
+		withIdentities:  mq.withIdentities.Clone(),
 		withMemberships: mq.withMemberships.Clone(),
 		// clone intermediate query.
 		sql:  mq.sql.Clone(),
@@ -415,14 +415,14 @@ func (mq *MemberQuery) WithTeams(opts ...func(*TeamQuery)) *MemberQuery {
 	return mq
 }
 
-// WithContacts tells the query-builder to eager-load the nodes that are connected to
-// the "contacts" edge. The optional arguments are used to configure the query builder of the edge.
-func (mq *MemberQuery) WithContacts(opts ...func(*IdentityQuery)) *MemberQuery {
+// WithIdentities tells the query-builder to eager-load the nodes that are connected to
+// the "identities" edge. The optional arguments are used to configure the query builder of the edge.
+func (mq *MemberQuery) WithIdentities(opts ...func(*IdentityQuery)) *MemberQuery {
 	query := (&IdentityClient{config: mq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	mq.withContacts = query
+	mq.withIdentities = query
 	return mq
 }
 
@@ -519,7 +519,7 @@ func (mq *MemberQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Membe
 			mq.withUser != nil,
 			mq.withOrg != nil,
 			mq.withTeams != nil,
-			mq.withContacts != nil,
+			mq.withIdentities != nil,
 			mq.withMemberships != nil,
 		}
 	)
@@ -560,10 +560,10 @@ func (mq *MemberQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Membe
 			return nil, err
 		}
 	}
-	if query := mq.withContacts; query != nil {
-		if err := mq.loadContacts(ctx, query, nodes,
-			func(n *Member) { n.Edges.Contacts = []*Identity{} },
-			func(n *Member, e *Identity) { n.Edges.Contacts = append(n.Edges.Contacts, e) }); err != nil {
+	if query := mq.withIdentities; query != nil {
+		if err := mq.loadIdentities(ctx, query, nodes,
+			func(n *Member) { n.Edges.Identities = []*Identity{} },
+			func(n *Member, e *Identity) { n.Edges.Identities = append(n.Edges.Identities, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -696,34 +696,64 @@ func (mq *MemberQuery) loadTeams(ctx context.Context, query *TeamQuery, nodes []
 	}
 	return nil
 }
-func (mq *MemberQuery) loadContacts(ctx context.Context, query *IdentityQuery, nodes []*Member, init func(*Member), assign func(*Member, *Identity)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uuid.UUID]*Member)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
+func (mq *MemberQuery) loadIdentities(ctx context.Context, query *IdentityQuery, nodes []*Member, init func(*Member), assign func(*Member, *Identity)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[uuid.UUID]*Member)
+	nids := make(map[string]map[*Member]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
 		if init != nil {
-			init(nodes[i])
+			init(node)
 		}
 	}
-	query.withFKs = true
-	query.Where(predicate.Identity(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(member.ContactsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(member.IdentitiesTable)
+		s.Join(joinT).On(s.C(identity.FieldID), joinT.C(member.IdentitiesPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(member.IdentitiesPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(member.IdentitiesPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(uuid.UUID)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := *values[0].(*uuid.UUID)
+				inValue := values[1].(*sql.NullString).String
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Member]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Identity](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.member_contacts
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "member_contacts" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "member_contacts" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected "identities" node returned %v`, n.ID)
 		}
-		assign(node, n)
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

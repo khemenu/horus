@@ -32,7 +32,9 @@ func (s *MembershipStoreTestSuite) Run(name string, sub func(ctx context.Context
 func TestMembershipStoreSqlite(t *testing.T) {
 	suite.Run(t, &MembershipStoreTestSuite{
 		SuiteWithStoresOrg: SuiteWithStoresOrg{
-			SuiteWithStores: NewSuiteWithSqliteStores(),
+			SuiteWithStoresUser: SuiteWithStoresUser{
+				SuiteWithStores: NewSuiteWithSqliteStores(),
+			},
 		},
 	})
 }

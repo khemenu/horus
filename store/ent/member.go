@@ -45,8 +45,8 @@ type MemberEdges struct {
 	Org *Org `json:"org,omitempty"`
 	// Teams holds the value of the teams edge.
 	Teams []*Team `json:"teams,omitempty"`
-	// Contacts holds the value of the contacts edge.
-	Contacts []*Identity `json:"contacts,omitempty"`
+	// Identities holds the value of the identities edge.
+	Identities []*Identity `json:"identities,omitempty"`
 	// Memberships holds the value of the memberships edge.
 	Memberships []*Membership `json:"memberships,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -89,13 +89,13 @@ func (e MemberEdges) TeamsOrErr() ([]*Team, error) {
 	return nil, &NotLoadedError{edge: "teams"}
 }
 
-// ContactsOrErr returns the Contacts value or an error if the edge
+// IdentitiesOrErr returns the Identities value or an error if the edge
 // was not loaded in eager-loading.
-func (e MemberEdges) ContactsOrErr() ([]*Identity, error) {
+func (e MemberEdges) IdentitiesOrErr() ([]*Identity, error) {
 	if e.loadedTypes[3] {
-		return e.Contacts, nil
+		return e.Identities, nil
 	}
-	return nil, &NotLoadedError{edge: "contacts"}
+	return nil, &NotLoadedError{edge: "identities"}
 }
 
 // MembershipsOrErr returns the Memberships value or an error if the edge
@@ -197,9 +197,9 @@ func (m *Member) QueryTeams() *TeamQuery {
 	return NewMemberClient(m.config).QueryTeams(m)
 }
 
-// QueryContacts queries the "contacts" edge of the Member entity.
-func (m *Member) QueryContacts() *IdentityQuery {
-	return NewMemberClient(m.config).QueryContacts(m)
+// QueryIdentities queries the "identities" edge of the Member entity.
+func (m *Member) QueryIdentities() *IdentityQuery {
+	return NewMemberClient(m.config).QueryIdentities(m)
 }
 
 // QueryMemberships queries the "memberships" edge of the Member entity.

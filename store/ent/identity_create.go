@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"khepri.dev/horus"
 	"khepri.dev/horus/store/ent/identity"
+	"khepri.dev/horus/store/ent/member"
 	"khepri.dev/horus/store/ent/user"
 )
 
@@ -78,6 +79,21 @@ func (ic *IdentityCreate) SetID(s string) *IdentityCreate {
 // SetOwner sets the "owner" edge to the User entity.
 func (ic *IdentityCreate) SetOwner(u *User) *IdentityCreate {
 	return ic.SetOwnerID(u.ID)
+}
+
+// AddMemberIDs adds the "member" edge to the Member entity by IDs.
+func (ic *IdentityCreate) AddMemberIDs(ids ...uuid.UUID) *IdentityCreate {
+	ic.mutation.AddMemberIDs(ids...)
+	return ic
+}
+
+// AddMember adds the "member" edges to the Member entity.
+func (ic *IdentityCreate) AddMember(m ...*Member) *IdentityCreate {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return ic.AddMemberIDs(ids...)
 }
 
 // Mutation returns the IdentityMutation object of the builder.
@@ -226,6 +242,22 @@ func (ic *IdentityCreate) createSpec() (*Identity, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.OwnerID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ic.mutation.MemberIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   identity.MemberTable,
+			Columns: identity.MemberPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(member.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

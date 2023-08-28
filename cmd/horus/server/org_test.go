@@ -201,7 +201,7 @@ func TestInviteUser(t *testing.T) {
 			OrgId: org.Id[:],
 			Identity: &pb.Identity{
 				Kind:  pb.IdentityKind_IDENTITY_KIND_MAIL,
-				Value: h.identity.Value,
+				Value: string(h.identity.Value),
 			},
 		})
 		s, ok := status.FromError(err)
@@ -269,7 +269,7 @@ func TestJoinOrg(t *testing.T) {
 			OrgId: org.Id[:],
 			Identity: &pb.Identity{
 				Kind:  pb.IdentityKind_IDENTITY_KIND_MAIL,
-				Value: h.identity.Value,
+				Value: string(h.identity.Value),
 			},
 		})
 		require.NoError(err)

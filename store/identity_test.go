@@ -21,24 +21,6 @@ func TestIdentityStoreSqlite(t *testing.T) {
 	})
 }
 
-func (s *IdentityStoreTestSuite) InitAmun() *horus.IdentityInit {
-	return &horus.IdentityInit{
-		OwnerId:    s.user.Id,
-		Kind:       horus.IdentityMail,
-		Value:      "amun@khepri.dev",
-		VerifiedBy: horus.VerifierGoogleOauth2,
-	}
-}
-
-func (s *IdentityStoreTestSuite) InitAtum() *horus.IdentityInit {
-	return &horus.IdentityInit{
-		OwnerId:    s.user.Id,
-		Kind:       horus.IdentityMail,
-		Value:      "atum@khepri.dev",
-		VerifiedBy: horus.VerifierGoogleOauth2,
-	}
-}
-
 func (s *IdentityStoreTestSuite) TestNew() {
 	s.Run("user can have multiple identity", func(ctx context.Context) {
 		require := s.Require()
@@ -120,7 +102,7 @@ func (s *IdentityStoreTestSuite) TestGetAllByOwner() {
 
 		identities, err := s.Identities().GetAllByOwner(ctx, s.user.Id)
 		require.NoError(err)
-		require.Equal(map[string]*horus.Identity{
+		require.Equal(map[horus.IdentityValue]*horus.Identity{
 			amun.Value: amun,
 			atum.Value: atum,
 		}, identities)

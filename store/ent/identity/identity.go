@@ -26,6 +26,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
+	// EdgeMember holds the string denoting the member edge name in mutations.
+	EdgeMember = "member"
 	// Table holds the table name of the identity in the database.
 	Table = "identities"
 	// OwnerTable is the table that holds the owner relation/edge.
@@ -35,6 +37,11 @@ const (
 	OwnerInverseTable = "users"
 	// OwnerColumn is the table column denoting the owner relation/edge.
 	OwnerColumn = "owner_id"
+	// MemberTable is the table that holds the member relation/edge. The primary key declared below.
+	MemberTable = "member_identities"
+	// MemberInverseTable is the table name for the Member entity.
+	// It exists in this package in order to avoid circular dependency with the "member" package.
+	MemberInverseTable = "members"
 )
 
 // Columns holds all SQL columns for identity fields.
@@ -47,21 +54,16 @@ var Columns = []string{
 	FieldCreatedAt,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "identities"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"member_contacts",
-}
+var (
+	// MemberPrimaryKey and MemberColumn2 are the table columns denoting the
+	// primary key for the member relation (M2M).
+	MemberPrimaryKey = []string{"member_id", "identity_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -120,10 +122,31 @@ func ByOwnerField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newOwnerStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByMemberCount orders the results by member count.
+func ByMemberCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMemberStep(), opts...)
+	}
+}
+
+// ByMember orders the results by member terms.
+func ByMember(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMemberStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newOwnerStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(OwnerInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, OwnerTable, OwnerColumn),
+	)
+}
+func newMemberStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MemberInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, MemberTable, MemberPrimaryKey...),
 	)
 }

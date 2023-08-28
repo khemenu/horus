@@ -33,8 +33,8 @@ const (
 	EdgeOrg = "org"
 	// EdgeTeams holds the string denoting the teams edge name in mutations.
 	EdgeTeams = "teams"
-	// EdgeContacts holds the string denoting the contacts edge name in mutations.
-	EdgeContacts = "contacts"
+	// EdgeIdentities holds the string denoting the identities edge name in mutations.
+	EdgeIdentities = "identities"
 	// EdgeMemberships holds the string denoting the memberships edge name in mutations.
 	EdgeMemberships = "memberships"
 	// Table holds the table name of the member in the database.
@@ -58,13 +58,11 @@ const (
 	// TeamsInverseTable is the table name for the Team entity.
 	// It exists in this package in order to avoid circular dependency with the "team" package.
 	TeamsInverseTable = "teams"
-	// ContactsTable is the table that holds the contacts relation/edge.
-	ContactsTable = "identities"
-	// ContactsInverseTable is the table name for the Identity entity.
+	// IdentitiesTable is the table that holds the identities relation/edge. The primary key declared below.
+	IdentitiesTable = "member_identities"
+	// IdentitiesInverseTable is the table name for the Identity entity.
 	// It exists in this package in order to avoid circular dependency with the "identity" package.
-	ContactsInverseTable = "identities"
-	// ContactsColumn is the table column denoting the contacts relation/edge.
-	ContactsColumn = "member_contacts"
+	IdentitiesInverseTable = "identities"
 	// MembershipsTable is the table that holds the memberships relation/edge.
 	MembershipsTable = "memberships"
 	// MembershipsInverseTable is the table name for the Membership entity.
@@ -88,6 +86,9 @@ var (
 	// TeamsPrimaryKey and TeamsColumn2 are the table columns denoting the
 	// primary key for the teams relation (M2M).
 	TeamsPrimaryKey = []string{"team_id", "member_id"}
+	// IdentitiesPrimaryKey and IdentitiesColumn2 are the table columns denoting the
+	// primary key for the identities relation (M2M).
+	IdentitiesPrimaryKey = []string{"member_id", "identity_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -182,17 +183,17 @@ func ByTeams(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByContactsCount orders the results by contacts count.
-func ByContactsCount(opts ...sql.OrderTermOption) OrderOption {
+// ByIdentitiesCount orders the results by identities count.
+func ByIdentitiesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newContactsStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newIdentitiesStep(), opts...)
 	}
 }
 
-// ByContacts orders the results by contacts terms.
-func ByContacts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByIdentities orders the results by identities terms.
+func ByIdentities(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newContactsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newIdentitiesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -230,11 +231,11 @@ func newTeamsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2M, true, TeamsTable, TeamsPrimaryKey...),
 	)
 }
-func newContactsStep() *sqlgraph.Step {
+func newIdentitiesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ContactsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ContactsTable, ContactsColumn),
+		sqlgraph.To(IdentitiesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, IdentitiesTable, IdentitiesPrimaryKey...),
 	)
 }
 func newMembershipsStep() *sqlgraph.Step {

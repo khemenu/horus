@@ -46,7 +46,11 @@ func (s *SuiteWithStores) Run(name string, sub func(ctx context.Context), opts .
 			opt(&conf)
 		}
 
-		client := enttest.Open(s.T(), s.driver_name, s.source_name, enttest.WithOptions(ent.Log(s.T().Log)))
+		client := enttest.Open(
+			s.T(), s.driver_name, s.source_name,
+			enttest.WithOptions(ent.Log(s.T().Log)),
+			// enttest.WithOptions(ent.Debug()),
+		)
 		defer client.Close()
 
 		stores, err := store.NewStores(client, conf.store_conf)
@@ -63,6 +67,24 @@ type SuiteWithStoresUser struct {
 	user *horus.User
 }
 
+func (s *SuiteWithStoresUser) InitAmun() *horus.IdentityInit {
+	return &horus.IdentityInit{
+		OwnerId:    s.user.Id,
+		Kind:       horus.IdentityMail,
+		Value:      "amun@khepri.dev",
+		VerifiedBy: horus.VerifierGoogleOauth2,
+	}
+}
+
+func (s *SuiteWithStoresUser) InitAtum() *horus.IdentityInit {
+	return &horus.IdentityInit{
+		OwnerId:    s.user.Id,
+		Kind:       horus.IdentityMail,
+		Value:      "atum@khepri.dev",
+		VerifiedBy: horus.VerifierGoogleOauth2,
+	}
+}
+
 func (s *SuiteWithStoresUser) Run(name string, sub func(ctx context.Context), opts ...suiteOption) {
 	s.SuiteWithStores.Run(name, func(ctx context.Context) {
 		user, err := s.Users().New(ctx)
@@ -74,9 +96,8 @@ func (s *SuiteWithStoresUser) Run(name string, sub func(ctx context.Context), op
 }
 
 type SuiteWithStoresOrg struct {
-	SuiteWithStores
+	SuiteWithStoresUser
 
-	user  *horus.User
 	org   *horus.Org
 	owner *horus.Member
 }

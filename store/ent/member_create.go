@@ -111,19 +111,19 @@ func (mc *MemberCreate) AddTeams(t ...*Team) *MemberCreate {
 	return mc.AddTeamIDs(ids...)
 }
 
-// AddContactIDs adds the "contacts" edge to the Identity entity by IDs.
-func (mc *MemberCreate) AddContactIDs(ids ...string) *MemberCreate {
-	mc.mutation.AddContactIDs(ids...)
+// AddIdentityIDs adds the "identities" edge to the Identity entity by IDs.
+func (mc *MemberCreate) AddIdentityIDs(ids ...string) *MemberCreate {
+	mc.mutation.AddIdentityIDs(ids...)
 	return mc
 }
 
-// AddContacts adds the "contacts" edges to the Identity entity.
-func (mc *MemberCreate) AddContacts(i ...*Identity) *MemberCreate {
+// AddIdentities adds the "identities" edges to the Identity entity.
+func (mc *MemberCreate) AddIdentities(i ...*Identity) *MemberCreate {
 	ids := make([]string, len(i))
 	for j := range i {
 		ids[j] = i[j].ID
 	}
-	return mc.AddContactIDs(ids...)
+	return mc.AddIdentityIDs(ids...)
 }
 
 // Mutation returns the MemberMutation object of the builder.
@@ -309,12 +309,12 @@ func (mc *MemberCreate) createSpec() (*Member, *sqlgraph.CreateSpec) {
 		edge.Target.Fields = specE.Fields
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := mc.mutation.ContactsIDs(); len(nodes) > 0 {
+	if nodes := mc.mutation.IdentitiesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   member.ContactsTable,
-			Columns: []string{member.ContactsColumn},
+			Table:   member.IdentitiesTable,
+			Columns: member.IdentitiesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(identity.FieldID, field.TypeString),

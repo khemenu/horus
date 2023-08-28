@@ -574,7 +574,6 @@ func (uq *UserQuery) loadIdentities(ctx context.Context, query *IdentityQuery, n
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(identity.FieldOwnerID)
 	}

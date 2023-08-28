@@ -514,6 +514,22 @@ func (c *IdentityClient) QueryOwner(i *Identity) *UserQuery {
 	return query
 }
 
+// QueryMember queries the member edge of a Identity.
+func (c *IdentityClient) QueryMember(i *Identity) *MemberQuery {
+	query := (&MemberClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(identity.Table, identity.FieldID, id),
+			sqlgraph.To(member.Table, member.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, identity.MemberTable, identity.MemberPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *IdentityClient) Hooks() []Hook {
 	return c.hooks.Identity
@@ -680,15 +696,15 @@ func (c *MemberClient) QueryTeams(m *Member) *TeamQuery {
 	return query
 }
 
-// QueryContacts queries the contacts edge of a Member.
-func (c *MemberClient) QueryContacts(m *Member) *IdentityQuery {
+// QueryIdentities queries the identities edge of a Member.
+func (c *MemberClient) QueryIdentities(m *Member) *IdentityQuery {
 	query := (&IdentityClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(member.Table, member.FieldID, id),
 			sqlgraph.To(identity.Table, identity.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, member.ContactsTable, member.ContactsColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, member.IdentitiesTable, member.IdentitiesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
 		return fromV, nil
