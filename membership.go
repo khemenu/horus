@@ -22,4 +22,5 @@ type MembershipInit struct {
 type MembershipStore interface {
 	New(ctx context.Context, init MembershipInit) (*Membership, error)
 	GetById(ctx context.Context, team_id TeamId, member_id MemberId) (*Membership, error)
+	DeleteByUserIdFromTeam(ctx context.Context, team_id TeamId, user_id UserId) error
 }

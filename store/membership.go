@@ -10,6 +10,7 @@ import (
 	"khepri.dev/horus"
 	"khepri.dev/horus/log"
 	"khepri.dev/horus/store/ent"
+	"khepri.dev/horus/store/ent/member"
 	"khepri.dev/horus/store/ent/membership"
 )
 
@@ -71,4 +72,18 @@ func (s *membershipStore) GetById(ctx context.Context, team_id horus.TeamId, mem
 	}
 
 	return fromEntMembership(res), nil
+}
+
+func (s *membershipStore) DeleteByUserIdFromTeam(ctx context.Context, team_id horus.TeamId, user_id horus.UserId) error {
+	_, err := s.client.Membership.Delete().
+		Where(membership.And(
+			membership.TeamID(uuid.UUID(team_id)),
+			membership.HasMemberWith(member.UserID(uuid.UUID(user_id))),
+		)).
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("save: %w", err)
+	}
+
+	return nil
 }

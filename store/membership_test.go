@@ -123,3 +123,33 @@ func (s *MembershipStoreTestSuite) TestGetById() {
 		require.Equal(horus.RoleTeamOwner, membership.Role)
 	})
 }
+
+func (s *MembershipStoreTestSuite) TestDeleteByUserIdFromTeam() {
+	s.Run("team does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		err := s.Memberships().DeleteByUserIdFromTeam(ctx, horus.TeamId(uuid.New()), s.user.Id)
+		require.NoError(err)
+	})
+
+	s.Run("user does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		err := s.Memberships().DeleteByUserIdFromTeam(ctx, s.team.Id, horus.UserId(uuid.New()))
+		require.NoError(err)
+	})
+
+	s.Run("sole membership in the team", func(ctx context.Context) {
+		require := s.Require()
+
+		err := s.Memberships().DeleteByUserIdFromTeam(ctx, s.team.Id, s.user.Id)
+		require.NoError(err)
+
+		owner, err := s.Members().GetById(ctx, s.owner.Id)
+		require.NoError(err)
+		require.Equal(s.owner, owner)
+
+		_, err = s.Memberships().GetById(ctx, s.team.Id, s.owner.Id)
+		require.ErrorIs(err, horus.ErrNotExist)
+	})
+}
