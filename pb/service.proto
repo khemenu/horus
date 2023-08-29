@@ -8,6 +8,8 @@ option go_package = "khepri.dev/horus/pb";
 
 //
 service Horus {
+	// List identities
+	rpc ListIdentities(ListIdentitiesReq) returns (ListIdentitiesRes) {};
 	// Creates organization.
 	rpc NewOrg(NewOrgReq) returns (NewOrgRes) {};
 	// Lists organizations the user belongs to.
@@ -26,6 +28,11 @@ service Horus {
 	rpc AddMemberIdentity(AddMemberIdentityReq) returns (AddMemberIdentityRes) {};
 	// Remove identity from member.
 	rpc RemoveMemberIdentity(RemoveMemberIdentityReq) returns (RemoveMemberIdentityRes) {};
+}
+
+message ListIdentitiesReq {}
+message ListIdentitiesRes {
+	repeated Identity identities = 1; // List of identities of the user.
 }
 
 message NewOrgReq {}

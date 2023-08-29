@@ -14,28 +14,6 @@ import (
 	"khepri.dev/horus/pb"
 )
 
-func toPbIdentityKind(v horus.IdentityKind) pb.IdentityKind {
-	switch v {
-	case horus.IdentityMail:
-		return pb.IdentityKind_IDENTITY_KIND_MAIL
-	}
-
-	return pb.IdentityKind_IDENTITY_KIND_UNSPECIFIED
-}
-
-func toPbIdentity(v *horus.Identity) *pb.Identity {
-	return &pb.Identity{
-		OwnerId: v.OwnerId[:],
-		Kind:    toPbIdentityKind(v.Kind),
-		Value:   string(v.Value),
-
-		Name:       v.Name,
-		VerifiedBy: string(v.VerifiedBy),
-
-		CreatedAt: v.CreatedAt.Format(time.RFC3339),
-	}
-}
-
 func toPbMember(v *horus.Member) *pb.Member {
 	return &pb.Member{
 		Id:     v.Id[:],

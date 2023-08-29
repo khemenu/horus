@@ -21,6 +21,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	Horus_ListIdentities_FullMethodName       = "/khepri.horus.Horus/ListIdentities"
 	Horus_NewOrg_FullMethodName               = "/khepri.horus.Horus/NewOrg"
 	Horus_ListOrgs_FullMethodName             = "/khepri.horus.Horus/ListOrgs"
 	Horus_UpdateOrg_FullMethodName            = "/khepri.horus.Horus/UpdateOrg"
@@ -36,6 +37,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type HorusClient interface {
+	// List identities
+	ListIdentities(ctx context.Context, in *ListIdentitiesReq, opts ...grpc.CallOption) (*ListIdentitiesRes, error)
 	// Creates organization.
 	NewOrg(ctx context.Context, in *NewOrgReq, opts ...grpc.CallOption) (*NewOrgRes, error)
 	// Lists organizations the user belongs to.
@@ -62,6 +65,15 @@ type horusClient struct {
 
 func NewHorusClient(cc grpc.ClientConnInterface) HorusClient {
 	return &horusClient{cc}
+}
+
+func (c *horusClient) ListIdentities(ctx context.Context, in *ListIdentitiesReq, opts ...grpc.CallOption) (*ListIdentitiesRes, error) {
+	out := new(ListIdentitiesRes)
+	err := c.cc.Invoke(ctx, Horus_ListIdentities_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *horusClient) NewOrg(ctx context.Context, in *NewOrgReq, opts ...grpc.CallOption) (*NewOrgRes, error) {
@@ -149,6 +161,8 @@ func (c *horusClient) RemoveMemberIdentity(ctx context.Context, in *RemoveMember
 // All implementations must embed UnimplementedHorusServer
 // for forward compatibility
 type HorusServer interface {
+	// List identities
+	ListIdentities(context.Context, *ListIdentitiesReq) (*ListIdentitiesRes, error)
 	// Creates organization.
 	NewOrg(context.Context, *NewOrgReq) (*NewOrgRes, error)
 	// Lists organizations the user belongs to.
@@ -174,6 +188,9 @@ type HorusServer interface {
 type UnimplementedHorusServer struct {
 }
 
+func (UnimplementedHorusServer) ListIdentities(context.Context, *ListIdentitiesReq) (*ListIdentitiesRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListIdentities not implemented")
+}
 func (UnimplementedHorusServer) NewOrg(context.Context, *NewOrgReq) (*NewOrgRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewOrg not implemented")
 }
@@ -212,6 +229,24 @@ type UnsafeHorusServer interface {
 
 func RegisterHorusServer(s grpc.ServiceRegistrar, srv HorusServer) {
 	s.RegisterService(&Horus_ServiceDesc, srv)
+}
+
+func _Horus_ListIdentities_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListIdentitiesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HorusServer).ListIdentities(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Horus_ListIdentities_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HorusServer).ListIdentities(ctx, req.(*ListIdentitiesReq))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Horus_NewOrg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -383,6 +418,10 @@ var Horus_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "khepri.horus.Horus",
 	HandlerType: (*HorusServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListIdentities",
+			Handler:    _Horus_ListIdentities_Handler,
+		},
 		{
 			MethodName: "NewOrg",
 			Handler:    _Horus_NewOrg_Handler,
