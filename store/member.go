@@ -179,6 +179,21 @@ func (s *memberStore) AddIdentity(ctx context.Context, member_id horus.MemberId,
 	return err
 }
 
+func (s *memberStore) RemoveIdentity(ctx context.Context, member_id horus.MemberId, identity_value horus.IdentityValue) error {
+	err := s.client.Member.UpdateOneID(uuid.UUID(member_id)).
+		RemoveIdentityIDs(string(identity_value)).
+		Exec(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil
+		}
+
+		return fmt.Errorf("save: %w", err)
+	}
+
+	return nil
+}
+
 func (s *memberStore) DeleteById(ctx context.Context, member_id horus.MemberId) error {
 	err := s.client.Member.DeleteOneID(uuid.UUID(member_id)).Exec(ctx)
 	if err != nil {

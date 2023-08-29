@@ -21,13 +21,15 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Horus_NewOrg_FullMethodName     = "/khepri.horus.Horus/NewOrg"
-	Horus_ListOrgs_FullMethodName   = "/khepri.horus.Horus/ListOrgs"
-	Horus_UpdateOrg_FullMethodName  = "/khepri.horus.Horus/UpdateOrg"
-	Horus_InviteUser_FullMethodName = "/khepri.horus.Horus/InviteUser"
-	Horus_JoinOrg_FullMethodName    = "/khepri.horus.Horus/JoinOrg"
-	Horus_LeaveOrg_FullMethodName   = "/khepri.horus.Horus/LeaveOrg"
-	Horus_SetRoleOrg_FullMethodName = "/khepri.horus.Horus/SetRoleOrg"
+	Horus_NewOrg_FullMethodName               = "/khepri.horus.Horus/NewOrg"
+	Horus_ListOrgs_FullMethodName             = "/khepri.horus.Horus/ListOrgs"
+	Horus_UpdateOrg_FullMethodName            = "/khepri.horus.Horus/UpdateOrg"
+	Horus_InviteUser_FullMethodName           = "/khepri.horus.Horus/InviteUser"
+	Horus_JoinOrg_FullMethodName              = "/khepri.horus.Horus/JoinOrg"
+	Horus_LeaveOrg_FullMethodName             = "/khepri.horus.Horus/LeaveOrg"
+	Horus_SetRoleOrg_FullMethodName           = "/khepri.horus.Horus/SetRoleOrg"
+	Horus_AddMemberIdentity_FullMethodName    = "/khepri.horus.Horus/AddMemberIdentity"
+	Horus_RemoveMemberIdentity_FullMethodName = "/khepri.horus.Horus/RemoveMemberIdentity"
 )
 
 // HorusClient is the client API for Horus service.
@@ -48,6 +50,10 @@ type HorusClient interface {
 	LeaveOrg(ctx context.Context, in *LeaveOrgReq, opts ...grpc.CallOption) (*LeaveOrgRes, error)
 	// Set role of the member for the orgnization.
 	SetRoleOrg(ctx context.Context, in *SetRoleOrgReq, opts ...grpc.CallOption) (*SetRoleOrgRes, error)
+	// Add identity to member.
+	AddMemberIdentity(ctx context.Context, in *AddMemberIdentityReq, opts ...grpc.CallOption) (*AddMemberIdentityRes, error)
+	// Remove identity from member.
+	RemoveMemberIdentity(ctx context.Context, in *RemoveMemberIdentityReq, opts ...grpc.CallOption) (*RemoveMemberIdentityRes, error)
 }
 
 type horusClient struct {
@@ -121,6 +127,24 @@ func (c *horusClient) SetRoleOrg(ctx context.Context, in *SetRoleOrgReq, opts ..
 	return out, nil
 }
 
+func (c *horusClient) AddMemberIdentity(ctx context.Context, in *AddMemberIdentityReq, opts ...grpc.CallOption) (*AddMemberIdentityRes, error) {
+	out := new(AddMemberIdentityRes)
+	err := c.cc.Invoke(ctx, Horus_AddMemberIdentity_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *horusClient) RemoveMemberIdentity(ctx context.Context, in *RemoveMemberIdentityReq, opts ...grpc.CallOption) (*RemoveMemberIdentityRes, error) {
+	out := new(RemoveMemberIdentityRes)
+	err := c.cc.Invoke(ctx, Horus_RemoveMemberIdentity_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // HorusServer is the server API for Horus service.
 // All implementations must embed UnimplementedHorusServer
 // for forward compatibility
@@ -139,6 +163,10 @@ type HorusServer interface {
 	LeaveOrg(context.Context, *LeaveOrgReq) (*LeaveOrgRes, error)
 	// Set role of the member for the orgnization.
 	SetRoleOrg(context.Context, *SetRoleOrgReq) (*SetRoleOrgRes, error)
+	// Add identity to member.
+	AddMemberIdentity(context.Context, *AddMemberIdentityReq) (*AddMemberIdentityRes, error)
+	// Remove identity from member.
+	RemoveMemberIdentity(context.Context, *RemoveMemberIdentityReq) (*RemoveMemberIdentityRes, error)
 	mustEmbedUnimplementedHorusServer()
 }
 
@@ -166,6 +194,12 @@ func (UnimplementedHorusServer) LeaveOrg(context.Context, *LeaveOrgReq) (*LeaveO
 }
 func (UnimplementedHorusServer) SetRoleOrg(context.Context, *SetRoleOrgReq) (*SetRoleOrgRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetRoleOrg not implemented")
+}
+func (UnimplementedHorusServer) AddMemberIdentity(context.Context, *AddMemberIdentityReq) (*AddMemberIdentityRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddMemberIdentity not implemented")
+}
+func (UnimplementedHorusServer) RemoveMemberIdentity(context.Context, *RemoveMemberIdentityReq) (*RemoveMemberIdentityRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveMemberIdentity not implemented")
 }
 func (UnimplementedHorusServer) mustEmbedUnimplementedHorusServer() {}
 
@@ -306,6 +340,42 @@ func _Horus_SetRoleOrg_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Horus_AddMemberIdentity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddMemberIdentityReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HorusServer).AddMemberIdentity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Horus_AddMemberIdentity_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HorusServer).AddMemberIdentity(ctx, req.(*AddMemberIdentityReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Horus_RemoveMemberIdentity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveMemberIdentityReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HorusServer).RemoveMemberIdentity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Horus_RemoveMemberIdentity_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HorusServer).RemoveMemberIdentity(ctx, req.(*RemoveMemberIdentityReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Horus_ServiceDesc is the grpc.ServiceDesc for Horus service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -340,6 +410,14 @@ var Horus_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetRoleOrg",
 			Handler:    _Horus_SetRoleOrg_Handler,
+		},
+		{
+			MethodName: "AddMemberIdentity",
+			Handler:    _Horus_AddMemberIdentity_Handler,
+		},
+		{
+			MethodName: "RemoveMemberIdentity",
+			Handler:    _Horus_RemoveMemberIdentity_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

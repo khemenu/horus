@@ -8,6 +8,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/suite"
 	"khepri.dev/horus"
+	"khepri.dev/horus/internal/fx"
 )
 
 type MemberStoreTestSuite struct {
@@ -246,6 +247,19 @@ func (s *MemberStoreTestSuite) TestAddIdentity() {
 		require.NoError(err)
 	})
 
+	s.Run("already exist", func(ctx context.Context) {
+		require := s.Require()
+
+		identity, err := s.Identities().New(ctx, s.InitAmun())
+		require.NoError(err)
+
+		err = s.Members().AddIdentity(ctx, s.owner.Id, identity.Value)
+		require.NoError(err)
+
+		err = s.Members().AddIdentity(ctx, s.owner.Id, identity.Value)
+		require.NoError(err)
+	})
+
 	s.Run("different owner", func(ctx context.Context) {
 		require := s.Require()
 
@@ -264,6 +278,61 @@ func (s *MemberStoreTestSuite) TestAddIdentity() {
 
 		err = s.Members().AddIdentity(ctx, other_member.Id, identity.Value)
 		require.ErrorIs(err, horus.ErrInvalidArgument)
+	})
+}
+
+func (s *MemberStoreTestSuite) TestRemoveIdentity() {
+	for _, tc := range []struct {
+		desc           string
+		member_id      horus.MemberId
+		identity_value horus.IdentityValue
+	}{
+		{
+			desc:      "member does not exist",
+			member_id: horus.MemberId(uuid.New()),
+		},
+		{
+			desc:           "identity does not exist",
+			identity_value: "not exists",
+		},
+		{
+			desc:           "member and identity both does not exist",
+			member_id:      horus.MemberId(uuid.New()),
+			identity_value: "not exists",
+		},
+	} {
+		s.Run(tc.desc, func(ctx context.Context) {
+			require := s.Require()
+
+			identity, err := s.Identities().New(ctx, s.InitAmun())
+			require.NoError(err)
+
+			err = s.Members().AddIdentity(ctx, s.owner.Id, identity.Value)
+			require.NoError(err)
+
+			member_id := fx.Fallback(tc.member_id, s.owner.Id)
+			identity_value := fx.Fallback(tc.identity_value, identity.Value)
+
+			err = s.Members().RemoveIdentity(ctx, member_id, identity_value)
+			require.NoError(err)
+		})
+	}
+
+	s.Run("member and identity both exists", func(ctx context.Context) {
+		require := s.Require()
+
+		identity, err := s.Identities().New(ctx, s.InitAmun())
+		require.NoError(err)
+
+		err = s.Members().AddIdentity(ctx, s.owner.Id, identity.Value)
+		require.NoError(err)
+
+		err = s.Members().RemoveIdentity(ctx, s.owner.Id, identity.Value)
+		require.NoError(err)
+
+		member, err := s.Members().GetById(ctx, s.owner.Id)
+		require.NoError(err)
+		require.NotContains(member.Identities, identity.Value)
 	})
 }
 

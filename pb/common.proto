@@ -32,13 +32,29 @@ message Status {
 
 //
 message Identity {
-	IdentityKind kind  = 1; //
-	string       value = 2; //
+	bytes        owner_id = 1; //
+	IdentityKind kind     = 2; //
+	string       value    = 3; //
 
-	string verified_by = 3; //
+	string name        = 4; //
+	string verified_by = 5; //
+
+	string created_at = 6; //
 }
 
 message Org {
 	bytes  id   = 1; // Unique ID.
 	string name = 2; // Display name; it is not unique.
+}
+
+message Member {
+	bytes   id      = 1; //
+	bytes   org_id  = 2; // Organization ID where this member belongs.
+	bytes   user_id = 3; // User ID who act this this member.
+	RoleOrg role    = 4; //
+
+	string            name       = 5; // Diaply name in the organization.
+	repeated Identity identities = 6; // Identities in the organization.
+
+	string created_at = 7; // Datetime.
 }

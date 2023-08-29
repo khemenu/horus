@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -117,7 +118,7 @@ func grpcStatusWithCode(code codes.Code) error {
 	return status.Error(code, code.String())
 }
 
-func to_role_org(v horus.RoleOrg) pb.RoleOrg {
+func toPbRoleOrg(v horus.RoleOrg) pb.RoleOrg {
 	switch v {
 	case horus.RoleOrgOwner:
 		return pb.RoleOrg_ROLE_ORG_OWNER
@@ -137,4 +138,24 @@ func fromPbRoleOrg(v pb.RoleOrg) horus.RoleOrg {
 	}
 
 	return ""
+}
+
+func parseUuidArg[T ~[16]byte](v []byte, name string) (T, error) {
+	rst, err := uuid.FromBytes(v)
+	if err != nil {
+		desc := ""
+		if name == "" {
+			desc = "invalid ID"
+		} else {
+			desc = fmt.Sprintf("invalid %s ID", name)
+		}
+
+		return T{}, status.Errorf(codes.InvalidArgument, desc)
+	}
+
+	return T(rst), nil
+}
+
+func parseMemberId(v []byte) (horus.MemberId, error) {
+	return parseUuidArg[horus.MemberId](v, "member")
 }

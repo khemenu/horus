@@ -26,8 +26,8 @@ type orgStore struct {
 	*stores
 }
 
-func (s *orgStore) New(ctx context.Context, init horus.OrgInit) (*horus.Org, error) {
-	return withTx(ctx, s.client, func(tx *ent.Tx) (*horus.Org, error) {
+func (s *orgStore) New(ctx context.Context, init horus.OrgInit) (*horus.OrgNewResult, error) {
+	return withTx(ctx, s.client, func(tx *ent.Tx) (*horus.OrgNewResult, error) {
 		org, err := tx.Org.Create().
 			SetName(init.Name).
 			Save(ctx)
@@ -35,16 +35,20 @@ func (s *orgStore) New(ctx context.Context, init horus.OrgInit) (*horus.Org, err
 			return nil, fmt.Errorf("save: %w", err)
 		}
 
-		if _, err := newMember(ctx, tx.Client(), horus.MemberInit{
+		owner, err := newMember(ctx, tx.Client(), horus.MemberInit{
 			OrgId:  horus.OrgId(org.ID),
 			UserId: init.OwnerId,
 			Role:   horus.RoleOrgOwner,
-		}); err != nil {
+		})
+		if err != nil {
 			return nil, fmt.Errorf("set org owner: %w", err)
 		}
 
 		log.FromCtx(ctx).Info("new org", "id", org.ID)
-		return fromEntOrg(org), nil
+		return &horus.OrgNewResult{
+			Org:   fromEntOrg(org),
+			Owner: owner,
+		}, nil
 	})
 }
 

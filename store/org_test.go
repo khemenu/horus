@@ -36,12 +36,14 @@ func (s *OrgStoreTestSuite) TestNew() {
 	s.Run("with an owner that exists", func(ctx context.Context) {
 		require := s.Require()
 
-		org, err := s.Orgs().New(ctx, horus.OrgInit{
+		rst, err := s.Orgs().New(ctx, horus.OrgInit{
 			OwnerId: s.user.Id,
 			Name:    "Khepri",
 		})
 		require.NoError(err)
-		require.Equal("Khepri", org.Name)
+		require.Equal("Khepri", rst.Org.Name)
+		require.Equal(s.user.Id, rst.Owner.UserId)
+		require.Equal(horus.RoleOrgOwner, rst.Owner.Role)
 	})
 }
 
@@ -59,9 +61,9 @@ func (s *OrgStoreTestSuite) TestGetById() {
 		expected, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
 		require.NoError(err)
 
-		actual, err := s.Orgs().GetById(ctx, expected.Id)
+		actual, err := s.Orgs().GetById(ctx, expected.Org.Id)
 		require.NoError(err)
-		require.Equal(expected, actual)
+		require.Equal(expected.Org, actual)
 	})
 }
 
@@ -85,15 +87,15 @@ func (s *OrgStoreTestSuite) TestGetAllByUserId() {
 	s.Run("user belongs to many orgs", func(ctx context.Context) {
 		require := s.Require()
 
-		org1, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		rst1, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
 		require.NoError(err)
 
-		org2, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		rst2, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
 		require.NoError(err)
 
 		orgs, err := s.Orgs().GetAllByUserId(ctx, s.user.Id)
 		require.NoError(err)
-		require.ElementsMatch([]*horus.Org{org1, org2}, orgs)
+		require.ElementsMatch([]*horus.Org{rst1.Org, rst2.Org}, orgs)
 	})
 }
 
@@ -111,12 +113,12 @@ func (s *OrgStoreTestSuite) TestUpdateById() {
 	s.Run("org exists", func(ctx context.Context) {
 		require := s.Require()
 
-		org, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		rst, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
 		require.NoError(err)
-		require.Empty(org.Name)
+		require.Empty(rst.Org.Name)
 
 		updated, err := s.Orgs().UpdateById(ctx, &horus.Org{
-			Id:   org.Id,
+			Id:   rst.Org.Id,
 			Name: "foo",
 		})
 		require.NoError(err)

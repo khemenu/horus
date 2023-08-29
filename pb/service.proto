@@ -22,11 +22,16 @@ service Horus {
 	rpc LeaveOrg(LeaveOrgReq) returns (LeaveOrgRes) {};
 	// Set role of the member for the orgnization.
 	rpc SetRoleOrg(SetRoleOrgReq) returns (SetRoleOrgRes) {};
+	// Add identity to member.
+	rpc AddMemberIdentity(AddMemberIdentityReq) returns (AddMemberIdentityRes) {};
+	// Remove identity from member.
+	rpc RemoveMemberIdentity(RemoveMemberIdentityReq) returns (RemoveMemberIdentityRes) {};
 }
 
 message NewOrgReq {}
 message NewOrgRes {
-	Org org = 1; // Created organization ID.
+	Org    org   = 1; // Created organization ID.
+	Member owner = 2; // Owner of the organization, the actor.
 }
 
 message ListOrgsReq {}
@@ -62,3 +67,15 @@ message SetRoleOrgReq {
 	RoleOrg role      = 2; // Role to be changed.
 }
 message SetRoleOrgRes {}
+
+message AddMemberIdentityReq {
+	bytes  member_id      = 1; // ID of the member to add the identity.
+	string identity_value = 2; // Value of the identity to be added.
+}
+message AddMemberIdentityRes {}
+
+message RemoveMemberIdentityReq {
+	bytes  member_id      = 1; // ID of the member to remove the identity.
+	string identity_value = 2; // Value of the identity to be removeed.
+}
+message RemoveMemberIdentityRes {}

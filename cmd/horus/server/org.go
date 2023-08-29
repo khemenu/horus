@@ -35,13 +35,14 @@ func fromPbOrg(v *pb.Org) *horus.Org {
 func (s *grpcServer) NewOrg(ctx context.Context, req *pb.NewOrgReq) (*pb.NewOrgRes, error) {
 	user := s.mustUser(ctx)
 
-	org, err := s.Horus.Orgs().New(ctx, horus.OrgInit{OwnerId: user.Id})
+	rst, err := s.Horus.Orgs().New(ctx, horus.OrgInit{OwnerId: user.Id})
 	if err != nil {
 		return nil, grpcInternalErr(ctx, err)
 	}
 
 	return &pb.NewOrgRes{
-		Org: toPbOrg(org),
+		Org:   toPbOrg(rst.Org),
+		Owner: toPbMember(rst.Owner),
 	}, nil
 }
 

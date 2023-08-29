@@ -25,8 +25,13 @@ type OrgInit struct {
 	Name    string
 }
 
+type OrgNewResult struct {
+	Org   *Org
+	Owner *Member
+}
+
 type OrgStore interface {
-	New(ctx context.Context, init OrgInit) (*Org, error)
+	New(ctx context.Context, init OrgInit) (*OrgNewResult, error)
 	GetById(ctx context.Context, org_id OrgId) (*Org, error)
 	GetAllByUserId(ctx context.Context, user_id UserId) ([]*Org, error)
 	UpdateById(ctx context.Context, org *Org) (*Org, error)

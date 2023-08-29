@@ -4,14 +4,11 @@ lint:
     all_default: true
 
     remove:
+      - MAX_LINE_LENGTH
       - FIELD_NAMES_EXCLUDE_PREPOSITIONS
       - MESSAGES_HAVE_COMMENT
 
   rules_option:
-    max_line_length:
-      max_chars: 80
-      tab_chars: 4
-
     indent:
       style: tab
       not_insert_newline: true

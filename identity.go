@@ -17,8 +17,8 @@ type Identity struct {
 	OwnerId UserId
 	Kind    IdentityKind
 	Value   IdentityValue
-	Name    string
 
+	Name       string
 	VerifiedBy Verifier
 
 	CreatedAt time.Time

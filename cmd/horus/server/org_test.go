@@ -21,16 +21,16 @@ func TestListOrg(t *testing.T) {
 	}))
 
 	t.Run("org exists", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		org1, err := h.client.NewOrg(ctx, &pb.NewOrgReq{})
+		rst1, err := h.client.NewOrg(ctx, &pb.NewOrgReq{})
 		require.NoError(err)
 
-		org2, err := h.client.NewOrg(ctx, &pb.NewOrgReq{})
+		rst2, err := h.client.NewOrg(ctx, &pb.NewOrgReq{})
 		require.NoError(err)
 
 		res, err := h.client.ListOrgs(ctx, &pb.ListOrgsReq{})
 		require.NoError(err)
 		require.ElementsMatch(
-			[][]byte{org1.Org.Id, org2.Org.Id},
+			[][]byte{rst1.Org.Id, rst2.Org.Id},
 			fx.MapV(res.Orgs, func(v *pb.Org) []byte {
 				return v.Id
 			}))
@@ -54,11 +54,11 @@ func TestUpdateOrg(t *testing.T) {
 	}))
 
 	t.Run("as an owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		org, err := h.client.NewOrg(ctx, &pb.NewOrgReq{})
+		rst, err := h.client.NewOrg(ctx, &pb.NewOrgReq{})
 		require.NoError(err)
 
 		_, err = h.client.UpdateOrg(ctx, &pb.UpdateOrgReq{Org: &pb.Org{
-			Id:   org.Org.Id,
+			Id:   rst.Org.Id,
 			Name: "foo",
 		}})
 		require.NoError(err)
@@ -68,17 +68,17 @@ func TestUpdateOrg(t *testing.T) {
 		owner, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: owner.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: owner.Id})
 		require.NoError(err)
 
 		h.Members().New(ctx, horus.MemberInit{
-			OrgId:  org.Id,
+			OrgId:  rst.Org.Id,
 			UserId: h.user.Id,
 			Role:   horus.RoleOrgMember,
 		})
 
 		_, err = h.client.UpdateOrg(ctx, &pb.UpdateOrgReq{Org: &pb.Org{
-			Id:   org.Id[:],
+			Id:   rst.Org.Id[:],
 			Name: "foo",
 		}})
 		s, ok := status.FromError(err)
@@ -89,7 +89,7 @@ func TestUpdateOrg(t *testing.T) {
 
 func TestInviteUser(t *testing.T) {
 	t.Run("invalid argument", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
 		require.NoError(err)
 
 		testCases := []struct {
@@ -109,7 +109,7 @@ func TestInviteUser(t *testing.T) {
 			{
 				desc: "kind unspecified",
 				req: &pb.InviteUserReq{
-					OrgId: org.Id[:],
+					OrgId: rst.Org.Id[:],
 					Identity: &pb.Identity{
 						Kind:  pb.IdentityKind_IDENTITY_KIND_UNSPECIFIED,
 						Value: "foo@khepri.dev",
@@ -119,7 +119,7 @@ func TestInviteUser(t *testing.T) {
 			{
 				desc: "invalid mail addres",
 				req: &pb.InviteUserReq{
-					OrgId: org.Id[:],
+					OrgId: rst.Org.Id[:],
 					Identity: &pb.Identity{
 						Kind:  pb.IdentityKind_IDENTITY_KIND_MAIL,
 						Value: "royale with cheese",
@@ -140,11 +140,11 @@ func TestInviteUser(t *testing.T) {
 		owner, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: owner.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: owner.Id})
 		require.NoError(err)
 
 		req := &pb.InviteUserReq{
-			OrgId: org.Id[:],
+			OrgId: rst.Org.Id[:],
 			Identity: &pb.Identity{
 				Kind:  pb.IdentityKind_IDENTITY_KIND_MAIL,
 				Value: "foo@khepri",
@@ -162,7 +162,7 @@ func TestInviteUser(t *testing.T) {
 		{
 			// Invite as a member
 			h.Members().New(ctx, horus.MemberInit{
-				OrgId:  org.Id,
+				OrgId:  rst.Org.Id,
 				UserId: h.user.Id,
 				Role:   horus.RoleOrgMember,
 			})
@@ -175,11 +175,11 @@ func TestInviteUser(t *testing.T) {
 	}))
 
 	t.Run("user that does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
 		require.NoError(err)
 
 		_, err = h.client.InviteUser(ctx, &pb.InviteUserReq{
-			OrgId: org.Id[:],
+			OrgId: rst.Org.Id[:],
 			Identity: &pb.Identity{
 				Kind:  pb.IdentityKind_IDENTITY_KIND_MAIL,
 				Value: "foo@khepri.dev",
@@ -194,11 +194,11 @@ func TestInviteUser(t *testing.T) {
 	}))
 
 	t.Run("user already a member", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
 		require.NoError(err)
 
 		_, err = h.client.InviteUser(ctx, &pb.InviteUserReq{
-			OrgId: org.Id[:],
+			OrgId: rst.Org.Id[:],
 			Identity: &pb.Identity{
 				Kind:  pb.IdentityKind_IDENTITY_KIND_MAIL,
 				Value: string(h.identity.Value),
@@ -236,10 +236,10 @@ func TestJoinOrg(t *testing.T) {
 	}))
 
 	t.Run("already a member", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
 		require.NoError(err)
 
-		_, err = h.client.JoinOrg(ctx, &pb.JoinOrgReq{OrgId: org.Id[:]})
+		_, err = h.client.JoinOrg(ctx, &pb.JoinOrgReq{OrgId: rst.Org.Id[:]})
 		require.NoError(err)
 	}))
 
@@ -247,10 +247,10 @@ func TestJoinOrg(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
 		require.NoError(err)
 
-		_, err = h.client.JoinOrg(ctx, &pb.JoinOrgReq{OrgId: org.Id[:]})
+		_, err = h.client.JoinOrg(ctx, &pb.JoinOrgReq{OrgId: rst.Org.Id[:]})
 		s, ok := status.FromError(err)
 		require.True(ok)
 		require.Equal(codes.PermissionDenied, s.Code())
@@ -262,11 +262,11 @@ func TestJoinOrg(t *testing.T) {
 			Value: "other@khepri.dev",
 		})
 
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.user.Id})
 		require.NoError(err)
 
 		_, err = other.client.InviteUser(other.ctx, &pb.InviteUserReq{
-			OrgId: org.Id[:],
+			OrgId: rst.Org.Id[:],
 			Identity: &pb.Identity{
 				Kind:  pb.IdentityKind_IDENTITY_KIND_MAIL,
 				Value: string(h.identity.Value),
@@ -274,10 +274,10 @@ func TestJoinOrg(t *testing.T) {
 		})
 		require.NoError(err)
 
-		_, err = h.client.JoinOrg(ctx, &pb.JoinOrgReq{OrgId: org.Id[:]})
+		_, err = h.client.JoinOrg(ctx, &pb.JoinOrgReq{OrgId: rst.Org.Id[:]})
 		require.NoError(err)
 
-		member, err := h.Members().GetByUserIdFromOrg(ctx, org.Id, h.user.Id)
+		member, err := h.Members().GetByUserIdFromOrg(ctx, rst.Org.Id, h.user.Id)
 		require.NoError(err)
 		require.Equal(horus.RoleOrgMember, member.Role)
 	}))
@@ -288,10 +288,10 @@ func TestLeaveOrg(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
 		require.NoError(err)
 
-		_, err = h.client.LeaveOrg(ctx, &pb.LeaveOrgReq{OrgId: org.Id[:]})
+		_, err = h.client.LeaveOrg(ctx, &pb.LeaveOrgReq{OrgId: rst.Org.Id[:]})
 		require.NoError(err)
 	}))
 
@@ -312,17 +312,17 @@ func TestLeaveOrg(t *testing.T) {
 			other, err := h.Users().New(ctx)
 			require.NoError(err)
 
-			org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+			rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
 			require.NoError(err)
 
 			_, err = h.Members().New(ctx, horus.MemberInit{
-				OrgId:  org.Id,
+				OrgId:  rst.Org.Id,
 				UserId: h.user.Id,
 				Role:   tC.role,
 			})
 			require.NoError(err)
 
-			_, err = h.client.LeaveOrg(ctx, &pb.LeaveOrgReq{OrgId: org.Id[:]})
+			_, err = h.client.LeaveOrg(ctx, &pb.LeaveOrgReq{OrgId: rst.Org.Id[:]})
 			require.NoError(err)
 		}))
 	}
@@ -331,17 +331,17 @@ func TestLeaveOrg(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
 		require.NoError(err)
 
 		_, err = h.Members().New(ctx, horus.MemberInit{
-			OrgId:  org.Id,
+			OrgId:  rst.Org.Id,
 			UserId: h.user.Id,
 			Role:   horus.RoleOrgMember,
 		})
 		require.NoError(err)
 
-		_, err = h.client.LeaveOrg(ctx, &pb.LeaveOrgReq{OrgId: org.Id[:]})
+		_, err = h.client.LeaveOrg(ctx, &pb.LeaveOrgReq{OrgId: rst.Org.Id[:]})
 		require.NoError(err)
 	}))
 
@@ -349,17 +349,17 @@ func TestLeaveOrg(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
 		require.NoError(err)
 
 		_, err = h.Members().New(ctx, horus.MemberInit{
-			OrgId:  org.Id,
+			OrgId:  rst.Org.Id,
 			UserId: h.user.Id,
 			Role:   horus.RoleOrgOwner,
 		})
 		require.NoError(err)
 
-		_, err = h.client.LeaveOrg(ctx, &pb.LeaveOrgReq{OrgId: org.Id[:]})
+		_, err = h.client.LeaveOrg(ctx, &pb.LeaveOrgReq{OrgId: rst.Org.Id[:]})
 		s, ok := status.FromError(err)
 		require.True(ok)
 		require.Equal(codes.FailedPrecondition, s.Code())
@@ -368,14 +368,14 @@ func TestLeaveOrg(t *testing.T) {
 
 func TestSetOrgRole(t *testing.T) {
 	t.Run("invalid argument", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
 		require.NoError(err)
 
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
 		other_member, err := h.Members().New(ctx, horus.MemberInit{
-			OrgId:  org.Id,
+			OrgId:  rst.Org.Id,
 			UserId: other.Id,
 			Role:   horus.RoleOrgOwner,
 		})
@@ -424,11 +424,11 @@ func TestSetOrgRole(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
 		require.NoError(err)
 
 		me, err := h.Members().New(ctx, horus.MemberInit{
-			OrgId:  org.Id,
+			OrgId:  rst.Org.Id,
 			UserId: h.user.Id,
 			Role:   horus.RoleOrgMember,
 		})
@@ -447,11 +447,11 @@ func TestSetOrgRole(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
 		require.NoError(err)
 
 		me, err := h.Members().New(ctx, horus.MemberInit{
-			OrgId:  org.Id,
+			OrgId:  rst.Org.Id,
 			UserId: h.user.Id,
 			Role:   horus.RoleOrgOwner,
 		})
@@ -472,10 +472,10 @@ func TestSetOrgRole(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		other_org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
 		require.NoError(err)
 
-		other_owner, err := h.Members().GetByUserIdFromOrg(ctx, other_org.Id, other.Id)
+		other_owner, err := h.Members().GetByUserIdFromOrg(ctx, rst.Org.Id, other.Id)
 		require.NoError(err)
 
 		_, err = h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
@@ -491,10 +491,10 @@ func TestSetOrgRole(t *testing.T) {
 	}))
 
 	t.Run("as a sole owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
 		require.NoError(err)
 
-		me, err := h.Members().GetByUserIdFromOrg(ctx, org.Id, h.user.Id)
+		me, err := h.Members().GetByUserIdFromOrg(ctx, rst.Org.Id, h.user.Id)
 		require.NoError(err)
 
 		_, err = h.client.SetRoleOrg(ctx, &pb.SetRoleOrgReq{
