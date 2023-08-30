@@ -137,3 +137,45 @@ func (s *IdentityStoreTestSuite) TestUpdate() {
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
 }
+
+func (s *IdentityStoreTestSuite) TestDelete() {
+	s.Run("exists", func(ctx context.Context) {
+		require := s.Require()
+
+		amun, err := s.Identities().New(ctx, s.InitAmun())
+		require.NoError(err)
+
+		err = s.Identities().Delete(ctx, amun.Value)
+		require.NoError(err)
+
+		_, err = s.Identities().GetByValue(ctx, amun.Value)
+		require.ErrorIs(err, horus.ErrNotExist)
+	})
+
+	s.Run("not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		err := s.Identities().Delete(ctx, "not exist")
+		require.NoError(err)
+	})
+
+	s.Run("identity of member also deleted", func(ctx context.Context) {
+		require := s.Require()
+
+		amun, err := s.Identities().New(ctx, s.InitAmun())
+		require.NoError(err)
+
+		rst, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		require.NoError(err)
+
+		err = s.Members().AddIdentity(ctx, rst.Owner.Id, amun.Value)
+		require.NoError(err)
+
+		err = s.Identities().Delete(ctx, amun.Value)
+		require.NoError(err)
+
+		member, err := s.Members().GetById(ctx, rst.Owner.Id)
+		require.NoError(err)
+		require.Empty(member.Identities)
+	})
+}

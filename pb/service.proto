@@ -10,6 +10,8 @@ option go_package = "khepri.dev/horus/pb";
 service Horus {
 	// List identities
 	rpc ListIdentities(ListIdentitiesReq) returns (ListIdentitiesRes) {};
+	// Delete an identity.
+	rpc DeleteIdentity(DeleteIdentityReq) returns (DeleteIdentityRes) {};
 	// Creates organization.
 	rpc NewOrg(NewOrgReq) returns (NewOrgRes) {};
 	// Lists organizations the user belongs to.
@@ -24,9 +26,22 @@ service Horus {
 	rpc LeaveOrg(LeaveOrgReq) returns (LeaveOrgRes) {};
 	// Set role of the member for the orgnization.
 	rpc SetRoleOrg(SetRoleOrgReq) returns (SetRoleOrgRes) {};
-	// Add identity to member.
+	// rpc RemoveOrgMember
+	// rpc DeleteOrg
+	// rpc NewTeam
+	// rpc ListTeams
+	// rpc UpdateTeam
+	// rpc InviteMember
+	// rpc JoinTeam
+	// rpc LeaveTeam
+	// rpc SetRoleTeam
+	// Add an identity to the member.
+	// rpg RemoveTeamMember
+	// rpc DeleteTeam
+	// rpc ListMembers // TODO: stream?
+	// rpc UpdateMember
 	rpc AddMemberIdentity(AddMemberIdentityReq) returns (AddMemberIdentityRes) {};
-	// Remove identity from member.
+	// Remove an identity from the member.
 	rpc RemoveMemberIdentity(RemoveMemberIdentityReq) returns (RemoveMemberIdentityRes) {};
 }
 
@@ -34,6 +49,11 @@ message ListIdentitiesReq {}
 message ListIdentitiesRes {
 	repeated Identity identities = 1; // List of identities of the user.
 }
+
+message DeleteIdentityReq {
+	string identity_value = 1; // Value of the identity to delete.
+}
+message DeleteIdentityRes {}
 
 message NewOrgReq {}
 message NewOrgRes {

@@ -118,3 +118,16 @@ func (s *identityStore) Update(ctx context.Context, input *horus.Identity) (*hor
 
 	return fromEntIdentity(res), nil
 }
+
+func (s *identityStore) Delete(ctx context.Context, identity_value horus.IdentityValue) error {
+	err := s.client.Identity.DeleteOneID(string(identity_value)).Exec(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil
+		}
+
+		return fmt.Errorf("query: %w", err)
+	}
+
+	return nil
+}

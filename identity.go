@@ -38,4 +38,5 @@ type IdentityStore interface {
 	GetByValue(ctx context.Context, identity_value IdentityValue) (*Identity, error)
 	GetAllByOwner(ctx context.Context, owner_id UserId) (map[IdentityValue]*Identity, error)
 	Update(ctx context.Context, input *Identity) (*Identity, error)
+	Delete(ctx context.Context, identity_value IdentityValue) error
 }

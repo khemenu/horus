@@ -22,6 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	Horus_ListIdentities_FullMethodName       = "/khepri.horus.Horus/ListIdentities"
+	Horus_DeleteIdentity_FullMethodName       = "/khepri.horus.Horus/DeleteIdentity"
 	Horus_NewOrg_FullMethodName               = "/khepri.horus.Horus/NewOrg"
 	Horus_ListOrgs_FullMethodName             = "/khepri.horus.Horus/ListOrgs"
 	Horus_UpdateOrg_FullMethodName            = "/khepri.horus.Horus/UpdateOrg"
@@ -39,6 +40,8 @@ const (
 type HorusClient interface {
 	// List identities
 	ListIdentities(ctx context.Context, in *ListIdentitiesReq, opts ...grpc.CallOption) (*ListIdentitiesRes, error)
+	// Delete an identity.
+	DeleteIdentity(ctx context.Context, in *DeleteIdentityReq, opts ...grpc.CallOption) (*DeleteIdentityRes, error)
 	// Creates organization.
 	NewOrg(ctx context.Context, in *NewOrgReq, opts ...grpc.CallOption) (*NewOrgRes, error)
 	// Lists organizations the user belongs to.
@@ -53,9 +56,22 @@ type HorusClient interface {
 	LeaveOrg(ctx context.Context, in *LeaveOrgReq, opts ...grpc.CallOption) (*LeaveOrgRes, error)
 	// Set role of the member for the orgnization.
 	SetRoleOrg(ctx context.Context, in *SetRoleOrgReq, opts ...grpc.CallOption) (*SetRoleOrgRes, error)
-	// Add identity to member.
+	// rpc RemoveOrgMember
+	// rpc DeleteOrg
+	// rpc NewTeam
+	// rpc ListTeams
+	// rpc UpdateTeam
+	// rpc InviteMember
+	// rpc JoinTeam
+	// rpc LeaveTeam
+	// rpc SetRoleTeam
+	// Add an identity to the member.
+	// rpg RemoveTeamMember
+	// rpc DeleteTeam
+	// rpc ListMembers // TODO: stream?
+	// rpc UpdateMember
 	AddMemberIdentity(ctx context.Context, in *AddMemberIdentityReq, opts ...grpc.CallOption) (*AddMemberIdentityRes, error)
-	// Remove identity from member.
+	// Remove an identity from the member.
 	RemoveMemberIdentity(ctx context.Context, in *RemoveMemberIdentityReq, opts ...grpc.CallOption) (*RemoveMemberIdentityRes, error)
 }
 
@@ -70,6 +86,15 @@ func NewHorusClient(cc grpc.ClientConnInterface) HorusClient {
 func (c *horusClient) ListIdentities(ctx context.Context, in *ListIdentitiesReq, opts ...grpc.CallOption) (*ListIdentitiesRes, error) {
 	out := new(ListIdentitiesRes)
 	err := c.cc.Invoke(ctx, Horus_ListIdentities_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *horusClient) DeleteIdentity(ctx context.Context, in *DeleteIdentityReq, opts ...grpc.CallOption) (*DeleteIdentityRes, error) {
+	out := new(DeleteIdentityRes)
+	err := c.cc.Invoke(ctx, Horus_DeleteIdentity_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +188,8 @@ func (c *horusClient) RemoveMemberIdentity(ctx context.Context, in *RemoveMember
 type HorusServer interface {
 	// List identities
 	ListIdentities(context.Context, *ListIdentitiesReq) (*ListIdentitiesRes, error)
+	// Delete an identity.
+	DeleteIdentity(context.Context, *DeleteIdentityReq) (*DeleteIdentityRes, error)
 	// Creates organization.
 	NewOrg(context.Context, *NewOrgReq) (*NewOrgRes, error)
 	// Lists organizations the user belongs to.
@@ -177,9 +204,22 @@ type HorusServer interface {
 	LeaveOrg(context.Context, *LeaveOrgReq) (*LeaveOrgRes, error)
 	// Set role of the member for the orgnization.
 	SetRoleOrg(context.Context, *SetRoleOrgReq) (*SetRoleOrgRes, error)
-	// Add identity to member.
+	// rpc RemoveOrgMember
+	// rpc DeleteOrg
+	// rpc NewTeam
+	// rpc ListTeams
+	// rpc UpdateTeam
+	// rpc InviteMember
+	// rpc JoinTeam
+	// rpc LeaveTeam
+	// rpc SetRoleTeam
+	// Add an identity to the member.
+	// rpg RemoveTeamMember
+	// rpc DeleteTeam
+	// rpc ListMembers // TODO: stream?
+	// rpc UpdateMember
 	AddMemberIdentity(context.Context, *AddMemberIdentityReq) (*AddMemberIdentityRes, error)
-	// Remove identity from member.
+	// Remove an identity from the member.
 	RemoveMemberIdentity(context.Context, *RemoveMemberIdentityReq) (*RemoveMemberIdentityRes, error)
 	mustEmbedUnimplementedHorusServer()
 }
@@ -190,6 +230,9 @@ type UnimplementedHorusServer struct {
 
 func (UnimplementedHorusServer) ListIdentities(context.Context, *ListIdentitiesReq) (*ListIdentitiesRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListIdentities not implemented")
+}
+func (UnimplementedHorusServer) DeleteIdentity(context.Context, *DeleteIdentityReq) (*DeleteIdentityRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteIdentity not implemented")
 }
 func (UnimplementedHorusServer) NewOrg(context.Context, *NewOrgReq) (*NewOrgRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewOrg not implemented")
@@ -245,6 +288,24 @@ func _Horus_ListIdentities_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(HorusServer).ListIdentities(ctx, req.(*ListIdentitiesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Horus_DeleteIdentity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteIdentityReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HorusServer).DeleteIdentity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Horus_DeleteIdentity_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HorusServer).DeleteIdentity(ctx, req.(*DeleteIdentityReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -421,6 +482,10 @@ var Horus_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListIdentities",
 			Handler:    _Horus_ListIdentities_Handler,
+		},
+		{
+			MethodName: "DeleteIdentity",
+			Handler:    _Horus_DeleteIdentity_Handler,
 		},
 		{
 			MethodName: "NewOrg",
