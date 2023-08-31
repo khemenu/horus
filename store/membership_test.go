@@ -94,6 +94,19 @@ func (s *MembershipStoreTestSuite) TestNew() {
 		require.NoError(err)
 		require.Equal(horus.RoleTeamMember, membership.Role)
 	})
+
+	s.Run("member is in the another org", func(ctx context.Context) {
+		require := s.Require()
+
+		rst, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		require.NoError(err)
+
+		_, err = s.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: s.owner.Id,
+		})
+		require.ErrorIs(err, horus.ErrNotExist)
+	})
 }
 
 func (s *MembershipStoreTestSuite) TestGetById() {
@@ -121,6 +134,36 @@ func (s *MembershipStoreTestSuite) TestGetById() {
 		require.NoError(err)
 
 		membership, err := s.Memberships().GetById(ctx, team.Id, s.owner.Id)
+		require.NoError(err)
+		require.Equal(horus.RoleTeamOwner, membership.Role)
+	})
+}
+
+func (s *MembershipStoreTestSuite) TestGetByUserIdFromTeam() {
+	s.Run("team does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		_, err := s.Memberships().GetByUserIdFromTeam(ctx, horus.TeamId(uuid.New()), s.user.Id)
+		require.ErrorIs(err, horus.ErrNotExist)
+	})
+
+	s.Run("user does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		_, err := s.Memberships().GetByUserIdFromTeam(ctx, s.team.Id, horus.UserId(uuid.New()))
+		require.ErrorIs(err, horus.ErrNotExist)
+	})
+
+	s.Run("both team and user exists", func(ctx context.Context) {
+		require := s.Require()
+
+		team, err := s.Teams().New(ctx, horus.TeamInit{
+			OrgId:   s.org.Id,
+			OwnerId: s.owner.Id,
+		})
+		require.NoError(err)
+
+		membership, err := s.Memberships().GetByUserIdFromTeam(ctx, team.Id, s.user.Id)
 		require.NoError(err)
 		require.Equal(horus.RoleTeamOwner, membership.Role)
 	})

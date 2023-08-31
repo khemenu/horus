@@ -84,3 +84,18 @@ func (s *teamStore) GetAllByOrgId(ctx context.Context, org_id horus.OrgId) ([]*h
 
 	return fx.MapV(res, fromEntTeam), nil
 }
+
+func (s *teamStore) UpdateById(ctx context.Context, team *horus.Team) (*horus.Team, error) {
+	res, err := s.client.Team.UpdateOneID(uuid.UUID(team.Id)).
+		SetName(team.Name).
+		Save(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, horus.ErrNotExist
+		}
+
+		return nil, fmt.Errorf("query: %w", err)
+	}
+
+	return fromEntTeam(res), nil
+}

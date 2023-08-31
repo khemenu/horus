@@ -47,6 +47,11 @@ message Org {
 	string name = 2; // Display name; it is not unique.
 }
 
+message Team {
+	bytes  id   = 1; // Unique ID.
+	string name = 2; // Display name; it is not unique.
+}
+
 message Member {
 	bytes   id      = 1; //
 	bytes   org_id  = 2; // Organization ID where this member belongs.

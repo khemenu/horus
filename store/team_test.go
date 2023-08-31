@@ -114,3 +114,36 @@ func (s *TeamStoreTestSuite) TestGetAllByOrgId() {
 		require.ElementsMatch([]*horus.Team{a, b}, teams)
 	})
 }
+
+func (s *TeamStoreTestSuite) TestUpdateById() {
+	s.Run("team does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		_, err := s.Teams().UpdateById(ctx, &horus.Team{
+			Id:    horus.TeamId(uuid.New()),
+			OrgId: s.owner.OrgId,
+			Name:  "A-team",
+		})
+		require.ErrorIs(err, horus.ErrNotExist)
+	})
+
+	s.Run("team exists", func(ctx context.Context) {
+		require := s.Require()
+
+		team, err := s.Teams().New(ctx, horus.TeamInit{
+			OrgId:   s.owner.OrgId,
+			OwnerId: s.owner.Id,
+			Name:    "A-team",
+		})
+		require.NoError(err)
+
+		team.Name = "Crazy 88s"
+		team, err = s.Teams().UpdateById(ctx, team)
+		require.NoError(err)
+		require.Equal("Crazy 88s", team.Name)
+
+		actual, err := s.Teams().GetById(ctx, team.Id)
+		require.NoError(err)
+		require.Equal(team, actual)
+	})
+}

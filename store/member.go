@@ -13,6 +13,7 @@ import (
 	"khepri.dev/horus/store/ent"
 	"khepri.dev/horus/store/ent/identity"
 	"khepri.dev/horus/store/ent/member"
+	"khepri.dev/horus/store/ent/team"
 )
 
 func fromEntMember(v *ent.Member) *horus.Member {
@@ -86,6 +87,24 @@ func (s *memberStore) GetByUserIdFromOrg(ctx context.Context, org_id horus.OrgId
 			member.OrgID(uuid.UUID(org_id)),
 			member.UserID(uuid.UUID(user_id)),
 		)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, horus.ErrNotExist
+		}
+
+		return nil, fmt.Errorf("query: %w", err)
+	}
+
+	return fromEntMember(res), nil
+}
+
+func (s *memberStore) GetByUserIdFromTeam(ctx context.Context, team_id horus.TeamId, user_id horus.UserId) (*horus.Member, error) {
+	res, err := s.client.Team.Query().
+		Where(team.ID(uuid.UUID(team_id))).
+		QueryOrg().
+		QueryMembers().
+		Where(member.UserID(uuid.UUID(user_id))).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {

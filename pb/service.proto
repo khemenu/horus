@@ -12,7 +12,7 @@ service Horus {
 	rpc ListIdentities(ListIdentitiesReq) returns (ListIdentitiesRes) {};
 	// Delete an identity.
 	rpc DeleteIdentity(DeleteIdentityReq) returns (DeleteIdentityRes) {};
-	// Creates organization.
+	// Creates an organization.
 	rpc NewOrg(NewOrgReq) returns (NewOrgRes) {};
 	// Lists organizations the user belongs to.
 	rpc ListOrgs(ListOrgsReq) returns (ListOrgsRes) {};
@@ -28,11 +28,16 @@ service Horus {
 	rpc SetRoleOrg(SetRoleOrgReq) returns (SetRoleOrgRes) {};
 	// rpc RemoveOrgMember
 	// rpc DeleteOrg
-	// rpc NewTeam
-	// rpc ListTeams
-	// rpc UpdateTeam
-	// rpc InviteMember
-	// rpc JoinTeam
+	// Creates a team.
+	rpc NewTeam(NewTeamReq) returns (NewTeamRes) {};
+	// Lists teams.
+	rpc ListTeams(ListTeamsReq) returns (ListTeamsRes) {};
+	// Updates team info.
+	rpc UpdateTeam(UpdateTeamReq) returns (UpdateTeamRes) {};
+	// Invites an orgnization member as a team member.
+	rpc InviteMember(InviteMemberReq) returns (InviteMemberRes) {};
+	// Joins a team.
+	rpc JoinTeam(JoinTeamReq) returns (JoinTeamRes) {};
 	// rpc LeaveTeam
 	// rpc SetRoleTeam
 	// Add an identity to the member.
@@ -57,7 +62,7 @@ message DeleteIdentityRes {}
 
 message NewOrgReq {}
 message NewOrgRes {
-	Org    org   = 1; // Created organization ID.
+	Org    org   = 1; // The organization just created.
 	Member owner = 2; // Owner of the organization, the actor.
 }
 
@@ -94,6 +99,38 @@ message SetRoleOrgReq {
 	RoleOrg role      = 2; // Role to be changed.
 }
 message SetRoleOrgRes {}
+
+message NewTeamReq {
+	bytes  org_id = 1; // ID of the organization where the team will be created.
+	string name   = 2; // Name of the team to be created.
+}
+message NewTeamRes {
+	Team team = 1; // The team just created.
+}
+
+message ListTeamsReq {
+	bytes org_id = 1; //
+}
+message ListTeamsRes {
+	repeated Team teams = 1; //
+}
+
+message UpdateTeamReq {
+	bytes  team_id = 1; //
+	string name    = 2; //
+}
+message UpdateTeamRes {}
+
+message InviteMemberReq {
+	bytes team_id   = 1; // Team to invite members to.
+	bytes member_id = 2; // ID of the member to invite.
+}
+message InviteMemberRes {}
+
+message JoinTeamReq {
+	bytes team_id = 1; // Team to invite members to.
+}
+message JoinTeamRes {}
 
 message AddMemberIdentityReq {
 	bytes  member_id      = 1; // ID of the member to add the identity.

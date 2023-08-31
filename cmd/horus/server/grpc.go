@@ -156,6 +156,14 @@ func parseUuidArg[T ~[16]byte](v []byte, name string) (T, error) {
 	return T(rst), nil
 }
 
+func parseOrgId(v []byte) (horus.OrgId, error) {
+	return parseUuidArg[horus.OrgId](v, "organization")
+}
+
+func parseTeamId(v []byte) (horus.TeamId, error) {
+	return parseUuidArg[horus.TeamId](v, "team")
+}
+
 func parseMemberId(v []byte) (horus.MemberId, error) {
 	return parseUuidArg[horus.MemberId](v, "member")
 }

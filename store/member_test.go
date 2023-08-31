@@ -151,6 +151,42 @@ func (s *MemberStoreTestSuite) TestGetByUserIdFromOrg() {
 	})
 }
 
+func (s *MemberStoreTestSuite) TestGetByUserIdFromTeam() {
+	s.Run("team does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		_, err := s.Members().GetByUserIdFromTeam(ctx, horus.TeamId(uuid.New()), s.user.Id)
+		require.ErrorIs(err, horus.ErrNotExist)
+	})
+
+	s.Run("user does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		team, err := s.Teams().New(ctx, horus.TeamInit{
+			OrgId:   s.org.Id,
+			OwnerId: s.owner.Id,
+		})
+		require.NoError(err)
+
+		_, err = s.Members().GetByUserIdFromTeam(ctx, team.Id, horus.UserId(uuid.New()))
+		require.ErrorIs(err, horus.ErrNotExist)
+	})
+
+	s.Run("both team and user are exist", func(ctx context.Context) {
+		require := s.Require()
+
+		team, err := s.Teams().New(ctx, horus.TeamInit{
+			OrgId:   s.org.Id,
+			OwnerId: s.owner.Id,
+		})
+		require.NoError(err)
+
+		member, err := s.Members().GetByUserIdFromTeam(ctx, team.Id, s.user.Id)
+		require.NoError(err)
+		require.Equal(s.owner, member)
+	})
+}
+
 func (s *MemberStoreTestSuite) TestGetAllByOrgId() {
 	s.Run("with org that does not exist", func(ctx context.Context) {
 		require := s.Require()
