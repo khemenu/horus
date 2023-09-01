@@ -241,3 +241,18 @@ func (s *grpcServer) JoinTeam(ctx context.Context, req *pb.JoinTeamReq) (*pb.Joi
 
 	return &pb.JoinTeamRes{}, nil
 }
+
+func (s *grpcServer) LeaveTeam(ctx context.Context, req *pb.LeaveTeamReq) (*pb.LeaveTeamRes, error) {
+	team_id, err := parseTeamId(req.TeamId)
+	if err != nil {
+		return nil, err
+	}
+
+	user := s.mustUser(ctx)
+	err = s.Memberships().DeleteByUserIdFromTeam(ctx, team_id, user.Id)
+	if err != nil {
+		return nil, grpcInternalErr(ctx, fmt.Errorf("delete membership: %w", err))
+	}
+
+	return &pb.LeaveTeamRes{}, nil
+}

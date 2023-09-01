@@ -35,6 +35,7 @@ const (
 	Horus_UpdateTeam_FullMethodName           = "/khepri.horus.Horus/UpdateTeam"
 	Horus_InviteMember_FullMethodName         = "/khepri.horus.Horus/InviteMember"
 	Horus_JoinTeam_FullMethodName             = "/khepri.horus.Horus/JoinTeam"
+	Horus_LeaveTeam_FullMethodName            = "/khepri.horus.Horus/LeaveTeam"
 	Horus_AddMemberIdentity_FullMethodName    = "/khepri.horus.Horus/AddMemberIdentity"
 	Horus_RemoveMemberIdentity_FullMethodName = "/khepri.horus.Horus/RemoveMemberIdentity"
 )
@@ -73,13 +74,14 @@ type HorusClient interface {
 	InviteMember(ctx context.Context, in *InviteMemberReq, opts ...grpc.CallOption) (*InviteMemberRes, error)
 	// Joins a team.
 	JoinTeam(ctx context.Context, in *JoinTeamReq, opts ...grpc.CallOption) (*JoinTeamRes, error)
-	// rpc LeaveTeam
+	// Leaves a team
+	LeaveTeam(ctx context.Context, in *LeaveTeamReq, opts ...grpc.CallOption) (*LeaveTeamRes, error)
 	// rpc SetRoleTeam
-	// Add an identity to the member.
 	// rpg RemoveTeamMember
 	// rpc DeleteTeam
 	// rpc ListMembers // TODO: stream?
 	// rpc UpdateMember
+	// Add an identity to the member.
 	AddMemberIdentity(ctx context.Context, in *AddMemberIdentityReq, opts ...grpc.CallOption) (*AddMemberIdentityRes, error)
 	// Remove an identity from the member.
 	RemoveMemberIdentity(ctx context.Context, in *RemoveMemberIdentityReq, opts ...grpc.CallOption) (*RemoveMemberIdentityRes, error)
@@ -219,6 +221,15 @@ func (c *horusClient) JoinTeam(ctx context.Context, in *JoinTeamReq, opts ...grp
 	return out, nil
 }
 
+func (c *horusClient) LeaveTeam(ctx context.Context, in *LeaveTeamReq, opts ...grpc.CallOption) (*LeaveTeamRes, error) {
+	out := new(LeaveTeamRes)
+	err := c.cc.Invoke(ctx, Horus_LeaveTeam_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *horusClient) AddMemberIdentity(ctx context.Context, in *AddMemberIdentityReq, opts ...grpc.CallOption) (*AddMemberIdentityRes, error) {
 	out := new(AddMemberIdentityRes)
 	err := c.cc.Invoke(ctx, Horus_AddMemberIdentity_FullMethodName, in, out, opts...)
@@ -271,13 +282,14 @@ type HorusServer interface {
 	InviteMember(context.Context, *InviteMemberReq) (*InviteMemberRes, error)
 	// Joins a team.
 	JoinTeam(context.Context, *JoinTeamReq) (*JoinTeamRes, error)
-	// rpc LeaveTeam
+	// Leaves a team
+	LeaveTeam(context.Context, *LeaveTeamReq) (*LeaveTeamRes, error)
 	// rpc SetRoleTeam
-	// Add an identity to the member.
 	// rpg RemoveTeamMember
 	// rpc DeleteTeam
 	// rpc ListMembers // TODO: stream?
 	// rpc UpdateMember
+	// Add an identity to the member.
 	AddMemberIdentity(context.Context, *AddMemberIdentityReq) (*AddMemberIdentityRes, error)
 	// Remove an identity from the member.
 	RemoveMemberIdentity(context.Context, *RemoveMemberIdentityReq) (*RemoveMemberIdentityRes, error)
@@ -329,6 +341,9 @@ func (UnimplementedHorusServer) InviteMember(context.Context, *InviteMemberReq) 
 }
 func (UnimplementedHorusServer) JoinTeam(context.Context, *JoinTeamReq) (*JoinTeamRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinTeam not implemented")
+}
+func (UnimplementedHorusServer) LeaveTeam(context.Context, *LeaveTeamReq) (*LeaveTeamRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LeaveTeam not implemented")
 }
 func (UnimplementedHorusServer) AddMemberIdentity(context.Context, *AddMemberIdentityReq) (*AddMemberIdentityRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddMemberIdentity not implemented")
@@ -601,6 +616,24 @@ func _Horus_JoinTeam_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Horus_LeaveTeam_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LeaveTeamReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HorusServer).LeaveTeam(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Horus_LeaveTeam_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HorusServer).LeaveTeam(ctx, req.(*LeaveTeamReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Horus_AddMemberIdentity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddMemberIdentityReq)
 	if err := dec(in); err != nil {
@@ -699,6 +732,10 @@ var Horus_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "JoinTeam",
 			Handler:    _Horus_JoinTeam_Handler,
+		},
+		{
+			MethodName: "LeaveTeam",
+			Handler:    _Horus_LeaveTeam_Handler,
 		},
 		{
 			MethodName: "AddMemberIdentity",
