@@ -25,7 +25,8 @@ func (Membership) Fields() []ent.Field {
 
 func (Membership) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("team", Team.Type).Unique().Immutable().Required().Field("team_id"),
+		edge.To("team", Team.Type).Unique().Immutable().Required().Field("team_id").
+			Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.To("member", Member.Type).Unique().Immutable().Required().Field("member_id").
 			Annotations(entsql.OnDelete(entsql.Cascade)),
 	}

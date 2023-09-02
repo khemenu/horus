@@ -42,9 +42,10 @@ service Horus {
 	rpc LeaveTeam(LeaveTeamReq) returns (LeaveTeamRes) {};
 	// Sets role of the member for the team.
 	rpc SetRoleTeam(SetRoleTeamReq) returns (SetRoleTeamRes) {};
-	// Deletes team member.
+	// Deletes a team member.
 	rpc DeleteTeamMember(DeleteTeamMemberReq) returns (DeleteTeamMemberRes) {};
-	// rpc DeleteTeam
+	// Deletes a team.
+	rpc DeleteTeam(DeleteTeamReq) returns (DeleteTeamRes) {};
 	// rpc ListMembers // TODO: stream?
 	// rpc UpdateMember
 	// Add an identity to the member.
@@ -148,10 +149,15 @@ message SetRoleTeamReq {
 message SetRoleTeamRes {}
 
 message DeleteTeamMemberReq {
-	bytes team_id   = 1; //
-	bytes member_id = 2; //
+	bytes team_id   = 1; // ID of the team from which to delete a member.
+	bytes member_id = 2; // ID of the member to delete from a team.
 }
 message DeleteTeamMemberRes {}
+
+message DeleteTeamReq {
+	bytes team_id = 1; // ID of the team to delete from an organization.
+}
+message DeleteTeamRes {}
 
 message AddMemberIdentityReq {
 	bytes  member_id      = 1; // ID of the member to add the identity.

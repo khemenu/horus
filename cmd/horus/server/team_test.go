@@ -923,3 +923,85 @@ func TestDeleteTeamMember(t *testing.T) {
 		require.Equal(codes.PermissionDenied, s.Code())
 	}))
 }
+
+func TestDeleteTeam(t *testing.T) {
+	t.Run("team does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		team_id := uuid.New()
+		_, err := h.client.DeleteTeam(ctx, &pb.DeleteTeamReq{
+			TeamId: team_id[:],
+		})
+		require.NoError(err)
+	}))
+
+	t.Run("as an org owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		require.NoError(err)
+
+		team, err := h.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: rst.Owner.Id,
+		})
+		require.NoError(err)
+
+		_, err = h.client.DeleteTeam(ctx, &pb.DeleteTeamReq{TeamId: team.Id[:]})
+		require.NoError(err)
+
+		_, err = h.Teams().GetById(ctx, team.Id)
+		require.ErrorIs(err, horus.ErrNotExist)
+
+		_, err = h.Members().GetById(ctx, rst.Owner.Id)
+		require.NoError(err)
+	}))
+
+	t.Run("as an org member without a membership", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		other, err := h.Users().New(ctx)
+		require.NoError(err)
+
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		require.NoError(err)
+
+		_, err = h.Members().New(ctx, horus.MemberInit{
+			OrgId:  rst.Org.Id,
+			UserId: h.user.Id,
+			Role:   horus.RoleOrgMember,
+		})
+		require.NoError(err)
+
+		team, err := h.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: rst.Owner.Id,
+		})
+		require.NoError(err)
+
+		_, err = h.client.DeleteTeam(ctx, &pb.DeleteTeamReq{TeamId: team.Id[:]})
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.PermissionDenied, s.Code())
+	}))
+
+	t.Run("as a team owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		other, err := h.Users().New(ctx)
+		require.NoError(err)
+
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		require.NoError(err)
+
+		member, err := h.Members().New(ctx, horus.MemberInit{
+			OrgId:  rst.Org.Id,
+			UserId: h.user.Id,
+			Role:   horus.RoleOrgMember,
+		})
+		require.NoError(err)
+
+		team, err := h.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: member.Id,
+		})
+		require.NoError(err)
+
+		_, err = h.client.DeleteTeam(ctx, &pb.DeleteTeamReq{TeamId: team.Id[:]})
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.PermissionDenied, s.Code())
+	}))
+}

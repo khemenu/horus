@@ -99,3 +99,17 @@ func (s *teamStore) UpdateById(ctx context.Context, team *horus.Team) (*horus.Te
 
 	return fromEntTeam(res), nil
 }
+
+func (s *teamStore) DeleteByIdFromOrg(ctx context.Context, org_id horus.OrgId, team_id horus.TeamId) error {
+	_, err := s.client.Team.Delete().
+		Where(team.And(
+			team.ID(uuid.UUID(team_id)),
+			team.OrgID(uuid.UUID(org_id)),
+		)).
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("query: %w", err)
+	}
+
+	return nil
+}

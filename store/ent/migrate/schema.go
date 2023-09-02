@@ -76,7 +76,7 @@ var (
 				Symbol:     "members_orgs_members",
 				Columns:    []*schema.Column{MembersColumns[4]},
 				RefColumns: []*schema.Column{OrgsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "members_users_belongs",
@@ -110,7 +110,7 @@ var (
 				Symbol:     "memberships_teams_team",
 				Columns:    []*schema.Column{MembershipsColumns[2]},
 				RefColumns: []*schema.Column{TeamsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "memberships_members_member",
@@ -149,7 +149,7 @@ var (
 				Symbol:     "teams_orgs_teams",
 				Columns:    []*schema.Column{TeamsColumns[3]},
 				RefColumns: []*schema.Column{OrgsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}

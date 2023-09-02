@@ -393,3 +393,30 @@ func (s *grpcServer) DeleteTeamMember(ctx context.Context, req *pb.DeleteTeamMem
 
 	return &pb.DeleteTeamMemberRes{}, nil
 }
+
+func (s *grpcServer) DeleteTeam(ctx context.Context, req *pb.DeleteTeamReq) (*pb.DeleteTeamRes, error) {
+	team_id, err := parseTeamId(req.TeamId)
+	if err != nil {
+		return nil, err
+	}
+
+	user := s.mustUser(ctx)
+	member, err := s.Members().GetByUserIdFromTeam(ctx, team_id, user.Id)
+	if err != nil {
+		if errors.Is(err, horus.ErrNotExist) {
+			return &pb.DeleteTeamRes{}, nil
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("get member details: %w", err))
+	}
+	if member.Role != horus.RoleOrgOwner {
+		return nil, grpcStatusWithCode(codes.PermissionDenied)
+	}
+
+	err = s.Teams().DeleteByIdFromOrg(ctx, member.OrgId, team_id)
+	if err != nil {
+		return nil, grpcInternalErr(ctx, fmt.Errorf("delete a team: %w", err))
+	}
+
+	return &pb.DeleteTeamRes{}, nil
+}

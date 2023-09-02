@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
@@ -21,7 +22,9 @@ func (Org) Fields() []ent.Field {
 
 func (Org) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("teams", Team.Type),
-		edge.To("members", Member.Type),
+		edge.To("teams", Team.Type).
+			Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("members", Member.Type).
+			Annotations(entsql.OnDelete(entsql.Cascade)),
 	}
 }

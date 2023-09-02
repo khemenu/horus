@@ -32,4 +32,5 @@ type TeamStore interface {
 	GetById(ctx context.Context, team_id TeamId) (*Team, error)
 	GetAllByOrgId(ctx context.Context, org_id OrgId) ([]*Team, error)
 	UpdateById(ctx context.Context, team *Team) (*Team, error)
+	DeleteByIdFromOrg(ctx context.Context, org_id OrgId, team_id TeamId) error
 }

@@ -147,3 +147,47 @@ func (s *TeamStoreTestSuite) TestUpdateById() {
 		require.Equal(team, actual)
 	})
 }
+
+func (s *TeamStoreTestSuite) TestDeleteByIdFromOrg() {
+	s.Run("team does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		err := s.Teams().DeleteByIdFromOrg(ctx, s.org.Id, horus.TeamId(uuid.New()))
+		require.NoError(err)
+	})
+
+	s.Run("team does not exist in given org", func(ctx context.Context) {
+		require := s.Require()
+
+		rst, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		require.NoError(err)
+
+		team, err := s.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: rst.Owner.Id,
+		})
+		require.NoError(err)
+
+		err = s.Teams().DeleteByIdFromOrg(ctx, s.org.Id, team.Id)
+		require.NoError(err)
+
+		_, err = s.Teams().GetById(ctx, team.Id)
+		require.NoError(err)
+	})
+
+	s.Run("team exists", func(ctx context.Context) {
+		require := s.Require()
+
+		team, err := s.Teams().New(ctx, horus.TeamInit{
+			OrgId:   s.org.Id,
+			OwnerId: s.owner.Id,
+		})
+		require.NoError(err)
+
+		err = s.Teams().DeleteByIdFromOrg(ctx, s.org.Id, team.Id)
+		require.NoError(err)
+
+		_, err = s.Teams().GetById(ctx, team.Id)
+		require.ErrorIs(err, horus.ErrNotExist)
+	})
+}
