@@ -18,15 +18,16 @@ service Horus {
 	rpc ListOrgs(ListOrgsReq) returns (ListOrgsRes) {};
 	// Updates orgnataion info.
 	rpc UpdateOrg(UpdateOrgReq) returns (UpdateOrgRes) {};
-	// Invites a user to the organization.
+	// Invites a user to an organization.
 	rpc InviteUser(InviteUserReq) returns (InviteUserRes) {};
 	// Joins an organization.
 	rpc JoinOrg(JoinOrgReq) returns (JoinOrgRes) {};
 	// Leaves an organization.
 	rpc LeaveOrg(LeaveOrgReq) returns (LeaveOrgRes) {};
-	// Sets role of the member for the orgnization.
+	// Sets role of a member for an orgnization.
 	rpc SetRoleOrg(SetRoleOrgReq) returns (SetRoleOrgRes) {};
-	// rpc DeleteOrgMember
+	// Deletes a member from an organization.
+	rpc DeleteOrgMember(DeleteOrgMemberReq) returns (DeleteOrgMemberRes) {};
 	// rpc DeleteOrg
 	// Creates a team.
 	rpc NewTeam(NewTeamReq) returns (NewTeamRes) {};
@@ -104,6 +105,11 @@ message SetRoleOrgReq {
 	RoleOrg role      = 2; // Role to be changed.
 }
 message SetRoleOrgRes {}
+
+message DeleteOrgMemberReq {
+	bytes member_id = 1; // ID of the member to delete from the organization.
+}
+message DeleteOrgMemberRes {}
 
 message NewTeamReq {
 	bytes  org_id = 1; // ID of the organization where the team will be created.

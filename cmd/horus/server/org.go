@@ -250,3 +250,39 @@ func (s *grpcServer) SetRoleOrg(ctx context.Context, req *pb.SetRoleOrgReq) (*pb
 
 	return &pb.SetRoleOrgRes{}, nil
 }
+
+func (s *grpcServer) DeleteOrgMember(ctx context.Context, req *pb.DeleteOrgMemberReq) (*pb.DeleteOrgMemberRes, error) {
+	member_id, err := parseMemberId(req.MemberId)
+	if err != nil {
+		return nil, err
+	}
+
+	user := s.mustUser(ctx)
+	target_member, err := s.Members().GetById(ctx, member_id)
+	if err != nil {
+		if errors.Is(err, horus.ErrNotExist) {
+			return &pb.DeleteOrgMemberRes{}, nil
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("get member details: %w", err))
+	}
+
+	member, err := s.Members().GetByUserIdFromOrg(ctx, target_member.OrgId, user.Id)
+	if err != nil {
+		if errors.Is(err, horus.ErrNotExist) {
+			return &pb.DeleteOrgMemberRes{}, nil
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("get member details: %w", err))
+	}
+	if member.Role != horus.RoleOrgOwner || target_member.Role == horus.RoleOrgOwner {
+		return nil, grpcStatusWithCode(codes.PermissionDenied)
+	}
+
+	err = s.Members().DeleteById(ctx, member_id)
+	if err != nil {
+		return nil, grpcInternalErr(ctx, fmt.Errorf("get a member: %w", err))
+	}
+
+	return &pb.DeleteOrgMemberRes{}, nil
+}
