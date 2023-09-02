@@ -35,4 +35,5 @@ type OrgStore interface {
 	GetById(ctx context.Context, org_id OrgId) (*Org, error)
 	GetAllByUserId(ctx context.Context, user_id UserId) ([]*Org, error)
 	UpdateById(ctx context.Context, org *Org) (*Org, error)
+	DeleteById(ctx context.Context, org_id OrgId) error
 }

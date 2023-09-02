@@ -28,7 +28,8 @@ service Horus {
 	rpc SetRoleOrg(SetRoleOrgReq) returns (SetRoleOrgRes) {};
 	// Deletes a member from an organization.
 	rpc DeleteOrgMember(DeleteOrgMemberReq) returns (DeleteOrgMemberRes) {};
-	// rpc DeleteOrg
+	// Deletes an orgnaization.
+	rpc DeleteOrg(DeleteOrgReq) returns (DeleteOrgRes) {};
 	// Creates a team.
 	rpc NewTeam(NewTeamReq) returns (NewTeamRes) {};
 	// Lists teams.
@@ -110,6 +111,11 @@ message DeleteOrgMemberReq {
 	bytes member_id = 1; // ID of the member to delete from the organization.
 }
 message DeleteOrgMemberRes {}
+
+message DeleteOrgReq {
+	bytes org_id = 1; // ID of the organization to remove.
+}
+message DeleteOrgRes {}
 
 message NewTeamReq {
 	bytes  org_id = 1; // ID of the organization where the team will be created.

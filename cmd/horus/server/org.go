@@ -286,3 +286,34 @@ func (s *grpcServer) DeleteOrgMember(ctx context.Context, req *pb.DeleteOrgMembe
 
 	return &pb.DeleteOrgMemberRes{}, nil
 }
+
+func (s *grpcServer) DeleteOrg(ctx context.Context, req *pb.DeleteOrgReq) (*pb.DeleteOrgRes, error) {
+	org_id, err := parseOrgId(req.OrgId)
+	if err != nil {
+		return nil, err
+	}
+
+	user := s.mustUser(ctx)
+	member, err := s.Members().GetByUserIdFromOrg(ctx, org_id, user.Id)
+	if err != nil {
+		if errors.Is(err, horus.ErrNotExist) {
+			return &pb.DeleteOrgRes{}, nil
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("get member details: %w", err))
+	}
+	if member.Role != horus.RoleOrgOwner {
+		return nil, grpcStatusWithCode(codes.PermissionDenied)
+	}
+
+	err = s.Orgs().DeleteById(ctx, org_id)
+	if err != nil {
+		if errors.Is(err, horus.ErrFailedPrecondition) {
+			return nil, grpcStatusWithCode(codes.FailedPrecondition)
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("delete an org: %w", err))
+	}
+
+	return &pb.DeleteOrgRes{}, nil
+}

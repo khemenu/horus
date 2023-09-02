@@ -93,3 +93,29 @@ func (s *orgStore) UpdateById(ctx context.Context, org *horus.Org) (*horus.Org, 
 
 	return fromEntOrg(res), nil
 }
+
+func (s *orgStore) DeleteById(ctx context.Context, org_id horus.OrgId) error {
+	_, err := withTx(ctx, s.client, func(tx *ent.Tx) (int, error) {
+		cnt, err := tx.Member.Query().
+			Where(member.And(
+				member.OrgID(uuid.UUID(org_id)),
+				member.RoleEQ(horus.RoleOrgOwner),
+			)).
+			Count(ctx)
+		if err != nil {
+			return 0, fmt.Errorf("query members: %w", err)
+		}
+		if cnt > 1 {
+			return 0, fmt.Errorf("%w: there should be sole owner", horus.ErrFailedPrecondition)
+		}
+
+		err = tx.Org.DeleteOneID(uuid.UUID(org_id)).Exec(ctx)
+		if err != nil {
+			return 0, fmt.Errorf("query org: %w", err)
+		}
+
+		return 0, nil
+	})
+
+	return err
+}

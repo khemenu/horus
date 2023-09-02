@@ -31,6 +31,7 @@ const (
 	Horus_LeaveOrg_FullMethodName             = "/khepri.horus.Horus/LeaveOrg"
 	Horus_SetRoleOrg_FullMethodName           = "/khepri.horus.Horus/SetRoleOrg"
 	Horus_DeleteOrgMember_FullMethodName      = "/khepri.horus.Horus/DeleteOrgMember"
+	Horus_DeleteOrg_FullMethodName            = "/khepri.horus.Horus/DeleteOrg"
 	Horus_NewTeam_FullMethodName              = "/khepri.horus.Horus/NewTeam"
 	Horus_ListTeams_FullMethodName            = "/khepri.horus.Horus/ListTeams"
 	Horus_UpdateTeam_FullMethodName           = "/khepri.horus.Horus/UpdateTeam"
@@ -69,7 +70,8 @@ type HorusClient interface {
 	SetRoleOrg(ctx context.Context, in *SetRoleOrgReq, opts ...grpc.CallOption) (*SetRoleOrgRes, error)
 	// Deletes a member from an organization.
 	DeleteOrgMember(ctx context.Context, in *DeleteOrgMemberReq, opts ...grpc.CallOption) (*DeleteOrgMemberRes, error)
-	// rpc DeleteOrg
+	// Deletes an orgnaization.
+	DeleteOrg(ctx context.Context, in *DeleteOrgReq, opts ...grpc.CallOption) (*DeleteOrgRes, error)
 	// Creates a team.
 	NewTeam(ctx context.Context, in *NewTeamReq, opts ...grpc.CallOption) (*NewTeamRes, error)
 	// Lists teams.
@@ -189,6 +191,15 @@ func (c *horusClient) SetRoleOrg(ctx context.Context, in *SetRoleOrgReq, opts ..
 func (c *horusClient) DeleteOrgMember(ctx context.Context, in *DeleteOrgMemberReq, opts ...grpc.CallOption) (*DeleteOrgMemberRes, error) {
 	out := new(DeleteOrgMemberRes)
 	err := c.cc.Invoke(ctx, Horus_DeleteOrgMember_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *horusClient) DeleteOrg(ctx context.Context, in *DeleteOrgReq, opts ...grpc.CallOption) (*DeleteOrgRes, error) {
+	out := new(DeleteOrgRes)
+	err := c.cc.Invoke(ctx, Horus_DeleteOrg_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +338,8 @@ type HorusServer interface {
 	SetRoleOrg(context.Context, *SetRoleOrgReq) (*SetRoleOrgRes, error)
 	// Deletes a member from an organization.
 	DeleteOrgMember(context.Context, *DeleteOrgMemberReq) (*DeleteOrgMemberRes, error)
-	// rpc DeleteOrg
+	// Deletes an orgnaization.
+	DeleteOrg(context.Context, *DeleteOrgReq) (*DeleteOrgRes, error)
 	// Creates a team.
 	NewTeam(context.Context, *NewTeamReq) (*NewTeamRes, error)
 	// Lists teams.
@@ -389,6 +401,9 @@ func (UnimplementedHorusServer) SetRoleOrg(context.Context, *SetRoleOrgReq) (*Se
 }
 func (UnimplementedHorusServer) DeleteOrgMember(context.Context, *DeleteOrgMemberReq) (*DeleteOrgMemberRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteOrgMember not implemented")
+}
+func (UnimplementedHorusServer) DeleteOrg(context.Context, *DeleteOrgReq) (*DeleteOrgRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteOrg not implemented")
 }
 func (UnimplementedHorusServer) NewTeam(context.Context, *NewTeamReq) (*NewTeamRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewTeam not implemented")
@@ -615,6 +630,24 @@ func _Horus_DeleteOrgMember_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(HorusServer).DeleteOrgMember(ctx, req.(*DeleteOrgMemberReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Horus_DeleteOrg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteOrgReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HorusServer).DeleteOrg(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Horus_DeleteOrg_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HorusServer).DeleteOrg(ctx, req.(*DeleteOrgReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -881,6 +914,10 @@ var Horus_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteOrgMember",
 			Handler:    _Horus_DeleteOrgMember_Handler,
+		},
+		{
+			MethodName: "DeleteOrg",
+			Handler:    _Horus_DeleteOrg_Handler,
 		},
 		{
 			MethodName: "NewTeam",
