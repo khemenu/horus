@@ -32,7 +32,7 @@ service Horus {
 	rpc NewTeam(NewTeamReq) returns (NewTeamRes) {};
 	// Lists teams.
 	rpc ListTeams(ListTeamsReq) returns (ListTeamsRes) {};
-	// Updates team info.
+	// Updates a team info.
 	rpc UpdateTeam(UpdateTeamReq) returns (UpdateTeamRes) {};
 	// Invites an orgnization member as a team member.
 	rpc InviteMember(InviteMemberReq) returns (InviteMemberRes) {};
@@ -47,7 +47,8 @@ service Horus {
 	// Deletes a team.
 	rpc DeleteTeam(DeleteTeamReq) returns (DeleteTeamRes) {};
 	// rpc ListMembers // TODO: stream?
-	// rpc UpdateMember
+	// Updates a member info.
+	rpc UpdateMember(UpdateMemberReq) returns (UpdateMemberRes) {};
 	// Add an identity to the member.
 	rpc AddMemberIdentity(AddMemberIdentityReq) returns (AddMemberIdentityRes) {};
 	// Remove an identity from the member.
@@ -159,14 +160,20 @@ message DeleteTeamReq {
 }
 message DeleteTeamRes {}
 
+message UpdateMemberReq {
+	bytes  org_id = 1; //
+	string name   = 2; //
+}
+message UpdateMemberRes {}
+
 message AddMemberIdentityReq {
-	bytes  member_id      = 1; // ID of the member to add the identity.
+	bytes  org_id         = 1; // Organization ID of the member whose identity will be added.
 	string identity_value = 2; // Value of the identity to be added.
 }
 message AddMemberIdentityRes {}
 
 message RemoveMemberIdentityReq {
-	bytes  member_id      = 1; // ID of the member to remove the identity.
+	bytes  org_id         = 1; // Organization ID of the member whose identity will be removed.
 	string identity_value = 2; // Value of the identity to be removeed.
 }
 message RemoveMemberIdentityRes {}

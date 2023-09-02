@@ -198,6 +198,47 @@ func (s *memberStore) AddIdentity(ctx context.Context, member_id horus.MemberId,
 	return err
 }
 
+func (s *memberStore) AddIdentityByUserIdFromOrg(ctx context.Context, org_id horus.OrgId, user_id horus.UserId, identity_value horus.IdentityValue) error {
+	_, err := withTx(ctx, s.client, func(tx *ent.Tx) (int, error) {
+		cnt, err := tx.Member.Update().
+			Where(member.And(
+				member.OrgID(uuid.UUID(org_id)),
+				member.UserID(uuid.UUID(user_id)),
+			)).
+			AddIdentityIDs(string(identity_value)).
+			Save(ctx)
+		if err != nil {
+			if ent.IsConstraintError(err) {
+				if strings.Contains(err.Error(), "FOREIGN KEY") {
+					return 0, errors.Join(horus.ErrNotExist, err)
+				}
+			}
+
+			return 0, fmt.Errorf("query member: %w", err)
+		}
+		if cnt != 1 {
+			return 0, horus.ErrNotExist
+		}
+
+		cnt, err = tx.Identity.Query().
+			Where(identity.And(
+				identity.ID(string(identity_value)),
+				identity.OwnerID(uuid.UUID(user_id)),
+			)).
+			Count(ctx)
+		if err != nil {
+			return 0, fmt.Errorf("query identity: %w", err)
+		}
+		if cnt != 1 {
+			return 0, horus.ErrNotExist
+		}
+
+		return 0, nil
+	})
+
+	return err
+}
+
 func (s *memberStore) RemoveIdentity(ctx context.Context, member_id horus.MemberId, identity_value horus.IdentityValue) error {
 	err := s.client.Member.UpdateOneID(uuid.UUID(member_id)).
 		RemoveIdentityIDs(string(identity_value)).
@@ -207,6 +248,21 @@ func (s *memberStore) RemoveIdentity(ctx context.Context, member_id horus.Member
 			return nil
 		}
 
+		return fmt.Errorf("save: %w", err)
+	}
+
+	return nil
+}
+
+func (s *memberStore) RemoveIdentityByUserIdFromOrg(ctx context.Context, org_id horus.OrgId, user_id horus.UserId, identity_value horus.IdentityValue) error {
+	_, err := s.client.Member.Update().
+		Where(member.And(
+			member.OrgID(uuid.UUID(org_id)),
+			member.UserID(uuid.UUID(user_id)),
+		)).
+		RemoveIdentityIDs(string(identity_value)).
+		Save(ctx)
+	if err != nil {
 		return fmt.Errorf("save: %w", err)
 	}
 

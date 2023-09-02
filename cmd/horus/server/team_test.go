@@ -1003,5 +1003,8 @@ func TestDeleteTeam(t *testing.T) {
 		s, ok := status.FromError(err)
 		require.True(ok)
 		require.Equal(codes.PermissionDenied, s.Code())
+
+		_, err = h.Teams().GetById(ctx, team.Id)
+		require.NoError(err)
 	}))
 }
