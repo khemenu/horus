@@ -132,6 +132,20 @@ func (s *membershipStore) UpdateById(ctx context.Context, membership *horus.Memb
 	return fromEntMembership(res), nil
 }
 
+func (s *membershipStore) DeleteById(ctx context.Context, team_id horus.TeamId, member_id horus.MemberId) error {
+	_, err := s.client.Membership.Delete().
+		Where(membership.And(
+			membership.TeamID(uuid.UUID(team_id)),
+			membership.MemberID(uuid.UUID(member_id)),
+		)).
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("query: %w", err)
+	}
+
+	return nil
+}
+
 func (s *membershipStore) DeleteByUserIdFromTeam(ctx context.Context, team_id horus.TeamId, user_id horus.UserId) error {
 	_, err := s.client.Membership.Delete().
 		Where(membership.And(
@@ -140,7 +154,7 @@ func (s *membershipStore) DeleteByUserIdFromTeam(ctx context.Context, team_id ho
 		)).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("save: %w", err)
+		return fmt.Errorf("query: %w", err)
 	}
 
 	return nil

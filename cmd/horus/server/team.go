@@ -270,7 +270,6 @@ func (s *grpcServer) SetRoleTeam(ctx context.Context, req *pb.SetRoleTeamReq) (*
 	}
 
 	user := s.mustUser(ctx)
-
 	member, err := s.Members().GetByUserIdFromTeam(ctx, team_id, user.Id)
 	if err != nil {
 		if errors.Is(err, horus.ErrNotExist) {
@@ -331,4 +330,66 @@ func (s *grpcServer) SetRoleTeam(ctx context.Context, req *pb.SetRoleTeamReq) (*
 	}
 
 	return &pb.SetRoleTeamRes{}, nil
+}
+
+func (s *grpcServer) DeleteTeamMember(ctx context.Context, req *pb.DeleteTeamMemberReq) (*pb.DeleteTeamMemberRes, error) {
+	team_id, err := parseTeamId(req.TeamId)
+	if err != nil {
+		return nil, err
+	}
+
+	target_member_id, err := parseMemberId(req.MemberId)
+	if err != nil {
+		return nil, err
+	}
+
+	user := s.mustUser(ctx)
+	member, err := s.Members().GetByUserIdFromTeam(ctx, team_id, user.Id)
+	if err != nil {
+		if errors.Is(err, horus.ErrNotExist) {
+			return nil, grpcStatusWithCode(codes.NotFound)
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("get member details: %w", err))
+	}
+
+	if member.Role == horus.RoleOrgOwner {
+		err := s.Memberships().DeleteById(ctx, team_id, target_member_id)
+		if err != nil {
+			return nil, grpcInternalErr(ctx, fmt.Errorf("delete a membership: %w", err))
+		}
+
+		return &pb.DeleteTeamMemberRes{}, nil
+	}
+
+	membership, err := s.Memberships().GetById(ctx, team_id, member.Id)
+	if err != nil {
+		if errors.Is(err, horus.ErrNotExist) {
+			return nil, grpcStatusWithCode(codes.PermissionDenied)
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("update membership: %w", err))
+	}
+	if membership.Role != horus.RoleTeamOwner {
+		return nil, grpcStatusWithCode(codes.PermissionDenied)
+	}
+
+	target_membership, err := s.Memberships().GetById(ctx, team_id, target_member_id)
+	if err != nil {
+		if errors.Is(err, horus.ErrNotExist) {
+			return nil, status.Errorf(codes.NotFound, "member not found")
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("get membership details: %w", err))
+	}
+	if target_membership.Role == horus.RoleTeamOwner {
+		return nil, grpcStatusWithCode(codes.PermissionDenied)
+	}
+
+	err = s.Memberships().DeleteById(ctx, team_id, target_member_id)
+	if err != nil {
+		return nil, grpcInternalErr(ctx, fmt.Errorf("delete a membership: %w", err))
+	}
+
+	return &pb.DeleteTeamMemberRes{}, nil
 }
