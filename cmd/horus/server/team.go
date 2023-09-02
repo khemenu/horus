@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"khepri.dev/horus"
 	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/pb"
@@ -255,4 +256,79 @@ func (s *grpcServer) LeaveTeam(ctx context.Context, req *pb.LeaveTeamReq) (*pb.L
 	}
 
 	return &pb.LeaveTeamRes{}, nil
+}
+
+func (s *grpcServer) SetRoleTeam(ctx context.Context, req *pb.SetRoleTeamReq) (*pb.SetRoleTeamRes, error) {
+	team_id, err := parseTeamId(req.TeamId)
+	if err != nil {
+		return nil, err
+	}
+
+	target_member_id, err := parseMemberId(req.MemberId)
+	if err != nil {
+		return nil, err
+	}
+
+	user := s.mustUser(ctx)
+
+	member, err := s.Members().GetByUserIdFromTeam(ctx, team_id, user.Id)
+	if err != nil {
+		if errors.Is(err, horus.ErrNotExist) {
+			return nil, grpcStatusWithCode(codes.NotFound)
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("get member details: %w", err))
+	}
+
+	if member.Role == horus.RoleOrgOwner {
+		_, err := s.Memberships().UpdateById(ctx, &horus.Membership{
+			TeamId:   team_id,
+			MemberId: target_member_id,
+			Role:     fromPbRoleTeam(req.Role),
+		})
+		if err != nil {
+			if errors.Is(err, horus.ErrNotExist) {
+				return nil, status.Errorf(codes.NotFound, "member not found")
+			}
+
+			return nil, grpcInternalErr(ctx, fmt.Errorf("update membership: %w", err))
+		}
+
+		return &pb.SetRoleTeamRes{}, nil
+	}
+
+	membership, err := s.Memberships().GetById(ctx, team_id, member.Id)
+	if err != nil {
+		if errors.Is(err, horus.ErrNotExist) {
+			return nil, grpcStatusWithCode(codes.PermissionDenied)
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("update membership: %w", err))
+	}
+	if membership.Role != horus.RoleTeamOwner {
+		return nil, grpcStatusWithCode(codes.PermissionDenied)
+	}
+
+	target_membership, err := s.Memberships().GetById(ctx, team_id, target_member_id)
+	if err != nil {
+		if errors.Is(err, horus.ErrNotExist) {
+			return nil, status.Errorf(codes.NotFound, "member not found")
+		}
+
+		return nil, grpcInternalErr(ctx, fmt.Errorf("get membership details: %w", err))
+	}
+	if target_membership.Role != horus.RoleTeamMember {
+		return nil, grpcStatusWithCode(codes.PermissionDenied)
+	}
+
+	_, err = s.Memberships().UpdateById(ctx, &horus.Membership{
+		TeamId:   team_id,
+		MemberId: target_member_id,
+		Role:     fromPbRoleTeam(req.Role),
+	})
+	if err != nil {
+		return nil, grpcInternalErr(ctx, fmt.Errorf("update membership: %w", err))
+	}
+
+	return &pb.SetRoleTeamRes{}, nil
 }

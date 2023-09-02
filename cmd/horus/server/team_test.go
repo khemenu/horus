@@ -545,3 +545,214 @@ func TestLeaveTeam(t *testing.T) {
 		require.NoError(err)
 	}))
 }
+
+func TestSetRoleTeam(t *testing.T) {
+	t.Run("team does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		require.NoError(err)
+
+		team_id := uuid.New()
+		_, err = h.client.SetRoleTeam(ctx, &pb.SetRoleTeamReq{
+			TeamId:   team_id[:],
+			MemberId: rst.Owner.Id[:],
+		})
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.NotFound, s.Code())
+	}))
+
+	t.Run("member does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		require.NoError(err)
+
+		team, err := h.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: rst.Owner.Id,
+		})
+		require.NoError(err)
+
+		member_id := uuid.New()
+		_, err = h.client.SetRoleTeam(ctx, &pb.SetRoleTeamReq{
+			TeamId:   team.Id[:],
+			MemberId: member_id[:],
+			Role:     pb.RoleTeam_ROLE_TEAM_MEMBER,
+		})
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.NotFound, s.Code())
+	}))
+
+	t.Run("as an org owner without membership", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		require.NoError(err)
+
+		other, err := h.Users().New(ctx)
+		require.NoError(err)
+
+		other_member, err := h.Members().New(ctx, horus.MemberInit{
+			OrgId:  rst.Org.Id,
+			UserId: other.Id,
+			Role:   horus.RoleOrgMember,
+		})
+		require.NoError(err)
+
+		team, err := h.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: other_member.Id,
+		})
+		require.NoError(err)
+
+		_, err = h.client.SetRoleTeam(ctx, &pb.SetRoleTeamReq{
+			TeamId:   team.Id[:],
+			MemberId: other_member.Id[:],
+			Role:     pb.RoleTeam_ROLE_TEAM_MEMBER,
+		})
+		require.NoError(err)
+	}))
+
+	t.Run("as a team member", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		other, err := h.Users().New(ctx)
+		require.NoError(err)
+
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		require.NoError(err)
+
+		team, err := h.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: rst.Owner.Id,
+		})
+		require.NoError(err)
+
+		_, err = h.Members().New(ctx, horus.MemberInit{
+			OrgId:  rst.Org.Id,
+			UserId: h.user.Id,
+			Role:   horus.RoleOrgMember,
+		})
+		require.NoError(err)
+
+		_, err = h.client.SetRoleTeam(ctx, &pb.SetRoleTeamReq{
+			TeamId:   team.Id[:],
+			MemberId: rst.Owner.Id[:],
+			Role:     pb.RoleTeam_ROLE_TEAM_MEMBER,
+		})
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.PermissionDenied, s.Code())
+	}))
+
+	t.Run("set team member to team owner as a team owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		other, err := h.Users().New(ctx)
+		require.NoError(err)
+
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		require.NoError(err)
+
+		member, err := h.Members().New(ctx, horus.MemberInit{
+			OrgId:  rst.Org.Id,
+			UserId: h.user.Id,
+			Role:   horus.RoleOrgMember,
+		})
+		require.NoError(err)
+
+		team, err := h.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: member.Id,
+		})
+		require.NoError(err)
+
+		_, err = h.Memberships().New(ctx, horus.MembershipInit{
+			TeamId:   team.Id,
+			MemberId: rst.Owner.Id,
+			Role:     horus.RoleTeamMember,
+		})
+		require.NoError(err)
+
+		_, err = h.client.SetRoleTeam(ctx, &pb.SetRoleTeamReq{
+			TeamId:   team.Id[:],
+			MemberId: rst.Owner.Id[:],
+			Role:     pb.RoleTeam_ROLE_TEAM_OWNER,
+		})
+		require.NoError(err)
+	}))
+
+	t.Run("set team owner to team member as a team owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		other, err := h.Users().New(ctx)
+		require.NoError(err)
+
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		require.NoError(err)
+
+		member, err := h.Members().New(ctx, horus.MemberInit{
+			OrgId:  rst.Org.Id,
+			UserId: h.user.Id,
+			Role:   horus.RoleOrgMember,
+		})
+		require.NoError(err)
+
+		team, err := h.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: member.Id,
+		})
+		require.NoError(err)
+
+		_, err = h.Memberships().New(ctx, horus.MembershipInit{
+			TeamId:   team.Id,
+			MemberId: rst.Owner.Id,
+			Role:     horus.RoleTeamOwner,
+		})
+		require.NoError(err)
+
+		_, err = h.client.SetRoleTeam(ctx, &pb.SetRoleTeamReq{
+			TeamId:   team.Id[:],
+			MemberId: rst.Owner.Id[:],
+			Role:     pb.RoleTeam_ROLE_TEAM_MEMBER,
+		})
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.PermissionDenied, s.Code())
+	}))
+
+	t.Run("set team member to team owner as another team owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		other, err := h.Users().New(ctx)
+		require.NoError(err)
+
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		require.NoError(err)
+
+		member, err := h.Members().New(ctx, horus.MemberInit{
+			OrgId:  rst.Org.Id,
+			UserId: h.user.Id,
+			Role:   horus.RoleOrgMember,
+		})
+		require.NoError(err)
+
+		_, err = h.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: member.Id,
+		})
+		require.NoError(err)
+
+		team, err := h.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: rst.Owner.Id,
+		})
+		require.NoError(err)
+
+		_, err = h.Memberships().UpdateById(ctx, &horus.Membership{
+			TeamId:   team.Id,
+			MemberId: rst.Owner.Id,
+			Role:     horus.RoleTeamMember,
+		})
+		require.NoError(err)
+
+		_, err = h.client.SetRoleTeam(ctx, &pb.SetRoleTeamReq{
+			TeamId:   team.Id[:],
+			MemberId: rst.Owner.Id[:],
+			Role:     pb.RoleTeam_ROLE_TEAM_OWNER,
+		})
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.PermissionDenied, s.Code())
+	}))
+
+}

@@ -140,6 +140,17 @@ func fromPbRoleOrg(v pb.RoleOrg) horus.RoleOrg {
 	return ""
 }
 
+func fromPbRoleTeam(v pb.RoleTeam) horus.RoleTeam {
+	switch v {
+	case pb.RoleTeam_ROLE_TEAM_OWNER:
+		return horus.RoleTeamOwner
+	case pb.RoleTeam_ROLE_TEAM_MEMBER:
+		return horus.RoleTeamMember
+	}
+
+	return ""
+}
+
 func parseUuidArg[T ~[16]byte](v []byte, name string) (T, error) {
 	rst, err := uuid.FromBytes(v)
 	if err != nil {
