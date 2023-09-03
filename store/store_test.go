@@ -114,9 +114,7 @@ func (s *SuiteWithStoresOrg) Run(name string, sub func(ctx context.Context), opt
 		rst, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
 		require.NoError(err)
 		s.org = rst.Org
-
-		s.owner, err = s.Members().GetByUserIdFromOrg(ctx, s.org.Id, s.user.Id)
-		require.NoError(err)
+		s.owner = rst.Owner
 
 		sub(ctx)
 	}, opts...)

@@ -52,3 +52,10 @@ type Stores interface {
 	Members() MemberStore
 	Memberships() MembershipStore
 }
+
+type SortOrder string
+
+const (
+	SortOrderAscending  = "asc"
+	SortOrderDescending = "desc"
+)

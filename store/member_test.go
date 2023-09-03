@@ -217,6 +217,115 @@ func (s *MemberStoreTestSuite) TestGetAllByOrgId() {
 	})
 }
 
+func (s *MemberStoreTestSuite) TestList() {
+	s.Run("from org", func(ctx context.Context) {
+		require := s.Require()
+
+		rst, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		require.NoError(err)
+
+		nobody, err := s.Users().New(ctx)
+		require.NoError(err)
+
+		_, err = s.Members().New(ctx, horus.MemberInit{
+			OrgId:  rst.Org.Id,
+			UserId: nobody.Id,
+			Role:   horus.RoleOrgMember,
+			Name:   "z",
+		})
+		require.NoError(err)
+
+		someone_a, err := s.Users().New(ctx)
+		require.NoError(err)
+
+		someone_b, err := s.Users().New(ctx)
+		require.NoError(err)
+
+		member_b, err := s.Members().New(ctx, horus.MemberInit{
+			OrgId:  s.org.Id,
+			UserId: someone_b.Id,
+			Role:   horus.RoleOrgMember,
+			Name:   "b",
+		})
+		require.NoError(err)
+
+		member_a, err := s.Members().New(ctx, horus.MemberInit{
+			OrgId:  s.org.Id,
+			UserId: someone_a.Id,
+			Role:   horus.RoleOrgMember,
+			Name:   "a",
+		})
+		require.NoError(err)
+
+		for _, tc := range []struct {
+			desc     string
+			conf     horus.MemberListFromOrgConfig
+			expected []*horus.Member
+		}{
+			{
+				desc: "by name asc",
+				conf: horus.MemberListFromOrgConfig{
+					Limit: 10,
+					Sorts: []horus.MemberSort{
+						{Keyword: horus.MemberSortByName, Order: horus.SortOrderAscending},
+					},
+				},
+				expected: []*horus.Member{s.owner, member_a, member_b},
+			},
+			{
+				desc: "by name desc",
+				conf: horus.MemberListFromOrgConfig{
+					Limit: 10,
+					Sorts: []horus.MemberSort{
+						{Keyword: horus.MemberSortByName, Order: horus.SortOrderDescending},
+					},
+				},
+				expected: []*horus.Member{member_b, member_a, s.owner},
+			},
+			{
+				desc: "by created date",
+				conf: horus.MemberListFromOrgConfig{
+					Limit: 10,
+					Sorts: []horus.MemberSort{
+						{Keyword: horus.MemberSortByCreatedDate, Order: horus.SortOrderDescending},
+					},
+				},
+				expected: []*horus.Member{member_a, member_b, s.owner},
+			},
+			{
+				desc: "with offset",
+				conf: horus.MemberListFromOrgConfig{
+					Offset: 1,
+					Limit:  10,
+					Sorts: []horus.MemberSort{
+						{Keyword: horus.MemberSortByName, Order: horus.SortOrderAscending},
+					},
+				},
+				expected: []*horus.Member{member_a, member_b},
+			},
+			{
+				desc: "with limit",
+				conf: horus.MemberListFromOrgConfig{
+					Offset: 1,
+					Limit:  1,
+					Sorts: []horus.MemberSort{
+						{Keyword: horus.MemberSortByName, Order: horus.SortOrderAscending},
+					},
+				},
+				expected: []*horus.Member{member_a},
+			},
+		} {
+			s.Suite.Run(tc.desc, func() {
+				require := s.Require()
+
+				members, err := s.Members().ListFromOrg(ctx, s.org.Id, tc.conf)
+				require.NoError(err)
+				require.Equal(tc.expected, members)
+			})
+		}
+	})
+}
+
 func (s *MemberStoreTestSuite) TestUpdateById() {
 	s.Run("member does not exist", func(ctx context.Context) {
 		require := s.Require()

@@ -27,3 +27,15 @@ func TestFallback(t *testing.T) {
 		require.Equal(t, a, rst)
 	}
 }
+
+func TestCond(t *testing.T) {
+	{
+		v := fx.Cond(true, 36, 42)
+		require.Equal(t, v, 36)
+	}
+
+	{
+		v := fx.Cond(false, 36, 42)
+		require.Equal(t, v, 42)
+	}
+}

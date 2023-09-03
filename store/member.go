@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"khepri.dev/horus"
 	"khepri.dev/horus/internal/fx"
@@ -13,6 +15,7 @@ import (
 	"khepri.dev/horus/store/ent"
 	"khepri.dev/horus/store/ent/identity"
 	"khepri.dev/horus/store/ent/member"
+	"khepri.dev/horus/store/ent/predicate"
 	"khepri.dev/horus/store/ent/team"
 )
 
@@ -132,6 +135,56 @@ func (s *memberStore) GetAllByOrgId(ctx context.Context, org_id horus.OrgId) ([]
 	}
 
 	return fx.MapV(res, fromEntMember), nil
+}
+
+func (s *memberStore) listFromWhere(ctx context.Context, where predicate.Member, conf horus.MemberListFromOrgConfig) ([]*horus.Member, error) {
+	conf.Limit = fx.Max(conf.Limit, 0)
+	conf.Offset = fx.Max(conf.Offset, 0)
+
+	default_sort := []horus.MemberSort{
+		{Keyword: horus.MemberSortByCreatedDate, Order: horus.SortOrderDescending},
+		{Keyword: horus.MemberSortByName, Order: horus.SortOrderDescending},
+	}
+
+	input_keywords := fx.MapV(conf.Sorts, func(v horus.MemberSort) horus.MemberSortKeyword { return v.Keyword })
+	default_sort = fx.FilterV(default_sort, func(v horus.MemberSort) bool {
+		return !slices.Contains(input_keywords, v.Keyword)
+	})
+
+	conf.Sorts = append(conf.Sorts, default_sort...)
+
+	order_opts := fx.FilterMapV(conf.Sorts, func(v horus.MemberSort) (member.OrderOption, bool) {
+		order := fx.Cond(v.Order == horus.SortOrderAscending, sql.OrderAsc(), sql.OrderDesc())
+		switch v.Keyword {
+		case horus.MemberSortByCreatedDate:
+			return member.ByCreatedAt(order), true
+		case horus.MemberSortByName:
+			return member.ByName(order), true
+		}
+
+		return nil, false
+	})
+
+	res, err := s.client.Debug().Member.Query().
+		Where(where).
+		WithIdentities().
+		Order(order_opts...).
+		Limit(conf.Limit).
+		Offset(conf.Offset).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("query: %w", err)
+	}
+
+	return fx.MapV(res, fromEntMember), nil
+}
+
+func (s *memberStore) ListFromOrg(ctx context.Context, org_id horus.OrgId, conf horus.MemberListFromOrgConfig) ([]*horus.Member, error) {
+	return s.listFromWhere(ctx, member.OrgID(uuid.UUID(org_id)), conf)
+}
+
+func (s *memberStore) ListFromTeam(ctx context.Context, team_id horus.TeamId, conf horus.MemberListFromOrgConfig) ([]*horus.Member, error) {
+	return s.listFromWhere(ctx, member.HasTeamsWith(team.ID(uuid.UUID(team_id))), conf)
 }
 
 func (s *memberStore) UpdateById(ctx context.Context, member_ *horus.Member) (*horus.Member, error) {

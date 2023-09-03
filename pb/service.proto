@@ -12,6 +12,7 @@ service Horus {
 	rpc ListIdentities(ListIdentitiesReq) returns (ListIdentitiesRes) {};
 	// Delete an identity.
 	rpc DeleteIdentity(DeleteIdentityReq) returns (DeleteIdentityRes) {};
+
 	// Creates an organization.
 	rpc NewOrg(NewOrgReq) returns (NewOrgRes) {};
 	// Lists organizations the user belongs to.
@@ -26,10 +27,9 @@ service Horus {
 	rpc LeaveOrg(LeaveOrgReq) returns (LeaveOrgRes) {};
 	// Sets role of a member for an orgnization.
 	rpc SetRoleOrg(SetRoleOrgReq) returns (SetRoleOrgRes) {};
-	// Deletes a member from an organization.
-	rpc DeleteOrgMember(DeleteOrgMemberReq) returns (DeleteOrgMemberRes) {};
 	// Deletes an orgnaization.
 	rpc DeleteOrg(DeleteOrgReq) returns (DeleteOrgRes) {};
+
 	// Creates a team.
 	rpc NewTeam(NewTeamReq) returns (NewTeamRes) {};
 	// Lists teams.
@@ -44,17 +44,23 @@ service Horus {
 	rpc LeaveTeam(LeaveTeamReq) returns (LeaveTeamRes) {};
 	// Sets role of the member for the team.
 	rpc SetRoleTeam(SetRoleTeamReq) returns (SetRoleTeamRes) {};
-	// Deletes a team member.
-	rpc DeleteTeamMember(DeleteTeamMemberReq) returns (DeleteTeamMemberRes) {};
 	// Deletes a team.
 	rpc DeleteTeam(DeleteTeamReq) returns (DeleteTeamRes) {};
-	// rpc ListMembers // TODO: stream?
+
+	// Lists members in the organization.
+	rpc ListOrgMembers(ListOrgMembersReq) returns (ListOrgMembersRes) {};
+	// Lists members in the team.
+	rpc ListTeamMembers(ListTeamMembersReq) returns (ListTeamMembersRes) {};
 	// Updates a member info.
 	rpc UpdateMember(UpdateMemberReq) returns (UpdateMemberRes) {};
 	// Add an identity to the member.
 	rpc AddMemberIdentity(AddMemberIdentityReq) returns (AddMemberIdentityRes) {};
 	// Remove an identity from the member.
 	rpc RemoveMemberIdentity(RemoveMemberIdentityReq) returns (RemoveMemberIdentityRes) {};
+	// Deletes a member from an organization.
+	rpc DeleteOrgMember(DeleteOrgMemberReq) returns (DeleteOrgMemberRes) {};
+	// Deletes a team member.
+	rpc DeleteTeamMember(DeleteTeamMemberReq) returns (DeleteTeamMemberRes) {};
 }
 
 message ListIdentitiesReq {}
@@ -107,11 +113,6 @@ message SetRoleOrgReq {
 }
 message SetRoleOrgRes {}
 
-message DeleteOrgMemberReq {
-	bytes member_id = 1; // ID of the member to delete from the organization.
-}
-message DeleteOrgMemberRes {}
-
 message DeleteOrgReq {
 	bytes org_id = 1; // ID of the organization to remove.
 }
@@ -161,16 +162,32 @@ message SetRoleTeamReq {
 }
 message SetRoleTeamRes {}
 
-message DeleteTeamMemberReq {
-	bytes team_id   = 1; // ID of the team from which to delete a member.
-	bytes member_id = 2; // ID of the member to delete from a team.
-}
-message DeleteTeamMemberRes {}
-
 message DeleteTeamReq {
 	bytes team_id = 1; // ID of the team to delete from an organization.
 }
 message DeleteTeamRes {}
+
+message ListOrgMembersReq {
+	bytes org_id = 1; //
+	int64 offset = 2; //
+	int64 limit  = 3; //
+
+	repeated MemberSort sorts = 4; //
+}
+message ListOrgMembersRes {
+	repeated Member members = 1; //
+}
+
+message ListTeamMembersReq {
+	bytes org_id = 1; //
+	int64 offset = 2; //
+	int64 limit  = 3; //
+
+	repeated MemberSort sorts = 4; //
+}
+message ListTeamMembersRes {
+	repeated Member members = 1; //
+}
 
 message UpdateMemberReq {
 	bytes  org_id = 1; //
@@ -189,3 +206,14 @@ message RemoveMemberIdentityReq {
 	string identity_value = 2; // Value of the identity to be removeed.
 }
 message RemoveMemberIdentityRes {}
+
+message DeleteOrgMemberReq {
+	bytes member_id = 1; // ID of the member to delete from the organization.
+}
+message DeleteOrgMemberRes {}
+
+message DeleteTeamMemberReq {
+	bytes team_id   = 1; // ID of the team from which to delete a member.
+	bytes member_id = 2; // ID of the member to delete from a team.
+}
+message DeleteTeamMemberRes {}

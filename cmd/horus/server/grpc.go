@@ -118,6 +118,17 @@ func grpcStatusWithCode(code codes.Code) error {
 	return status.Error(code, code.String())
 }
 
+func fromPbSortOrder(v pb.SortOrder) (horus.SortOrder, bool) {
+	switch v {
+	case pb.SortOrder_SORT_ORDER_ASCENDING:
+		return horus.SortOrderAscending, true
+	case pb.SortOrder_SORT_ORDER_DESCENDING:
+		return horus.SortOrderDescending, true
+	}
+
+	return "", false
+}
+
 func toPbRoleOrg(v horus.RoleOrg) pb.RoleOrg {
 	switch v {
 	case horus.RoleOrgOwner:

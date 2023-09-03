@@ -15,3 +15,11 @@ func Fallback[T comparable](first T, second T) T {
 
 	return second
 }
+
+func Cond[T any](cond bool, t T, f T) T {
+	if cond {
+		return t
+	} else {
+		return f
+	}
+}

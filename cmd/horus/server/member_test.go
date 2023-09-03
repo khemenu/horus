@@ -9,8 +9,64 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"khepri.dev/horus"
+	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/pb"
 )
+
+func TestListOrgMembers(t *testing.T) {
+	t.Run("org does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		org_id := uuid.New()
+		_, err := h.client.ListOrgMembers(ctx, &pb.ListOrgMembersReq{
+			OrgId: org_id[:],
+		})
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.NotFound, s.Code())
+	}))
+
+	t.Run("not a member", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		other, err := h.Users().New(ctx)
+		require.NoError(err)
+
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		require.NoError(err)
+
+		_, err = h.client.ListOrgMembers(ctx, &pb.ListOrgMembersReq{
+			OrgId: rst.Org.Id[:],
+		})
+		s, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.NotFound, s.Code())
+	}))
+
+	t.Run("as a member", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
+		other, err := h.Users().New(ctx)
+		require.NoError(err)
+
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		require.NoError(err)
+
+		member, err := h.Members().New(ctx, horus.MemberInit{
+			OrgId:  rst.Org.Id,
+			UserId: h.user.Id,
+			Role:   horus.RoleOrgMember,
+		})
+		require.NoError(err)
+
+		res, err := h.client.ListOrgMembers(ctx, &pb.ListOrgMembersReq{
+			OrgId: rst.Org.Id[:],
+			Limit: 10,
+			Sorts: []*pb.MemberSort{
+				{
+					Keyword: pb.MemberSortKeyword_MEMBER_SORT_KEYWORD_CRATED_DATE,
+					Order:   pb.SortOrder_SORT_ORDER_DESCENDING,
+				},
+			},
+		})
+		require.NoError(err)
+		require.Equal([][]byte{member.Id[:], rst.Owner.Id[:]}, fx.MapV(res.Members, func(v *pb.Member) []byte { return v.Id }))
+	}))
+}
 
 func TestUpdateMember(t *testing.T) {
 	t.Run("org does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
