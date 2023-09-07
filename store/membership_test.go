@@ -169,6 +169,37 @@ func (s *MembershipStoreTestSuite) TestGetByUserIdFromTeam() {
 	})
 }
 
+func (s *MembershipStoreTestSuite) TestGetAllByMemberId() {
+	s.Run("member does not exist", func(ctx context.Context) {
+		require := s.Require()
+
+		member_id := uuid.New()
+		memberships, err := s.Memberships().GetAllByMemberId(ctx, horus.MemberId(member_id))
+		require.NoError(err)
+		require.Empty(memberships)
+	})
+
+	s.Run("member exists with multiple membership", func(ctx context.Context) {
+		require := s.Require()
+
+		membership1, err := s.Memberships().GetById(ctx, s.team.Id, s.owner.Id)
+		require.NoError(err)
+
+		team, err := s.Teams().New(ctx, horus.TeamInit{
+			OrgId:   s.org.Id,
+			OwnerId: s.owner.Id,
+		})
+		require.NoError(err)
+
+		membership2, err := s.Memberships().GetById(ctx, team.Id, s.owner.Id)
+		require.NoError(err)
+
+		memberships, err := s.Memberships().GetAllByMemberId(ctx, s.owner.Id)
+		require.NoError(err)
+		require.ElementsMatch([]*horus.Membership{membership1, membership2}, memberships)
+	})
+}
+
 func (s *MembershipStoreTestSuite) TestDeleteById() {
 	s.Run("team does not exist", func(ctx context.Context) {
 		require := s.Require()

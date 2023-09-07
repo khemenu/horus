@@ -22,6 +22,7 @@ enum RoleOrg {
 	ROLE_ORG_UNSPECIFIED = 0;  //
 	ROLE_ORG_OWNER       = 10; //
 	ROLE_ORG_MEMBER      = 20; //
+	ROLE_ORG_INVITEE     = 30; //
 }
 
 // Member role for organization.
@@ -29,6 +30,7 @@ enum RoleTeam {
 	ROLE_TEAM_UNSPECIFIED = 0;  //
 	ROLE_TEAM_OWNER       = 10; //
 	ROLE_TEAM_MEMBER      = 20; //
+	ROLE_TEAM_INVITEE     = 30; //
 }
 
 message Status {
@@ -69,6 +71,17 @@ message Member {
 	repeated Identity identities = 6; // Identities in the organization.
 
 	string created_at = 7; // Datetime.
+}
+
+message Membership {
+	bytes    team_id   = 1; //
+	bytes    member_id = 2; //
+	RoleTeam role      = 3; //
+}
+
+message Profile {
+	Member              member      = 1; //
+	repeated Membership memberships = 2; //
 }
 
 //

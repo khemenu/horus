@@ -21,6 +21,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	Horus_GetProfile_FullMethodName           = "/khepri.horus.Horus/GetProfile"
 	Horus_ListIdentities_FullMethodName       = "/khepri.horus.Horus/ListIdentities"
 	Horus_DeleteIdentity_FullMethodName       = "/khepri.horus.Horus/DeleteIdentity"
 	Horus_NewOrg_FullMethodName               = "/khepri.horus.Horus/NewOrg"
@@ -52,6 +53,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type HorusClient interface {
+	// Get my profile in the organization.
+	GetProfile(ctx context.Context, in *GetProfileReq, opts ...grpc.CallOption) (*GetProfileRes, error)
 	// List identities
 	ListIdentities(ctx context.Context, in *ListIdentitiesReq, opts ...grpc.CallOption) (*ListIdentitiesRes, error)
 	// Delete an identity.
@@ -110,6 +113,15 @@ type horusClient struct {
 
 func NewHorusClient(cc grpc.ClientConnInterface) HorusClient {
 	return &horusClient{cc}
+}
+
+func (c *horusClient) GetProfile(ctx context.Context, in *GetProfileReq, opts ...grpc.CallOption) (*GetProfileRes, error) {
+	out := new(GetProfileRes)
+	err := c.cc.Invoke(ctx, Horus_GetProfile_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *horusClient) ListIdentities(ctx context.Context, in *ListIdentitiesReq, opts ...grpc.CallOption) (*ListIdentitiesRes, error) {
@@ -341,6 +353,8 @@ func (c *horusClient) DeleteTeamMember(ctx context.Context, in *DeleteTeamMember
 // All implementations must embed UnimplementedHorusServer
 // for forward compatibility
 type HorusServer interface {
+	// Get my profile in the organization.
+	GetProfile(context.Context, *GetProfileReq) (*GetProfileRes, error)
 	// List identities
 	ListIdentities(context.Context, *ListIdentitiesReq) (*ListIdentitiesRes, error)
 	// Delete an identity.
@@ -398,6 +412,9 @@ type HorusServer interface {
 type UnimplementedHorusServer struct {
 }
 
+func (UnimplementedHorusServer) GetProfile(context.Context, *GetProfileReq) (*GetProfileRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProfile not implemented")
+}
 func (UnimplementedHorusServer) ListIdentities(context.Context, *ListIdentitiesReq) (*ListIdentitiesRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListIdentities not implemented")
 }
@@ -484,6 +501,24 @@ type UnsafeHorusServer interface {
 
 func RegisterHorusServer(s grpc.ServiceRegistrar, srv HorusServer) {
 	s.RegisterService(&Horus_ServiceDesc, srv)
+}
+
+func _Horus_GetProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProfileReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HorusServer).GetProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Horus_GetProfile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HorusServer).GetProfile(ctx, req.(*GetProfileReq))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Horus_ListIdentities_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -943,6 +978,10 @@ var Horus_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "khepri.horus.Horus",
 	HandlerType: (*HorusServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetProfile",
+			Handler:    _Horus_GetProfile_Handler,
+		},
 		{
 			MethodName: "ListIdentities",
 			Handler:    _Horus_ListIdentities_Handler,

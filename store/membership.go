@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"khepri.dev/horus"
+	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/log"
 	"khepri.dev/horus/store/ent"
 	"khepri.dev/horus/store/ent/member"
@@ -115,6 +116,17 @@ func (s *membershipStore) GetByUserIdFromTeam(ctx context.Context, team_id horus
 	}
 
 	return fromEntMembership(res), nil
+}
+
+func (s *membershipStore) GetAllByMemberId(ctx context.Context, member_id horus.MemberId) ([]*horus.Membership, error) {
+	res, err := s.client.Membership.Query().
+		Where(membership.MemberID(uuid.UUID(member_id))).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("query: %w", err)
+	}
+
+	return fx.MapV(res, fromEntMembership), nil
 }
 
 func (s *membershipStore) UpdateById(ctx context.Context, membership *horus.Membership) (*horus.Membership, error) {

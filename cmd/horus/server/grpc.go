@@ -135,9 +135,24 @@ func toPbRoleOrg(v horus.RoleOrg) pb.RoleOrg {
 		return pb.RoleOrg_ROLE_ORG_OWNER
 	case horus.RoleOrgMember:
 		return pb.RoleOrg_ROLE_ORG_MEMBER
+	case horus.RoleOrgInvitee:
+		return pb.RoleOrg_ROLE_ORG_INVITEE
 	}
 
 	return pb.RoleOrg_ROLE_ORG_UNSPECIFIED
+}
+
+func toPbRoleTeam(v horus.RoleTeam) pb.RoleTeam {
+	switch v {
+	case horus.RoleTeamOwner:
+		return pb.RoleTeam_ROLE_TEAM_OWNER
+	case horus.RoleTeamMember:
+		return pb.RoleTeam_ROLE_TEAM_MEMBER
+	case horus.RoleTeamInvitee:
+		return pb.RoleTeam_ROLE_TEAM_INVITEE
+	}
+
+	return pb.RoleTeam_ROLE_TEAM_UNSPECIFIED
 }
 
 func fromPbRoleOrg(v pb.RoleOrg) horus.RoleOrg {

@@ -8,6 +8,9 @@ option go_package = "khepri.dev/horus/pb";
 
 //
 service Horus {
+	// Get my profile in the organization.
+	rpc GetProfile(GetProfileReq) returns (GetProfileRes) {};
+
 	// List identities
 	rpc ListIdentities(ListIdentitiesReq) returns (ListIdentitiesRes) {};
 	// Delete an identity.
@@ -61,6 +64,13 @@ service Horus {
 	rpc DeleteOrgMember(DeleteOrgMemberReq) returns (DeleteOrgMemberRes) {};
 	// Deletes a team member.
 	rpc DeleteTeamMember(DeleteTeamMemberReq) returns (DeleteTeamMemberRes) {};
+}
+
+message GetProfileReq {
+	bytes org_id = 1; //
+}
+message GetProfileRes {
+	Profile profile = 1; //
 }
 
 message ListIdentitiesReq {}
