@@ -15,7 +15,7 @@ type Org struct {
 func (Org) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Unique().Default(uuid.New),
-		field.String("name").Default("").MaxLen(64),
+		field.String("name").NotEmpty().MaxLen(64),
 		field.Time("created_at").Immutable().Default(utcNow),
 	}
 }

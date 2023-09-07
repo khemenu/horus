@@ -58,7 +58,10 @@ func (s *OrgStoreTestSuite) TestGetById() {
 	s.Run("exists", func(ctx context.Context) {
 		require := s.Require()
 
-		expected, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		expected, err := s.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: s.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		actual, err := s.Orgs().GetById(ctx, expected.Org.Id)
@@ -87,10 +90,16 @@ func (s *OrgStoreTestSuite) TestGetAllByUserId() {
 	s.Run("user belongs to many orgs", func(ctx context.Context) {
 		require := s.Require()
 
-		rst1, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		rst1, err := s.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: s.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
-		rst2, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		rst2, err := s.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: s.user.Id,
+			Name:    "Khemenu",
+		})
 		require.NoError(err)
 
 		orgs, err := s.Orgs().GetAllByUserId(ctx, s.user.Id)
@@ -113,9 +122,12 @@ func (s *OrgStoreTestSuite) TestUpdateById() {
 	s.Run("org exists", func(ctx context.Context) {
 		require := s.Require()
 
-		rst, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		rst, err := s.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: s.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
-		require.Empty(rst.Org.Name)
+		require.Equal("Khepri", rst.Org.Name)
 
 		updated, err := s.Orgs().UpdateById(ctx, &horus.Org{
 			Id:   rst.Org.Id,

@@ -65,6 +65,10 @@ func (s *grpcServer) NewTeam(ctx context.Context, req *pb.NewTeamReq) (*pb.NewTe
 		Name:    req.Name,
 	})
 	if err != nil {
+		if errors.Is(err, horus.ErrExist) {
+			return nil, status.Error(codes.AlreadyExists, "name already exist")
+		}
+
 		return nil, grpcInternalErr(ctx, err)
 	}
 

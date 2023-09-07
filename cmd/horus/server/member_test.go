@@ -28,7 +28,10 @@ func TestListOrgMembers(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		_, err = h.client.ListOrgMembers(ctx, &pb.ListOrgMembersReq{
@@ -43,7 +46,10 @@ func TestListOrgMembers(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		member, err := h.Members().New(ctx, horus.MemberInit{
@@ -84,7 +90,10 @@ func TestUpdateMember(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		_, err = h.client.UpdateMember(ctx, &pb.UpdateMemberReq{
@@ -100,7 +109,10 @@ func TestUpdateMember(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		member, err := h.Members().New(ctx, horus.MemberInit{
@@ -136,7 +148,10 @@ func TestAddMemberIdentity(t *testing.T) {
 	}))
 
 	t.Run("identity does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		_, err = h.client.AddMemberIdentity(ctx, &pb.AddMemberIdentityReq{
@@ -159,7 +174,11 @@ func TestAddMemberIdentity(t *testing.T) {
 			VerifiedBy: "khepri",
 		})
 		require.NoError(err)
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		_, err = h.client.AddMemberIdentity(ctx, &pb.AddMemberIdentityReq{
@@ -172,7 +191,10 @@ func TestAddMemberIdentity(t *testing.T) {
 	}))
 
 	t.Run("my identity", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		_, err = h.client.AddMemberIdentity(ctx, &pb.AddMemberIdentityReq{
@@ -183,7 +205,10 @@ func TestAddMemberIdentity(t *testing.T) {
 	}))
 
 	t.Run("identity already exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		_, err = h.client.AddMemberIdentity(ctx, &pb.AddMemberIdentityReq{
@@ -211,7 +236,10 @@ func TestRemoveMemberIdentity(t *testing.T) {
 	}))
 
 	t.Run("identity does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		_, err = h.client.RemoveMemberIdentity(ctx, &pb.RemoveMemberIdentityReq{

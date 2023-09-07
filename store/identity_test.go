@@ -165,7 +165,10 @@ func (s *IdentityStoreTestSuite) TestDelete() {
 		amun, err := s.Identities().New(ctx, s.InitAmun())
 		require.NoError(err)
 
-		rst, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		rst, err := s.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: s.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		err = s.Members().AddIdentity(ctx, rst.Owner.Id, amun.Value)

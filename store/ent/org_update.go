@@ -36,14 +36,6 @@ func (ou *OrgUpdate) SetName(s string) *OrgUpdate {
 	return ou
 }
 
-// SetNillableName sets the "name" field if the given value is not nil.
-func (ou *OrgUpdate) SetNillableName(s *string) *OrgUpdate {
-	if s != nil {
-		ou.SetName(*s)
-	}
-	return ou
-}
-
 // AddTeamIDs adds the "teams" edge to the Team entity by IDs.
 func (ou *OrgUpdate) AddTeamIDs(ids ...uuid.UUID) *OrgUpdate {
 	ou.mutation.AddTeamIDs(ids...)
@@ -286,14 +278,6 @@ type OrgUpdateOne struct {
 // SetName sets the "name" field.
 func (ouo *OrgUpdateOne) SetName(s string) *OrgUpdateOne {
 	ouo.mutation.SetName(s)
-	return ouo
-}
-
-// SetNillableName sets the "name" field if the given value is not nil.
-func (ouo *OrgUpdateOne) SetNillableName(s *string) *OrgUpdateOne {
-	if s != nil {
-		ouo.SetName(*s)
-	}
 	return ouo
 }
 

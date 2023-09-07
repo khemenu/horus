@@ -36,13 +36,19 @@ func (s *teamStore) New(ctx context.Context, init horus.TeamInit) (*horus.Team, 
 			SetName(init.Name).
 			Save(ctx)
 		if err != nil {
+			if ent.IsValidationError(err) {
+				return nil, errors.Join(horus.ErrInvalidArgument, err)
+			}
 			if ent.IsConstraintError(err) {
 				if strings.Contains(err.Error(), "FOREIGN KEY") {
 					return nil, errors.Join(horus.ErrNotExist, err)
 				}
+				if strings.Contains(err.Error(), "UNIQUE") {
+					return nil, errors.Join(horus.ErrExist, err)
+				}
 			}
 
-			return nil, fmt.Errorf("save: %w", err)
+			return nil, fmt.Errorf("query: %w", err)
 		}
 
 		_, err = s.memberships.new(ctx, tx.Client(), horus.MembershipInit{

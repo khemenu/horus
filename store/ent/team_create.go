@@ -35,14 +35,6 @@ func (tc *TeamCreate) SetName(s string) *TeamCreate {
 	return tc
 }
 
-// SetNillableName sets the "name" field if the given value is not nil.
-func (tc *TeamCreate) SetNillableName(s *string) *TeamCreate {
-	if s != nil {
-		tc.SetName(*s)
-	}
-	return tc
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (tc *TeamCreate) SetCreatedAt(t time.Time) *TeamCreate {
 	tc.mutation.SetCreatedAt(t)
@@ -126,10 +118,6 @@ func (tc *TeamCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (tc *TeamCreate) defaults() {
-	if _, ok := tc.mutation.Name(); !ok {
-		v := team.DefaultName
-		tc.mutation.SetName(v)
-	}
 	if _, ok := tc.mutation.CreatedAt(); !ok {
 		v := team.DefaultCreatedAt()
 		tc.mutation.SetCreatedAt(v)

@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -32,6 +33,10 @@ func (s *orgStore) New(ctx context.Context, init horus.OrgInit) (*horus.OrgNewRe
 			SetName(init.Name).
 			Save(ctx)
 		if err != nil {
+			if ent.IsValidationError(err) {
+				return nil, errors.Join(horus.ErrInvalidArgument, err)
+			}
+
 			return nil, fmt.Errorf("save: %w", err)
 		}
 

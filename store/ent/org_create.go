@@ -29,14 +29,6 @@ func (oc *OrgCreate) SetName(s string) *OrgCreate {
 	return oc
 }
 
-// SetNillableName sets the "name" field if the given value is not nil.
-func (oc *OrgCreate) SetNillableName(s *string) *OrgCreate {
-	if s != nil {
-		oc.SetName(*s)
-	}
-	return oc
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (oc *OrgCreate) SetCreatedAt(t time.Time) *OrgCreate {
 	oc.mutation.SetCreatedAt(t)
@@ -130,10 +122,6 @@ func (oc *OrgCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (oc *OrgCreate) defaults() {
-	if _, ok := oc.mutation.Name(); !ok {
-		v := org.DefaultName
-		oc.mutation.SetName(v)
-	}
 	if _, ok := oc.mutation.CreatedAt(); !ok {
 		v := org.DefaultCreatedAt()
 		oc.mutation.SetCreatedAt(v)

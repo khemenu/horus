@@ -123,7 +123,7 @@ var (
 	// OrgsColumns holds the columns for the "orgs" table.
 	OrgsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "name", Type: field.TypeString, Size: 64},
 		{Name: "created_at", Type: field.TypeTime},
 	}
 	// OrgsTable holds the schema information for the "orgs" table.
@@ -135,7 +135,7 @@ var (
 	// TeamsColumns holds the columns for the "teams" table.
 	TeamsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "name", Type: field.TypeString, Size: 64},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "org_id", Type: field.TypeUUID},
 	}
@@ -150,6 +150,13 @@ var (
 				Columns:    []*schema.Column{TeamsColumns[3]},
 				RefColumns: []*schema.Column{OrgsColumns[0]},
 				OnDelete:   schema.Cascade,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "team_org_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{TeamsColumns[3], TeamsColumns[1]},
 			},
 		},
 	}

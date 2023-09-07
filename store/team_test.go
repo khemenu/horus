@@ -159,12 +159,16 @@ func (s *TeamStoreTestSuite) TestDeleteByIdFromOrg() {
 	s.Run("team does not exist in given org", func(ctx context.Context) {
 		require := s.Require()
 
-		rst, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		rst, err := s.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: s.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := s.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -181,6 +185,7 @@ func (s *TeamStoreTestSuite) TestDeleteByIdFromOrg() {
 		team, err := s.Teams().New(ctx, horus.TeamInit{
 			OrgId:   s.org.Id,
 			OwnerId: s.owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -189,5 +194,36 @@ func (s *TeamStoreTestSuite) TestDeleteByIdFromOrg() {
 
 		_, err = s.Teams().GetById(ctx, team.Id)
 		require.ErrorIs(err, horus.ErrNotExist)
+	})
+
+	s.Run("duplicate team name in an org", func(ctx context.Context) {
+		require := s.Require()
+
+		rst, err := s.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: s.user.Id,
+			Name:    "Khemenu",
+		})
+		require.NoError(err)
+
+		_, err = s.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: rst.Owner.Id,
+			Name:    "A",
+		})
+		require.NoError(err)
+
+		_, err = s.Teams().New(ctx, horus.TeamInit{
+			OrgId:   s.org.Id,
+			OwnerId: s.owner.Id,
+			Name:    "A",
+		})
+		require.NoError(err)
+
+		_, err = s.Teams().New(ctx, horus.TeamInit{
+			OrgId:   s.org.Id,
+			OwnerId: s.owner.Id,
+			Name:    "A",
+		})
+		require.ErrorIs(err, horus.ErrExist)
 	})
 }

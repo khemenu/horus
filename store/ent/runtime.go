@@ -75,10 +75,22 @@ func init() {
 	_ = orgFields
 	// orgDescName is the schema descriptor for name field.
 	orgDescName := orgFields[1].Descriptor()
-	// org.DefaultName holds the default value on creation for the name field.
-	org.DefaultName = orgDescName.Default.(string)
 	// org.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	org.NameValidator = orgDescName.Validators[0].(func(string) error)
+	org.NameValidator = func() func(string) error {
+		validators := orgDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 	// orgDescCreatedAt is the schema descriptor for created_at field.
 	orgDescCreatedAt := orgFields[2].Descriptor()
 	// org.DefaultCreatedAt holds the default value on creation for the created_at field.
@@ -91,10 +103,22 @@ func init() {
 	_ = teamFields
 	// teamDescName is the schema descriptor for name field.
 	teamDescName := teamFields[2].Descriptor()
-	// team.DefaultName holds the default value on creation for the name field.
-	team.DefaultName = teamDescName.Default.(string)
 	// team.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	team.NameValidator = teamDescName.Validators[0].(func(string) error)
+	team.NameValidator = func() func(string) error {
+		validators := teamDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 	// teamDescCreatedAt is the schema descriptor for created_at field.
 	teamDescCreatedAt := teamFields[3].Descriptor()
 	// team.DefaultCreatedAt holds the default value on creation for the created_at field.

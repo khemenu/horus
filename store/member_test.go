@@ -165,6 +165,7 @@ func (s *MemberStoreTestSuite) TestGetByUserIdFromTeam() {
 		team, err := s.Teams().New(ctx, horus.TeamInit{
 			OrgId:   s.org.Id,
 			OwnerId: s.owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -178,6 +179,7 @@ func (s *MemberStoreTestSuite) TestGetByUserIdFromTeam() {
 		team, err := s.Teams().New(ctx, horus.TeamInit{
 			OrgId:   s.org.Id,
 			OwnerId: s.owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -221,7 +223,10 @@ func (s *MemberStoreTestSuite) TestList() {
 	s.Run("from org", func(ctx context.Context) {
 		require := s.Require()
 
-		rst, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		rst, err := s.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: s.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		nobody, err := s.Users().New(ctx)
@@ -502,6 +507,7 @@ func (s *MemberStoreTestSuite) TestDeleteById() {
 		team, err := s.Teams().New(ctx, horus.TeamInit{
 			OrgId:   s.org.Id,
 			OwnerId: s.owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 

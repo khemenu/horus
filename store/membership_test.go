@@ -21,6 +21,7 @@ func (s *MembershipStoreTestSuite) Run(name string, sub func(ctx context.Context
 		team, err := s.Teams().New(ctx, horus.TeamInit{
 			OrgId:   s.org.Id,
 			OwnerId: s.owner.Id,
+			Name:    "Crazy 88s",
 		})
 		s.Require().NoError(err)
 
@@ -98,12 +99,16 @@ func (s *MembershipStoreTestSuite) TestNew() {
 	s.Run("member is in the another org", func(ctx context.Context) {
 		require := s.Require()
 
-		rst, err := s.Orgs().New(ctx, horus.OrgInit{OwnerId: s.user.Id})
+		rst, err := s.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: s.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		_, err = s.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: s.owner.Id,
+			Name:    "A",
 		})
 		require.ErrorIs(err, horus.ErrNotExist)
 	})
@@ -130,6 +135,7 @@ func (s *MembershipStoreTestSuite) TestGetById() {
 		team, err := s.Teams().New(ctx, horus.TeamInit{
 			OrgId:   s.org.Id,
 			OwnerId: s.owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -160,6 +166,7 @@ func (s *MembershipStoreTestSuite) TestGetByUserIdFromTeam() {
 		team, err := s.Teams().New(ctx, horus.TeamInit{
 			OrgId:   s.org.Id,
 			OwnerId: s.owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -188,6 +195,7 @@ func (s *MembershipStoreTestSuite) TestGetAllByMemberId() {
 		team, err := s.Teams().New(ctx, horus.TeamInit{
 			OrgId:   s.org.Id,
 			OwnerId: s.owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 

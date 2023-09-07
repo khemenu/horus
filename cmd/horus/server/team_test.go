@@ -15,7 +15,10 @@ import (
 
 func TestNewTeam(t *testing.T) {
 	t.Run("as an org owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		res, err := h.client.NewTeam(ctx, &pb.NewTeamReq{
@@ -30,7 +33,10 @@ func TestNewTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		org, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		org, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		_, err = h.Members().New(ctx, horus.MemberInit{
@@ -67,13 +73,24 @@ func TestListTeams(t *testing.T) {
 	}))
 
 	t.Run("org where the user belongs", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
-		team1, err := h.Teams().New(ctx, horus.TeamInit{OrgId: rst.Org.Id, OwnerId: rst.Owner.Id})
+		team1, err := h.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: rst.Owner.Id,
+			Name:    "A",
+		})
 		require.NoError(err)
 
-		team2, err := h.Teams().New(ctx, horus.TeamInit{OrgId: rst.Org.Id, OwnerId: rst.Owner.Id})
+		team2, err := h.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: rst.Owner.Id,
+			Name:    "B",
+		})
 		require.NoError(err)
 
 		res, err := h.client.ListTeams(ctx, &pb.ListTeamsReq{OrgId: rst.Org.Id[:]})
@@ -85,10 +102,17 @@ func TestListTeams(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
-		_, err = h.Teams().New(ctx, horus.TeamInit{OrgId: rst.Org.Id, OwnerId: rst.Owner.Id})
+		_, err = h.Teams().New(ctx, horus.TeamInit{
+			OrgId:   rst.Org.Id,
+			OwnerId: rst.Owner.Id,
+			Name:    "A",
+		})
 		require.NoError(err)
 
 		_, err = h.client.ListTeams(ctx, &pb.ListTeamsReq{OrgId: rst.Org.Id[:]})
@@ -114,7 +138,10 @@ func TestUpdateTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
@@ -144,7 +171,10 @@ func TestUpdateTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
@@ -167,7 +197,10 @@ func TestUpdateTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
@@ -201,7 +234,10 @@ func TestUpdateTeam(t *testing.T) {
 	}))
 
 	t.Run("as a team owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
@@ -222,7 +258,10 @@ func TestUpdateTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
@@ -253,7 +292,10 @@ func TestUpdateTeam(t *testing.T) {
 
 func TestInviteMember(t *testing.T) {
 	t.Run("team does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		id := uuid.New()
@@ -267,12 +309,16 @@ func TestInviteMember(t *testing.T) {
 	}))
 
 	t.Run("member does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -287,12 +333,16 @@ func TestInviteMember(t *testing.T) {
 	}))
 
 	t.Run("as an org owner without a membership", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -310,12 +360,16 @@ func TestInviteMember(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -336,19 +390,26 @@ func TestInviteMember(t *testing.T) {
 	}))
 
 	t.Run("as a team owner, invite a member in another org", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst2, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst2, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		other_member, err := h.Members().New(ctx, horus.MemberInit{
@@ -378,7 +439,10 @@ func TestJoinTeam(t *testing.T) {
 	}))
 
 	t.Run("as an org owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		other, err := h.Users().New(ctx)
@@ -394,6 +458,7 @@ func TestJoinTeam(t *testing.T) {
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: other_member.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -410,12 +475,16 @@ func TestJoinTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -436,12 +505,16 @@ func TestJoinTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -467,12 +540,16 @@ func TestJoinTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -483,12 +560,16 @@ func TestJoinTeam(t *testing.T) {
 	}))
 
 	t.Run("as a team member", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -505,12 +586,16 @@ func TestLeaveTeam(t *testing.T) {
 	}))
 
 	t.Run("as a team owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -525,12 +610,16 @@ func TestLeaveTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -548,7 +637,10 @@ func TestLeaveTeam(t *testing.T) {
 
 func TestSetRoleTeam(t *testing.T) {
 	t.Run("team does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team_id := uuid.New()
@@ -562,12 +654,16 @@ func TestSetRoleTeam(t *testing.T) {
 	}))
 
 	t.Run("member does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -583,7 +679,10 @@ func TestSetRoleTeam(t *testing.T) {
 	}))
 
 	t.Run("as an org owner without membership", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		other, err := h.Users().New(ctx)
@@ -599,6 +698,7 @@ func TestSetRoleTeam(t *testing.T) {
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: other_member.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -614,12 +714,16 @@ func TestSetRoleTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -644,7 +748,10 @@ func TestSetRoleTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		member, err := h.Members().New(ctx, horus.MemberInit{
@@ -657,6 +764,7 @@ func TestSetRoleTeam(t *testing.T) {
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: member.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -679,7 +787,10 @@ func TestSetRoleTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		member, err := h.Members().New(ctx, horus.MemberInit{
@@ -692,6 +803,7 @@ func TestSetRoleTeam(t *testing.T) {
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: member.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -716,7 +828,10 @@ func TestSetRoleTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		member, err := h.Members().New(ctx, horus.MemberInit{
@@ -729,12 +844,14 @@ func TestSetRoleTeam(t *testing.T) {
 		_, err = h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: member.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "B",
 		})
 		require.NoError(err)
 
@@ -759,7 +876,10 @@ func TestSetRoleTeam(t *testing.T) {
 
 func TestDeleteTeamMember(t *testing.T) {
 	t.Run("team does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team_id := uuid.New()
@@ -773,12 +893,16 @@ func TestDeleteTeamMember(t *testing.T) {
 	}))
 
 	t.Run("member does not exist", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -791,7 +915,10 @@ func TestDeleteTeamMember(t *testing.T) {
 	}))
 
 	t.Run("as an org owner without membership", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		other, err := h.Users().New(ctx)
@@ -807,6 +934,7 @@ func TestDeleteTeamMember(t *testing.T) {
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: other_member.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -821,12 +949,16 @@ func TestDeleteTeamMember(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -857,7 +989,10 @@ func TestDeleteTeamMember(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		member, err := h.Members().New(ctx, horus.MemberInit{
@@ -870,6 +1005,7 @@ func TestDeleteTeamMember(t *testing.T) {
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: member.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -891,7 +1027,10 @@ func TestDeleteTeamMember(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		member, err := h.Members().New(ctx, horus.MemberInit{
@@ -904,6 +1043,7 @@ func TestDeleteTeamMember(t *testing.T) {
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: member.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -934,12 +1074,16 @@ func TestDeleteTeam(t *testing.T) {
 	}))
 
 	t.Run("as an org owner", WithHorusGrpc(func(require *require.Assertions, ctx context.Context, h *horusGrpc) {
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: h.user.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: h.user.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -957,7 +1101,10 @@ func TestDeleteTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		_, err = h.Members().New(ctx, horus.MemberInit{
@@ -970,6 +1117,7 @@ func TestDeleteTeam(t *testing.T) {
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: rst.Owner.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 
@@ -983,7 +1131,10 @@ func TestDeleteTeam(t *testing.T) {
 		other, err := h.Users().New(ctx)
 		require.NoError(err)
 
-		rst, err := h.Orgs().New(ctx, horus.OrgInit{OwnerId: other.Id})
+		rst, err := h.Orgs().New(ctx, horus.OrgInit{
+			OwnerId: other.Id,
+			Name:    "Khepri",
+		})
 		require.NoError(err)
 
 		member, err := h.Members().New(ctx, horus.MemberInit{
@@ -996,6 +1147,7 @@ func TestDeleteTeam(t *testing.T) {
 		team, err := h.Teams().New(ctx, horus.TeamInit{
 			OrgId:   rst.Org.Id,
 			OwnerId: member.Id,
+			Name:    "A",
 		})
 		require.NoError(err)
 

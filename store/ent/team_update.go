@@ -35,14 +35,6 @@ func (tu *TeamUpdate) SetName(s string) *TeamUpdate {
 	return tu
 }
 
-// SetNillableName sets the "name" field if the given value is not nil.
-func (tu *TeamUpdate) SetNillableName(s *string) *TeamUpdate {
-	if s != nil {
-		tu.SetName(*s)
-	}
-	return tu
-}
-
 // AddMemberIDs adds the "members" edge to the Member entity by IDs.
 func (tu *TeamUpdate) AddMemberIDs(ids ...uuid.UUID) *TeamUpdate {
 	tu.mutation.AddMemberIDs(ids...)
@@ -219,14 +211,6 @@ type TeamUpdateOne struct {
 // SetName sets the "name" field.
 func (tuo *TeamUpdateOne) SetName(s string) *TeamUpdateOne {
 	tuo.mutation.SetName(s)
-	return tuo
-}
-
-// SetNillableName sets the "name" field if the given value is not nil.
-func (tuo *TeamUpdateOne) SetNillableName(s *string) *TeamUpdateOne {
-	if s != nil {
-		tuo.SetName(*s)
-	}
 	return tuo
 }
 
