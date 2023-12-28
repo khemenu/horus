@@ -1,5 +1,5 @@
 {
-	"name": "kepri-horus",
+	"name": "khepri-horus",
 	"build": {
 		"context": ".",
 		"dockerfile": "Dockerfile"
