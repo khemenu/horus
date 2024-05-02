@@ -18,6 +18,8 @@ type User struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 	// CreatedDate holds the value of the "created_date" field.
 	CreatedDate time.Time `json:"created_date,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -71,6 +73,8 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case user.FieldName:
+			values[i] = new(sql.NullString)
 		case user.FieldCreatedDate:
 			values[i] = new(sql.NullTime)
 		case user.FieldID:
@@ -95,6 +99,12 @@ func (u *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				u.ID = *value
+			}
+		case user.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field name", values[i])
+			} else if value.Valid {
+				u.Name = value.String
 			}
 		case user.FieldCreatedDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -153,6 +163,9 @@ func (u *User) String() string {
 	var builder strings.Builder
 	builder.WriteString("User(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", u.ID))
+	builder.WriteString("name=")
+	builder.WriteString(u.Name)
+	builder.WriteString(", ")
 	builder.WriteString("created_date=")
 	builder.WriteString(u.CreatedDate.Format(time.ANSIC))
 	builder.WriteByte(')')

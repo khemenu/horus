@@ -69,25 +69,9 @@ func (tc *TeamCreate) SetInterVisibility(tv team.InterVisibility) *TeamCreate {
 	return tc
 }
 
-// SetNillableInterVisibility sets the "inter_visibility" field if the given value is not nil.
-func (tc *TeamCreate) SetNillableInterVisibility(tv *team.InterVisibility) *TeamCreate {
-	if tv != nil {
-		tc.SetInterVisibility(*tv)
-	}
-	return tc
-}
-
 // SetIntraVisibility sets the "intra_visibility" field.
 func (tc *TeamCreate) SetIntraVisibility(tv team.IntraVisibility) *TeamCreate {
 	tc.mutation.SetIntraVisibility(tv)
-	return tc
-}
-
-// SetNillableIntraVisibility sets the "intra_visibility" field if the given value is not nil.
-func (tc *TeamCreate) SetNillableIntraVisibility(tv *team.IntraVisibility) *TeamCreate {
-	if tv != nil {
-		tc.SetIntraVisibility(*tv)
-	}
 	return tc
 }
 
@@ -181,14 +165,6 @@ func (tc *TeamCreate) defaults() {
 	if _, ok := tc.mutation.Description(); !ok {
 		v := team.DefaultDescription
 		tc.mutation.SetDescription(v)
-	}
-	if _, ok := tc.mutation.InterVisibility(); !ok {
-		v := team.DefaultInterVisibility
-		tc.mutation.SetInterVisibility(v)
-	}
-	if _, ok := tc.mutation.IntraVisibility(); !ok {
-		v := team.DefaultIntraVisibility
-		tc.mutation.SetIntraVisibility(v)
 	}
 	if _, ok := tc.mutation.CreatedDate(); !ok {
 		v := team.DefaultCreatedDate()

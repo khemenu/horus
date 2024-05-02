@@ -358,11 +358,13 @@ message DeleteTokenRequest {
 message User {
   bytes id = 1;
 
+  string name = 2;
+
   google.protobuf.Timestamp created_date = 15;
 
-  repeated Identity identities = 2;
+  repeated Identity identities = 3;
 
-  repeated Account accounts = 3;
+  repeated Account accounts = 4;
 }
 
 message CreateUserRequest {

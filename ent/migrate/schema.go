@@ -149,8 +149,8 @@ var (
 		{Name: "alias", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString, Size: 64},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
-		{Name: "inter_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}, Default: "PRIVATE"},
-		{Name: "intra_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}, Default: "PRIVATE"},
+		{Name: "inter_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}},
+		{Name: "intra_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}},
 		{Name: "created_date", Type: field.TypeTime},
 		{Name: "silo_id", Type: field.TypeUUID},
 	}
@@ -201,6 +201,7 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "created_date", Type: field.TypeTime},
 	}
 	// UsersTable holds the schema information for the "users" table.

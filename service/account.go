@@ -24,7 +24,7 @@ func (s *AccountService) Create(ctx context.Context, req *horus.CreateAccountReq
 }
 
 func (s *AccountService) Get(ctx context.Context, req *horus.GetAccountRequest) (*horus.Account, error) {
-	res, err := s.raw.Account().Get(ctx, &horus.GetAccountRequest{
+	res, err := s.store.Account().Get(ctx, &horus.GetAccountRequest{
 		Id:   req.Id,
 		View: horus.GetAccountRequest_WITH_EDGE_IDS,
 	})
@@ -89,7 +89,7 @@ func (s *AccountService) Update(ctx context.Context, req *horus.UpdateAccountReq
 	v.Alias = req.Account.Alias
 	v.Name = req.Account.Name
 	v.Description = req.Account.Description
-	return s.raw.Account().Update(ctx, &horus.UpdateAccountRequest{
+	return s.store.Account().Update(ctx, &horus.UpdateAccountRequest{
 		Account: v,
 	})
 }
@@ -107,7 +107,7 @@ func (s *AccountService) Delete(ctx context.Context, req *horus.DeleteAccountReq
 	case bytes.Equal(f.Actor.ID[:], v.Owner.Id):
 		fallthrough
 	case f.ActingAccount.Role == account.RoleOWNER:
-		return s.raw.Account().Delete(ctx, req)
+		return s.store.Account().Delete(ctx, req)
 	}
 
 	return nil, ErrPermissionDenied

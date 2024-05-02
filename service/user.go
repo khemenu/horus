@@ -21,7 +21,7 @@ func (s *UserService) Create(ctx context.Context, req *horus.CreateUserRequest) 
 
 func (s *UserService) Get(ctx context.Context, req *horus.GetUserRequest) (*horus.User, error) {
 	f := frame.Must(ctx)
-	return s.raw.User().Get(ctx, &horus.GetUserRequest{
+	return s.store.User().Get(ctx, &horus.GetUserRequest{
 		Id:   f.Actor.ID[:],
 		View: req.View,
 	})

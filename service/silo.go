@@ -13,7 +13,8 @@ import (
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/proto/khepri/horus"
 	"khepri.dev/horus/ent/silo"
-	"khepri.dev/horus/internal/lox"
+	"khepri.dev/horus/internal/entutils"
+	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/service/frame"
 )
 
@@ -24,11 +25,11 @@ type SiloService struct {
 
 func (s *SiloService) Create(ctx context.Context, req *horus.CreateSiloRequest) (*horus.Silo, error) {
 	f := frame.Must(ctx)
-	return withTxV(ctx, s.client, func(tx *ent.Tx) (*horus.Silo, error) {
+	return entutils.WithTxV(ctx, s.client, func(tx *ent.Tx) (*horus.Silo, error) {
 		c := tx.Client()
 		res, err := horus.NewSiloService(c).Create(ctx, &horus.CreateSiloRequest{
 			Silo: &horus.Silo{
-				Alias: lox.CoalesceOr(req.Silo.GetAlias(), alias.New()),
+				Alias: fx.CoalesceOr(req.Silo.GetAlias(), alias.New()),
 				Name:  req.Silo.GetName(),
 			},
 		})
@@ -58,7 +59,7 @@ func (s *SiloService) Create(ctx context.Context, req *horus.CreateSiloRequest) 
 
 func (s *SiloService) Get(ctx context.Context, req *horus.GetSiloRequest) (*horus.Silo, error) {
 	f := frame.Must(ctx)
-	res, err := s.raw.Silo().Get(ctx, req)
+	res, err := s.store.Silo().Get(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +92,7 @@ func (s *SiloService) Update(ctx context.Context, req *horus.UpdateSiloRequest) 
 	v.Alias = req.Silo.Alias
 	v.Name = req.Silo.Name
 	v.Description = req.Silo.Description
-	return s.raw.Silo().Update(ctx, &horus.UpdateSiloRequest{
+	return s.store.Silo().Update(ctx, &horus.UpdateSiloRequest{
 		Silo: v,
 	})
 }

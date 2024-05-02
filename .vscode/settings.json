@@ -1,8 +1,8 @@
 {
 	"files.exclude": {
 		"**/.git": true,
-		"pb/*.pb.go": true,
 		"ent/{[!sp],?[!cr],??[!ho]}*": true,
+		"ent/proto/khepri/horus/*.pb.go": true,
 		"ent/proto/khepri/horus/horus*.go": true,
 	},
 	"files.readonlyInclude": {
@@ -13,7 +13,7 @@
 	},
 	"protoc": {
 		"options": [
-			"--proto_path=${workspaceRoot}/ent/proto/khepri/horus",
+			"--proto_path=${workspaceRoot}/ent/proto",
 		]
 	}
 }

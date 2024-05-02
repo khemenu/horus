@@ -24,6 +24,12 @@ type UserCreate struct {
 	hooks    []Hook
 }
 
+// SetName sets the "name" field.
+func (uc *UserCreate) SetName(s string) *UserCreate {
+	uc.mutation.SetName(s)
+	return uc
+}
+
 // SetCreatedDate sets the "created_date" field.
 func (uc *UserCreate) SetCreatedDate(t time.Time) *UserCreate {
 	uc.mutation.SetCreatedDate(t)
@@ -144,6 +150,14 @@ func (uc *UserCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
+	if _, ok := uc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "User.name"`)}
+	}
+	if v, ok := uc.mutation.Name(); ok {
+		if err := user.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
+		}
+	}
 	if _, ok := uc.mutation.CreatedDate(); !ok {
 		return &ValidationError{Name: "created_date", err: errors.New(`ent: missing required field "User.created_date"`)}
 	}
@@ -181,6 +195,10 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if id, ok := uc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
+	}
+	if value, ok := uc.mutation.Name(); ok {
+		_spec.SetField(user.FieldName, field.TypeString, value)
+		_node.Name = value
 	}
 	if value, ok := uc.mutation.CreatedDate(); ok {
 		_spec.SetField(user.FieldCreatedDate, field.TypeTime, value)

@@ -94,9 +94,6 @@ var (
 // InterVisibility defines the type for the "inter_visibility" enum field.
 type InterVisibility string
 
-// InterVisibilityPRIVATE is the default value of the InterVisibility enum.
-const DefaultInterVisibility = InterVisibilityPRIVATE
-
 // InterVisibility values.
 const (
 	InterVisibilityPRIVATE InterVisibility = "PRIVATE"
@@ -119,9 +116,6 @@ func InterVisibilityValidator(iv InterVisibility) error {
 
 // IntraVisibility defines the type for the "intra_visibility" enum field.
 type IntraVisibility string
-
-// IntraVisibilityPRIVATE is the default value of the IntraVisibility enum.
-const DefaultIntraVisibility = IntraVisibilityPRIVATE
 
 // IntraVisibility values.
 const (

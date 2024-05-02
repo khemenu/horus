@@ -3,11 +3,11 @@ package service_test
 import (
 	"testing"
 
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"khepri.dev/horus/ent/proto/khepri/horus"
+	"khepri.dev/horus/internal/fx"
 )
 
 type AccountTestSuite struct {
@@ -97,7 +97,7 @@ func (s *AccountTestSuite) TestList() {
 		})
 		require.NoError(err)
 
-		vs := lo.Map(res.AccountList, func(v *horus.Account, _ int) string { return v.Silo.Alias })
+		vs := fx.MapV(res.AccountList, func(v *horus.Account) string { return v.Silo.Alias })
 		require.Contains(vs, s.silo.Alias)
 		require.Contains(vs, v1.Alias)
 		require.Contains(vs, v2.Alias)

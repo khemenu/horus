@@ -56,7 +56,7 @@ func (s *MembershipService) Create(ctx context.Context, req *horus.CreateMembers
 			return nil, ErrPermissionDenied
 		}
 
-		return s.raw.Membership().Create(ctx, req)
+		return s.store.Membership().Create(ctx, req)
 	}
 	if f.ActingAccount.Role == account.RoleOWNER {
 		if target_account.Role == horus.Account_ROLE_OWNER {
@@ -64,7 +64,7 @@ func (s *MembershipService) Create(ctx context.Context, req *horus.CreateMembers
 			return nil, ErrPermissionDenied
 		}
 
-		return s.raw.Membership().Create(ctx, req)
+		return s.store.Membership().Create(ctx, req)
 	}
 
 	v, err := f.ActingAccount.QueryMemberships().
@@ -82,11 +82,11 @@ func (s *MembershipService) Create(ctx context.Context, req *horus.CreateMembers
 		return nil, ErrPermissionDenied
 	}
 
-	return s.raw.Membership().Create(ctx, req)
+	return s.store.Membership().Create(ctx, req)
 }
 
 func (s *MembershipService) Get(ctx context.Context, req *horus.GetMembershipRequest) (*horus.Membership, error) {
-	res, err := s.raw.Membership().Get(ctx, &horus.GetMembershipRequest{
+	res, err := s.store.Membership().Get(ctx, &horus.GetMembershipRequest{
 		Id:   req.Id,
 		View: horus.GetMembershipRequest_WITH_EDGE_IDS,
 	})
@@ -130,7 +130,7 @@ func (s *MembershipService) Update(ctx context.Context, req *horus.UpdateMembers
 	}
 
 	res.Role = req.Membership.Role
-	return s.raw.Membership().Update(ctx, &horus.UpdateMembershipRequest{
+	return s.store.Membership().Update(ctx, &horus.UpdateMembershipRequest{
 		Membership: res,
 	})
 }
@@ -143,7 +143,7 @@ func (s *MembershipService) Delete(ctx context.Context, req *horus.DeleteMembers
 
 	f := frame.Must(ctx)
 	if f.ActingAccount == nil {
-		return s.raw.Membership().Delete(ctx, req)
+		return s.store.Membership().Delete(ctx, req)
 	}
 
 	if f.ActingAccount.Role != account.RoleOWNER {
@@ -162,5 +162,5 @@ func (s *MembershipService) Delete(ctx context.Context, req *horus.DeleteMembers
 		}
 	}
 
-	return s.raw.Membership().Delete(ctx, req)
+	return s.store.Membership().Delete(ctx, req)
 }

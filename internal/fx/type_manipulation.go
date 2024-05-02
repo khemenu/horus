@@ -1,4 +1,4 @@
-package lox
+package fx
 
 func FromPtrOrF[T any](x *T, callback func() T) T {
 	if x == nil {

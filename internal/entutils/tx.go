@@ -1,4 +1,4 @@
-package service
+package entutils
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"khepri.dev/horus/ent"
 )
 
-func withTxV[T any](ctx context.Context, client *ent.Client, fn func(tx *ent.Tx) (*T, error)) (*T, error) {
+func WithTxV[T any](ctx context.Context, client *ent.Client, fn func(tx *ent.Tx) (*T, error)) (*T, error) {
 	tx, err := client.Tx(ctx)
 	if err != nil {
 		return nil, err
@@ -33,8 +33,8 @@ func withTxV[T any](ctx context.Context, client *ent.Client, fn func(tx *ent.Tx)
 	return res, nil
 }
 
-func withTx(ctx context.Context, client *ent.Client, fn func(tx *ent.Tx) error) error {
-	_, err := withTxV(ctx, client, func(tx *ent.Tx) (*int, error) {
+func WithTx(ctx context.Context, client *ent.Client, fn func(tx *ent.Tx) error) error {
+	_, err := WithTxV(ctx, client, func(tx *ent.Tx) (*int, error) {
 		return nil, fn(tx)
 	})
 	return err

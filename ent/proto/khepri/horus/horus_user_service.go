@@ -39,6 +39,8 @@ func toProtoUser(e *ent.User) (*User, error) {
 		return nil, err
 	}
 	v.Id = id
+	name := e.Name
+	v.Name = name
 	for _, edg := range e.Edges.Accounts {
 		id, err := edg.ID.MarshalBinary()
 		if err != nil {
@@ -127,6 +129,8 @@ func (svc *UserService) Update(ctx context.Context, req *UpdateUserRequest) (*Us
 		return nil, status.Errorf(codes.InvalidArgument, "invalid argument: %s", err)
 	}
 	m := svc.client.User.UpdateOneID(userID)
+	userName := user.GetName()
+	m.SetName(userName)
 	for _, item := range user.GetAccounts() {
 		var accounts uuid.UUID
 		if err := (&accounts).UnmarshalBinary(item.GetId()); err != nil {
@@ -180,6 +184,8 @@ func (svc *UserService) createBuilder(user *User) (*ent.UserCreate, error) {
 	m := svc.client.User.Create()
 	userCreatedDate := runtime.ExtractTime(user.GetCreatedDate())
 	m.SetCreatedDate(userCreatedDate)
+	userName := user.GetName()
+	m.SetName(userName)
 	for _, item := range user.GetAccounts() {
 		var accounts uuid.UUID
 		if err := (&accounts).UnmarshalBinary(item.GetId()); err != nil {

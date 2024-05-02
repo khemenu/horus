@@ -1,10 +1,10 @@
-package lox_test
+package fx_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"khepri.dev/horus/internal/lox"
+	"khepri.dev/horus/internal/fx"
 )
 
 func TestFromPtrOrF(t *testing.T) {
@@ -25,8 +25,8 @@ func TestFromPtrOrF(t *testing.T) {
 	i := 9
 	ptrInt := &i
 
-	is.Equal(str, lox.FromPtrOrF(ptrStr, callbackStr))
-	is.Equal(fallbackStr, lox.FromPtrOrF(nil, callbackStr))
-	is.Equal(i, lox.FromPtrOrF(ptrInt, callbackInt))
-	is.Equal(fallbackInt, lox.FromPtrOrF(nil, callbackInt))
+	is.Equal(str, fx.FromPtrOrF(ptrStr, callbackStr))
+	is.Equal(fallbackStr, fx.FromPtrOrF(nil, callbackStr))
+	is.Equal(i, fx.FromPtrOrF(ptrInt, callbackInt))
+	is.Equal(fallbackInt, fx.FromPtrOrF(nil, callbackInt))
 }

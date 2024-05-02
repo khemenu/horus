@@ -15,6 +15,8 @@ const (
 	Label = "user"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// FieldCreatedDate holds the string denoting the created_date field in the database.
 	FieldCreatedDate = "created_date"
 	// EdgeIdentities holds the string denoting the identities edge name in mutations.
@@ -51,6 +53,7 @@ const (
 // Columns holds all SQL columns for user fields.
 var Columns = []string{
 	FieldID,
+	FieldName,
 	FieldCreatedDate,
 }
 
@@ -65,6 +68,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// NameValidator is a validator for the "name" field. It is called by the builders before save.
+	NameValidator func(string) error
 	// DefaultCreatedDate holds the default value on creation for the "created_date" field.
 	DefaultCreatedDate func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
@@ -77,6 +82,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByName orders the results by the name field.
+func ByName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
 // ByCreatedDate orders the results by the created_date field.

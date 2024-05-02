@@ -247,8 +247,12 @@ func init() {
 	token.IDValidator = tokenDescID.Validators[0].(func(string) error)
 	userFields := schema.User{}.Fields()
 	_ = userFields
+	// userDescName is the schema descriptor for name field.
+	userDescName := userFields[1].Descriptor()
+	// user.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	user.NameValidator = userDescName.Validators[0].(func(string) error)
 	// userDescCreatedDate is the schema descriptor for created_date field.
-	userDescCreatedDate := userFields[1].Descriptor()
+	userDescCreatedDate := userFields[2].Descriptor()
 	// user.DefaultCreatedDate holds the default value on creation for the created_date field.
 	user.DefaultCreatedDate = userDescCreatedDate.Default.(func() time.Time)
 	// userDescID is the schema descriptor for id field.

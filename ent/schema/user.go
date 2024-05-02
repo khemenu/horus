@@ -15,8 +15,14 @@ type User struct {
 
 func (User) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Unique().Default(uuid.New).
+		field.UUID("id", uuid.UUID{}).
+			Unique().
+			Default(uuid.New).
 			Annotations(entproto.Field(1)),
+		field.String("name").
+			Unique().
+			NotEmpty().
+			Annotations(entproto.Field(2)),
 
 		field.Time("created_date").Immutable().Default(utcNow).
 			Annotations(entproto.Field(15)),
@@ -26,9 +32,9 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("identities", Identity.Type).
-			Annotations(entproto.Field(2)),
-		edge.To("accounts", Account.Type).
 			Annotations(entproto.Field(3)),
+		edge.To("accounts", Account.Type).
+			Annotations(entproto.Field(4)),
 		edge.To("tokens", Token.Type).
 			Annotations(entsql.OnDelete(entsql.Cascade), entproto.Skip()),
 	}

@@ -13,17 +13,19 @@ RUN TEMP=$(mktemp -d) \
 	&& chmod 755 /usr/local/bin/protoc \
 	&& rm -rf "${TEMP}"
 
-
+	
 
 USER hypnos
 
-RUN cd ~ \
-	&& go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31 \
-	&& go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3 \
-	&& go install entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc@master
+RUN go install \
+		google.golang.org/protobuf/cmd/protoc-gen-go@v1.31 \
+		google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3 \
+		entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc@master
 
-RUN cd ~ \
-	&& go install github.com/yoheimuta/protolint/cmd/protolint@latest
+RUN go install \
+		github.com/yoheimuta/protolint/cmd/protolint@latest
+
+
 
 # Comment below lines if you don't want to use Zsh
 RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true \

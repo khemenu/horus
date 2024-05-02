@@ -1,0 +1,16 @@
+grpc:
+  host: localhost
+  port: 35122
+
+http:
+  host: localhost
+  port: 35123
+
+db:
+  driver:
+  source:
+
+debug:
+  enabled: true
+  unsecured: true
+  use_mem_db: true
