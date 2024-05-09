@@ -40,9 +40,17 @@ type DbConfig struct {
 }
 
 type DebugConfig struct {
-	Enabled   bool `yaml:"enabled"`
-	Unsecured bool `yaml:"unsecured"`
-	UseMemDb  bool `yaml:"use_mem_db"`
+	Enabled   bool        `yaml:"enabled"`
+	Unsecured bool        `yaml:"unsecured"`
+	MemDb     MemDbConfig `yaml:"mem_db"`
+}
+
+type MemDbConfig struct {
+	Enabled bool `yaml:"enabled"`
+	Users   []struct {
+		Name     string `yaml:"name"`
+		Password string `yaml:"password"`
+	} `yaml:"users"`
 }
 
 func ParseArgs(args []string) (*Config, error) {

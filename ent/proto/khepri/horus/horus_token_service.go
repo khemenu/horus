@@ -35,12 +35,17 @@ func toProtoToken(e *ent.Token) (*Token, error) {
 	v.CreatedAt = created_at
 	expired_at := timestamppb.New(e.ExpiredAt)
 	v.ExpiredAt = expired_at
-	id := e.ID
+	id, err := e.ID.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
 	v.Id = id
 	name := e.Name
 	v.Name = name
 	_type := e.Type
 	v.Type = _type
+	value := e.Value
+	v.Value = value
 	if edg := e.Edges.Owner; edg != nil {
 		id, err := edg.ID.MarshalBinary()
 		if err != nil {
@@ -84,7 +89,10 @@ func (svc *TokenService) Get(ctx context.Context, req *GetTokenRequest) (*Token,
 		err error
 		get *ent.Token
 	)
-	id := req.GetId()
+	var id uuid.UUID
+	if err := (&id).UnmarshalBinary(req.GetId()); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid argument: %s", err)
+	}
 	switch req.GetView() {
 	case GetTokenRequest_VIEW_UNSPECIFIED, GetTokenRequest_BASIC:
 		get, err = svc.client.Token.Get(ctx, id)
@@ -112,7 +120,10 @@ func (svc *TokenService) Get(ctx context.Context, req *GetTokenRequest) (*Token,
 // Update implements TokenServiceServer.Update
 func (svc *TokenService) Update(ctx context.Context, req *UpdateTokenRequest) (*Token, error) {
 	token := req.GetToken()
-	tokenID := token.GetId()
+	var tokenID uuid.UUID
+	if err := (&tokenID).UnmarshalBinary(token.GetId()); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid argument: %s", err)
+	}
 	m := svc.client.Token.UpdateOneID(tokenID)
 	tokenExpiredAt := runtime.ExtractTime(token.GetExpiredAt())
 	m.SetExpiredAt(tokenExpiredAt)
@@ -140,7 +151,10 @@ func (svc *TokenService) Update(ctx context.Context, req *UpdateTokenRequest) (*
 // Delete implements TokenServiceServer.Delete
 func (svc *TokenService) Delete(ctx context.Context, req *DeleteTokenRequest) (*emptypb.Empty, error) {
 	var err error
-	id := req.GetId()
+	var id uuid.UUID
+	if err := (&id).UnmarshalBinary(req.GetId()); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid argument: %s", err)
+	}
 	err = svc.client.Token.DeleteOneID(id).Exec(ctx)
 	switch {
 	case err == nil:
@@ -163,6 +177,8 @@ func (svc *TokenService) createBuilder(token *Token) (*ent.TokenCreate, error) {
 	m.SetName(tokenName)
 	tokenType := token.GetType()
 	m.SetType(tokenType)
+	tokenValue := token.GetValue()
+	m.SetValue(tokenValue)
 	if token.GetOwner() != nil {
 		var tokenOwner uuid.UUID
 		if err := (&tokenOwner).UnmarshalBinary(token.GetOwner().GetId()); err != nil {

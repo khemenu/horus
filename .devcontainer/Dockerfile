@@ -17,15 +17,12 @@ RUN TEMP=$(mktemp -d) \
 
 USER hypnos
 
-RUN go install \
+RUN  echo \
 		google.golang.org/protobuf/cmd/protoc-gen-go@v1.31 \
 		google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3 \
-		entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc@master
-
-RUN go install \
-		github.com/yoheimuta/protolint/cmd/protolint@latest
-
-
+		entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc@master \
+		github.com/yoheimuta/protolint/cmd/protolint@latest \
+	| xargs -n1 go install
 
 # Comment below lines if you don't want to use Zsh
 RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true \

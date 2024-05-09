@@ -177,7 +177,8 @@ var (
 	}
 	// TokensColumns holds the columns for the "tokens" table.
 	TokensColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "value", Type: field.TypeString, Unique: true},
 		{Name: "type", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString, Default: ""},
 		{Name: "created_at", Type: field.TypeTime},
@@ -192,7 +193,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "tokens_users_tokens",
-				Columns:    []*schema.Column{TokensColumns[5]},
+				Columns:    []*schema.Column{TokensColumns[6]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.Cascade,
 			},

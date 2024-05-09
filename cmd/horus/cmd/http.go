@@ -12,7 +12,7 @@ import (
 )
 
 func HandleAuth(mux *http.ServeMux, svc service.Service) {
-	mux.HandleFunc("/basic/sign-in", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/auth/basic/sign-in", func(w http.ResponseWriter, r *http.Request) {
 		username, password, ok := r.BasicAuth()
 		if !ok {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -27,6 +27,8 @@ func HandleAuth(mux *http.ServeMux, svc service.Service) {
 			s, ok := status.FromError(err)
 			if ok {
 				switch s.Code() {
+				case codes.NotFound:
+					fallthrough
 				case codes.Unauthenticated:
 					w.WriteHeader(http.StatusUnauthorized)
 					return
@@ -39,19 +41,23 @@ func HandleAuth(mux *http.ServeMux, svc service.Service) {
 
 		http.SetCookie(w, &http.Cookie{
 			Name:  tokens.CookieName,
-			Value: res.Token.Id,
+			Value: res.Token.Value,
 
 			Path:    "/",
 			Expires: time.Now().Add(24 * time.Hour),
 
-			Secure:   true,
+			Secure:   false,
 			HttpOnly: true,
 			SameSite: http.SameSiteStrictMode,
 		})
 	})
-	mux.HandleFunc("/sign-out", func(w http.ResponseWriter, r *http.Request) {
-		if cookie, err := r.Cookie(tokens.CookieName); err == nil {
-			svc.Token().Delete(r.Context(), &horus.DeleteTokenRequest{Id: cookie.Value})
+	mux.HandleFunc("/auth/sign-out", func(w http.ResponseWriter, r *http.Request) {
+		if cookie, err := r.Cookie(tokens.CookieName); err != nil {
+			// No cookie found => no tokens
+		} else if _, err := svc.Auth().SignOut(r.Context(), &horus.SingOutRequest{Token: &horus.Token{Value: cookie.Value}}); err == nil {
+			// Ok
+		} else {
+			// TODO: log
 		}
 
 		http.SetCookie(w, &http.Cookie{

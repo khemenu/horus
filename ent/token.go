@@ -18,7 +18,9 @@ import (
 type Token struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID string `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
+	// Value holds the value of the "value" field.
+	Value string `json:"-"`
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
 	// Name holds the value of the "name" field.
@@ -61,10 +63,12 @@ func (*Token) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case token.FieldID, token.FieldType, token.FieldName:
+		case token.FieldValue, token.FieldType, token.FieldName:
 			values[i] = new(sql.NullString)
 		case token.FieldCreatedAt, token.FieldExpiredAt:
 			values[i] = new(sql.NullTime)
+		case token.FieldID:
+			values[i] = new(uuid.UUID)
 		case token.ForeignKeys[0]: // user_tokens
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
@@ -83,10 +87,16 @@ func (t *Token) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case token.FieldID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value != nil {
+				t.ID = *value
+			}
+		case token.FieldValue:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field value", values[i])
 			} else if value.Valid {
-				t.ID = value.String
+				t.Value = value.String
 			}
 		case token.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -126,9 +136,9 @@ func (t *Token) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the Token.
+// GetValue returns the ent.Value that was dynamically selected and assigned to the Token.
 // This includes values selected through modifiers, order, etc.
-func (t *Token) Value(name string) (ent.Value, error) {
+func (t *Token) GetValue(name string) (ent.Value, error) {
 	return t.selectValues.Get(name)
 }
 
@@ -160,6 +170,8 @@ func (t *Token) String() string {
 	var builder strings.Builder
 	builder.WriteString("Token(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", t.ID))
+	builder.WriteString("value=<sensitive>")
+	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(t.Type)
 	builder.WriteString(", ")

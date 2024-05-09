@@ -11,13 +11,14 @@ option go_package = "khepri.dev/horus/ent/proto/khepri/horus";
 service AuthService {
 	rpc BasicSignUp(BasicSignUpRequest) returns (BasicSignUpRseponse);
 	rpc BasicSignIn(BasicSignInRequest) returns (BasicSignInRseponse);
+	rpc TokenSignIn(TokenSignInRequest) returns (TokenSignInResponse);
+	rpc SignOut(SingOutRequest) returns (SingOutResponse);
 }
 
 message BasicSignUpRequest {
 	string username = 1;
 	string password = 2;
 }
-
 message BasicSignUpRseponse {
 	Token token = 1;
 }
@@ -26,7 +27,19 @@ message BasicSignInRequest {
 	string username = 1;
 	string password = 2;
 }
-
 message BasicSignInRseponse {
 	Token token = 1;
+}
+
+message TokenSignInRequest {
+	Token token = 1;
+}
+message TokenSignInResponse {
+	Token token = 1;
+}
+
+message SingOutRequest {
+	Token token = 1;
+}
+message SingOutResponse {
 }

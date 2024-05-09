@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 const (
@@ -14,6 +15,8 @@ const (
 	Label = "token"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldValue holds the string denoting the value field in the database.
+	FieldValue = "value"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
 	// FieldName holds the string denoting the name field in the database.
@@ -38,6 +41,7 @@ const (
 // Columns holds all SQL columns for token fields.
 var Columns = []string{
 	FieldID,
+	FieldValue,
 	FieldType,
 	FieldName,
 	FieldCreatedAt,
@@ -66,14 +70,16 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// ValueValidator is a validator for the "value" field. It is called by the builders before save.
+	ValueValidator func(string) error
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
 	// DefaultName holds the default value on creation for the "name" field.
 	DefaultName string
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
-	// IDValidator is a validator for the "id" field. It is called by the builders before save.
-	IDValidator func(string) error
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
 )
 
 // OrderOption defines the ordering options for the Token queries.
@@ -82,6 +88,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByValue orders the results by the value field.
+func ByValue(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldValue, opts...).ToFunc()
 }
 
 // ByType orders the results by the type field.

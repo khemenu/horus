@@ -21,6 +21,8 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	AuthService_BasicSignUp_FullMethodName = "/khepri.horus.AuthService/BasicSignUp"
 	AuthService_BasicSignIn_FullMethodName = "/khepri.horus.AuthService/BasicSignIn"
+	AuthService_TokenSignIn_FullMethodName = "/khepri.horus.AuthService/TokenSignIn"
+	AuthService_SignOut_FullMethodName     = "/khepri.horus.AuthService/SignOut"
 )
 
 // AuthServiceClient is the client API for AuthService service.
@@ -29,6 +31,8 @@ const (
 type AuthServiceClient interface {
 	BasicSignUp(ctx context.Context, in *BasicSignUpRequest, opts ...grpc.CallOption) (*BasicSignUpRseponse, error)
 	BasicSignIn(ctx context.Context, in *BasicSignInRequest, opts ...grpc.CallOption) (*BasicSignInRseponse, error)
+	TokenSignIn(ctx context.Context, in *TokenSignInRequest, opts ...grpc.CallOption) (*TokenSignInResponse, error)
+	SignOut(ctx context.Context, in *SingOutRequest, opts ...grpc.CallOption) (*SingOutResponse, error)
 }
 
 type authServiceClient struct {
@@ -57,12 +61,32 @@ func (c *authServiceClient) BasicSignIn(ctx context.Context, in *BasicSignInRequ
 	return out, nil
 }
 
+func (c *authServiceClient) TokenSignIn(ctx context.Context, in *TokenSignInRequest, opts ...grpc.CallOption) (*TokenSignInResponse, error) {
+	out := new(TokenSignInResponse)
+	err := c.cc.Invoke(ctx, AuthService_TokenSignIn_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) SignOut(ctx context.Context, in *SingOutRequest, opts ...grpc.CallOption) (*SingOutResponse, error) {
+	out := new(SingOutResponse)
+	err := c.cc.Invoke(ctx, AuthService_SignOut_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility
 type AuthServiceServer interface {
 	BasicSignUp(context.Context, *BasicSignUpRequest) (*BasicSignUpRseponse, error)
 	BasicSignIn(context.Context, *BasicSignInRequest) (*BasicSignInRseponse, error)
+	TokenSignIn(context.Context, *TokenSignInRequest) (*TokenSignInResponse, error)
+	SignOut(context.Context, *SingOutRequest) (*SingOutResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -75,6 +99,12 @@ func (UnimplementedAuthServiceServer) BasicSignUp(context.Context, *BasicSignUpR
 }
 func (UnimplementedAuthServiceServer) BasicSignIn(context.Context, *BasicSignInRequest) (*BasicSignInRseponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BasicSignIn not implemented")
+}
+func (UnimplementedAuthServiceServer) TokenSignIn(context.Context, *TokenSignInRequest) (*TokenSignInResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TokenSignIn not implemented")
+}
+func (UnimplementedAuthServiceServer) SignOut(context.Context, *SingOutRequest) (*SingOutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SignOut not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 
@@ -125,6 +155,42 @@ func _AuthService_BasicSignIn_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_TokenSignIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TokenSignInRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).TokenSignIn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_TokenSignIn_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).TokenSignIn(ctx, req.(*TokenSignInRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_SignOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SingOutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).SignOut(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_SignOut_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).SignOut(ctx, req.(*SingOutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -139,6 +205,14 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BasicSignIn",
 			Handler:    _AuthService_BasicSignIn_Handler,
+		},
+		{
+			MethodName: "TokenSignIn",
+			Handler:    _AuthService_TokenSignIn_Handler,
+		},
+		{
+			MethodName: "SignOut",
+			Handler:    _AuthService_SignOut_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

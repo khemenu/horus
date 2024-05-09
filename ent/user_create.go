@@ -89,14 +89,14 @@ func (uc *UserCreate) AddAccounts(a ...*Account) *UserCreate {
 }
 
 // AddTokenIDs adds the "tokens" edge to the Token entity by IDs.
-func (uc *UserCreate) AddTokenIDs(ids ...string) *UserCreate {
+func (uc *UserCreate) AddTokenIDs(ids ...uuid.UUID) *UserCreate {
 	uc.mutation.AddTokenIDs(ids...)
 	return uc
 }
 
 // AddTokens adds the "tokens" edges to the Token entity.
 func (uc *UserCreate) AddTokens(t ...*Token) *UserCreate {
-	ids := make([]string, len(t))
+	ids := make([]uuid.UUID, len(t))
 	for i := range t {
 		ids[i] = t[i].ID
 	}
@@ -244,7 +244,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Columns: []string{user.TokensColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(token.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(token.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

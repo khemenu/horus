@@ -1,0 +1,33 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    command: [ "sh", "-c", "while sleep 1000; do :; done" ]
+
+    privileged: true
+
+    volumes:
+      - type: bind
+        source: ..
+        target: /workspace
+
+    expose:
+      - 35122
+      - 35123
+
+  gw:
+    image: envoyproxy/envoy:v1.30-latest
+
+    ports:
+      - target: 9901
+        published: 9901
+      - target: 35121
+        published: 35121
+
+    volumes:
+      - type: bind
+        source: ./envoy.yaml
+        target: /etc/envoy/envoy.yaml
+        read_only: true

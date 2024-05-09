@@ -229,22 +229,26 @@ func init() {
 	team.DefaultID = teamDescID.Default.(func() uuid.UUID)
 	tokenFields := schema.Token{}.Fields()
 	_ = tokenFields
+	// tokenDescValue is the schema descriptor for value field.
+	tokenDescValue := tokenFields[1].Descriptor()
+	// token.ValueValidator is a validator for the "value" field. It is called by the builders before save.
+	token.ValueValidator = tokenDescValue.Validators[0].(func(string) error)
 	// tokenDescType is the schema descriptor for type field.
-	tokenDescType := tokenFields[1].Descriptor()
+	tokenDescType := tokenFields[2].Descriptor()
 	// token.TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	token.TypeValidator = tokenDescType.Validators[0].(func(string) error)
 	// tokenDescName is the schema descriptor for name field.
-	tokenDescName := tokenFields[2].Descriptor()
+	tokenDescName := tokenFields[3].Descriptor()
 	// token.DefaultName holds the default value on creation for the name field.
 	token.DefaultName = tokenDescName.Default.(string)
 	// tokenDescCreatedAt is the schema descriptor for created_at field.
-	tokenDescCreatedAt := tokenFields[3].Descriptor()
+	tokenDescCreatedAt := tokenFields[4].Descriptor()
 	// token.DefaultCreatedAt holds the default value on creation for the created_at field.
 	token.DefaultCreatedAt = tokenDescCreatedAt.Default.(func() time.Time)
 	// tokenDescID is the schema descriptor for id field.
 	tokenDescID := tokenFields[0].Descriptor()
-	// token.IDValidator is a validator for the "id" field. It is called by the builders before save.
-	token.IDValidator = tokenDescID.Validators[0].(func(string) error)
+	// token.DefaultID holds the default value on creation for the id field.
+	token.DefaultID = tokenDescID.Default.(func() uuid.UUID)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescName is the schema descriptor for name field.

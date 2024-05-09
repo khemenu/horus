@@ -107,8 +107,8 @@ func (tq *TokenQuery) FirstX(ctx context.Context) *Token {
 
 // FirstID returns the first Token ID from the query.
 // Returns a *NotFoundError when no Token ID was found.
-func (tq *TokenQuery) FirstID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (tq *TokenQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = tq.Limit(1).IDs(setContextOp(ctx, tq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -120,7 +120,7 @@ func (tq *TokenQuery) FirstID(ctx context.Context) (id string, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (tq *TokenQuery) FirstIDX(ctx context.Context) string {
+func (tq *TokenQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := tq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,8 +158,8 @@ func (tq *TokenQuery) OnlyX(ctx context.Context) *Token {
 // OnlyID is like Only, but returns the only Token ID in the query.
 // Returns a *NotSingularError when more than one Token ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (tq *TokenQuery) OnlyID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (tq *TokenQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = tq.Limit(2).IDs(setContextOp(ctx, tq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -175,7 +175,7 @@ func (tq *TokenQuery) OnlyID(ctx context.Context) (id string, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (tq *TokenQuery) OnlyIDX(ctx context.Context) string {
+func (tq *TokenQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := tq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -203,7 +203,7 @@ func (tq *TokenQuery) AllX(ctx context.Context) []*Token {
 }
 
 // IDs executes the query and returns a list of Token IDs.
-func (tq *TokenQuery) IDs(ctx context.Context) (ids []string, err error) {
+func (tq *TokenQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if tq.ctx.Unique == nil && tq.path != nil {
 		tq.Unique(true)
 	}
@@ -215,7 +215,7 @@ func (tq *TokenQuery) IDs(ctx context.Context) (ids []string, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (tq *TokenQuery) IDsX(ctx context.Context) []string {
+func (tq *TokenQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := tq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -299,12 +299,12 @@ func (tq *TokenQuery) WithOwner(opts ...func(*UserQuery)) *TokenQuery {
 // Example:
 //
 //	var v []struct {
-//		Type string `json:"type,omitempty"`
+//		Value string `json:"value,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Token.Query().
-//		GroupBy(token.FieldType).
+//		GroupBy(token.FieldValue).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (tq *TokenQuery) GroupBy(field string, fields ...string) *TokenGroupBy {
@@ -322,11 +322,11 @@ func (tq *TokenQuery) GroupBy(field string, fields ...string) *TokenGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Type string `json:"type,omitempty"`
+//		Value string `json:"value,omitempty"`
 //	}
 //
 //	client.Token.Query().
-//		Select(token.FieldType).
+//		Select(token.FieldValue).
 //		Scan(ctx, &v)
 func (tq *TokenQuery) Select(fields ...string) *TokenSelect {
 	tq.ctx.Fields = append(tq.ctx.Fields, fields...)
@@ -452,7 +452,7 @@ func (tq *TokenQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (tq *TokenQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(token.Table, token.Columns, sqlgraph.NewFieldSpec(token.FieldID, field.TypeString))
+	_spec := sqlgraph.NewQuerySpec(token.Table, token.Columns, sqlgraph.NewFieldSpec(token.FieldID, field.TypeUUID))
 	_spec.From = tq.sql
 	if unique := tq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

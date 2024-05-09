@@ -1347,7 +1347,7 @@ func (c *TokenClient) UpdateOne(t *Token) *TokenUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *TokenClient) UpdateOneID(id string) *TokenUpdateOne {
+func (c *TokenClient) UpdateOneID(id uuid.UUID) *TokenUpdateOne {
 	mutation := newTokenMutation(c.config, OpUpdateOne, withTokenID(id))
 	return &TokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -1364,7 +1364,7 @@ func (c *TokenClient) DeleteOne(t *Token) *TokenDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *TokenClient) DeleteOneID(id string) *TokenDeleteOne {
+func (c *TokenClient) DeleteOneID(id uuid.UUID) *TokenDeleteOne {
 	builder := c.Delete().Where(token.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1381,12 +1381,12 @@ func (c *TokenClient) Query() *TokenQuery {
 }
 
 // Get returns a Token entity by its id.
-func (c *TokenClient) Get(ctx context.Context, id string) (*Token, error) {
+func (c *TokenClient) Get(ctx context.Context, id uuid.UUID) (*Token, error) {
 	return c.Query().Where(token.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *TokenClient) GetX(ctx context.Context, id string) *Token {
+func (c *TokenClient) GetX(ctx context.Context, id uuid.UUID) *Token {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)

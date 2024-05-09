@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -90,6 +92,12 @@ func NewService(client *ent.Client) Service {
 			team:       horus.NewTeamService(client),
 			token:      horus.NewTokenService(client),
 		},
+		keyer: tokens.NewArgon2iKeyer(tokens.Argon2iKeyerInit{
+			Time:    3,
+			Memory:  32 * (1 << 10),
+			Threads: 4,
+			KeyLen:  32,
+		}),
 	}
 	s.auth = &AuthService{base: s}
 	s.user = &UserService{base: s}
@@ -109,25 +117,40 @@ func GrpcUnaryInterceptor(svc Service, db *ent.Client) grpc.UnaryServerIntercept
 			return nil, status.Error(codes.InvalidArgument, "missing metadata")
 		}
 
-		values, ok := md[tokens.CookieName]
-		if !ok || len(values) != 1 {
-			return nil, status.Error(codes.InvalidArgument, "no access token")
+		var token string
+		if entry := md.Get("cookie"); len(entry) > 0 {
+			prefix := fmt.Sprintf("%s=", tokens.CookieName)
+			for _, cookie := range strings.Split(entry[0], "; ") {
+				if !strings.HasPrefix(cookie, prefix) {
+					continue
+				}
+
+				kv := strings.SplitN(cookie, "=", 2)
+				if len(kv) != 2 {
+					break
+				}
+
+				token = kv[1]
+				break
+			}
+		}
+		if token == "" {
+			return nil, status.Error(codes.Unauthenticated, "no access token")
 		}
 
-		token, err := svc.Token().Get(ctx, &horus.GetTokenRequest{
-			Id:   values[0],
-			View: horus.GetTokenRequest_WITH_EDGE_IDS,
-		})
+		res, err := svc.Auth().TokenSignIn(ctx, &horus.TokenSignInRequest{Token: &horus.Token{
+			Value: token,
+		}})
 		if err != nil {
 			switch status.Code(err) {
-			case codes.NotFound:
-				return nil, status.Error(codes.Unauthenticated, "invalid token")
+			case codes.Unauthenticated:
+				return nil, err
 			default:
 				return nil, status.Error(codes.Internal, "failed to get token details")
 			}
 		}
 
-		user, err := db.User.Get(ctx, uuid.UUID(token.Owner.Id))
+		user, err := db.User.Get(ctx, uuid.UUID(res.Token.Owner.Id))
 		if err != nil {
 			return nil, status.Error(codes.Internal, "failed to get user details")
 		}

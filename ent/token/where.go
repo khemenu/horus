@@ -7,62 +7,58 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 	"khepri.dev/horus/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id string) predicate.Token {
+func ID(id uuid.UUID) predicate.Token {
 	return predicate.Token(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id string) predicate.Token {
+func IDEQ(id uuid.UUID) predicate.Token {
 	return predicate.Token(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id string) predicate.Token {
+func IDNEQ(id uuid.UUID) predicate.Token {
 	return predicate.Token(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...string) predicate.Token {
+func IDIn(ids ...uuid.UUID) predicate.Token {
 	return predicate.Token(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...string) predicate.Token {
+func IDNotIn(ids ...uuid.UUID) predicate.Token {
 	return predicate.Token(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id string) predicate.Token {
+func IDGT(id uuid.UUID) predicate.Token {
 	return predicate.Token(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id string) predicate.Token {
+func IDGTE(id uuid.UUID) predicate.Token {
 	return predicate.Token(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id string) predicate.Token {
+func IDLT(id uuid.UUID) predicate.Token {
 	return predicate.Token(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id string) predicate.Token {
+func IDLTE(id uuid.UUID) predicate.Token {
 	return predicate.Token(sql.FieldLTE(FieldID, id))
 }
 
-// IDEqualFold applies the EqualFold predicate on the ID field.
-func IDEqualFold(id string) predicate.Token {
-	return predicate.Token(sql.FieldEqualFold(FieldID, id))
-}
-
-// IDContainsFold applies the ContainsFold predicate on the ID field.
-func IDContainsFold(id string) predicate.Token {
-	return predicate.Token(sql.FieldContainsFold(FieldID, id))
+// Value applies equality check predicate on the "value" field. It's identical to ValueEQ.
+func Value(v string) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldValue, v))
 }
 
 // Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
@@ -83,6 +79,71 @@ func CreatedAt(v time.Time) predicate.Token {
 // ExpiredAt applies equality check predicate on the "expired_at" field. It's identical to ExpiredAtEQ.
 func ExpiredAt(v time.Time) predicate.Token {
 	return predicate.Token(sql.FieldEQ(FieldExpiredAt, v))
+}
+
+// ValueEQ applies the EQ predicate on the "value" field.
+func ValueEQ(v string) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldValue, v))
+}
+
+// ValueNEQ applies the NEQ predicate on the "value" field.
+func ValueNEQ(v string) predicate.Token {
+	return predicate.Token(sql.FieldNEQ(FieldValue, v))
+}
+
+// ValueIn applies the In predicate on the "value" field.
+func ValueIn(vs ...string) predicate.Token {
+	return predicate.Token(sql.FieldIn(FieldValue, vs...))
+}
+
+// ValueNotIn applies the NotIn predicate on the "value" field.
+func ValueNotIn(vs ...string) predicate.Token {
+	return predicate.Token(sql.FieldNotIn(FieldValue, vs...))
+}
+
+// ValueGT applies the GT predicate on the "value" field.
+func ValueGT(v string) predicate.Token {
+	return predicate.Token(sql.FieldGT(FieldValue, v))
+}
+
+// ValueGTE applies the GTE predicate on the "value" field.
+func ValueGTE(v string) predicate.Token {
+	return predicate.Token(sql.FieldGTE(FieldValue, v))
+}
+
+// ValueLT applies the LT predicate on the "value" field.
+func ValueLT(v string) predicate.Token {
+	return predicate.Token(sql.FieldLT(FieldValue, v))
+}
+
+// ValueLTE applies the LTE predicate on the "value" field.
+func ValueLTE(v string) predicate.Token {
+	return predicate.Token(sql.FieldLTE(FieldValue, v))
+}
+
+// ValueContains applies the Contains predicate on the "value" field.
+func ValueContains(v string) predicate.Token {
+	return predicate.Token(sql.FieldContains(FieldValue, v))
+}
+
+// ValueHasPrefix applies the HasPrefix predicate on the "value" field.
+func ValueHasPrefix(v string) predicate.Token {
+	return predicate.Token(sql.FieldHasPrefix(FieldValue, v))
+}
+
+// ValueHasSuffix applies the HasSuffix predicate on the "value" field.
+func ValueHasSuffix(v string) predicate.Token {
+	return predicate.Token(sql.FieldHasSuffix(FieldValue, v))
+}
+
+// ValueEqualFold applies the EqualFold predicate on the "value" field.
+func ValueEqualFold(v string) predicate.Token {
+	return predicate.Token(sql.FieldEqualFold(FieldValue, v))
+}
+
+// ValueContainsFold applies the ContainsFold predicate on the "value" field.
+func ValueContainsFold(v string) predicate.Token {
+	return predicate.Token(sql.FieldContainsFold(FieldValue, v))
 }
 
 // TypeEQ applies the EQ predicate on the "type" field.

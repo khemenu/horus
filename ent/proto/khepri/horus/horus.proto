@@ -316,17 +316,19 @@ message DeleteTeamRequest {
 }
 
 message Token {
-  string id = 1;
+  bytes id = 1;
 
-  string type = 3;
+  string value = 2;
 
-  string name = 4;
+  string type = 4;
+
+  string name = 5;
 
   google.protobuf.Timestamp created_at = 15;
 
   google.protobuf.Timestamp expired_at = 14;
 
-  User owner = 2;
+  User owner = 3;
 }
 
 message CreateTokenRequest {
@@ -334,7 +336,7 @@ message CreateTokenRequest {
 }
 
 message GetTokenRequest {
-  string id = 1;
+  bytes id = 1;
 
   View view = 2;
 
@@ -352,7 +354,7 @@ message UpdateTokenRequest {
 }
 
 message DeleteTokenRequest {
-  string id = 1;
+  bytes id = 1;
 }
 
 message User {

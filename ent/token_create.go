@@ -22,6 +22,12 @@ type TokenCreate struct {
 	hooks    []Hook
 }
 
+// SetValue sets the "value" field.
+func (tc *TokenCreate) SetValue(s string) *TokenCreate {
+	tc.mutation.SetValue(s)
+	return tc
+}
+
 // SetType sets the "type" field.
 func (tc *TokenCreate) SetType(s string) *TokenCreate {
 	tc.mutation.SetType(s)
@@ -63,8 +69,16 @@ func (tc *TokenCreate) SetExpiredAt(t time.Time) *TokenCreate {
 }
 
 // SetID sets the "id" field.
-func (tc *TokenCreate) SetID(s string) *TokenCreate {
-	tc.mutation.SetID(s)
+func (tc *TokenCreate) SetID(u uuid.UUID) *TokenCreate {
+	tc.mutation.SetID(u)
+	return tc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (tc *TokenCreate) SetNillableID(u *uuid.UUID) *TokenCreate {
+	if u != nil {
+		tc.SetID(*u)
+	}
 	return tc
 }
 
@@ -122,10 +136,22 @@ func (tc *TokenCreate) defaults() {
 		v := token.DefaultCreatedAt()
 		tc.mutation.SetCreatedAt(v)
 	}
+	if _, ok := tc.mutation.ID(); !ok {
+		v := token.DefaultID()
+		tc.mutation.SetID(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (tc *TokenCreate) check() error {
+	if _, ok := tc.mutation.Value(); !ok {
+		return &ValidationError{Name: "value", err: errors.New(`ent: missing required field "Token.value"`)}
+	}
+	if v, ok := tc.mutation.Value(); ok {
+		if err := token.ValueValidator(v); err != nil {
+			return &ValidationError{Name: "value", err: fmt.Errorf(`ent: validator failed for field "Token.value": %w`, err)}
+		}
+	}
 	if _, ok := tc.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Token.type"`)}
 	}
@@ -142,11 +168,6 @@ func (tc *TokenCreate) check() error {
 	}
 	if _, ok := tc.mutation.ExpiredAt(); !ok {
 		return &ValidationError{Name: "expired_at", err: errors.New(`ent: missing required field "Token.expired_at"`)}
-	}
-	if v, ok := tc.mutation.ID(); ok {
-		if err := token.IDValidator(v); err != nil {
-			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "Token.id": %w`, err)}
-		}
 	}
 	if _, ok := tc.mutation.OwnerID(); !ok {
 		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "Token.owner"`)}
@@ -166,10 +187,10 @@ func (tc *TokenCreate) sqlSave(ctx context.Context) (*Token, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(string); ok {
-			_node.ID = id
-		} else {
-			return nil, fmt.Errorf("unexpected Token.ID type: %T", _spec.ID.Value)
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
 		}
 	}
 	tc.mutation.id = &_node.ID
@@ -180,11 +201,15 @@ func (tc *TokenCreate) sqlSave(ctx context.Context) (*Token, error) {
 func (tc *TokenCreate) createSpec() (*Token, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Token{config: tc.config}
-		_spec = sqlgraph.NewCreateSpec(token.Table, sqlgraph.NewFieldSpec(token.FieldID, field.TypeString))
+		_spec = sqlgraph.NewCreateSpec(token.Table, sqlgraph.NewFieldSpec(token.FieldID, field.TypeUUID))
 	)
 	if id, ok := tc.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = id
+		_spec.ID.Value = &id
+	}
+	if value, ok := tc.mutation.Value(); ok {
+		_spec.SetField(token.FieldValue, field.TypeString, value)
+		_node.Value = value
 	}
 	if value, ok := tc.mutation.GetType(); ok {
 		_spec.SetField(token.FieldType, field.TypeString, value)

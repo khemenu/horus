@@ -13,8 +13,11 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 	"khepri.dev/horus/ent"
+	"khepri.dev/horus/ent/proto/khepri/horus"
 	"khepri.dev/horus/log"
 	"khepri.dev/horus/service"
+	"khepri.dev/horus/service/frame"
+	"khepri.dev/horus/tokens"
 )
 
 func Run(ctx context.Context, c *Config) error {
@@ -29,12 +32,12 @@ func Run(ctx context.Context, c *Config) error {
 		db  *ent.Client
 		err error
 	)
-	if c.Debug.Enabled && c.Debug.UseMemDb {
+	if c.Debug.Enabled && c.Debug.MemDb.Enabled {
 		l.Warn("use mem DB")
 
 		db, err = ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 		if err != nil {
-			return fmt.Errorf("create mem DB db: %w", err)
+			return fmt.Errorf("create mem DB: %w", err)
 		}
 	} else {
 		db, err = ent.Open(c.Db.Driver, c.Db.Source)
@@ -47,6 +50,23 @@ func Run(ctx context.Context, c *Config) error {
 	}
 
 	svc := service.NewService(db)
+	if c.Debug.Enabled && c.Debug.MemDb.Enabled {
+		for _, u := range c.Debug.MemDb.Users {
+			user, err := db.User.Create().SetName(u.Name).Save(ctx)
+			if err != nil {
+				return fmt.Errorf("create user for mem DB: %w", err)
+			}
+
+			f := frame.Frame{Actor: user}
+			ctx := frame.WithContext(ctx, &f)
+			if _, err := svc.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
+				Value: u.Password,
+				Type:  tokens.TypeBasic,
+			}}); err != nil {
+				return fmt.Errorf("set password for user %s: %w", u.Name, err)
+			}
+		}
+	}
 
 	grpc_addr := fmt.Sprintf("%s:%d", c.Grpc.Host, c.Grpc.Port)
 	grpc_listener, err := net.Listen("tcp", grpc_addr)
