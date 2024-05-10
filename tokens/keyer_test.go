@@ -10,23 +10,23 @@ import (
 func TestArgon2iKeyer(t *testing.T) {
 	require := require.New(t)
 
-	keyer := tokens.NewArgon2iKeyer(tokens.Argon2iKeyerInit{
-		Time:    3,
-		Memory:  32 * (1 << 10),
-		Threads: 4,
-		KeyLen:  32,
+	keyer := tokens.NewArgon2i(&tokens.Argon2State{
+		Parallelism: 4,
+		TagLength:   32,
+		MemorySize:  32 * (1 << 10),
+		Iterations:  3,
 	})
 
 	given := []byte("Royale with Cheese")
 	h1, err := keyer.Key(given)
 	require.NoError(err)
 
-	err = keyer.Compare(given, h1)
+	err = h1.Compare(given)
 	require.NoError(err)
 
 	h2, err := keyer.Key([]byte("Le Big Mac"))
 	require.NoError(err)
 
-	err = keyer.Compare(given, h2)
+	err = h2.Compare(given)
 	require.Error(err)
 }
