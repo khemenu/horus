@@ -8,13 +8,14 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"khepri.dev/horus"
 	"khepri.dev/horus/alias"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/account"
-	"khepri.dev/horus/ent/proto/khepri/horus"
 	"khepri.dev/horus/ent/silo"
 	"khepri.dev/horus/internal/entutils"
 	"khepri.dev/horus/internal/fx"
+	"khepri.dev/horus/service/bare"
 	"khepri.dev/horus/service/frame"
 )
 
@@ -27,7 +28,7 @@ func (s *SiloService) Create(ctx context.Context, req *horus.CreateSiloRequest) 
 	f := frame.Must(ctx)
 	return entutils.WithTxV(ctx, s.client, func(tx *ent.Tx) (*horus.Silo, error) {
 		c := tx.Client()
-		res, err := horus.NewSiloService(c).Create(ctx, &horus.CreateSiloRequest{
+		res, err := bare.NewSiloService(c).Create(ctx, &horus.CreateSiloRequest{
 			Silo: &horus.Silo{
 				Alias: fx.CoalesceOr(req.Silo.GetAlias(), alias.New()),
 				Name:  req.Silo.GetName(),
@@ -37,7 +38,7 @@ func (s *SiloService) Create(ctx context.Context, req *horus.CreateSiloRequest) 
 			return nil, err
 		}
 
-		_, err = horus.NewAccountService(c).Create(ctx, &horus.CreateAccountRequest{
+		_, err = bare.NewAccountService(c).Create(ctx, &horus.CreateAccountRequest{
 			Account: &horus.Account{
 				Alias:       "founder",
 				Name:        "Founder",
@@ -59,7 +60,7 @@ func (s *SiloService) Create(ctx context.Context, req *horus.CreateSiloRequest) 
 
 func (s *SiloService) Get(ctx context.Context, req *horus.GetSiloRequest) (*horus.Silo, error) {
 	f := frame.Must(ctx)
-	res, err := s.store.Silo().Get(ctx, req)
+	res, err := s.bare.Silo().Get(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +93,7 @@ func (s *SiloService) Update(ctx context.Context, req *horus.UpdateSiloRequest) 
 	v.Alias = req.Silo.Alias
 	v.Name = req.Silo.Name
 	v.Description = req.Silo.Description
-	return s.store.Silo().Update(ctx, &horus.UpdateSiloRequest{
+	return s.bare.Silo().Update(ctx, &horus.UpdateSiloRequest{
 		Silo: v,
 	})
 }

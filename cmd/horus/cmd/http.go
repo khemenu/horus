@@ -6,7 +6,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"khepri.dev/horus/ent/proto/khepri/horus"
+	"khepri.dev/horus"
 	"khepri.dev/horus/service"
 	"khepri.dev/horus/tokens"
 )

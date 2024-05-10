@@ -6,7 +6,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"khepri.dev/horus/ent/proto/khepri/horus"
+	"khepri.dev/horus"
 	"khepri.dev/horus/service/frame"
 )
 
@@ -21,7 +21,7 @@ func (s *UserService) Create(ctx context.Context, req *horus.CreateUserRequest) 
 
 func (s *UserService) Get(ctx context.Context, req *horus.GetUserRequest) (*horus.User, error) {
 	f := frame.Must(ctx)
-	return s.store.User().Get(ctx, &horus.GetUserRequest{
+	return s.bare.User().Get(ctx, &horus.GetUserRequest{
 		Id:   f.Actor.ID[:],
 		View: req.View,
 	})

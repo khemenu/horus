@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/account"
-	"khepri.dev/horus/ent/proto/khepri/horus"
 	"khepri.dev/horus/service/frame"
 )
 
@@ -24,7 +24,7 @@ func (s *AccountService) Create(ctx context.Context, req *horus.CreateAccountReq
 }
 
 func (s *AccountService) Get(ctx context.Context, req *horus.GetAccountRequest) (*horus.Account, error) {
-	res, err := s.store.Account().Get(ctx, &horus.GetAccountRequest{
+	res, err := s.bare.Account().Get(ctx, &horus.GetAccountRequest{
 		Id:   req.Id,
 		View: horus.GetAccountRequest_WITH_EDGE_IDS,
 	})
@@ -52,27 +52,29 @@ func (s *AccountService) Get(ctx context.Context, req *horus.GetAccountRequest) 
 }
 
 func (s *AccountService) List(ctx context.Context, req *horus.ListAccountRequest) (*horus.ListAccountResponse, error) {
-	f := frame.Must(ctx)
-	vs, err := f.Actor.QueryAccounts().
-		WithSilo().
-		All(ctx)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
+	// f := frame.Must(ctx)
+	// vs, err := f.Actor.QueryAccounts().
+	// 	WithSilo().
+	// 	All(ctx)
+	// if err != nil {
+	// 	return nil, status.Errorf(codes.Internal, err.Error())
+	// }
 
-	res, err := horus.ToProtoAccountList(vs)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
+	// res, err := horus.ToProtoAccountList(vs)
+	// if err != nil {
+	// 	return nil, status.Errorf(codes.Internal, err.Error())
+	// }
 
-	for i, v := range vs {
-		res[i].Silo, err = horus.ToProtoSilo(v.Edges.Silo)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
-		}
-	}
+	// for i, v := range vs {
+	// 	res[i].Silo, err = horus.ToProtoSilo(v.Edges.Silo)
+	// 	if err != nil {
+	// 		return nil, status.Errorf(codes.Internal, err.Error())
+	// 	}
+	// }
 
-	return &horus.ListAccountResponse{AccountList: res}, nil
+	// return &horus.ListAccountResponse{AccountList: res}, nil
+
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
 
 func (s *AccountService) Update(ctx context.Context, req *horus.UpdateAccountRequest) (*horus.Account, error) {
@@ -89,7 +91,7 @@ func (s *AccountService) Update(ctx context.Context, req *horus.UpdateAccountReq
 	v.Alias = req.Account.Alias
 	v.Name = req.Account.Name
 	v.Description = req.Account.Description
-	return s.store.Account().Update(ctx, &horus.UpdateAccountRequest{
+	return s.bare.Account().Update(ctx, &horus.UpdateAccountRequest{
 		Account: v,
 	})
 }
@@ -107,7 +109,7 @@ func (s *AccountService) Delete(ctx context.Context, req *horus.DeleteAccountReq
 	case bytes.Equal(f.Actor.ID[:], v.Owner.Id):
 		fallthrough
 	case f.ActingAccount.Role == account.RoleOWNER:
-		return s.store.Account().Delete(ctx, req)
+		return s.bare.Account().Delete(ctx, req)
 	}
 
 	return nil, ErrPermissionDenied

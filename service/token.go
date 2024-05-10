@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"khepri.dev/horus/ent/proto/khepri/horus"
+	"khepri.dev/horus"
 	"khepri.dev/horus/service/frame"
 	"khepri.dev/horus/tokens"
 )
@@ -52,7 +52,7 @@ func (s *TokenService) createBasic(ctx context.Context, req *horus.CreateTokenRe
 	// TODO: TypeBasic must be unique per user;
 	// User upsert or transaction.
 	// OR keep all tokens? then use only latest one?
-	token, err := s.store.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
+	token, err := s.bare.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
 		Value: key_str,
 		Owner: &horus.User{Id: f.Actor.ID[:]},
 		Type:  tokens.TypeBasic,
@@ -72,7 +72,7 @@ func (s *TokenService) createAccess(ctx context.Context, req *horus.CreateTokenR
 		return nil, fmt.Errorf("generate token: %w", err)
 	}
 
-	return s.store.Token().Create(ctx, &horus.CreateTokenRequest{
+	return s.bare.Token().Create(ctx, &horus.CreateTokenRequest{
 		Token: &horus.Token{
 			Value:     v,
 			Type:      tokens.TypeAccess,
@@ -127,7 +127,7 @@ func (s *TokenService) Update(ctx context.Context, req *horus.UpdateTokenRequest
 }
 func (s *TokenService) Delete(ctx context.Context, req *horus.DeleteTokenRequest) (*emptypb.Empty, error) {
 	f := frame.Must(ctx)
-	token, err := s.store.Token().Get(ctx, &horus.GetTokenRequest{Id: req.Id})
+	token, err := s.bare.Token().Get(ctx, &horus.GetTokenRequest{Id: req.Id})
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			return nil, status.Error(codes.NotFound, "not found")
@@ -140,7 +140,7 @@ func (s *TokenService) Delete(ctx context.Context, req *horus.DeleteTokenRequest
 	}
 
 	token.ExpiredAt = timestamppb.Now()
-	if _, err := s.store.Token().Update(ctx, &horus.UpdateTokenRequest{Token: token}); err != nil {
+	if _, err := s.bare.Token().Update(ctx, &horus.UpdateTokenRequest{Token: token}); err != nil {
 		return nil, fmt.Errorf("update token expired date: %w", err)
 	}
 

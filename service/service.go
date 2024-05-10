@@ -10,24 +10,19 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
-	"khepri.dev/horus/ent/proto/khepri/horus"
 	"khepri.dev/horus/service/frame"
 	"khepri.dev/horus/tokens"
 )
 
-type Store interface {
-	User() horus.UserServiceServer
-	Account() horus.AccountServiceServer
-	Membership() horus.MembershipServiceServer
-	Silo() horus.SiloServiceServer
-	Team() horus.TeamServiceServer
-	Token() horus.TokenServiceServer
+type service struct {
+	auth horus.AuthServiceServer
+	store
 }
 
-type Service interface {
-	Auth() horus.AuthServiceServer
-	Store
+func (s *service) Auth() horus.AuthServiceServer {
+	return s.auth
 }
 
 type store struct {
@@ -63,35 +58,16 @@ func (s *store) Token() horus.TokenServiceServer {
 	return s.token
 }
 
-type service struct {
-	auth horus.AuthServiceServer
-	store
-}
-
-func (s *service) Auth() horus.AuthServiceServer {
-	return s.auth
-}
-
 type base struct {
-	service
-
 	client *ent.Client
-	store  Store
+	bare   horus.Store
 
 	keyer tokens.Keyer
 }
 
-func NewService(client *ent.Client) Service {
-	s := &base{
+func NewService(client *ent.Client) horus.Service {
+	b := &base{
 		client: client,
-		store: &store{
-			user:       horus.NewUserService(client),
-			account:    horus.NewAccountService(client),
-			membership: horus.NewMembershipService(client),
-			silo:       horus.NewSiloService(client),
-			team:       horus.NewTeamService(client),
-			token:      horus.NewTokenService(client),
-		},
 		keyer: tokens.NewArgon2iKeyer(tokens.Argon2iKeyerInit{
 			Time:    3,
 			Memory:  32 * (1 << 10),
@@ -99,18 +75,21 @@ func NewService(client *ent.Client) Service {
 			KeyLen:  32,
 		}),
 	}
-	s.auth = &AuthService{base: s}
-	s.user = &UserService{base: s}
-	s.account = &AccountService{base: s}
-	s.membership = &MembershipService{base: s}
-	s.silo = &SiloService{base: s}
-	s.team = &TeamService{base: s}
-	s.token = &TokenService{base: s}
 
-	return s
+	return &service{
+		auth: &AuthService{base: b},
+		store: store{
+			user:       &UserService{base: b},
+			account:    &AccountService{base: b},
+			membership: &MembershipService{base: b},
+			silo:       &SiloService{base: b},
+			team:       &TeamService{base: b},
+			token:      &TokenService{base: b},
+		},
+	}
 }
 
-func GrpcUnaryInterceptor(svc Service, db *ent.Client) grpc.UnaryServerInterceptor {
+func GrpcUnaryInterceptor(svc horus.Service, db *ent.Client) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
@@ -160,13 +139,4 @@ func GrpcUnaryInterceptor(svc Service, db *ent.Client) grpc.UnaryServerIntercept
 		ctx = frame.WithContext(ctx, f)
 		return handler(ctx, req)
 	}
-}
-
-func GrpcRegisterStoreService(svc Service, s *grpc.Server) {
-	horus.RegisterUserServiceServer(s, svc.User())
-	horus.RegisterAccountServiceServer(s, svc.Account())
-	horus.RegisterMembershipServiceServer(s, svc.Membership())
-	horus.RegisterSiloServiceServer(s, svc.Silo())
-	horus.RegisterTeamServiceServer(s, svc.Team())
-	horus.RegisterTokenServiceServer(s, svc.Token())
 }

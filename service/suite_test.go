@@ -6,11 +6,11 @@ import (
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/suite"
+	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/enttest"
 	"khepri.dev/horus/ent/membership"
-	"khepri.dev/horus/ent/proto/khepri/horus"
 	"khepri.dev/horus/ent/team"
 	"khepri.dev/horus/service"
 	"khepri.dev/horus/service/frame"
@@ -30,7 +30,7 @@ type Suite struct {
 	source_name string
 
 	client *ent.Client
-	svc    service.Service
+	svc    horus.Service
 
 	frame *frame.Frame // Frame of actor.
 	other *frame.Frame // User who does not have any relation with the actor.

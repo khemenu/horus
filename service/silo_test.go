@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"khepri.dev/horus"
 	"khepri.dev/horus/ent/account"
-	"khepri.dev/horus/ent/proto/khepri/horus"
 	"khepri.dev/horus/ent/silo"
 )
 

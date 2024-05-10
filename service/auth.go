@@ -8,8 +8,8 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
-	"khepri.dev/horus/ent/proto/khepri/horus"
 	"khepri.dev/horus/ent/token"
 	"khepri.dev/horus/ent/user"
 	"khepri.dev/horus/service/frame"
@@ -56,7 +56,7 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 	}
 
 	ctx = frame.WithContext(ctx, &frame.Frame{Actor: u})
-	access_token, err := s.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
+	access_token, err := s.bare.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
 		Type: tokens.TypeAccess,
 	}})
 	if err != nil {

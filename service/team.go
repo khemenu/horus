@@ -7,14 +7,15 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"khepri.dev/horus"
 	"khepri.dev/horus/alias"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/membership"
-	"khepri.dev/horus/ent/proto/khepri/horus"
 	"khepri.dev/horus/ent/team"
 	"khepri.dev/horus/internal/entutils"
 	"khepri.dev/horus/internal/fx"
+	"khepri.dev/horus/service/bare"
 	"khepri.dev/horus/service/frame"
 )
 
@@ -46,7 +47,7 @@ func (s *TeamService) Create(ctx context.Context, req *horus.CreateTeamRequest) 
 
 	return entutils.WithTxV(ctx, s.client, func(tx *ent.Tx) (*horus.Team, error) {
 		c := tx.Client()
-		res, err := horus.NewTeamService(c).Create(ctx, &horus.CreateTeamRequest{
+		res, err := bare.NewTeamService(c).Create(ctx, &horus.CreateTeamRequest{
 			Team: &horus.Team{
 				Alias: fx.CoalesceOr(req.Team.GetAlias(), alias.New()),
 				Name:  req.Team.GetName(),
@@ -60,7 +61,7 @@ func (s *TeamService) Create(ctx context.Context, req *horus.CreateTeamRequest) 
 			return nil, err
 		}
 
-		_, err = horus.NewMembershipService(c).Create(ctx, &horus.CreateMembershipRequest{
+		_, err = bare.NewMembershipService(c).Create(ctx, &horus.CreateMembershipRequest{
 			Membership: &horus.Membership{
 				Role:    horus.Membership_ROLE_OWNER,
 				Account: &horus.Account{Id: v.ID[:]},
@@ -76,7 +77,7 @@ func (s *TeamService) Create(ctx context.Context, req *horus.CreateTeamRequest) 
 }
 
 func (s *TeamService) Get(ctx context.Context, req *horus.GetTeamRequest) (*horus.Team, error) {
-	res, err := s.store.Team().Get(ctx, &horus.GetTeamRequest{
+	res, err := s.bare.Team().Get(ctx, &horus.GetTeamRequest{
 		Id:   req.Id,
 		View: horus.GetTeamRequest_WITH_EDGE_IDS,
 	})
@@ -137,7 +138,7 @@ func (s *TeamService) Update(ctx context.Context, req *horus.UpdateTeamRequest) 
 	if f.ActingAccount.Role == account.RoleOWNER {
 		v.InterVisibility = req.Team.InterVisibility
 		v.IntraVisibility = req.Team.IntraVisibility
-		return s.store.Team().Update(ctx, &horus.UpdateTeamRequest{Team: v})
+		return s.bare.Team().Update(ctx, &horus.UpdateTeamRequest{Team: v})
 	}
 
 	member, err := f.ActingAccount.QueryMemberships().
@@ -151,7 +152,7 @@ func (s *TeamService) Update(ctx context.Context, req *horus.UpdateTeamRequest) 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	if member.Role == membership.RoleOWNER {
-		return s.store.Team().Update(ctx, &horus.UpdateTeamRequest{Team: v})
+		return s.bare.Team().Update(ctx, &horus.UpdateTeamRequest{Team: v})
 	}
 
 	return nil, ErrPermissionDenied

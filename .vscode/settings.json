@@ -2,7 +2,7 @@
 	"files.exclude": {
 		"**/.git": true,
 		"ent": true,
-		"service/bare": true
+		"service/bare/*_service.go": true
 	},
 	"files.readonlyInclude": {
 		"ent/proto/khepri/horus/horus.proto": true,

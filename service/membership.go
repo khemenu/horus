@@ -7,10 +7,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/membership"
-	"khepri.dev/horus/ent/proto/khepri/horus"
 	"khepri.dev/horus/ent/team"
 	"khepri.dev/horus/service/frame"
 )
@@ -31,7 +31,7 @@ func (s *MembershipService) Create(ctx context.Context, req *horus.CreateMembers
 		return nil, newErrMissingRequiredField("membership.team.id")
 	}
 
-	target_account, err := s.Account().Get(ctx, &horus.GetAccountRequest{
+	target_account, err := s.bare.Account().Get(ctx, &horus.GetAccountRequest{
 		Id:   account_id,
 		View: horus.GetAccountRequest_WITH_EDGE_IDS,
 	})
@@ -40,7 +40,7 @@ func (s *MembershipService) Create(ctx context.Context, req *horus.CreateMembers
 	}
 
 	// Ensure that team exists.
-	_, err = s.Team().Get(ctx, &horus.GetTeamRequest{
+	_, err = s.bare.Team().Get(ctx, &horus.GetTeamRequest{
 		Id:   team_id,
 		View: horus.GetTeamRequest_WITH_EDGE_IDS,
 	})
@@ -56,7 +56,7 @@ func (s *MembershipService) Create(ctx context.Context, req *horus.CreateMembers
 			return nil, ErrPermissionDenied
 		}
 
-		return s.store.Membership().Create(ctx, req)
+		return s.bare.Membership().Create(ctx, req)
 	}
 	if f.ActingAccount.Role == account.RoleOWNER {
 		if target_account.Role == horus.Account_ROLE_OWNER {
@@ -64,7 +64,7 @@ func (s *MembershipService) Create(ctx context.Context, req *horus.CreateMembers
 			return nil, ErrPermissionDenied
 		}
 
-		return s.store.Membership().Create(ctx, req)
+		return s.bare.Membership().Create(ctx, req)
 	}
 
 	v, err := f.ActingAccount.QueryMemberships().
@@ -82,18 +82,18 @@ func (s *MembershipService) Create(ctx context.Context, req *horus.CreateMembers
 		return nil, ErrPermissionDenied
 	}
 
-	return s.store.Membership().Create(ctx, req)
+	return s.bare.Membership().Create(ctx, req)
 }
 
 func (s *MembershipService) Get(ctx context.Context, req *horus.GetMembershipRequest) (*horus.Membership, error) {
-	res, err := s.store.Membership().Get(ctx, &horus.GetMembershipRequest{
+	res, err := s.bare.Membership().Get(ctx, &horus.GetMembershipRequest{
 		Id:   req.Id,
 		View: horus.GetMembershipRequest_WITH_EDGE_IDS,
 	})
 	if err != nil {
 		return nil, err
 	}
-	if _, err := s.Account().Get(ctx, &horus.GetAccountRequest{Id: res.Account.Id}); err != nil {
+	if _, err := s.bare.Account().Get(ctx, &horus.GetAccountRequest{Id: res.Account.Id}); err != nil {
 		return nil, err
 	}
 
@@ -130,7 +130,7 @@ func (s *MembershipService) Update(ctx context.Context, req *horus.UpdateMembers
 	}
 
 	res.Role = req.Membership.Role
-	return s.store.Membership().Update(ctx, &horus.UpdateMembershipRequest{
+	return s.bare.Membership().Update(ctx, &horus.UpdateMembershipRequest{
 		Membership: res,
 	})
 }
@@ -143,7 +143,7 @@ func (s *MembershipService) Delete(ctx context.Context, req *horus.DeleteMembers
 
 	f := frame.Must(ctx)
 	if f.ActingAccount == nil {
-		return s.store.Membership().Delete(ctx, req)
+		return s.bare.Membership().Delete(ctx, req)
 	}
 
 	if f.ActingAccount.Role != account.RoleOWNER {
@@ -162,5 +162,5 @@ func (s *MembershipService) Delete(ctx context.Context, req *horus.DeleteMembers
 		}
 	}
 
-	return s.store.Membership().Delete(ctx, req)
+	return s.bare.Membership().Delete(ctx, req)
 }
