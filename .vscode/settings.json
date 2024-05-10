@@ -1,9 +1,8 @@
 {
 	"files.exclude": {
 		"**/.git": true,
-		"ent/{[!sp],?[!cr],??[!ho]}*": true,
-		"ent/proto/khepri/horus/*.pb.go": true,
-		"ent/proto/khepri/horus/horus*.go": true,
+		"ent": true,
+		"service/bare": true
 	},
 	"files.readonlyInclude": {
 		"ent/proto/khepri/horus/horus.proto": true,

@@ -2,7 +2,7 @@
 	"name": "khepri-horus",
 	"dockerComposeFile": "docker-compose.yaml",
 	"service": "dev",
-	"workspaceFolder": "/workspace",
+	"workspaceFolder": "/workspaces/horus",
 	"customizations": {
 		"vscode": {
 			"extensions": [

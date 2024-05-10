@@ -9,7 +9,7 @@
 			"type": "go",
 			"request": "launch",
 			"mode": "auto",
-			"program": "${workspaceFolder}/cmd/horus",
+			"program": "${workspaceFolder}/cmd/entgen",
 			"cwd": "${workspaceFolder}"
 		}
 	]

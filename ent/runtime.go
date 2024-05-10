@@ -10,11 +10,11 @@ import (
 	"khepri.dev/horus/ent/identity"
 	"khepri.dev/horus/ent/invitation"
 	"khepri.dev/horus/ent/membership"
-	"khepri.dev/horus/ent/schema"
 	"khepri.dev/horus/ent/silo"
 	"khepri.dev/horus/ent/team"
 	"khepri.dev/horus/ent/token"
 	"khepri.dev/horus/ent/user"
+	"khepri.dev/horus/schema"
 )
 
 // The init function reads all schema descriptors with runtime code

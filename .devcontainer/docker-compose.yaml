@@ -11,6 +11,10 @@ services:
     volumes:
       - type: bind
         source: ..
+        target: /workspaces/horus
+
+      - type: bind
+        source: ${HOME}/workspace
         target: /workspace
 
     expose:
