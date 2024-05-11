@@ -4,7 +4,7 @@ package tokens;
 
 option go_package = "khepri.dev/horus/tokens";
 
-message Token {
+message Key {
 	bytes hash = 1; // Hashed value.
 	bytes salt = 2; // Additional data hashed with value.
 	oneof state {

@@ -1,7 +1,7 @@
 package tokens
 
 type Keyer interface {
-	Key(v []byte, opts ...KeyerOption) (*Token, error)
+	Key(v []byte, opts ...KeyerOption) (*Key, error)
 }
 
 type KeyerOption func(opt *KeyerOptions)

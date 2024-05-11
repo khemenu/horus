@@ -8,21 +8,21 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func (t *Token) Compare(v []byte) error {
+func (k *Key) Compare(v []byte) error {
 	var keyer Keyer
-	switch s := t.State.(type) {
-	case *Token_Argon2:
+	switch s := k.State.(type) {
+	case *Key_Argon2:
 		keyer = s.Argon2
 	default:
 		return errors.New("unknown keyer")
 	}
 
-	t_, err := keyer.Key(v, WithSalt(t.Salt))
+	k_, err := keyer.Key(v, WithSalt(k.Salt))
 	if err != nil {
 		return fmt.Errorf("keyer: %w", err)
 	}
 
-	if !bytes.Equal(t.Hash, t_.Hash) {
+	if !bytes.Equal(k.Hash, k_.Hash) {
 		return errors.New("hash mismatch")
 	}
 
@@ -30,7 +30,7 @@ func (t *Token) Compare(v []byte) error {
 }
 
 func Compare(v []byte, h []byte) error {
-	t := Token{}
+	t := Key{}
 	if err := proto.Unmarshal(h, &t); err != nil {
 		return fmt.Errorf("unmarshal: %w", err)
 	}

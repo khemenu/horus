@@ -18,15 +18,15 @@ func TestArgon2iKeyer(t *testing.T) {
 	})
 
 	given := []byte("Royale with Cheese")
-	h1, err := keyer.Key(given)
+	k1, err := keyer.Key(given)
 	require.NoError(err)
 
-	err = h1.Compare(given)
+	err = k1.Compare(given)
 	require.NoError(err)
 
-	h2, err := keyer.Key([]byte("Le Big Mac"))
+	k2, err := keyer.Key([]byte("Le Big Mac"))
 	require.NoError(err)
 
-	err = h2.Compare(given)
+	err = k2.Compare(given)
 	require.Error(err)
 }
