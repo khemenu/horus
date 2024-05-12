@@ -7,11 +7,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"khepri.dev/horus"
-	"khepri.dev/horus/service"
 	"khepri.dev/horus/tokens"
 )
 
-func HandleAuth(mux *http.ServeMux, svc service.Service) {
+func HandleAuth(mux *http.ServeMux, svc horus.Service) {
 	mux.HandleFunc("/auth/basic/sign-in", func(w http.ResponseWriter, r *http.Request) {
 		username, password, ok := r.BasicAuth()
 		if !ok {
@@ -40,7 +39,7 @@ func HandleAuth(mux *http.ServeMux, svc service.Service) {
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name:  tokens.CookieName,
+			Name:  tokens.TokenKeyName,
 			Value: res.Token.Value,
 
 			Path:    "/",
@@ -52,8 +51,8 @@ func HandleAuth(mux *http.ServeMux, svc service.Service) {
 		})
 	})
 	mux.HandleFunc("/auth/sign-out", func(w http.ResponseWriter, r *http.Request) {
-		if cookie, err := r.Cookie(tokens.CookieName); err != nil {
-			// No cookie found => no tokens
+		if cookie, err := r.Cookie(tokens.TokenKeyName); err != nil {
+			// No token found
 		} else if _, err := svc.Auth().SignOut(r.Context(), &horus.SingOutRequest{Token: &horus.Token{Value: cookie.Value}}); err == nil {
 			// Ok
 		} else {
@@ -61,7 +60,7 @@ func HandleAuth(mux *http.ServeMux, svc service.Service) {
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name: tokens.CookieName,
+			Name: tokens.TokenKeyName,
 
 			Expires: time.Unix(0, 0),
 			MaxAge:  -1,

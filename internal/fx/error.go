@@ -1,5 +1,12 @@
 package fx
 
+func Must[T any](obj T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
 type ErrCollector[T any] struct {
 	v   T
 	err error

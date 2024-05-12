@@ -6,5 +6,5 @@ const (
 )
 
 const (
-	CookieName = "horus_token"
+	TokenKeyName = "horus_token"
 )

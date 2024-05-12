@@ -11,16 +11,12 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"khepri.dev/horus"
 	"khepri.dev/horus/service/frame"
 	"khepri.dev/horus/tokens"
-)
-
-const (
-	TokenTypePassword = "password"
-	TokenTypeAccess   = "access"
 )
 
 type TokenService struct {
@@ -32,7 +28,7 @@ func (s *TokenService) Create(ctx context.Context, req *horus.CreateTokenRequest
 	switch req.Token.Type {
 	case tokens.TypeBasic:
 		return s.createBasic(ctx, req)
-	case TokenTypeAccess:
+	case tokens.TypeAccess:
 		return s.createAccess(ctx, req)
 	default:
 		return nil, status.Error(codes.InvalidArgument, "unknown type of token")
@@ -47,10 +43,15 @@ func (s *TokenService) createBasic(ctx context.Context, req *horus.CreateTokenRe
 		return nil, fmt.Errorf("generate key: %w", err)
 	}
 
-	key_str := base64.RawStdEncoding.EncodeToString(key)
+	key_str := ""
+	if b, err := proto.Marshal(key); err != nil {
+		return nil, fmt.Errorf("marshal key: %w", err)
+	} else {
+		key_str = base64.RawStdEncoding.EncodeToString(b)
+	}
 
 	// TODO: TypeBasic must be unique per user;
-	// User upsert or transaction.
+	// Use upsert or transaction.
 	// OR keep all tokens? then use only latest one?
 	token, err := s.bare.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
 		Value: key_str,
@@ -102,29 +103,29 @@ func (*TokenService) generateToken() (string, error) {
 }
 
 func (s *TokenService) Get(ctx context.Context, req *horus.GetTokenRequest) (*horus.Token, error) {
-	// f := frame.Must(ctx)
+	f := frame.Must(ctx)
 
-	// token, err := s.client.Token.Query().
-	// Where(token.And(
-	// 	token.TypeEQ(tokens.TypeBasic),
-	// 	token.HasOwnerWith(user.ID(f.Actor.ID)),
-	// )).
-	// First(ctx)
-	// if err != nil {
-	// 	if ent.IsNotFound(err) {
-	// 		return nil, status.Error(codes.FailedPrecondition, "no password")
-	// 	}
+	req.View = horus.GetTokenRequest_WITH_EDGE_IDS
+	token, err := s.bare.Token().Get(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal(token.Id, f.Actor.ID[:]) {
+		return nil, status.Error(codes.NotFound, "not found")
+	}
 
-	// 	return nil, fmt.Errorf("query ")
-	// }
-	// s.keyer.Compare()
+	switch token.Type {
+	default:
+		token.Value = ""
+	}
 
-	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+	return token, nil
 }
 
 func (s *TokenService) Update(ctx context.Context, req *horus.UpdateTokenRequest) (*horus.Token, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
+
 func (s *TokenService) Delete(ctx context.Context, req *horus.DeleteTokenRequest) (*emptypb.Empty, error) {
 	f := frame.Must(ctx)
 	token, err := s.bare.Token().Get(ctx, &horus.GetTokenRequest{Id: req.Id})

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -12,6 +11,8 @@ import (
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/token"
 	"khepri.dev/horus/ent/user"
+	"khepri.dev/horus/internal/fx"
+	"khepri.dev/horus/service/bare"
 	"khepri.dev/horus/service/frame"
 	"khepri.dev/horus/tokens"
 )
@@ -51,7 +52,7 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 
 	if key, err := base64.RawStdEncoding.DecodeString(token.Value); err != nil {
 		return nil, fmt.Errorf("invalid format of basic token: %w", err)
-	} else if err := s.keyer.Compare([]byte(req.Password), key); err != nil {
+	} else if err := tokens.Compare([]byte(req.Password), key); err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "password mismatch")
 	}
 
@@ -84,14 +85,7 @@ func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInReq
 		return nil, fmt.Errorf("query token: %w", err)
 	}
 
-	return &horus.TokenSignInResponse{Token: &horus.Token{
-		Id:        token.ID[:],
-		Type:      token.Type,
-		Name:      token.Value,
-		CreatedAt: req.Token.CreatedAt,
-		ExpiredAt: req.Token.ExpiredAt,
-		Owner:     &horus.User{Id: token.Edges.Owner.ID[:]},
-	}}, nil
+	return &horus.TokenSignInResponse{Token: fx.Must(bare.ToProtoToken(token))}, nil
 }
 
 func (s *AuthService) SignOut(ctx context.Context, req *horus.SingOutRequest) (*horus.SingOutResponse, error) {
@@ -102,6 +96,7 @@ func (s *AuthService) SignOut(ctx context.Context, req *horus.SingOutRequest) (*
 				token.Type(tokens.TypeAccess),
 			),
 		).
+		WithOwner().
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -111,10 +106,14 @@ func (s *AuthService) SignOut(ctx context.Context, req *horus.SingOutRequest) (*
 		return nil, fmt.Errorf("query token: %w", err)
 	}
 
-	token.ExpiredAt = time.Now()
-	if _, err := s.client.Token.UpdateOne(token).Save(ctx); err != nil {
-		return nil, fmt.Errorf("update token: %w", err)
+	ctx = frame.WithContext(ctx, &frame.Frame{
+		Actor: token.Edges.Owner,
+	})
+	if _, err := s.service.Token().Delete(ctx, &horus.DeleteTokenRequest{
+		Id: token.ID[:],
+	}); err != nil {
+		return nil, fmt.Errorf("delete token: %w", err)
 	}
 
-	return nil, status.Errorf(codes.Unimplemented, "method SignOut not implemented")
+	return &horus.SingOutResponse{}, nil
 }

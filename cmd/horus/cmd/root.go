@@ -84,7 +84,11 @@ func Run(ctx context.Context, c *Config) error {
 
 	grpc_server := grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
-		grpc.UnaryInterceptor(service.GrpcUnaryInterceptor(svc, db)))
+		grpc.ChainUnaryInterceptor(
+			horus.AuthUnaryInterceptor(svc.Auth().TokenSignIn),
+			service.UnaryInterceptor(svc, db),
+		),
+	)
 	http_server := &http.Server{
 		Addr: http_addr,
 	}
@@ -106,7 +110,7 @@ func Run(ctx context.Context, c *Config) error {
 		defer wg.Done()
 		defer once.Do(shutdown)
 
-		service.GrpcRegisterStoreService(svc, grpc_server)
+		horus.GrpcRegister(svc, grpc_server)
 		reflection.Register(grpc_server)
 
 		l.Info("serve gRPC", slog.String("addr", grpc_addr))
