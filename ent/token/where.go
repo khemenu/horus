@@ -71,14 +71,14 @@ func Name(v string) predicate.Token {
 	return predicate.Token(sql.FieldEQ(FieldName, v))
 }
 
-// CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
-func CreatedAt(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldEQ(FieldCreatedAt, v))
+// CreateDate applies equality check predicate on the "create_date" field. It's identical to CreateDateEQ.
+func CreateDate(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldCreateDate, v))
 }
 
-// ExpiredAt applies equality check predicate on the "expired_at" field. It's identical to ExpiredAtEQ.
-func ExpiredAt(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldEQ(FieldExpiredAt, v))
+// ExpiredDate applies equality check predicate on the "expired_date" field. It's identical to ExpiredDateEQ.
+func ExpiredDate(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldExpiredDate, v))
 }
 
 // ValueEQ applies the EQ predicate on the "value" field.
@@ -276,84 +276,84 @@ func NameContainsFold(v string) predicate.Token {
 	return predicate.Token(sql.FieldContainsFold(FieldName, v))
 }
 
-// CreatedAtEQ applies the EQ predicate on the "created_at" field.
-func CreatedAtEQ(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldEQ(FieldCreatedAt, v))
+// CreateDateEQ applies the EQ predicate on the "create_date" field.
+func CreateDateEQ(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldCreateDate, v))
 }
 
-// CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
-func CreatedAtNEQ(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldNEQ(FieldCreatedAt, v))
+// CreateDateNEQ applies the NEQ predicate on the "create_date" field.
+func CreateDateNEQ(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldNEQ(FieldCreateDate, v))
 }
 
-// CreatedAtIn applies the In predicate on the "created_at" field.
-func CreatedAtIn(vs ...time.Time) predicate.Token {
-	return predicate.Token(sql.FieldIn(FieldCreatedAt, vs...))
+// CreateDateIn applies the In predicate on the "create_date" field.
+func CreateDateIn(vs ...time.Time) predicate.Token {
+	return predicate.Token(sql.FieldIn(FieldCreateDate, vs...))
 }
 
-// CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
-func CreatedAtNotIn(vs ...time.Time) predicate.Token {
-	return predicate.Token(sql.FieldNotIn(FieldCreatedAt, vs...))
+// CreateDateNotIn applies the NotIn predicate on the "create_date" field.
+func CreateDateNotIn(vs ...time.Time) predicate.Token {
+	return predicate.Token(sql.FieldNotIn(FieldCreateDate, vs...))
 }
 
-// CreatedAtGT applies the GT predicate on the "created_at" field.
-func CreatedAtGT(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldGT(FieldCreatedAt, v))
+// CreateDateGT applies the GT predicate on the "create_date" field.
+func CreateDateGT(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldGT(FieldCreateDate, v))
 }
 
-// CreatedAtGTE applies the GTE predicate on the "created_at" field.
-func CreatedAtGTE(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldGTE(FieldCreatedAt, v))
+// CreateDateGTE applies the GTE predicate on the "create_date" field.
+func CreateDateGTE(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldGTE(FieldCreateDate, v))
 }
 
-// CreatedAtLT applies the LT predicate on the "created_at" field.
-func CreatedAtLT(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldLT(FieldCreatedAt, v))
+// CreateDateLT applies the LT predicate on the "create_date" field.
+func CreateDateLT(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldLT(FieldCreateDate, v))
 }
 
-// CreatedAtLTE applies the LTE predicate on the "created_at" field.
-func CreatedAtLTE(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldLTE(FieldCreatedAt, v))
+// CreateDateLTE applies the LTE predicate on the "create_date" field.
+func CreateDateLTE(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldLTE(FieldCreateDate, v))
 }
 
-// ExpiredAtEQ applies the EQ predicate on the "expired_at" field.
-func ExpiredAtEQ(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldEQ(FieldExpiredAt, v))
+// ExpiredDateEQ applies the EQ predicate on the "expired_date" field.
+func ExpiredDateEQ(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldExpiredDate, v))
 }
 
-// ExpiredAtNEQ applies the NEQ predicate on the "expired_at" field.
-func ExpiredAtNEQ(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldNEQ(FieldExpiredAt, v))
+// ExpiredDateNEQ applies the NEQ predicate on the "expired_date" field.
+func ExpiredDateNEQ(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldNEQ(FieldExpiredDate, v))
 }
 
-// ExpiredAtIn applies the In predicate on the "expired_at" field.
-func ExpiredAtIn(vs ...time.Time) predicate.Token {
-	return predicate.Token(sql.FieldIn(FieldExpiredAt, vs...))
+// ExpiredDateIn applies the In predicate on the "expired_date" field.
+func ExpiredDateIn(vs ...time.Time) predicate.Token {
+	return predicate.Token(sql.FieldIn(FieldExpiredDate, vs...))
 }
 
-// ExpiredAtNotIn applies the NotIn predicate on the "expired_at" field.
-func ExpiredAtNotIn(vs ...time.Time) predicate.Token {
-	return predicate.Token(sql.FieldNotIn(FieldExpiredAt, vs...))
+// ExpiredDateNotIn applies the NotIn predicate on the "expired_date" field.
+func ExpiredDateNotIn(vs ...time.Time) predicate.Token {
+	return predicate.Token(sql.FieldNotIn(FieldExpiredDate, vs...))
 }
 
-// ExpiredAtGT applies the GT predicate on the "expired_at" field.
-func ExpiredAtGT(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldGT(FieldExpiredAt, v))
+// ExpiredDateGT applies the GT predicate on the "expired_date" field.
+func ExpiredDateGT(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldGT(FieldExpiredDate, v))
 }
 
-// ExpiredAtGTE applies the GTE predicate on the "expired_at" field.
-func ExpiredAtGTE(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldGTE(FieldExpiredAt, v))
+// ExpiredDateGTE applies the GTE predicate on the "expired_date" field.
+func ExpiredDateGTE(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldGTE(FieldExpiredDate, v))
 }
 
-// ExpiredAtLT applies the LT predicate on the "expired_at" field.
-func ExpiredAtLT(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldLT(FieldExpiredAt, v))
+// ExpiredDateLT applies the LT predicate on the "expired_date" field.
+func ExpiredDateLT(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldLT(FieldExpiredDate, v))
 }
 
-// ExpiredAtLTE applies the LTE predicate on the "expired_at" field.
-func ExpiredAtLTE(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldLTE(FieldExpiredAt, v))
+// ExpiredDateLTE applies the LTE predicate on the "expired_date" field.
+func ExpiredDateLTE(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldLTE(FieldExpiredDate, v))
 }
 
 // HasOwner applies the HasEdge predicate on the "owner" edge.

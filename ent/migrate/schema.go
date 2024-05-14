@@ -104,7 +104,7 @@ var (
 	// MembershipsColumns holds the columns for the "memberships" table.
 	MembershipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"OWNER", "MEMBER"}},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"MEMBER", "OWNER"}},
 		{Name: "created_date", Type: field.TypeTime},
 		{Name: "account_memberships", Type: field.TypeUUID},
 		{Name: "team_members", Type: field.TypeUUID},
@@ -181,8 +181,8 @@ var (
 		{Name: "value", Type: field.TypeString, Unique: true},
 		{Name: "type", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString, Default: ""},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "expired_at", Type: field.TypeTime},
+		{Name: "create_date", Type: field.TypeTime},
+		{Name: "expired_date", Type: field.TypeTime},
 		{Name: "user_tokens", Type: field.TypeUUID},
 	}
 	// TokensTable holds the schema information for the "tokens" table.

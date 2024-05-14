@@ -22,6 +22,7 @@ const (
 	AuthService_BasicSignUp_FullMethodName = "/khepri.horus.AuthService/BasicSignUp"
 	AuthService_BasicSignIn_FullMethodName = "/khepri.horus.AuthService/BasicSignIn"
 	AuthService_TokenSignIn_FullMethodName = "/khepri.horus.AuthService/TokenSignIn"
+	AuthService_VerifyOtp_FullMethodName   = "/khepri.horus.AuthService/VerifyOtp"
 	AuthService_SignOut_FullMethodName     = "/khepri.horus.AuthService/SignOut"
 )
 
@@ -32,6 +33,7 @@ type AuthServiceClient interface {
 	BasicSignUp(ctx context.Context, in *BasicSignUpRequest, opts ...grpc.CallOption) (*BasicSignUpRseponse, error)
 	BasicSignIn(ctx context.Context, in *BasicSignInRequest, opts ...grpc.CallOption) (*BasicSignInRseponse, error)
 	TokenSignIn(ctx context.Context, in *TokenSignInRequest, opts ...grpc.CallOption) (*TokenSignInResponse, error)
+	VerifyOtp(ctx context.Context, in *VerifyOtpRequest, opts ...grpc.CallOption) (*VerifyOtpResponse, error)
 	SignOut(ctx context.Context, in *SingOutRequest, opts ...grpc.CallOption) (*SingOutResponse, error)
 }
 
@@ -70,6 +72,15 @@ func (c *authServiceClient) TokenSignIn(ctx context.Context, in *TokenSignInRequ
 	return out, nil
 }
 
+func (c *authServiceClient) VerifyOtp(ctx context.Context, in *VerifyOtpRequest, opts ...grpc.CallOption) (*VerifyOtpResponse, error) {
+	out := new(VerifyOtpResponse)
+	err := c.cc.Invoke(ctx, AuthService_VerifyOtp_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *authServiceClient) SignOut(ctx context.Context, in *SingOutRequest, opts ...grpc.CallOption) (*SingOutResponse, error) {
 	out := new(SingOutResponse)
 	err := c.cc.Invoke(ctx, AuthService_SignOut_FullMethodName, in, out, opts...)
@@ -86,6 +97,7 @@ type AuthServiceServer interface {
 	BasicSignUp(context.Context, *BasicSignUpRequest) (*BasicSignUpRseponse, error)
 	BasicSignIn(context.Context, *BasicSignInRequest) (*BasicSignInRseponse, error)
 	TokenSignIn(context.Context, *TokenSignInRequest) (*TokenSignInResponse, error)
+	VerifyOtp(context.Context, *VerifyOtpRequest) (*VerifyOtpResponse, error)
 	SignOut(context.Context, *SingOutRequest) (*SingOutResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
@@ -102,6 +114,9 @@ func (UnimplementedAuthServiceServer) BasicSignIn(context.Context, *BasicSignInR
 }
 func (UnimplementedAuthServiceServer) TokenSignIn(context.Context, *TokenSignInRequest) (*TokenSignInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TokenSignIn not implemented")
+}
+func (UnimplementedAuthServiceServer) VerifyOtp(context.Context, *VerifyOtpRequest) (*VerifyOtpResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyOtp not implemented")
 }
 func (UnimplementedAuthServiceServer) SignOut(context.Context, *SingOutRequest) (*SingOutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignOut not implemented")
@@ -173,6 +188,24 @@ func _AuthService_TokenSignIn_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_VerifyOtp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyOtpRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).VerifyOtp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_VerifyOtp_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).VerifyOtp(ctx, req.(*VerifyOtpRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AuthService_SignOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SingOutRequest)
 	if err := dec(in); err != nil {
@@ -209,6 +242,10 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TokenSignIn",
 			Handler:    _AuthService_TokenSignIn_Handler,
+		},
+		{
+			MethodName: "VerifyOtp",
+			Handler:    _AuthService_VerifyOtp_Handler,
 		},
 		{
 			MethodName: "SignOut",

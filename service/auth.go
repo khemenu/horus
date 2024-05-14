@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -37,7 +38,7 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 	token, err := s.client.Token.Query().
 		Where(
 			token.And(
-				token.Type(tokens.TypeBasic),
+				token.Type(horus.TokenTypeBasic),
 				token.HasOwnerWith(user.ID(u.ID)),
 			),
 		).
@@ -57,8 +58,8 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 	}
 
 	ctx = frame.WithContext(ctx, &frame.Frame{Actor: u})
-	access_token, err := s.bare.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
-		Type: tokens.TypeAccess,
+	access_token, err := s.service.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
+		Type: horus.TokenTypeAccess,
 	}})
 	if err != nil {
 		return nil, fmt.Errorf("create access token: %w", err)
@@ -72,7 +73,7 @@ func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInReq
 		Where(
 			token.And(
 				token.ValueEQ(req.Token.Value),
-				token.Type(tokens.TypeAccess),
+				token.Type(horus.TokenTypeAccess),
 			),
 		).
 		WithOwner().
@@ -88,12 +89,34 @@ func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInReq
 	return &horus.TokenSignInResponse{Token: fx.Must(bare.ToProtoToken(token))}, nil
 }
 
+func (s *AuthService) VerifyOtp(ctx context.Context, req *horus.VerifyOtpRequest) (*horus.VerifyOtpResponse, error) {
+	now := time.Now()
+	n, err := s.client.Token.Update().
+		Where(
+			token.And(
+				token.ValueEQ(req.Value),
+				token.Type(horus.TokenTypeOtp),
+				token.ExpiredDateGT(now),
+			),
+		).
+		SetExpiredDate(now).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("update token: %w", err)
+	}
+	if n != 0 {
+		return nil, status.Error(codes.Unauthenticated, "invalid token")
+	}
+
+	return &horus.VerifyOtpResponse{}, nil
+}
+
 func (s *AuthService) SignOut(ctx context.Context, req *horus.SingOutRequest) (*horus.SingOutResponse, error) {
 	token, err := s.client.Token.Query().
 		Where(
 			token.And(
 				token.ValueEQ(req.Token.Value),
-				token.Type(tokens.TypeAccess),
+				token.Type(horus.TokenTypeAccess),
 			),
 		).
 		WithOwner().

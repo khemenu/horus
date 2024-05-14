@@ -241,10 +241,10 @@ func init() {
 	tokenDescName := tokenFields[3].Descriptor()
 	// token.DefaultName holds the default value on creation for the name field.
 	token.DefaultName = tokenDescName.Default.(string)
-	// tokenDescCreatedAt is the schema descriptor for created_at field.
-	tokenDescCreatedAt := tokenFields[4].Descriptor()
-	// token.DefaultCreatedAt holds the default value on creation for the created_at field.
-	token.DefaultCreatedAt = tokenDescCreatedAt.Default.(func() time.Time)
+	// tokenDescCreateDate is the schema descriptor for create_date field.
+	tokenDescCreateDate := tokenFields[4].Descriptor()
+	// token.DefaultCreateDate holds the default value on creation for the create_date field.
+	token.DefaultCreateDate = tokenDescCreateDate.Default.(func() time.Time)
 	// tokenDescID is the schema descriptor for id field.
 	tokenDescID := tokenFields[0].Descriptor()
 	// token.DefaultID holds the default value on creation for the id field.

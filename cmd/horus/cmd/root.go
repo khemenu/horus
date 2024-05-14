@@ -7,7 +7,11 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -17,7 +21,6 @@ import (
 	"khepri.dev/horus/log"
 	"khepri.dev/horus/service"
 	"khepri.dev/horus/service/frame"
-	"khepri.dev/horus/tokens"
 )
 
 func Run(ctx context.Context, c *Config) error {
@@ -27,7 +30,7 @@ func Run(ctx context.Context, c *Config) error {
 		l.Warn("debug mode is enabled")
 	}
 
-	ctx = log.WithCtx(ctx, l)
+	ctx = log.Into(ctx, l)
 	var (
 		db  *ent.Client
 		err error
@@ -61,7 +64,7 @@ func Run(ctx context.Context, c *Config) error {
 			ctx := frame.WithContext(ctx, &f)
 			if _, err := svc.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
 				Value: u.Password,
-				Type:  tokens.TypeBasic,
+				Type:  horus.TokenTypeBasic,
 			}}); err != nil {
 				return fmt.Errorf("set password for user %s: %w", u.Name, err)
 			}
@@ -85,17 +88,28 @@ func Run(ctx context.Context, c *Config) error {
 	grpc_server := grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
 		grpc.ChainUnaryInterceptor(
+			log.UnaryInterceptor(l, slog.LevelInfo),
 			horus.AuthUnaryInterceptor(svc.Auth().TokenSignIn),
 			service.UnaryInterceptor(svc, db),
 		),
 	)
+	horus.GrpcRegister(svc, grpc_server)
+	reflection.Register(grpc_server)
+
 	http_server := &http.Server{
 		Addr: http_addr,
 	}
+	http_mux := http.NewServeMux()
+	HandleAuth(http_mux, svc)
+	http_server.Handler = log.HttpLogger(l, slog.LevelInfo, http_mux)
+
 	shutdown := func() {
 		grpc_server.GracefulStop()
 		http_server.Shutdown(ctx)
 	}
+
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	var (
 		wg   sync.WaitGroup
@@ -105,13 +119,10 @@ func Run(ctx context.Context, c *Config) error {
 		err_http error
 	)
 
-	wg.Add(2)
+	wg.Add(3)
 	go func() {
 		defer wg.Done()
 		defer once.Do(shutdown)
-
-		horus.GrpcRegister(svc, grpc_server)
-		reflection.Register(grpc_server)
 
 		l.Info("serve gRPC", slog.String("addr", grpc_addr))
 		err_grpc = grpc_server.Serve(grpc_listener)
@@ -120,22 +131,58 @@ func Run(ctx context.Context, c *Config) error {
 		defer wg.Done()
 		defer once.Do(shutdown)
 
-		mux := http.NewServeMux()
-		HandleAuth(mux, svc)
-		http_server.Handler = mux
-
 		l.Info("serve HTTP", slog.String("addr", http_addr))
 		err_http = http_server.Serve(http_listener)
 	}()
 
+	graceful := make(chan struct{}, 1)
+	go func() {
+		sig := <-interrupt
+		l.Warn("interrupted", slog.String("signal", sig.String()))
+		once.Do(shutdown)
+
+		l.Warn("force shutdown after 1 minute. interrupt once more to shutdown now.")
+		deadline := time.Now().Add(time.Minute)
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
+
+		freq := false
+	L:
+		for {
+			select {
+			case <-graceful:
+				return
+
+			case <-interrupt:
+				break L
+			case <-ticker.C:
+				r := time.Until(deadline)
+				r = time.Duration((r+time.Second/2)/time.Second) * time.Second
+				if r < 15*time.Second && !freq {
+					freq = true
+					ticker.Reset(time.Second)
+				}
+				if r < 500*time.Millisecond {
+					break L
+				}
+
+				l.Warn("tick", slog.Duration("remain", r))
+			}
+		}
+
+		l.Error("force shutdown")
+		os.Exit(1)
+	}()
+
 	errs := []error{}
 	wg.Wait()
-	if err_grpc != nil && !errors.Is(err, grpc.ErrServerStopped) {
+	if err_grpc != nil && !errors.Is(err_grpc, grpc.ErrServerStopped) {
 		errs = append(errs, fmt.Errorf("unexpected gRPC server stop: %w", err_grpc))
 	}
-	if err_http != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err_http != nil && !errors.Is(err_http, http.ErrServerClosed) {
 		errs = append(errs, fmt.Errorf("unexpected HTTP server stop: %w", err_http))
 	}
 
+	close(graceful)
 	return errors.Join(errs...)
 }

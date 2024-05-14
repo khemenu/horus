@@ -5,6 +5,8 @@ set -o pipefail
 set -o nounset
 # set -o xtrace
 
+shopt -s globstar
+
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" # Directory where this script exists.
 __root="$(cd "$(dirname "${__dir}")" && pwd)"         # Root directory of project.
 
@@ -19,15 +21,18 @@ cd "${PROTO_ROOT}"
 sed -i 's/khepri.dev\/horus\/ent\/proto\/khepri\/horus/khepri.dev\/horus/g' khepri/horus/horus.proto
 
 protoc \
-	-I="${PROTO_ROOT}" \
+	--proto_path="${PROTO_ROOT}" \
+	\
 	--go_out="${__root}" \
 	--go_opt=module="${MODULE_NAME}" \
+	\
 	--go-grpc_out="${__root}" \
 	--go-grpc_opt=module="${MODULE_NAME}" \
+	\
 	--entgrpc_out="${__root}/service/bare" \
 	--entgrpc_opt=module="${MODULE_NAME}" \
 	--entgrpc_opt=package="${MODULE_NAME}/service/bare" \
 	--entgrpc_opt=schema_path="${__root}/schema" \
 	--entgrpc_opt=entity_package="${MODULE_NAME}/ent" \
-	khepri/horus/auth.proto \
-	khepri/horus/horus.proto
+	\
+	"${PROTO_ROOT}"/**/*.proto

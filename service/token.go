@@ -16,7 +16,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"khepri.dev/horus"
 	"khepri.dev/horus/service/frame"
-	"khepri.dev/horus/tokens"
 )
 
 type TokenService struct {
@@ -26,13 +25,17 @@ type TokenService struct {
 
 func (s *TokenService) Create(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
 	switch req.Token.Type {
-	case tokens.TypeBasic:
+	case horus.TokenTypeBasic:
 		return s.createBasic(ctx, req)
-	case tokens.TypeAccess:
+	case horus.TokenTypeAccess:
 		return s.createAccess(ctx, req)
 	default:
-		return nil, status.Error(codes.InvalidArgument, "unknown type of token")
+		break
 	}
+
+	f := frame.Must(ctx)
+	req.Token.Owner = &horus.User{Id: f.Actor.ID[:]}
+	return s.bare.Token().Create(ctx, req)
 }
 
 func (s *TokenService) createBasic(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
@@ -56,7 +59,7 @@ func (s *TokenService) createBasic(ctx context.Context, req *horus.CreateTokenRe
 	token, err := s.bare.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
 		Value: key_str,
 		Owner: &horus.User{Id: f.Actor.ID[:]},
-		Type:  tokens.TypeBasic,
+		Type:  horus.TokenTypeBasic,
 	}})
 	if err != nil {
 		return nil, fmt.Errorf("create token: %w", err)
@@ -75,10 +78,10 @@ func (s *TokenService) createAccess(ctx context.Context, req *horus.CreateTokenR
 
 	return s.bare.Token().Create(ctx, &horus.CreateTokenRequest{
 		Token: &horus.Token{
-			Value:     v,
-			Type:      tokens.TypeAccess,
-			ExpiredAt: timestamppb.New(time.Now().Add(24 * time.Hour)),
-			Owner:     &horus.User{Id: f.Actor.ID[:]},
+			Value:       v,
+			Type:        horus.TokenTypeAccess,
+			ExpiredDate: timestamppb.New(time.Now().Add(24 * time.Hour)),
+			Owner:       &horus.User{Id: f.Actor.ID[:]},
 		},
 	})
 }
@@ -140,7 +143,7 @@ func (s *TokenService) Delete(ctx context.Context, req *horus.DeleteTokenRequest
 		return nil, status.Error(codes.NotFound, "not found")
 	}
 
-	token.ExpiredAt = timestamppb.Now()
+	token.ExpiredDate = timestamppb.Now()
 	if _, err := s.bare.Token().Update(ctx, &horus.UpdateTokenRequest{Token: token}); err != nil {
 		return nil, fmt.Errorf("update token expired date: %w", err)
 	}

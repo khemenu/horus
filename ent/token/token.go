@@ -21,10 +21,10 @@ const (
 	FieldType = "type"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// FieldCreatedAt holds the string denoting the created_at field in the database.
-	FieldCreatedAt = "created_at"
-	// FieldExpiredAt holds the string denoting the expired_at field in the database.
-	FieldExpiredAt = "expired_at"
+	// FieldCreateDate holds the string denoting the create_date field in the database.
+	FieldCreateDate = "create_date"
+	// FieldExpiredDate holds the string denoting the expired_date field in the database.
+	FieldExpiredDate = "expired_date"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
 	// Table holds the table name of the token in the database.
@@ -44,8 +44,8 @@ var Columns = []string{
 	FieldValue,
 	FieldType,
 	FieldName,
-	FieldCreatedAt,
-	FieldExpiredAt,
+	FieldCreateDate,
+	FieldExpiredDate,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "tokens"
@@ -76,8 +76,8 @@ var (
 	TypeValidator func(string) error
 	// DefaultName holds the default value on creation for the "name" field.
 	DefaultName string
-	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
-	DefaultCreatedAt func() time.Time
+	// DefaultCreateDate holds the default value on creation for the "create_date" field.
+	DefaultCreateDate func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -105,14 +105,14 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
-// ByCreatedAt orders the results by the created_at field.
-func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+// ByCreateDate orders the results by the create_date field.
+func ByCreateDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreateDate, opts...).ToFunc()
 }
 
-// ByExpiredAt orders the results by the expired_at field.
-func ByExpiredAt(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldExpiredAt, opts...).ToFunc()
+// ByExpiredDate orders the results by the expired_date field.
+func ByExpiredDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExpiredDate, opts...).ToFunc()
 }
 
 // ByOwnerField orders the results by owner field.

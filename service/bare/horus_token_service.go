@@ -32,10 +32,10 @@ func NewTokenService(client *ent.Client) *TokenService {
 // toProtoToken transforms the ent type to the pb type
 func toProtoToken(e *ent.Token) (*horus.Token, error) {
 	v := &horus.Token{}
-	created_at := timestamppb.New(e.CreatedAt)
-	v.CreatedAt = created_at
-	expired_at := timestamppb.New(e.ExpiredAt)
-	v.ExpiredAt = expired_at
+	create_date := timestamppb.New(e.CreateDate)
+	v.CreateDate = create_date
+	expired_date := timestamppb.New(e.ExpiredDate)
+	v.ExpiredDate = expired_date
 	id, err := e.ID.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -130,8 +130,8 @@ func (svc *TokenService) Update(ctx context.Context, req *horus.UpdateTokenReque
 		return nil, status.Errorf(codes.InvalidArgument, "invalid argument: %s", err)
 	}
 	m := svc.client.Token.UpdateOneID(tokenID)
-	tokenExpiredAt := runtime.ExtractTime(token.GetExpiredAt())
-	m.SetExpiredAt(tokenExpiredAt)
+	tokenExpiredDate := runtime.ExtractTime(token.GetExpiredDate())
+	m.SetExpiredDate(tokenExpiredDate)
 	tokenName := token.GetName()
 	m.SetName(tokenName)
 
@@ -174,10 +174,10 @@ func (svc *TokenService) Delete(ctx context.Context, req *horus.DeleteTokenReque
 
 func (svc *TokenService) createBuilder(token *horus.Token) (*ent.TokenCreate, error) {
 	m := svc.client.Token.Create()
-	tokenCreatedAt := runtime.ExtractTime(token.GetCreatedAt())
-	m.SetCreatedAt(tokenCreatedAt)
-	tokenExpiredAt := runtime.ExtractTime(token.GetExpiredAt())
-	m.SetExpiredAt(tokenExpiredAt)
+	tokenCreateDate := runtime.ExtractTime(token.GetCreateDate())
+	m.SetCreateDate(tokenCreateDate)
+	tokenExpiredDate := runtime.ExtractTime(token.GetExpiredDate())
+	m.SetExpiredDate(tokenExpiredDate)
 	tokenName := token.GetName()
 	m.SetName(tokenName)
 	tokenType := token.GetType()

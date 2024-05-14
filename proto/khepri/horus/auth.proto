@@ -12,6 +12,7 @@ service AuthService {
 	rpc BasicSignUp(BasicSignUpRequest) returns (BasicSignUpRseponse);
 	rpc BasicSignIn(BasicSignInRequest) returns (BasicSignInRseponse);
 	rpc TokenSignIn(TokenSignInRequest) returns (TokenSignInResponse);
+	rpc VerifyOtp(VerifyOtpRequest) returns (VerifyOtpResponse);
 	rpc SignOut(SingOutRequest) returns (SingOutResponse);
 }
 
@@ -36,6 +37,12 @@ message TokenSignInRequest {
 }
 message TokenSignInResponse {
 	Token token = 1;
+}
+
+message VerifyOtpRequest {
+	string value = 1;
+}
+message VerifyOtpResponse {
 }
 
 message SingOutRequest {

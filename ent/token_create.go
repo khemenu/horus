@@ -48,23 +48,23 @@ func (tc *TokenCreate) SetNillableName(s *string) *TokenCreate {
 	return tc
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (tc *TokenCreate) SetCreatedAt(t time.Time) *TokenCreate {
-	tc.mutation.SetCreatedAt(t)
+// SetCreateDate sets the "create_date" field.
+func (tc *TokenCreate) SetCreateDate(t time.Time) *TokenCreate {
+	tc.mutation.SetCreateDate(t)
 	return tc
 }
 
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tc *TokenCreate) SetNillableCreatedAt(t *time.Time) *TokenCreate {
+// SetNillableCreateDate sets the "create_date" field if the given value is not nil.
+func (tc *TokenCreate) SetNillableCreateDate(t *time.Time) *TokenCreate {
 	if t != nil {
-		tc.SetCreatedAt(*t)
+		tc.SetCreateDate(*t)
 	}
 	return tc
 }
 
-// SetExpiredAt sets the "expired_at" field.
-func (tc *TokenCreate) SetExpiredAt(t time.Time) *TokenCreate {
-	tc.mutation.SetExpiredAt(t)
+// SetExpiredDate sets the "expired_date" field.
+func (tc *TokenCreate) SetExpiredDate(t time.Time) *TokenCreate {
+	tc.mutation.SetExpiredDate(t)
 	return tc
 }
 
@@ -132,9 +132,9 @@ func (tc *TokenCreate) defaults() {
 		v := token.DefaultName
 		tc.mutation.SetName(v)
 	}
-	if _, ok := tc.mutation.CreatedAt(); !ok {
-		v := token.DefaultCreatedAt()
-		tc.mutation.SetCreatedAt(v)
+	if _, ok := tc.mutation.CreateDate(); !ok {
+		v := token.DefaultCreateDate()
+		tc.mutation.SetCreateDate(v)
 	}
 	if _, ok := tc.mutation.ID(); !ok {
 		v := token.DefaultID()
@@ -163,11 +163,11 @@ func (tc *TokenCreate) check() error {
 	if _, ok := tc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Token.name"`)}
 	}
-	if _, ok := tc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Token.created_at"`)}
+	if _, ok := tc.mutation.CreateDate(); !ok {
+		return &ValidationError{Name: "create_date", err: errors.New(`ent: missing required field "Token.create_date"`)}
 	}
-	if _, ok := tc.mutation.ExpiredAt(); !ok {
-		return &ValidationError{Name: "expired_at", err: errors.New(`ent: missing required field "Token.expired_at"`)}
+	if _, ok := tc.mutation.ExpiredDate(); !ok {
+		return &ValidationError{Name: "expired_date", err: errors.New(`ent: missing required field "Token.expired_date"`)}
 	}
 	if _, ok := tc.mutation.OwnerID(); !ok {
 		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "Token.owner"`)}
@@ -219,13 +219,13 @@ func (tc *TokenCreate) createSpec() (*Token, *sqlgraph.CreateSpec) {
 		_spec.SetField(token.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := tc.mutation.CreatedAt(); ok {
-		_spec.SetField(token.FieldCreatedAt, field.TypeTime, value)
-		_node.CreatedAt = value
+	if value, ok := tc.mutation.CreateDate(); ok {
+		_spec.SetField(token.FieldCreateDate, field.TypeTime, value)
+		_node.CreateDate = value
 	}
-	if value, ok := tc.mutation.ExpiredAt(); ok {
-		_spec.SetField(token.FieldExpiredAt, field.TypeTime, value)
-		_node.ExpiredAt = value
+	if value, ok := tc.mutation.ExpiredDate(); ok {
+		_spec.SetField(token.FieldExpiredDate, field.TypeTime, value)
+		_node.ExpiredDate = value
 	}
 	if nodes := tc.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

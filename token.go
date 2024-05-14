@@ -6,13 +6,13 @@ import (
 
 type tokenCtxKey struct{}
 
-func Get(ctx context.Context) (*Token, bool) {
+func From(ctx context.Context) (*Token, bool) {
 	token, ok := ctx.Value(tokenCtxKey{}).(*Token)
 	return token, ok
 }
 
 func Must(ctx context.Context) *Token {
-	token, ok := Get(ctx)
+	token, ok := From(ctx)
 	if !ok || token == nil {
 		panic("token not set")
 	}

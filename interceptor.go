@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"khepri.dev/horus/tokens"
 )
 
 func AuthUnaryInterceptor(signIn func(ctx context.Context, in *TokenSignInRequest) (*TokenSignInResponse, error)) grpc.UnaryServerInterceptor {
@@ -17,10 +16,10 @@ func AuthUnaryInterceptor(signIn func(ctx context.Context, in *TokenSignInReques
 		token := ""
 		if md, ok := metadata.FromIncomingContext(ctx); !ok {
 			return nil, status.Error(codes.InvalidArgument, "missing metadata")
-		} else if entries := md.Get(tokens.TokenKeyName); len(entries) > 0 {
+		} else if entries := md.Get(TokenKeyName); len(entries) > 0 {
 			token = entries[0]
 		} else if entries := md.Get("cookie"); len(entries) > 0 {
-			prefix := fmt.Sprintf("%s=", tokens.TokenKeyName)
+			prefix := fmt.Sprintf("%s=", TokenKeyName)
 			for _, cookie := range strings.Split(entries[0], "; ") {
 				if !strings.HasPrefix(cookie, prefix) {
 					continue
@@ -47,7 +46,7 @@ func AuthUnaryInterceptor(signIn func(ctx context.Context, in *TokenSignInReques
 		}
 
 		ctx = ctxWithToken(ctx, res.Token)
-		ctx = metadata.AppendToOutgoingContext(ctx, tokens.TokenKeyName, res.Token.Value)
+		ctx = metadata.AppendToOutgoingContext(ctx, TokenKeyName, res.Token.Value)
 		return handler(ctx, req)
 	}
 }

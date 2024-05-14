@@ -25,10 +25,10 @@ type Token struct {
 	Type string `json:"type,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	// ExpiredAt holds the value of the "expired_at" field.
-	ExpiredAt time.Time `json:"expired_at,omitempty"`
+	// CreateDate holds the value of the "create_date" field.
+	CreateDate time.Time `json:"create_date,omitempty"`
+	// ExpiredDate holds the value of the "expired_date" field.
+	ExpiredDate time.Time `json:"expired_date,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TokenQuery when eager-loading is set.
 	Edges        TokenEdges `json:"edges"`
@@ -65,7 +65,7 @@ func (*Token) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case token.FieldValue, token.FieldType, token.FieldName:
 			values[i] = new(sql.NullString)
-		case token.FieldCreatedAt, token.FieldExpiredAt:
+		case token.FieldCreateDate, token.FieldExpiredDate:
 			values[i] = new(sql.NullTime)
 		case token.FieldID:
 			values[i] = new(uuid.UUID)
@@ -110,17 +110,17 @@ func (t *Token) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.Name = value.String
 			}
-		case token.FieldCreatedAt:
+		case token.FieldCreateDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+				return fmt.Errorf("unexpected type %T for field create_date", values[i])
 			} else if value.Valid {
-				t.CreatedAt = value.Time
+				t.CreateDate = value.Time
 			}
-		case token.FieldExpiredAt:
+		case token.FieldExpiredDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field expired_at", values[i])
+				return fmt.Errorf("unexpected type %T for field expired_date", values[i])
 			} else if value.Valid {
-				t.ExpiredAt = value.Time
+				t.ExpiredDate = value.Time
 			}
 		case token.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
@@ -178,11 +178,11 @@ func (t *Token) String() string {
 	builder.WriteString("name=")
 	builder.WriteString(t.Name)
 	builder.WriteString(", ")
-	builder.WriteString("created_at=")
-	builder.WriteString(t.CreatedAt.Format(time.ANSIC))
+	builder.WriteString("create_date=")
+	builder.WriteString(t.CreateDate.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("expired_at=")
-	builder.WriteString(t.ExpiredAt.Format(time.ANSIC))
+	builder.WriteString("expired_date=")
+	builder.WriteString(t.ExpiredDate.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

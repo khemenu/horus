@@ -4283,8 +4283,8 @@ type TokenMutation struct {
 	value         *string
 	_type         *string
 	name          *string
-	created_at    *time.Time
-	expired_at    *time.Time
+	create_date   *time.Time
+	expired_date  *time.Time
 	clearedFields map[string]struct{}
 	owner         *uuid.UUID
 	clearedowner  bool
@@ -4505,76 +4505,76 @@ func (m *TokenMutation) ResetName() {
 	m.name = nil
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (m *TokenMutation) SetCreatedAt(t time.Time) {
-	m.created_at = &t
+// SetCreateDate sets the "create_date" field.
+func (m *TokenMutation) SetCreateDate(t time.Time) {
+	m.create_date = &t
 }
 
-// CreatedAt returns the value of the "created_at" field in the mutation.
-func (m *TokenMutation) CreatedAt() (r time.Time, exists bool) {
-	v := m.created_at
+// CreateDate returns the value of the "create_date" field in the mutation.
+func (m *TokenMutation) CreateDate() (r time.Time, exists bool) {
+	v := m.create_date
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCreatedAt returns the old "created_at" field's value of the Token entity.
+// OldCreateDate returns the old "create_date" field's value of the Token entity.
 // If the Token object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TokenMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+func (m *TokenMutation) OldCreateDate(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+		return v, errors.New("OldCreateDate is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+		return v, errors.New("OldCreateDate requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+		return v, fmt.Errorf("querying old value for OldCreateDate: %w", err)
 	}
-	return oldValue.CreatedAt, nil
+	return oldValue.CreateDate, nil
 }
 
-// ResetCreatedAt resets all changes to the "created_at" field.
-func (m *TokenMutation) ResetCreatedAt() {
-	m.created_at = nil
+// ResetCreateDate resets all changes to the "create_date" field.
+func (m *TokenMutation) ResetCreateDate() {
+	m.create_date = nil
 }
 
-// SetExpiredAt sets the "expired_at" field.
-func (m *TokenMutation) SetExpiredAt(t time.Time) {
-	m.expired_at = &t
+// SetExpiredDate sets the "expired_date" field.
+func (m *TokenMutation) SetExpiredDate(t time.Time) {
+	m.expired_date = &t
 }
 
-// ExpiredAt returns the value of the "expired_at" field in the mutation.
-func (m *TokenMutation) ExpiredAt() (r time.Time, exists bool) {
-	v := m.expired_at
+// ExpiredDate returns the value of the "expired_date" field in the mutation.
+func (m *TokenMutation) ExpiredDate() (r time.Time, exists bool) {
+	v := m.expired_date
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldExpiredAt returns the old "expired_at" field's value of the Token entity.
+// OldExpiredDate returns the old "expired_date" field's value of the Token entity.
 // If the Token object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TokenMutation) OldExpiredAt(ctx context.Context) (v time.Time, err error) {
+func (m *TokenMutation) OldExpiredDate(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldExpiredAt is only allowed on UpdateOne operations")
+		return v, errors.New("OldExpiredDate is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldExpiredAt requires an ID field in the mutation")
+		return v, errors.New("OldExpiredDate requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldExpiredAt: %w", err)
+		return v, fmt.Errorf("querying old value for OldExpiredDate: %w", err)
 	}
-	return oldValue.ExpiredAt, nil
+	return oldValue.ExpiredDate, nil
 }
 
-// ResetExpiredAt resets all changes to the "expired_at" field.
-func (m *TokenMutation) ResetExpiredAt() {
-	m.expired_at = nil
+// ResetExpiredDate resets all changes to the "expired_date" field.
+func (m *TokenMutation) ResetExpiredDate() {
+	m.expired_date = nil
 }
 
 // SetOwnerID sets the "owner" edge to the User entity by id.
@@ -4660,11 +4660,11 @@ func (m *TokenMutation) Fields() []string {
 	if m.name != nil {
 		fields = append(fields, token.FieldName)
 	}
-	if m.created_at != nil {
-		fields = append(fields, token.FieldCreatedAt)
+	if m.create_date != nil {
+		fields = append(fields, token.FieldCreateDate)
 	}
-	if m.expired_at != nil {
-		fields = append(fields, token.FieldExpiredAt)
+	if m.expired_date != nil {
+		fields = append(fields, token.FieldExpiredDate)
 	}
 	return fields
 }
@@ -4680,10 +4680,10 @@ func (m *TokenMutation) Field(name string) (ent.Value, bool) {
 		return m.GetType()
 	case token.FieldName:
 		return m.Name()
-	case token.FieldCreatedAt:
-		return m.CreatedAt()
-	case token.FieldExpiredAt:
-		return m.ExpiredAt()
+	case token.FieldCreateDate:
+		return m.CreateDate()
+	case token.FieldExpiredDate:
+		return m.ExpiredDate()
 	}
 	return nil, false
 }
@@ -4699,10 +4699,10 @@ func (m *TokenMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldType(ctx)
 	case token.FieldName:
 		return m.OldName(ctx)
-	case token.FieldCreatedAt:
-		return m.OldCreatedAt(ctx)
-	case token.FieldExpiredAt:
-		return m.OldExpiredAt(ctx)
+	case token.FieldCreateDate:
+		return m.OldCreateDate(ctx)
+	case token.FieldExpiredDate:
+		return m.OldExpiredDate(ctx)
 	}
 	return nil, fmt.Errorf("unknown Token field %s", name)
 }
@@ -4733,19 +4733,19 @@ func (m *TokenMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
-	case token.FieldCreatedAt:
+	case token.FieldCreateDate:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCreatedAt(v)
+		m.SetCreateDate(v)
 		return nil
-	case token.FieldExpiredAt:
+	case token.FieldExpiredDate:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetExpiredAt(v)
+		m.SetExpiredDate(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Token field %s", name)
@@ -4805,11 +4805,11 @@ func (m *TokenMutation) ResetField(name string) error {
 	case token.FieldName:
 		m.ResetName()
 		return nil
-	case token.FieldCreatedAt:
-		m.ResetCreatedAt()
+	case token.FieldCreateDate:
+		m.ResetCreateDate()
 		return nil
-	case token.FieldExpiredAt:
-		m.ResetExpiredAt()
+	case token.FieldExpiredDate:
+		m.ResetExpiredDate()
 		return nil
 	}
 	return fmt.Errorf("unknown Token field %s", name)

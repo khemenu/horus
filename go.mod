@@ -14,6 +14,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+require github.com/rs/xid v1.5.0 // indirect
+
 require (
 	ariga.io/atlas v0.15.1-0.20231110144547-3e8e2e192e6b // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect

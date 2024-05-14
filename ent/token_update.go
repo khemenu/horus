@@ -42,16 +42,16 @@ func (tu *TokenUpdate) SetNillableName(s *string) *TokenUpdate {
 	return tu
 }
 
-// SetExpiredAt sets the "expired_at" field.
-func (tu *TokenUpdate) SetExpiredAt(t time.Time) *TokenUpdate {
-	tu.mutation.SetExpiredAt(t)
+// SetExpiredDate sets the "expired_date" field.
+func (tu *TokenUpdate) SetExpiredDate(t time.Time) *TokenUpdate {
+	tu.mutation.SetExpiredDate(t)
 	return tu
 }
 
-// SetNillableExpiredAt sets the "expired_at" field if the given value is not nil.
-func (tu *TokenUpdate) SetNillableExpiredAt(t *time.Time) *TokenUpdate {
+// SetNillableExpiredDate sets the "expired_date" field if the given value is not nil.
+func (tu *TokenUpdate) SetNillableExpiredDate(t *time.Time) *TokenUpdate {
 	if t != nil {
-		tu.SetExpiredAt(*t)
+		tu.SetExpiredDate(*t)
 	}
 	return tu
 }
@@ -111,8 +111,8 @@ func (tu *TokenUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := tu.mutation.Name(); ok {
 		_spec.SetField(token.FieldName, field.TypeString, value)
 	}
-	if value, ok := tu.mutation.ExpiredAt(); ok {
-		_spec.SetField(token.FieldExpiredAt, field.TypeTime, value)
+	if value, ok := tu.mutation.ExpiredDate(); ok {
+		_spec.SetField(token.FieldExpiredDate, field.TypeTime, value)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -148,16 +148,16 @@ func (tuo *TokenUpdateOne) SetNillableName(s *string) *TokenUpdateOne {
 	return tuo
 }
 
-// SetExpiredAt sets the "expired_at" field.
-func (tuo *TokenUpdateOne) SetExpiredAt(t time.Time) *TokenUpdateOne {
-	tuo.mutation.SetExpiredAt(t)
+// SetExpiredDate sets the "expired_date" field.
+func (tuo *TokenUpdateOne) SetExpiredDate(t time.Time) *TokenUpdateOne {
+	tuo.mutation.SetExpiredDate(t)
 	return tuo
 }
 
-// SetNillableExpiredAt sets the "expired_at" field if the given value is not nil.
-func (tuo *TokenUpdateOne) SetNillableExpiredAt(t *time.Time) *TokenUpdateOne {
+// SetNillableExpiredDate sets the "expired_date" field if the given value is not nil.
+func (tuo *TokenUpdateOne) SetNillableExpiredDate(t *time.Time) *TokenUpdateOne {
 	if t != nil {
-		tuo.SetExpiredAt(*t)
+		tuo.SetExpiredDate(*t)
 	}
 	return tuo
 }
@@ -247,8 +247,8 @@ func (tuo *TokenUpdateOne) sqlSave(ctx context.Context) (_node *Token, err error
 	if value, ok := tuo.mutation.Name(); ok {
 		_spec.SetField(token.FieldName, field.TypeString, value)
 	}
-	if value, ok := tuo.mutation.ExpiredAt(); ok {
-		_spec.SetField(token.FieldExpiredAt, field.TypeTime, value)
+	if value, ok := tuo.mutation.ExpiredDate(); ok {
+		_spec.SetField(token.FieldExpiredDate, field.TypeTime, value)
 	}
 	_node = &Token{config: tuo.config}
 	_spec.Assign = _node.assignValues

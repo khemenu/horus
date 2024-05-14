@@ -33,11 +33,11 @@ func (Token) Fields() []ent.Field {
 			Default("").
 			Annotations(entproto.Field(5)),
 
-		field.Time("created_at").
+		field.Time("create_date").
 			Immutable().
 			Default(utcNow).
 			Annotations(entproto.Field(15)),
-		field.Time("expired_at").
+		field.Time("expired_date").
 			Annotations(entproto.Field(14)),
 	}
 }
