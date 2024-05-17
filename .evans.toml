@@ -1,0 +1,7 @@
+[default]
+package = "khepri.horus"
+
+[server]
+host = "localhost"
+port = 35122
+reflection = true

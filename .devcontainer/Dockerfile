@@ -13,6 +13,14 @@ RUN TEMP=$(mktemp -d) \
 	&& chmod 755 /usr/local/bin/protoc \
 	&& rm -rf "${TEMP}"
 
+RUN TEMP=$(mktemp -d) \
+	&& cd "${TEMP}" \
+	&& curl -o a.tar.gz -L "https://github.com/ktr0731/evans/releases/download/v0.10.11/evans_linux_$(dpkg --print-architecture).tar.gz" \
+	&& tar -xf a.tar.gz \
+	&& mv evans /usr/local/bin/. \
+	&& rm -rf "${TEMP}" \
+	&& evans --version
+
 	
 
 USER hypnos

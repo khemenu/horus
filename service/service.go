@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -95,6 +96,10 @@ func NewService(client *ent.Client) horus.Service {
 
 func UnaryInterceptor(svc horus.Service, db *ent.Client) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+		if strings.HasPrefix(info.FullMethod, "/khepri.horus.AuthService/") {
+			return handler(ctx, req)
+		}
+
 		token := horus.Must(ctx)
 
 		user, err := db.User.Get(ctx, uuid.UUID(token.Owner.Id))

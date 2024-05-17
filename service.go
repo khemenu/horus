@@ -19,6 +19,7 @@ type Store interface {
 }
 
 func GrpcRegister(svc Service, s *grpc.Server) {
+	RegisterAuthServiceServer(s, svc.Auth())
 	RegisterUserServiceServer(s, svc.User())
 	RegisterAccountServiceServer(s, svc.Account())
 	RegisterMembershipServiceServer(s, svc.Membership())

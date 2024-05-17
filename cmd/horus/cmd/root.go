@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -89,8 +90,19 @@ func Run(ctx context.Context, c *Config) error {
 		grpc.Creds(insecure.NewCredentials()),
 		grpc.ChainUnaryInterceptor(
 			log.UnaryInterceptor(l, slog.LevelInfo),
-			horus.AuthUnaryInterceptor(svc.Auth().TokenSignIn),
-			service.UnaryInterceptor(svc, db),
+			func() grpc.UnaryServerInterceptor {
+				auth_interceptor := horus.AuthUnaryInterceptor(svc.Auth().TokenSignIn)
+				svc_interceptor := service.UnaryInterceptor(svc, db)
+				return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+					if strings.HasPrefix(info.FullMethod, "/khepri.horus.AuthService/") {
+						return svc_interceptor(ctx, req, info, handler)
+					}
+
+					return auth_interceptor(ctx, req, info, func(ctx context.Context, req any) (any, error) {
+						return svc_interceptor(ctx, req, info, handler)
+					})
+				}
+			}(),
 		),
 	)
 	horus.GrpcRegister(svc, grpc_server)
@@ -119,7 +131,7 @@ func Run(ctx context.Context, c *Config) error {
 		err_http error
 	)
 
-	wg.Add(3)
+	wg.Add(2)
 	go func() {
 		defer wg.Done()
 		defer once.Do(shutdown)
@@ -137,8 +149,12 @@ func Run(ctx context.Context, c *Config) error {
 
 	graceful := make(chan struct{}, 1)
 	go func() {
-		sig := <-interrupt
-		l.Warn("interrupted", slog.String("signal", sig.String()))
+		select {
+		case sig := <-interrupt:
+			l.Warn("interrupted", slog.String("signal", sig.String()))
+		case <-graceful:
+			return
+		}
 		once.Do(shutdown)
 
 		l.Warn("force shutdown after 1 minute. interrupt once more to shutdown now.")
