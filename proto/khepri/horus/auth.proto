@@ -9,10 +9,19 @@ import "khepri/horus/horus.proto";
 option go_package = "khepri.dev/horus";
 
 service AuthService {
-	rpc BasicSignUp(BasicSignUpRequest) returns (BasicSignUpRseponse);
-	rpc BasicSignIn(BasicSignInRequest) returns (BasicSignInRseponse);
+	rpc BasicSignUp(BasicSignUpRequest) returns (BasicSignUpResponse);
+	rpc BasicSignIn(BasicSignInRequest) returns (BasicSignInResponse);
+
+	// Tests if given access token is valid and returns full info of the token if the token is valid one.
 	rpc TokenSignIn(TokenSignInRequest) returns (TokenSignInResponse);
+
+	// Issues an access token under given refresh token.
+	// Previous acces token under given refresh token is expired.
+	rpc Refresh(RefreshRequest) returns (RefreshResponse);
+
 	rpc VerifyOtp(VerifyOtpRequest) returns (VerifyOtpResponse);
+
+	// Expires given access token.
 	rpc SignOut(SingOutRequest) returns (SingOutResponse);
 }
 
@@ -20,7 +29,7 @@ message BasicSignUpRequest {
 	string username = 1;
 	string password = 2;
 }
-message BasicSignUpRseponse {
+message BasicSignUpResponse {
 	Token token = 1;
 }
 
@@ -28,8 +37,8 @@ message BasicSignInRequest {
 	string username = 1;
 	string password = 2;
 }
-message BasicSignInRseponse {
-	Token token = 1;
+message BasicSignInResponse {
+	Token token = 1; // Access token.
 }
 
 message TokenSignInRequest {
@@ -37,6 +46,13 @@ message TokenSignInRequest {
 }
 message TokenSignInResponse {
 	Token token = 1;
+}
+
+message RefreshRequest {
+	Token token = 1; // Refresh token.
+}
+message RefreshResponse {
+	Token token = 1; // Access token.
 }
 
 message VerifyOtpRequest {

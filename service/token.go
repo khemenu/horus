@@ -27,6 +27,8 @@ func (s *TokenService) Create(ctx context.Context, req *horus.CreateTokenRequest
 	switch req.Token.Type {
 	case horus.TokenTypeBasic:
 		return s.createBasic(ctx, req)
+	case horus.TokenTypeRefresh:
+		return s.createAccess(ctx, req)
 	case horus.TokenTypeAccess:
 		return s.createAccess(ctx, req)
 	default:
@@ -69,6 +71,23 @@ func (s *TokenService) createBasic(ctx context.Context, req *horus.CreateTokenRe
 	return token, nil
 }
 
+func (s *TokenService) createRefresh(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
+	f := frame.Must(ctx)
+	v, err := s.generateToken()
+	if err != nil {
+		return nil, fmt.Errorf("generate token: %w", err)
+	}
+
+	return s.bare.Token().Create(ctx, &horus.CreateTokenRequest{
+		Token: &horus.Token{
+			Value:       v,
+			Type:        horus.TokenTypeRefresh,
+			DateExpired: timestamppb.New(time.Now().Add(24 * time.Hour)),
+			Owner:       &horus.User{Id: f.Actor.ID[:]},
+		},
+	})
+}
+
 func (s *TokenService) createAccess(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
 	f := frame.Must(ctx)
 	v, err := s.generateToken()
@@ -80,8 +99,9 @@ func (s *TokenService) createAccess(ctx context.Context, req *horus.CreateTokenR
 		Token: &horus.Token{
 			Value:       v,
 			Type:        horus.TokenTypeAccess,
-			ExpiredDate: timestamppb.New(time.Now().Add(24 * time.Hour)),
+			DateExpired: timestamppb.New(time.Now().Add(24 * time.Hour)),
 			Owner:       &horus.User{Id: f.Actor.ID[:]},
+			Parent:      req.Token.GetParent(),
 		},
 	})
 }
@@ -143,7 +163,7 @@ func (s *TokenService) Delete(ctx context.Context, req *horus.DeleteTokenRequest
 		return nil, status.Error(codes.NotFound, "not found")
 	}
 
-	token.ExpiredDate = timestamppb.Now()
+	token.DateExpired = timestamppb.Now()
 	if _, err := s.bare.Token().Update(ctx, &horus.UpdateTokenRequest{Token: token}); err != nil {
 		return nil, fmt.Errorf("update token expired date: %w", err)
 	}

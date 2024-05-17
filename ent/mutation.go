@@ -4277,20 +4277,25 @@ func (m *TeamMutation) ResetEdge(name string) error {
 // TokenMutation represents an operation that mutates the Token nodes in the graph.
 type TokenMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	value         *string
-	_type         *string
-	name          *string
-	create_date   *time.Time
-	expired_date  *time.Time
-	clearedFields map[string]struct{}
-	owner         *uuid.UUID
-	clearedowner  bool
-	done          bool
-	oldValue      func(context.Context) (*Token, error)
-	predicates    []predicate.Token
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	value           *string
+	_type           *string
+	name            *string
+	date_created    *time.Time
+	date_expired    *time.Time
+	clearedFields   map[string]struct{}
+	owner           *uuid.UUID
+	clearedowner    bool
+	parent          *uuid.UUID
+	clearedparent   bool
+	children        map[uuid.UUID]struct{}
+	removedchildren map[uuid.UUID]struct{}
+	clearedchildren bool
+	done            bool
+	oldValue        func(context.Context) (*Token, error)
+	predicates      []predicate.Token
 }
 
 var _ ent.Mutation = (*TokenMutation)(nil)
@@ -4505,76 +4510,76 @@ func (m *TokenMutation) ResetName() {
 	m.name = nil
 }
 
-// SetCreateDate sets the "create_date" field.
-func (m *TokenMutation) SetCreateDate(t time.Time) {
-	m.create_date = &t
+// SetDateCreated sets the "date_created" field.
+func (m *TokenMutation) SetDateCreated(t time.Time) {
+	m.date_created = &t
 }
 
-// CreateDate returns the value of the "create_date" field in the mutation.
-func (m *TokenMutation) CreateDate() (r time.Time, exists bool) {
-	v := m.create_date
+// DateCreated returns the value of the "date_created" field in the mutation.
+func (m *TokenMutation) DateCreated() (r time.Time, exists bool) {
+	v := m.date_created
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCreateDate returns the old "create_date" field's value of the Token entity.
+// OldDateCreated returns the old "date_created" field's value of the Token entity.
 // If the Token object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TokenMutation) OldCreateDate(ctx context.Context) (v time.Time, err error) {
+func (m *TokenMutation) OldDateCreated(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreateDate is only allowed on UpdateOne operations")
+		return v, errors.New("OldDateCreated is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreateDate requires an ID field in the mutation")
+		return v, errors.New("OldDateCreated requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreateDate: %w", err)
+		return v, fmt.Errorf("querying old value for OldDateCreated: %w", err)
 	}
-	return oldValue.CreateDate, nil
+	return oldValue.DateCreated, nil
 }
 
-// ResetCreateDate resets all changes to the "create_date" field.
-func (m *TokenMutation) ResetCreateDate() {
-	m.create_date = nil
+// ResetDateCreated resets all changes to the "date_created" field.
+func (m *TokenMutation) ResetDateCreated() {
+	m.date_created = nil
 }
 
-// SetExpiredDate sets the "expired_date" field.
-func (m *TokenMutation) SetExpiredDate(t time.Time) {
-	m.expired_date = &t
+// SetDateExpired sets the "date_expired" field.
+func (m *TokenMutation) SetDateExpired(t time.Time) {
+	m.date_expired = &t
 }
 
-// ExpiredDate returns the value of the "expired_date" field in the mutation.
-func (m *TokenMutation) ExpiredDate() (r time.Time, exists bool) {
-	v := m.expired_date
+// DateExpired returns the value of the "date_expired" field in the mutation.
+func (m *TokenMutation) DateExpired() (r time.Time, exists bool) {
+	v := m.date_expired
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldExpiredDate returns the old "expired_date" field's value of the Token entity.
+// OldDateExpired returns the old "date_expired" field's value of the Token entity.
 // If the Token object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TokenMutation) OldExpiredDate(ctx context.Context) (v time.Time, err error) {
+func (m *TokenMutation) OldDateExpired(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldExpiredDate is only allowed on UpdateOne operations")
+		return v, errors.New("OldDateExpired is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldExpiredDate requires an ID field in the mutation")
+		return v, errors.New("OldDateExpired requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldExpiredDate: %w", err)
+		return v, fmt.Errorf("querying old value for OldDateExpired: %w", err)
 	}
-	return oldValue.ExpiredDate, nil
+	return oldValue.DateExpired, nil
 }
 
-// ResetExpiredDate resets all changes to the "expired_date" field.
-func (m *TokenMutation) ResetExpiredDate() {
-	m.expired_date = nil
+// ResetDateExpired resets all changes to the "date_expired" field.
+func (m *TokenMutation) ResetDateExpired() {
+	m.date_expired = nil
 }
 
 // SetOwnerID sets the "owner" edge to the User entity by id.
@@ -4614,6 +4619,99 @@ func (m *TokenMutation) OwnerIDs() (ids []uuid.UUID) {
 func (m *TokenMutation) ResetOwner() {
 	m.owner = nil
 	m.clearedowner = false
+}
+
+// SetParentID sets the "parent" edge to the Token entity by id.
+func (m *TokenMutation) SetParentID(id uuid.UUID) {
+	m.parent = &id
+}
+
+// ClearParent clears the "parent" edge to the Token entity.
+func (m *TokenMutation) ClearParent() {
+	m.clearedparent = true
+}
+
+// ParentCleared reports if the "parent" edge to the Token entity was cleared.
+func (m *TokenMutation) ParentCleared() bool {
+	return m.clearedparent
+}
+
+// ParentID returns the "parent" edge ID in the mutation.
+func (m *TokenMutation) ParentID() (id uuid.UUID, exists bool) {
+	if m.parent != nil {
+		return *m.parent, true
+	}
+	return
+}
+
+// ParentIDs returns the "parent" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ParentID instead. It exists only for internal usage by the builders.
+func (m *TokenMutation) ParentIDs() (ids []uuid.UUID) {
+	if id := m.parent; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetParent resets all changes to the "parent" edge.
+func (m *TokenMutation) ResetParent() {
+	m.parent = nil
+	m.clearedparent = false
+}
+
+// AddChildIDs adds the "children" edge to the Token entity by ids.
+func (m *TokenMutation) AddChildIDs(ids ...uuid.UUID) {
+	if m.children == nil {
+		m.children = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.children[ids[i]] = struct{}{}
+	}
+}
+
+// ClearChildren clears the "children" edge to the Token entity.
+func (m *TokenMutation) ClearChildren() {
+	m.clearedchildren = true
+}
+
+// ChildrenCleared reports if the "children" edge to the Token entity was cleared.
+func (m *TokenMutation) ChildrenCleared() bool {
+	return m.clearedchildren
+}
+
+// RemoveChildIDs removes the "children" edge to the Token entity by IDs.
+func (m *TokenMutation) RemoveChildIDs(ids ...uuid.UUID) {
+	if m.removedchildren == nil {
+		m.removedchildren = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.children, ids[i])
+		m.removedchildren[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedChildren returns the removed IDs of the "children" edge to the Token entity.
+func (m *TokenMutation) RemovedChildrenIDs() (ids []uuid.UUID) {
+	for id := range m.removedchildren {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ChildrenIDs returns the "children" edge IDs in the mutation.
+func (m *TokenMutation) ChildrenIDs() (ids []uuid.UUID) {
+	for id := range m.children {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetChildren resets all changes to the "children" edge.
+func (m *TokenMutation) ResetChildren() {
+	m.children = nil
+	m.clearedchildren = false
+	m.removedchildren = nil
 }
 
 // Where appends a list predicates to the TokenMutation builder.
@@ -4660,11 +4758,11 @@ func (m *TokenMutation) Fields() []string {
 	if m.name != nil {
 		fields = append(fields, token.FieldName)
 	}
-	if m.create_date != nil {
-		fields = append(fields, token.FieldCreateDate)
+	if m.date_created != nil {
+		fields = append(fields, token.FieldDateCreated)
 	}
-	if m.expired_date != nil {
-		fields = append(fields, token.FieldExpiredDate)
+	if m.date_expired != nil {
+		fields = append(fields, token.FieldDateExpired)
 	}
 	return fields
 }
@@ -4680,10 +4778,10 @@ func (m *TokenMutation) Field(name string) (ent.Value, bool) {
 		return m.GetType()
 	case token.FieldName:
 		return m.Name()
-	case token.FieldCreateDate:
-		return m.CreateDate()
-	case token.FieldExpiredDate:
-		return m.ExpiredDate()
+	case token.FieldDateCreated:
+		return m.DateCreated()
+	case token.FieldDateExpired:
+		return m.DateExpired()
 	}
 	return nil, false
 }
@@ -4699,10 +4797,10 @@ func (m *TokenMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldType(ctx)
 	case token.FieldName:
 		return m.OldName(ctx)
-	case token.FieldCreateDate:
-		return m.OldCreateDate(ctx)
-	case token.FieldExpiredDate:
-		return m.OldExpiredDate(ctx)
+	case token.FieldDateCreated:
+		return m.OldDateCreated(ctx)
+	case token.FieldDateExpired:
+		return m.OldDateExpired(ctx)
 	}
 	return nil, fmt.Errorf("unknown Token field %s", name)
 }
@@ -4733,19 +4831,19 @@ func (m *TokenMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
-	case token.FieldCreateDate:
+	case token.FieldDateCreated:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCreateDate(v)
+		m.SetDateCreated(v)
 		return nil
-	case token.FieldExpiredDate:
+	case token.FieldDateExpired:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetExpiredDate(v)
+		m.SetDateExpired(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Token field %s", name)
@@ -4805,11 +4903,11 @@ func (m *TokenMutation) ResetField(name string) error {
 	case token.FieldName:
 		m.ResetName()
 		return nil
-	case token.FieldCreateDate:
-		m.ResetCreateDate()
+	case token.FieldDateCreated:
+		m.ResetDateCreated()
 		return nil
-	case token.FieldExpiredDate:
-		m.ResetExpiredDate()
+	case token.FieldDateExpired:
+		m.ResetDateExpired()
 		return nil
 	}
 	return fmt.Errorf("unknown Token field %s", name)
@@ -4817,9 +4915,15 @@ func (m *TokenMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TokenMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.owner != nil {
 		edges = append(edges, token.EdgeOwner)
+	}
+	if m.parent != nil {
+		edges = append(edges, token.EdgeParent)
+	}
+	if m.children != nil {
+		edges = append(edges, token.EdgeChildren)
 	}
 	return edges
 }
@@ -4832,27 +4936,54 @@ func (m *TokenMutation) AddedIDs(name string) []ent.Value {
 		if id := m.owner; id != nil {
 			return []ent.Value{*id}
 		}
+	case token.EdgeParent:
+		if id := m.parent; id != nil {
+			return []ent.Value{*id}
+		}
+	case token.EdgeChildren:
+		ids := make([]ent.Value, 0, len(m.children))
+		for id := range m.children {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TokenMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
+	if m.removedchildren != nil {
+		edges = append(edges, token.EdgeChildren)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *TokenMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case token.EdgeChildren:
+		ids := make([]ent.Value, 0, len(m.removedchildren))
+		for id := range m.removedchildren {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TokenMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.clearedowner {
 		edges = append(edges, token.EdgeOwner)
+	}
+	if m.clearedparent {
+		edges = append(edges, token.EdgeParent)
+	}
+	if m.clearedchildren {
+		edges = append(edges, token.EdgeChildren)
 	}
 	return edges
 }
@@ -4863,6 +4994,10 @@ func (m *TokenMutation) EdgeCleared(name string) bool {
 	switch name {
 	case token.EdgeOwner:
 		return m.clearedowner
+	case token.EdgeParent:
+		return m.clearedparent
+	case token.EdgeChildren:
+		return m.clearedchildren
 	}
 	return false
 }
@@ -4874,6 +5009,9 @@ func (m *TokenMutation) ClearEdge(name string) error {
 	case token.EdgeOwner:
 		m.ClearOwner()
 		return nil
+	case token.EdgeParent:
+		m.ClearParent()
+		return nil
 	}
 	return fmt.Errorf("unknown Token unique edge %s", name)
 }
@@ -4884,6 +5022,12 @@ func (m *TokenMutation) ResetEdge(name string) error {
 	switch name {
 	case token.EdgeOwner:
 		m.ResetOwner()
+		return nil
+	case token.EdgeParent:
+		m.ResetParent()
+		return nil
+	case token.EdgeChildren:
+		m.ResetChildren()
 		return nil
 	}
 	return fmt.Errorf("unknown Token edge %s", name)

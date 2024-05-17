@@ -71,14 +71,14 @@ func Name(v string) predicate.Token {
 	return predicate.Token(sql.FieldEQ(FieldName, v))
 }
 
-// CreateDate applies equality check predicate on the "create_date" field. It's identical to CreateDateEQ.
-func CreateDate(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldEQ(FieldCreateDate, v))
+// DateCreated applies equality check predicate on the "date_created" field. It's identical to DateCreatedEQ.
+func DateCreated(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldDateCreated, v))
 }
 
-// ExpiredDate applies equality check predicate on the "expired_date" field. It's identical to ExpiredDateEQ.
-func ExpiredDate(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldEQ(FieldExpiredDate, v))
+// DateExpired applies equality check predicate on the "date_expired" field. It's identical to DateExpiredEQ.
+func DateExpired(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldDateExpired, v))
 }
 
 // ValueEQ applies the EQ predicate on the "value" field.
@@ -276,84 +276,84 @@ func NameContainsFold(v string) predicate.Token {
 	return predicate.Token(sql.FieldContainsFold(FieldName, v))
 }
 
-// CreateDateEQ applies the EQ predicate on the "create_date" field.
-func CreateDateEQ(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldEQ(FieldCreateDate, v))
+// DateCreatedEQ applies the EQ predicate on the "date_created" field.
+func DateCreatedEQ(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldDateCreated, v))
 }
 
-// CreateDateNEQ applies the NEQ predicate on the "create_date" field.
-func CreateDateNEQ(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldNEQ(FieldCreateDate, v))
+// DateCreatedNEQ applies the NEQ predicate on the "date_created" field.
+func DateCreatedNEQ(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldNEQ(FieldDateCreated, v))
 }
 
-// CreateDateIn applies the In predicate on the "create_date" field.
-func CreateDateIn(vs ...time.Time) predicate.Token {
-	return predicate.Token(sql.FieldIn(FieldCreateDate, vs...))
+// DateCreatedIn applies the In predicate on the "date_created" field.
+func DateCreatedIn(vs ...time.Time) predicate.Token {
+	return predicate.Token(sql.FieldIn(FieldDateCreated, vs...))
 }
 
-// CreateDateNotIn applies the NotIn predicate on the "create_date" field.
-func CreateDateNotIn(vs ...time.Time) predicate.Token {
-	return predicate.Token(sql.FieldNotIn(FieldCreateDate, vs...))
+// DateCreatedNotIn applies the NotIn predicate on the "date_created" field.
+func DateCreatedNotIn(vs ...time.Time) predicate.Token {
+	return predicate.Token(sql.FieldNotIn(FieldDateCreated, vs...))
 }
 
-// CreateDateGT applies the GT predicate on the "create_date" field.
-func CreateDateGT(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldGT(FieldCreateDate, v))
+// DateCreatedGT applies the GT predicate on the "date_created" field.
+func DateCreatedGT(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldGT(FieldDateCreated, v))
 }
 
-// CreateDateGTE applies the GTE predicate on the "create_date" field.
-func CreateDateGTE(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldGTE(FieldCreateDate, v))
+// DateCreatedGTE applies the GTE predicate on the "date_created" field.
+func DateCreatedGTE(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldGTE(FieldDateCreated, v))
 }
 
-// CreateDateLT applies the LT predicate on the "create_date" field.
-func CreateDateLT(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldLT(FieldCreateDate, v))
+// DateCreatedLT applies the LT predicate on the "date_created" field.
+func DateCreatedLT(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldLT(FieldDateCreated, v))
 }
 
-// CreateDateLTE applies the LTE predicate on the "create_date" field.
-func CreateDateLTE(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldLTE(FieldCreateDate, v))
+// DateCreatedLTE applies the LTE predicate on the "date_created" field.
+func DateCreatedLTE(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldLTE(FieldDateCreated, v))
 }
 
-// ExpiredDateEQ applies the EQ predicate on the "expired_date" field.
-func ExpiredDateEQ(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldEQ(FieldExpiredDate, v))
+// DateExpiredEQ applies the EQ predicate on the "date_expired" field.
+func DateExpiredEQ(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldDateExpired, v))
 }
 
-// ExpiredDateNEQ applies the NEQ predicate on the "expired_date" field.
-func ExpiredDateNEQ(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldNEQ(FieldExpiredDate, v))
+// DateExpiredNEQ applies the NEQ predicate on the "date_expired" field.
+func DateExpiredNEQ(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldNEQ(FieldDateExpired, v))
 }
 
-// ExpiredDateIn applies the In predicate on the "expired_date" field.
-func ExpiredDateIn(vs ...time.Time) predicate.Token {
-	return predicate.Token(sql.FieldIn(FieldExpiredDate, vs...))
+// DateExpiredIn applies the In predicate on the "date_expired" field.
+func DateExpiredIn(vs ...time.Time) predicate.Token {
+	return predicate.Token(sql.FieldIn(FieldDateExpired, vs...))
 }
 
-// ExpiredDateNotIn applies the NotIn predicate on the "expired_date" field.
-func ExpiredDateNotIn(vs ...time.Time) predicate.Token {
-	return predicate.Token(sql.FieldNotIn(FieldExpiredDate, vs...))
+// DateExpiredNotIn applies the NotIn predicate on the "date_expired" field.
+func DateExpiredNotIn(vs ...time.Time) predicate.Token {
+	return predicate.Token(sql.FieldNotIn(FieldDateExpired, vs...))
 }
 
-// ExpiredDateGT applies the GT predicate on the "expired_date" field.
-func ExpiredDateGT(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldGT(FieldExpiredDate, v))
+// DateExpiredGT applies the GT predicate on the "date_expired" field.
+func DateExpiredGT(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldGT(FieldDateExpired, v))
 }
 
-// ExpiredDateGTE applies the GTE predicate on the "expired_date" field.
-func ExpiredDateGTE(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldGTE(FieldExpiredDate, v))
+// DateExpiredGTE applies the GTE predicate on the "date_expired" field.
+func DateExpiredGTE(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldGTE(FieldDateExpired, v))
 }
 
-// ExpiredDateLT applies the LT predicate on the "expired_date" field.
-func ExpiredDateLT(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldLT(FieldExpiredDate, v))
+// DateExpiredLT applies the LT predicate on the "date_expired" field.
+func DateExpiredLT(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldLT(FieldDateExpired, v))
 }
 
-// ExpiredDateLTE applies the LTE predicate on the "expired_date" field.
-func ExpiredDateLTE(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldLTE(FieldExpiredDate, v))
+// DateExpiredLTE applies the LTE predicate on the "date_expired" field.
+func DateExpiredLTE(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldLTE(FieldDateExpired, v))
 }
 
 // HasOwner applies the HasEdge predicate on the "owner" edge.
@@ -371,6 +371,52 @@ func HasOwner() predicate.Token {
 func HasOwnerWith(preds ...predicate.User) predicate.Token {
 	return predicate.Token(func(s *sql.Selector) {
 		step := newOwnerStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasParent applies the HasEdge predicate on the "parent" edge.
+func HasParent() predicate.Token {
+	return predicate.Token(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ParentTable, ParentColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasParentWith applies the HasEdge predicate on the "parent" edge with a given conditions (other predicates).
+func HasParentWith(preds ...predicate.Token) predicate.Token {
+	return predicate.Token(func(s *sql.Selector) {
+		step := newParentStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasChildren applies the HasEdge predicate on the "children" edge.
+func HasChildren() predicate.Token {
+	return predicate.Token(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ChildrenTable, ChildrenColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasChildrenWith applies the HasEdge predicate on the "children" edge with a given conditions (other predicates).
+func HasChildrenWith(preds ...predicate.Token) predicate.Token {
+	return predicate.Token(func(s *sql.Selector) {
+		step := newChildrenStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

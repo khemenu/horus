@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -19,12 +20,14 @@ import (
 // TokenQuery is the builder for querying Token entities.
 type TokenQuery struct {
 	config
-	ctx        *QueryContext
-	order      []token.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Token
-	withOwner  *UserQuery
-	withFKs    bool
+	ctx          *QueryContext
+	order        []token.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.Token
+	withOwner    *UserQuery
+	withParent   *TokenQuery
+	withChildren *TokenQuery
+	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,6 +79,50 @@ func (tq *TokenQuery) QueryOwner() *UserQuery {
 			sqlgraph.From(token.Table, token.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, token.OwnerTable, token.OwnerColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryParent chains the current query on the "parent" edge.
+func (tq *TokenQuery) QueryParent() *TokenQuery {
+	query := (&TokenClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(token.Table, token.FieldID, selector),
+			sqlgraph.To(token.Table, token.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, token.ParentTable, token.ParentColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryChildren chains the current query on the "children" edge.
+func (tq *TokenQuery) QueryChildren() *TokenQuery {
+	query := (&TokenClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(token.Table, token.FieldID, selector),
+			sqlgraph.To(token.Table, token.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, token.ChildrenTable, token.ChildrenColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -270,12 +317,14 @@ func (tq *TokenQuery) Clone() *TokenQuery {
 		return nil
 	}
 	return &TokenQuery{
-		config:     tq.config,
-		ctx:        tq.ctx.Clone(),
-		order:      append([]token.OrderOption{}, tq.order...),
-		inters:     append([]Interceptor{}, tq.inters...),
-		predicates: append([]predicate.Token{}, tq.predicates...),
-		withOwner:  tq.withOwner.Clone(),
+		config:       tq.config,
+		ctx:          tq.ctx.Clone(),
+		order:        append([]token.OrderOption{}, tq.order...),
+		inters:       append([]Interceptor{}, tq.inters...),
+		predicates:   append([]predicate.Token{}, tq.predicates...),
+		withOwner:    tq.withOwner.Clone(),
+		withParent:   tq.withParent.Clone(),
+		withChildren: tq.withChildren.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
@@ -290,6 +339,28 @@ func (tq *TokenQuery) WithOwner(opts ...func(*UserQuery)) *TokenQuery {
 		opt(query)
 	}
 	tq.withOwner = query
+	return tq
+}
+
+// WithParent tells the query-builder to eager-load the nodes that are connected to
+// the "parent" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TokenQuery) WithParent(opts ...func(*TokenQuery)) *TokenQuery {
+	query := (&TokenClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withParent = query
+	return tq
+}
+
+// WithChildren tells the query-builder to eager-load the nodes that are connected to
+// the "children" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TokenQuery) WithChildren(opts ...func(*TokenQuery)) *TokenQuery {
+	query := (&TokenClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withChildren = query
 	return tq
 }
 
@@ -372,11 +443,13 @@ func (tq *TokenQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Token,
 		nodes       = []*Token{}
 		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [3]bool{
 			tq.withOwner != nil,
+			tq.withParent != nil,
+			tq.withChildren != nil,
 		}
 	)
-	if tq.withOwner != nil {
+	if tq.withOwner != nil || tq.withParent != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -403,6 +476,19 @@ func (tq *TokenQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Token,
 	if query := tq.withOwner; query != nil {
 		if err := tq.loadOwner(ctx, query, nodes, nil,
 			func(n *Token, e *User) { n.Edges.Owner = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withParent; query != nil {
+		if err := tq.loadParent(ctx, query, nodes, nil,
+			func(n *Token, e *Token) { n.Edges.Parent = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withChildren; query != nil {
+		if err := tq.loadChildren(ctx, query, nodes,
+			func(n *Token) { n.Edges.Children = []*Token{} },
+			func(n *Token, e *Token) { n.Edges.Children = append(n.Edges.Children, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -438,6 +524,69 @@ func (tq *TokenQuery) loadOwner(ctx context.Context, query *UserQuery, nodes []*
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (tq *TokenQuery) loadParent(ctx context.Context, query *TokenQuery, nodes []*Token, init func(*Token), assign func(*Token, *Token)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Token)
+	for i := range nodes {
+		if nodes[i].token_children == nil {
+			continue
+		}
+		fk := *nodes[i].token_children
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(token.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "token_children" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (tq *TokenQuery) loadChildren(ctx context.Context, query *TokenQuery, nodes []*Token, init func(*Token), assign func(*Token, *Token)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Token)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Token(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(token.ChildrenColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.token_children
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "token_children" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "token_children" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

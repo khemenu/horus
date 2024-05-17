@@ -65,6 +65,12 @@ type base struct {
 	keyer tokens.Keyer
 }
 
+func (b *base) withClient(client *ent.Client) *base {
+	b_ := *b
+	b_.client = client
+	return &b_
+}
+
 func NewService(client *ent.Client) horus.Service {
 	b := &base{
 		client: client,

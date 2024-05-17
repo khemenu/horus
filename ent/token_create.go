@@ -48,23 +48,23 @@ func (tc *TokenCreate) SetNillableName(s *string) *TokenCreate {
 	return tc
 }
 
-// SetCreateDate sets the "create_date" field.
-func (tc *TokenCreate) SetCreateDate(t time.Time) *TokenCreate {
-	tc.mutation.SetCreateDate(t)
+// SetDateCreated sets the "date_created" field.
+func (tc *TokenCreate) SetDateCreated(t time.Time) *TokenCreate {
+	tc.mutation.SetDateCreated(t)
 	return tc
 }
 
-// SetNillableCreateDate sets the "create_date" field if the given value is not nil.
-func (tc *TokenCreate) SetNillableCreateDate(t *time.Time) *TokenCreate {
+// SetNillableDateCreated sets the "date_created" field if the given value is not nil.
+func (tc *TokenCreate) SetNillableDateCreated(t *time.Time) *TokenCreate {
 	if t != nil {
-		tc.SetCreateDate(*t)
+		tc.SetDateCreated(*t)
 	}
 	return tc
 }
 
-// SetExpiredDate sets the "expired_date" field.
-func (tc *TokenCreate) SetExpiredDate(t time.Time) *TokenCreate {
-	tc.mutation.SetExpiredDate(t)
+// SetDateExpired sets the "date_expired" field.
+func (tc *TokenCreate) SetDateExpired(t time.Time) *TokenCreate {
+	tc.mutation.SetDateExpired(t)
 	return tc
 }
 
@@ -91,6 +91,40 @@ func (tc *TokenCreate) SetOwnerID(id uuid.UUID) *TokenCreate {
 // SetOwner sets the "owner" edge to the User entity.
 func (tc *TokenCreate) SetOwner(u *User) *TokenCreate {
 	return tc.SetOwnerID(u.ID)
+}
+
+// SetParentID sets the "parent" edge to the Token entity by ID.
+func (tc *TokenCreate) SetParentID(id uuid.UUID) *TokenCreate {
+	tc.mutation.SetParentID(id)
+	return tc
+}
+
+// SetNillableParentID sets the "parent" edge to the Token entity by ID if the given value is not nil.
+func (tc *TokenCreate) SetNillableParentID(id *uuid.UUID) *TokenCreate {
+	if id != nil {
+		tc = tc.SetParentID(*id)
+	}
+	return tc
+}
+
+// SetParent sets the "parent" edge to the Token entity.
+func (tc *TokenCreate) SetParent(t *Token) *TokenCreate {
+	return tc.SetParentID(t.ID)
+}
+
+// AddChildIDs adds the "children" edge to the Token entity by IDs.
+func (tc *TokenCreate) AddChildIDs(ids ...uuid.UUID) *TokenCreate {
+	tc.mutation.AddChildIDs(ids...)
+	return tc
+}
+
+// AddChildren adds the "children" edges to the Token entity.
+func (tc *TokenCreate) AddChildren(t ...*Token) *TokenCreate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tc.AddChildIDs(ids...)
 }
 
 // Mutation returns the TokenMutation object of the builder.
@@ -132,9 +166,9 @@ func (tc *TokenCreate) defaults() {
 		v := token.DefaultName
 		tc.mutation.SetName(v)
 	}
-	if _, ok := tc.mutation.CreateDate(); !ok {
-		v := token.DefaultCreateDate()
-		tc.mutation.SetCreateDate(v)
+	if _, ok := tc.mutation.DateCreated(); !ok {
+		v := token.DefaultDateCreated()
+		tc.mutation.SetDateCreated(v)
 	}
 	if _, ok := tc.mutation.ID(); !ok {
 		v := token.DefaultID()
@@ -163,11 +197,11 @@ func (tc *TokenCreate) check() error {
 	if _, ok := tc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Token.name"`)}
 	}
-	if _, ok := tc.mutation.CreateDate(); !ok {
-		return &ValidationError{Name: "create_date", err: errors.New(`ent: missing required field "Token.create_date"`)}
+	if _, ok := tc.mutation.DateCreated(); !ok {
+		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Token.date_created"`)}
 	}
-	if _, ok := tc.mutation.ExpiredDate(); !ok {
-		return &ValidationError{Name: "expired_date", err: errors.New(`ent: missing required field "Token.expired_date"`)}
+	if _, ok := tc.mutation.DateExpired(); !ok {
+		return &ValidationError{Name: "date_expired", err: errors.New(`ent: missing required field "Token.date_expired"`)}
 	}
 	if _, ok := tc.mutation.OwnerID(); !ok {
 		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "Token.owner"`)}
@@ -219,13 +253,13 @@ func (tc *TokenCreate) createSpec() (*Token, *sqlgraph.CreateSpec) {
 		_spec.SetField(token.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := tc.mutation.CreateDate(); ok {
-		_spec.SetField(token.FieldCreateDate, field.TypeTime, value)
-		_node.CreateDate = value
+	if value, ok := tc.mutation.DateCreated(); ok {
+		_spec.SetField(token.FieldDateCreated, field.TypeTime, value)
+		_node.DateCreated = value
 	}
-	if value, ok := tc.mutation.ExpiredDate(); ok {
-		_spec.SetField(token.FieldExpiredDate, field.TypeTime, value)
-		_node.ExpiredDate = value
+	if value, ok := tc.mutation.DateExpired(); ok {
+		_spec.SetField(token.FieldDateExpired, field.TypeTime, value)
+		_node.DateExpired = value
 	}
 	if nodes := tc.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -242,6 +276,39 @@ func (tc *TokenCreate) createSpec() (*Token, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_tokens = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.ParentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   token.ParentTable,
+			Columns: []string{token.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(token.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.token_children = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   token.ChildrenTable,
+			Columns: []string{token.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(token.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

@@ -12,6 +12,7 @@ import (
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/token"
 	"khepri.dev/horus/ent/user"
+	"khepri.dev/horus/internal/entutils"
 	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/service/bare"
 	"khepri.dev/horus/service/frame"
@@ -23,7 +24,7 @@ type AuthService struct {
 	*base
 }
 
-func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInRequest) (*horus.BasicSignInRseponse, error) {
+func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInRequest) (*horus.BasicSignInResponse, error) {
 	u, err := s.client.User.Query().
 		Where(user.NameEQ(req.Username)).
 		Only(ctx)
@@ -65,7 +66,9 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 		return nil, fmt.Errorf("create access token: %w", err)
 	}
 
-	return &horus.BasicSignInRseponse{Token: access_token}, nil
+	return &horus.BasicSignInResponse{
+		Token: access_token,
+	}, nil
 }
 
 func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInRequest) (*horus.TokenSignInResponse, error) {
@@ -86,20 +89,68 @@ func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInReq
 		return nil, fmt.Errorf("query token: %w", err)
 	}
 
-	return &horus.TokenSignInResponse{Token: fx.Must(bare.ToProtoToken(token))}, nil
+	return &horus.TokenSignInResponse{
+		Token: fx.Must(bare.ToProtoToken(token)),
+	}, nil
+}
+
+func (s *AuthService) Refresh(ctx context.Context, req *horus.RefreshRequest) (*horus.RefreshResponse, error) {
+	return entutils.WithTxV(ctx, s.client, func(tx *ent.Tx) (*horus.RefreshResponse, error) {
+		refresh_token, err := tx.Token.Query().
+			Where(token.And(
+				token.ValueEQ(req.Token.Value),
+				token.Type(horus.TokenTypeRefresh),
+				token.DateExpiredGT(time.Now()),
+			)).
+			Only(ctx)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return nil, status.Error(codes.Unauthenticated, "invalid token")
+			}
+
+			return nil, fmt.Errorf("query token: %w", err)
+		}
+
+		now := time.Now()
+		if _, err := tx.Token.Update().
+			Where(token.And(
+				token.Type(horus.TokenTypeAccess),
+				token.HasParentWith(token.ID(refresh_token.ID)),
+				token.DateExpiredGT(now),
+			)).
+			SetDateExpired(now).
+			Save(ctx); err != nil {
+			if ent.IsNotFound(err) {
+				return nil, status.Error(codes.Unauthenticated, "expires previous tokens")
+			}
+
+			return nil, fmt.Errorf("update token: %w", err)
+		}
+
+		ctx = frame.WithContext(ctx, &frame.Frame{Actor: refresh_token.Edges.Owner})
+		access_token, err := (&TokenService{base: s.withClient(tx.Client())}).Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
+			Type:   horus.TokenTypeAccess,
+			Parent: &horus.Token{Id: refresh_token.ID[:]},
+		}})
+		if err != nil {
+			return nil, fmt.Errorf("create access token: %w", err)
+		}
+
+		return &horus.RefreshResponse{
+			Token: access_token,
+		}, nil
+	})
 }
 
 func (s *AuthService) VerifyOtp(ctx context.Context, req *horus.VerifyOtpRequest) (*horus.VerifyOtpResponse, error) {
 	now := time.Now()
 	n, err := s.client.Token.Update().
-		Where(
-			token.And(
-				token.ValueEQ(req.Value),
-				token.Type(horus.TokenTypeOtp),
-				token.ExpiredDateGT(now),
-			),
-		).
-		SetExpiredDate(now).
+		Where(token.And(
+			token.ValueEQ(req.Value),
+			token.Type(horus.TokenTypeOtp),
+			token.DateCreatedGT(now),
+		)).
+		SetDateExpired(now).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("update token: %w", err)

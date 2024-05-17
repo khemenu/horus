@@ -1,15 +1,21 @@
 ---
 lint:
+  files:
+    exclude:
+      - proto/khepri/horus/horus.proto
+
   rules:
     all_default: true
 
     remove:
       - MAX_LINE_LENGTH
-      - FIELD_NAMES_EXCLUDE_PREPOSITIONS
       - MESSAGES_HAVE_COMMENT
-      - FILE_HAS_COMMENT
 
   rules_option:
+    max_line_length:
+      # max_chars: inf
+      tab_chars: 4
+
     indent:
       style: tab
       not_insert_newline: true
@@ -20,5 +26,5 @@ lint:
     enum_field_names_zero_value_end_with:
       suffix: UNSPECIFIED
 
-    # service_names_end_with:
-    #   text: Service
+    service_names_end_with:
+      text: Service

@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"khepri.dev/horus/ent/predicate"
 	"khepri.dev/horus/ent/token"
 )
@@ -42,23 +43,59 @@ func (tu *TokenUpdate) SetNillableName(s *string) *TokenUpdate {
 	return tu
 }
 
-// SetExpiredDate sets the "expired_date" field.
-func (tu *TokenUpdate) SetExpiredDate(t time.Time) *TokenUpdate {
-	tu.mutation.SetExpiredDate(t)
+// SetDateExpired sets the "date_expired" field.
+func (tu *TokenUpdate) SetDateExpired(t time.Time) *TokenUpdate {
+	tu.mutation.SetDateExpired(t)
 	return tu
 }
 
-// SetNillableExpiredDate sets the "expired_date" field if the given value is not nil.
-func (tu *TokenUpdate) SetNillableExpiredDate(t *time.Time) *TokenUpdate {
+// SetNillableDateExpired sets the "date_expired" field if the given value is not nil.
+func (tu *TokenUpdate) SetNillableDateExpired(t *time.Time) *TokenUpdate {
 	if t != nil {
-		tu.SetExpiredDate(*t)
+		tu.SetDateExpired(*t)
 	}
 	return tu
+}
+
+// AddChildIDs adds the "children" edge to the Token entity by IDs.
+func (tu *TokenUpdate) AddChildIDs(ids ...uuid.UUID) *TokenUpdate {
+	tu.mutation.AddChildIDs(ids...)
+	return tu
+}
+
+// AddChildren adds the "children" edges to the Token entity.
+func (tu *TokenUpdate) AddChildren(t ...*Token) *TokenUpdate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.AddChildIDs(ids...)
 }
 
 // Mutation returns the TokenMutation object of the builder.
 func (tu *TokenUpdate) Mutation() *TokenMutation {
 	return tu.mutation
+}
+
+// ClearChildren clears all "children" edges to the Token entity.
+func (tu *TokenUpdate) ClearChildren() *TokenUpdate {
+	tu.mutation.ClearChildren()
+	return tu
+}
+
+// RemoveChildIDs removes the "children" edge to Token entities by IDs.
+func (tu *TokenUpdate) RemoveChildIDs(ids ...uuid.UUID) *TokenUpdate {
+	tu.mutation.RemoveChildIDs(ids...)
+	return tu
+}
+
+// RemoveChildren removes "children" edges to Token entities.
+func (tu *TokenUpdate) RemoveChildren(t ...*Token) *TokenUpdate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.RemoveChildIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -111,8 +148,53 @@ func (tu *TokenUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := tu.mutation.Name(); ok {
 		_spec.SetField(token.FieldName, field.TypeString, value)
 	}
-	if value, ok := tu.mutation.ExpiredDate(); ok {
-		_spec.SetField(token.FieldExpiredDate, field.TypeTime, value)
+	if value, ok := tu.mutation.DateExpired(); ok {
+		_spec.SetField(token.FieldDateExpired, field.TypeTime, value)
+	}
+	if tu.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   token.ChildrenTable,
+			Columns: []string{token.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(token.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !tu.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   token.ChildrenTable,
+			Columns: []string{token.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(token.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   token.ChildrenTable,
+			Columns: []string{token.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(token.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -148,23 +230,59 @@ func (tuo *TokenUpdateOne) SetNillableName(s *string) *TokenUpdateOne {
 	return tuo
 }
 
-// SetExpiredDate sets the "expired_date" field.
-func (tuo *TokenUpdateOne) SetExpiredDate(t time.Time) *TokenUpdateOne {
-	tuo.mutation.SetExpiredDate(t)
+// SetDateExpired sets the "date_expired" field.
+func (tuo *TokenUpdateOne) SetDateExpired(t time.Time) *TokenUpdateOne {
+	tuo.mutation.SetDateExpired(t)
 	return tuo
 }
 
-// SetNillableExpiredDate sets the "expired_date" field if the given value is not nil.
-func (tuo *TokenUpdateOne) SetNillableExpiredDate(t *time.Time) *TokenUpdateOne {
+// SetNillableDateExpired sets the "date_expired" field if the given value is not nil.
+func (tuo *TokenUpdateOne) SetNillableDateExpired(t *time.Time) *TokenUpdateOne {
 	if t != nil {
-		tuo.SetExpiredDate(*t)
+		tuo.SetDateExpired(*t)
 	}
 	return tuo
+}
+
+// AddChildIDs adds the "children" edge to the Token entity by IDs.
+func (tuo *TokenUpdateOne) AddChildIDs(ids ...uuid.UUID) *TokenUpdateOne {
+	tuo.mutation.AddChildIDs(ids...)
+	return tuo
+}
+
+// AddChildren adds the "children" edges to the Token entity.
+func (tuo *TokenUpdateOne) AddChildren(t ...*Token) *TokenUpdateOne {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.AddChildIDs(ids...)
 }
 
 // Mutation returns the TokenMutation object of the builder.
 func (tuo *TokenUpdateOne) Mutation() *TokenMutation {
 	return tuo.mutation
+}
+
+// ClearChildren clears all "children" edges to the Token entity.
+func (tuo *TokenUpdateOne) ClearChildren() *TokenUpdateOne {
+	tuo.mutation.ClearChildren()
+	return tuo
+}
+
+// RemoveChildIDs removes the "children" edge to Token entities by IDs.
+func (tuo *TokenUpdateOne) RemoveChildIDs(ids ...uuid.UUID) *TokenUpdateOne {
+	tuo.mutation.RemoveChildIDs(ids...)
+	return tuo
+}
+
+// RemoveChildren removes "children" edges to Token entities.
+func (tuo *TokenUpdateOne) RemoveChildren(t ...*Token) *TokenUpdateOne {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.RemoveChildIDs(ids...)
 }
 
 // Where appends a list predicates to the TokenUpdate builder.
@@ -247,8 +365,53 @@ func (tuo *TokenUpdateOne) sqlSave(ctx context.Context) (_node *Token, err error
 	if value, ok := tuo.mutation.Name(); ok {
 		_spec.SetField(token.FieldName, field.TypeString, value)
 	}
-	if value, ok := tuo.mutation.ExpiredDate(); ok {
-		_spec.SetField(token.FieldExpiredDate, field.TypeTime, value)
+	if value, ok := tuo.mutation.DateExpired(); ok {
+		_spec.SetField(token.FieldDateExpired, field.TypeTime, value)
+	}
+	if tuo.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   token.ChildrenTable,
+			Columns: []string{token.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(token.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !tuo.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   token.ChildrenTable,
+			Columns: []string{token.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(token.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   token.ChildrenTable,
+			Columns: []string{token.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(token.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Token{config: tuo.config}
 	_spec.Assign = _node.assignValues

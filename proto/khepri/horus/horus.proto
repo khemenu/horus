@@ -185,9 +185,9 @@ message Membership {
   enum Role {
     ROLE_UNSPECIFIED = 0;
 
-    ROLE_MEMBER = 20;
-
     ROLE_OWNER = 10;
+
+    ROLE_MEMBER = 20;
   }
 }
 
@@ -320,15 +320,17 @@ message Token {
 
   string value = 2;
 
-  string type = 4;
+  string type = 5;
 
-  string name = 5;
+  string name = 6;
 
-  google.protobuf.Timestamp create_date = 15;
+  google.protobuf.Timestamp date_created = 15;
 
-  google.protobuf.Timestamp expired_date = 14;
+  google.protobuf.Timestamp date_expired = 14;
 
   User owner = 3;
+
+  Token parent = 4;
 }
 
 message CreateTokenRequest {

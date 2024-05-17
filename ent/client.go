@@ -1410,6 +1410,38 @@ func (c *TokenClient) QueryOwner(t *Token) *UserQuery {
 	return query
 }
 
+// QueryParent queries the parent edge of a Token.
+func (c *TokenClient) QueryParent(t *Token) *TokenQuery {
+	query := (&TokenClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(token.Table, token.FieldID, id),
+			sqlgraph.To(token.Table, token.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, token.ParentTable, token.ParentColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChildren queries the children edge of a Token.
+func (c *TokenClient) QueryChildren(t *Token) *TokenQuery {
+	query := (&TokenClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(token.Table, token.FieldID, id),
+			sqlgraph.To(token.Table, token.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, token.ChildrenTable, token.ChildrenColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *TokenClient) Hooks() []Hook {
 	return c.hooks.Token

@@ -25,24 +25,29 @@ type Token struct {
 	Type string `json:"type,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
-	// CreateDate holds the value of the "create_date" field.
-	CreateDate time.Time `json:"create_date,omitempty"`
-	// ExpiredDate holds the value of the "expired_date" field.
-	ExpiredDate time.Time `json:"expired_date,omitempty"`
+	// DateCreated holds the value of the "date_created" field.
+	DateCreated time.Time `json:"date_created,omitempty"`
+	// DateExpired holds the value of the "date_expired" field.
+	DateExpired time.Time `json:"date_expired,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TokenQuery when eager-loading is set.
-	Edges        TokenEdges `json:"edges"`
-	user_tokens  *uuid.UUID
-	selectValues sql.SelectValues
+	Edges          TokenEdges `json:"edges"`
+	token_children *uuid.UUID
+	user_tokens    *uuid.UUID
+	selectValues   sql.SelectValues
 }
 
 // TokenEdges holds the relations/edges for other nodes in the graph.
 type TokenEdges struct {
 	// Owner holds the value of the owner edge.
 	Owner *User `json:"owner,omitempty"`
+	// Parent holds the value of the parent edge.
+	Parent *Token `json:"parent,omitempty"`
+	// Children holds the value of the children edge.
+	Children []*Token `json:"children,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
 // OwnerOrErr returns the Owner value or an error if the edge
@@ -58,6 +63,28 @@ func (e TokenEdges) OwnerOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "owner"}
 }
 
+// ParentOrErr returns the Parent value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TokenEdges) ParentOrErr() (*Token, error) {
+	if e.loadedTypes[1] {
+		if e.Parent == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: token.Label}
+		}
+		return e.Parent, nil
+	}
+	return nil, &NotLoadedError{edge: "parent"}
+}
+
+// ChildrenOrErr returns the Children value or an error if the edge
+// was not loaded in eager-loading.
+func (e TokenEdges) ChildrenOrErr() ([]*Token, error) {
+	if e.loadedTypes[2] {
+		return e.Children, nil
+	}
+	return nil, &NotLoadedError{edge: "children"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Token) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -65,11 +92,13 @@ func (*Token) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case token.FieldValue, token.FieldType, token.FieldName:
 			values[i] = new(sql.NullString)
-		case token.FieldCreateDate, token.FieldExpiredDate:
+		case token.FieldDateCreated, token.FieldDateExpired:
 			values[i] = new(sql.NullTime)
 		case token.FieldID:
 			values[i] = new(uuid.UUID)
-		case token.ForeignKeys[0]: // user_tokens
+		case token.ForeignKeys[0]: // token_children
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+		case token.ForeignKeys[1]: // user_tokens
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -110,19 +139,26 @@ func (t *Token) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.Name = value.String
 			}
-		case token.FieldCreateDate:
+		case token.FieldDateCreated:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field create_date", values[i])
+				return fmt.Errorf("unexpected type %T for field date_created", values[i])
 			} else if value.Valid {
-				t.CreateDate = value.Time
+				t.DateCreated = value.Time
 			}
-		case token.FieldExpiredDate:
+		case token.FieldDateExpired:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field expired_date", values[i])
+				return fmt.Errorf("unexpected type %T for field date_expired", values[i])
 			} else if value.Valid {
-				t.ExpiredDate = value.Time
+				t.DateExpired = value.Time
 			}
 		case token.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field token_children", values[i])
+			} else if value.Valid {
+				t.token_children = new(uuid.UUID)
+				*t.token_children = *value.S.(*uuid.UUID)
+			}
+		case token.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field user_tokens", values[i])
 			} else if value.Valid {
@@ -145,6 +181,16 @@ func (t *Token) GetValue(name string) (ent.Value, error) {
 // QueryOwner queries the "owner" edge of the Token entity.
 func (t *Token) QueryOwner() *UserQuery {
 	return NewTokenClient(t.config).QueryOwner(t)
+}
+
+// QueryParent queries the "parent" edge of the Token entity.
+func (t *Token) QueryParent() *TokenQuery {
+	return NewTokenClient(t.config).QueryParent(t)
+}
+
+// QueryChildren queries the "children" edge of the Token entity.
+func (t *Token) QueryChildren() *TokenQuery {
+	return NewTokenClient(t.config).QueryChildren(t)
 }
 
 // Update returns a builder for updating this Token.
@@ -178,11 +224,11 @@ func (t *Token) String() string {
 	builder.WriteString("name=")
 	builder.WriteString(t.Name)
 	builder.WriteString(", ")
-	builder.WriteString("create_date=")
-	builder.WriteString(t.CreateDate.Format(time.ANSIC))
+	builder.WriteString("date_created=")
+	builder.WriteString(t.DateCreated.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("expired_date=")
-	builder.WriteString(t.ExpiredDate.Format(time.ANSIC))
+	builder.WriteString("date_expired=")
+	builder.WriteString(t.DateExpired.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

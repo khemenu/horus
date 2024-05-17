@@ -21,12 +21,16 @@ const (
 	FieldType = "type"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// FieldCreateDate holds the string denoting the create_date field in the database.
-	FieldCreateDate = "create_date"
-	// FieldExpiredDate holds the string denoting the expired_date field in the database.
-	FieldExpiredDate = "expired_date"
+	// FieldDateCreated holds the string denoting the date_created field in the database.
+	FieldDateCreated = "date_created"
+	// FieldDateExpired holds the string denoting the date_expired field in the database.
+	FieldDateExpired = "date_expired"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
+	// EdgeParent holds the string denoting the parent edge name in mutations.
+	EdgeParent = "parent"
+	// EdgeChildren holds the string denoting the children edge name in mutations.
+	EdgeChildren = "children"
 	// Table holds the table name of the token in the database.
 	Table = "tokens"
 	// OwnerTable is the table that holds the owner relation/edge.
@@ -36,6 +40,14 @@ const (
 	OwnerInverseTable = "users"
 	// OwnerColumn is the table column denoting the owner relation/edge.
 	OwnerColumn = "user_tokens"
+	// ParentTable is the table that holds the parent relation/edge.
+	ParentTable = "tokens"
+	// ParentColumn is the table column denoting the parent relation/edge.
+	ParentColumn = "token_children"
+	// ChildrenTable is the table that holds the children relation/edge.
+	ChildrenTable = "tokens"
+	// ChildrenColumn is the table column denoting the children relation/edge.
+	ChildrenColumn = "token_children"
 )
 
 // Columns holds all SQL columns for token fields.
@@ -44,13 +56,14 @@ var Columns = []string{
 	FieldValue,
 	FieldType,
 	FieldName,
-	FieldCreateDate,
-	FieldExpiredDate,
+	FieldDateCreated,
+	FieldDateExpired,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "tokens"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
+	"token_children",
 	"user_tokens",
 }
 
@@ -76,8 +89,8 @@ var (
 	TypeValidator func(string) error
 	// DefaultName holds the default value on creation for the "name" field.
 	DefaultName string
-	// DefaultCreateDate holds the default value on creation for the "create_date" field.
-	DefaultCreateDate func() time.Time
+	// DefaultDateCreated holds the default value on creation for the "date_created" field.
+	DefaultDateCreated func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -105,14 +118,14 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
-// ByCreateDate orders the results by the create_date field.
-func ByCreateDate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreateDate, opts...).ToFunc()
+// ByDateCreated orders the results by the date_created field.
+func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
 }
 
-// ByExpiredDate orders the results by the expired_date field.
-func ByExpiredDate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldExpiredDate, opts...).ToFunc()
+// ByDateExpired orders the results by the date_expired field.
+func ByDateExpired(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateExpired, opts...).ToFunc()
 }
 
 // ByOwnerField orders the results by owner field.
@@ -121,10 +134,45 @@ func ByOwnerField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newOwnerStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByParentField orders the results by parent field.
+func ByParentField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newParentStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByChildrenCount orders the results by children count.
+func ByChildrenCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newChildrenStep(), opts...)
+	}
+}
+
+// ByChildren orders the results by children terms.
+func ByChildren(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChildrenStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newOwnerStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(OwnerInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, OwnerTable, OwnerColumn),
+	)
+}
+func newParentStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ParentTable, ParentColumn),
+	)
+}
+func newChildrenStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ChildrenTable, ChildrenColumn),
 	)
 }

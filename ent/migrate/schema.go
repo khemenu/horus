@@ -104,7 +104,7 @@ var (
 	// MembershipsColumns holds the columns for the "memberships" table.
 	MembershipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"MEMBER", "OWNER"}},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"OWNER", "MEMBER"}},
 		{Name: "created_date", Type: field.TypeTime},
 		{Name: "account_memberships", Type: field.TypeUUID},
 		{Name: "team_members", Type: field.TypeUUID},
@@ -149,7 +149,7 @@ var (
 		{Name: "alias", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString, Size: 64},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
-		{Name: "inter_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}},
+		{Name: "inter_visibility", Type: field.TypeEnum, Enums: []string{"PUBLIC", "PRIVATE"}},
 		{Name: "intra_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}},
 		{Name: "created_date", Type: field.TypeTime},
 		{Name: "silo_id", Type: field.TypeUUID},
@@ -181,8 +181,9 @@ var (
 		{Name: "value", Type: field.TypeString, Unique: true},
 		{Name: "type", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString, Default: ""},
-		{Name: "create_date", Type: field.TypeTime},
-		{Name: "expired_date", Type: field.TypeTime},
+		{Name: "date_created", Type: field.TypeTime},
+		{Name: "date_expired", Type: field.TypeTime},
+		{Name: "token_children", Type: field.TypeUUID, Nullable: true},
 		{Name: "user_tokens", Type: field.TypeUUID},
 	}
 	// TokensTable holds the schema information for the "tokens" table.
@@ -192,8 +193,14 @@ var (
 		PrimaryKey: []*schema.Column{TokensColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "tokens_users_tokens",
+				Symbol:     "tokens_tokens_children",
 				Columns:    []*schema.Column{TokensColumns[6]},
+				RefColumns: []*schema.Column{TokensColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "tokens_users_tokens",
+				Columns:    []*schema.Column{TokensColumns[7]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -233,5 +240,6 @@ func init() {
 	MembershipsTable.ForeignKeys[0].RefTable = AccountsTable
 	MembershipsTable.ForeignKeys[1].RefTable = TeamsTable
 	TeamsTable.ForeignKeys[0].RefTable = SilosTable
-	TokensTable.ForeignKeys[0].RefTable = UsersTable
+	TokensTable.ForeignKeys[0].RefTable = TokensTable
+	TokensTable.ForeignKeys[1].RefTable = UsersTable
 }

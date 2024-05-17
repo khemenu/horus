@@ -22,6 +22,7 @@ const (
 	AuthService_BasicSignUp_FullMethodName = "/khepri.horus.AuthService/BasicSignUp"
 	AuthService_BasicSignIn_FullMethodName = "/khepri.horus.AuthService/BasicSignIn"
 	AuthService_TokenSignIn_FullMethodName = "/khepri.horus.AuthService/TokenSignIn"
+	AuthService_Refresh_FullMethodName     = "/khepri.horus.AuthService/Refresh"
 	AuthService_VerifyOtp_FullMethodName   = "/khepri.horus.AuthService/VerifyOtp"
 	AuthService_SignOut_FullMethodName     = "/khepri.horus.AuthService/SignOut"
 )
@@ -30,10 +31,15 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthServiceClient interface {
-	BasicSignUp(ctx context.Context, in *BasicSignUpRequest, opts ...grpc.CallOption) (*BasicSignUpRseponse, error)
-	BasicSignIn(ctx context.Context, in *BasicSignInRequest, opts ...grpc.CallOption) (*BasicSignInRseponse, error)
+	BasicSignUp(ctx context.Context, in *BasicSignUpRequest, opts ...grpc.CallOption) (*BasicSignUpResponse, error)
+	BasicSignIn(ctx context.Context, in *BasicSignInRequest, opts ...grpc.CallOption) (*BasicSignInResponse, error)
+	// Tests if given access token is valid and returns full info of the token if the token is valid one.
 	TokenSignIn(ctx context.Context, in *TokenSignInRequest, opts ...grpc.CallOption) (*TokenSignInResponse, error)
+	// Issues an access token under given refresh token.
+	// Previous acces token under given refresh token is expired.
+	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*RefreshResponse, error)
 	VerifyOtp(ctx context.Context, in *VerifyOtpRequest, opts ...grpc.CallOption) (*VerifyOtpResponse, error)
+	// Expires given access token.
 	SignOut(ctx context.Context, in *SingOutRequest, opts ...grpc.CallOption) (*SingOutResponse, error)
 }
 
@@ -45,8 +51,8 @@ func NewAuthServiceClient(cc grpc.ClientConnInterface) AuthServiceClient {
 	return &authServiceClient{cc}
 }
 
-func (c *authServiceClient) BasicSignUp(ctx context.Context, in *BasicSignUpRequest, opts ...grpc.CallOption) (*BasicSignUpRseponse, error) {
-	out := new(BasicSignUpRseponse)
+func (c *authServiceClient) BasicSignUp(ctx context.Context, in *BasicSignUpRequest, opts ...grpc.CallOption) (*BasicSignUpResponse, error) {
+	out := new(BasicSignUpResponse)
 	err := c.cc.Invoke(ctx, AuthService_BasicSignUp_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -54,8 +60,8 @@ func (c *authServiceClient) BasicSignUp(ctx context.Context, in *BasicSignUpRequ
 	return out, nil
 }
 
-func (c *authServiceClient) BasicSignIn(ctx context.Context, in *BasicSignInRequest, opts ...grpc.CallOption) (*BasicSignInRseponse, error) {
-	out := new(BasicSignInRseponse)
+func (c *authServiceClient) BasicSignIn(ctx context.Context, in *BasicSignInRequest, opts ...grpc.CallOption) (*BasicSignInResponse, error) {
+	out := new(BasicSignInResponse)
 	err := c.cc.Invoke(ctx, AuthService_BasicSignIn_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -66,6 +72,15 @@ func (c *authServiceClient) BasicSignIn(ctx context.Context, in *BasicSignInRequ
 func (c *authServiceClient) TokenSignIn(ctx context.Context, in *TokenSignInRequest, opts ...grpc.CallOption) (*TokenSignInResponse, error) {
 	out := new(TokenSignInResponse)
 	err := c.cc.Invoke(ctx, AuthService_TokenSignIn_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*RefreshResponse, error) {
+	out := new(RefreshResponse)
+	err := c.cc.Invoke(ctx, AuthService_Refresh_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -94,10 +109,15 @@ func (c *authServiceClient) SignOut(ctx context.Context, in *SingOutRequest, opt
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility
 type AuthServiceServer interface {
-	BasicSignUp(context.Context, *BasicSignUpRequest) (*BasicSignUpRseponse, error)
-	BasicSignIn(context.Context, *BasicSignInRequest) (*BasicSignInRseponse, error)
+	BasicSignUp(context.Context, *BasicSignUpRequest) (*BasicSignUpResponse, error)
+	BasicSignIn(context.Context, *BasicSignInRequest) (*BasicSignInResponse, error)
+	// Tests if given access token is valid and returns full info of the token if the token is valid one.
 	TokenSignIn(context.Context, *TokenSignInRequest) (*TokenSignInResponse, error)
+	// Issues an access token under given refresh token.
+	// Previous acces token under given refresh token is expired.
+	Refresh(context.Context, *RefreshRequest) (*RefreshResponse, error)
 	VerifyOtp(context.Context, *VerifyOtpRequest) (*VerifyOtpResponse, error)
+	// Expires given access token.
 	SignOut(context.Context, *SingOutRequest) (*SingOutResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
@@ -106,14 +126,17 @@ type AuthServiceServer interface {
 type UnimplementedAuthServiceServer struct {
 }
 
-func (UnimplementedAuthServiceServer) BasicSignUp(context.Context, *BasicSignUpRequest) (*BasicSignUpRseponse, error) {
+func (UnimplementedAuthServiceServer) BasicSignUp(context.Context, *BasicSignUpRequest) (*BasicSignUpResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BasicSignUp not implemented")
 }
-func (UnimplementedAuthServiceServer) BasicSignIn(context.Context, *BasicSignInRequest) (*BasicSignInRseponse, error) {
+func (UnimplementedAuthServiceServer) BasicSignIn(context.Context, *BasicSignInRequest) (*BasicSignInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BasicSignIn not implemented")
 }
 func (UnimplementedAuthServiceServer) TokenSignIn(context.Context, *TokenSignInRequest) (*TokenSignInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TokenSignIn not implemented")
+}
+func (UnimplementedAuthServiceServer) Refresh(context.Context, *RefreshRequest) (*RefreshResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Refresh not implemented")
 }
 func (UnimplementedAuthServiceServer) VerifyOtp(context.Context, *VerifyOtpRequest) (*VerifyOtpResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyOtp not implemented")
@@ -188,6 +211,24 @@ func _AuthService_TokenSignIn_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_Refresh_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefreshRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).Refresh(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_Refresh_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).Refresh(ctx, req.(*RefreshRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AuthService_VerifyOtp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(VerifyOtpRequest)
 	if err := dec(in); err != nil {
@@ -242,6 +283,10 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TokenSignIn",
 			Handler:    _AuthService_TokenSignIn_Handler,
+		},
+		{
+			MethodName: "Refresh",
+			Handler:    _AuthService_Refresh_Handler,
 		},
 		{
 			MethodName: "VerifyOtp",
