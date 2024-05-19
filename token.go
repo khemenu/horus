@@ -2,42 +2,24 @@ package horus
 
 import (
 	"context"
-	"time"
 )
 
-type TokenType string
+type tokenCtxKey struct{}
 
-var (
-	RefreshToken TokenType = "refresh_token"
-	AccessToken  TokenType = "access_token"
-)
-
-type TokenInit struct {
-	OwnerId UserId
-
-	Type     TokenType
-	Name     string
-	Duration time.Duration
+func From(ctx context.Context) (*Token, bool) {
+	token, ok := ctx.Value(tokenCtxKey{}).(*Token)
+	return token, ok
 }
 
-type Token struct {
-	Value   string
-	OwnerId UserId
+func Must(ctx context.Context) *Token {
+	token, ok := From(ctx)
+	if !ok || token == nil {
+		panic("token not set")
+	}
 
-	Type TokenType
-	Name string
-
-	CreatedAt time.Time
-	ExpiredAt time.Time
+	return token
 }
 
-func (t *Token) Duration() time.Duration {
-	return t.ExpiredAt.Sub(t.CreatedAt)
-}
-
-type TokenStore interface {
-	Issue(ctx context.Context, init TokenInit) (*Token, error)
-	GetByValue(ctx context.Context, value string, token_type TokenType) (*Token, error)
-	Revoke(ctx context.Context, value string) error
-	RevokeAll(ctx context.Context, owner_id UserId) error
+func ctxWithToken(ctx context.Context, token *Token) context.Context {
+	return context.WithValue(ctx, tokenCtxKey{}, token)
 }

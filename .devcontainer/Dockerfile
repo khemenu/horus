@@ -1,4 +1,4 @@
-FROM ghcr.io/lesomnus/dev-golang:1.21
+FROM ghcr.io/lesomnus/dev-golang:1.22
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 	--mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -9,20 +9,28 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 RUN TEMP=$(mktemp -d) \
 	&& cd "${TEMP}" \
 	&& curl -o protoc.zip -L https://github.com/protocolbuffers/protobuf/releases/download/v24.0/protoc-24.0-linux-x86_64.zip \
-	&& unzip protoc.zip bin/protoc -d /usr/local \
+	&& unzip protoc.zip -d /usr/local \
 	&& chmod 755 /usr/local/bin/protoc \
 	&& rm -rf "${TEMP}"
 
-RUN cd ~ \
-	&& go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31 \
-	&& go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3
+RUN TEMP=$(mktemp -d) \
+	&& cd "${TEMP}" \
+	&& curl -o a.tar.gz -L "https://github.com/ktr0731/evans/releases/download/v0.10.11/evans_linux_$(dpkg --print-architecture).tar.gz" \
+	&& tar -xf a.tar.gz \
+	&& mv evans /usr/local/bin/. \
+	&& rm -rf "${TEMP}" \
+	&& evans --version
 
-RUN cd ~ \
-	&& go install github.com/yoheimuta/protolint/cmd/protolint@latest
-
-
+	
 
 USER hypnos
+
+RUN  echo \
+		google.golang.org/protobuf/cmd/protoc-gen-go@v1.31 \
+		google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3 \
+		entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc@master \
+		github.com/yoheimuta/protolint/cmd/protolint@latest \
+	| xargs -n1 go install
 
 # Comment below lines if you don't want to use Zsh
 RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true \

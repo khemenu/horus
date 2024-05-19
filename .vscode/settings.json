@@ -1,15 +1,18 @@
 {
 	"files.exclude": {
 		"**/.git": true,
-		"pb/*.pb.go": true,
-		"store/ent/{[!s],?[!c]}*": true
+		"ent": true,
+		"service/bare/*_service.go": true
+	},
+	"files.readonlyInclude": {
+		"ent/proto/khepri/horus/horus.proto": true,
 	},
 	"[proto3]": {
 		"editor.formatOnSave": true
 	},
 	"protoc": {
 		"options": [
-			"--proto_path=${workspaceRoot}/pb",
+			"--proto_path=${workspaceRoot}/ent/proto",
 		]
 	}
 }

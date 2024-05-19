@@ -1,13 +1,8 @@
 {
-	"name": "kepri-horus",
-	"build": {
-		"context": ".",
-		"dockerfile": "Dockerfile"
-	},
-	"runArgs": [
-		"--network=khepri",
-		"--name=horus"
-	],
+	"name": "khepri-horus",
+	"dockerComposeFile": "docker-compose.yaml",
+	"service": "dev",
+	"workspaceFolder": "/workspaces/horus",
 	"customizations": {
 		"vscode": {
 			"extensions": [

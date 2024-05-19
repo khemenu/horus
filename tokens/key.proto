@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package tokens;
+
+option go_package = "khepri.dev/horus/tokens";
+
+message Key {
+	bytes hash = 1; // Hashed value.
+	bytes salt = 2; // Additional data hashed with value.
+	oneof state {
+		Argon2State argon2 = 15; // Argon2
+	}
+}
+
+message Argon2State {
+	uint32 parallelism = 1; // Degree of parallelism (i.e. number of threads).
+	uint32 tag_length  = 2; // Desired number of returned bytes.
+	uint32 memory_size = 3; // Amount of memory (in kibibytes) to use.
+	uint32 iterations  = 4; // Number of iterations to perform.
+	uint32 version     = 5; // The current version is 0x13 (19 decimal).
+
+	// 0: Argon2d
+	// 1: Argon2i
+	// 2: Argon2id
+	uint32 hash_type = 6;
+}
