@@ -1,8 +1,11 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/contrib/entproto"
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
@@ -35,8 +38,11 @@ func (Token) Fields() []ent.Field {
 
 		field.Time("date_created").
 			Immutable().
-			Default(utcNow).
-			Annotations(entproto.Field(15)),
+			Default(time.Now).
+			Annotations(
+				entsql.Default("CURRENT_TIMESTAMP"),
+				entproto.Field(15),
+			),
 		field.Time("date_expired").
 			Annotations(entproto.Field(14)),
 	}

@@ -13,6 +13,13 @@ db:
   driver:
   source:
 
+client:
+  db:
+    enabled: true
+    use_bare: true
+    driver: sqlite3
+    source: file:horus.db?cache=shared&_fk=1
+
 debug:
   enabled: true
   unsecured: true
