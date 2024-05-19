@@ -17,6 +17,7 @@ type Config struct {
 
 	Grpc GrpcConfig `yaml:"grpc"`
 	Http HttpConfig `yaml:"http"`
+	Kube KubeConfig `yaml:"kube"`
 
 	Db DbConfig `yaml:"db"`
 
@@ -32,6 +33,9 @@ type GrpcConfig struct {
 type HttpConfig struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
+}
+type KubeConfig struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 type DbConfig struct {

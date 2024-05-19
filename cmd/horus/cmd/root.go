@@ -113,6 +113,9 @@ func Run(ctx context.Context, c *Config) error {
 	}
 	http_mux := http.NewServeMux()
 	HandleAuth(http_mux, svc)
+	if c.Kube.Enabled {
+		HandleKubeWebhook(http_mux, svc)
+	}
 	http_server.Handler = log.HttpLogger(l, slog.LevelInfo, http_mux)
 
 	shutdown := func() {

@@ -1,4 +1,4 @@
-FROM ghcr.io/lesomnus/dev-golang:1.21
+FROM ghcr.io/lesomnus/dev-golang:1.22
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 	--mount=type=cache,target=/var/lib/apt,sharing=locked \
