@@ -24,8 +24,8 @@ type Silo struct {
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
-	// CreatedDate holds the value of the "created_date" field.
-	CreatedDate time.Time `json:"created_date,omitempty"`
+	// DateCreated holds the value of the "date_created" field.
+	DateCreated time.Time `json:"date_created,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SiloQuery when eager-loading is set.
 	Edges        SiloEdges `json:"edges"`
@@ -79,7 +79,7 @@ func (*Silo) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case silo.FieldAlias, silo.FieldName, silo.FieldDescription:
 			values[i] = new(sql.NullString)
-		case silo.FieldCreatedDate:
+		case silo.FieldDateCreated:
 			values[i] = new(sql.NullTime)
 		case silo.FieldID:
 			values[i] = new(uuid.UUID)
@@ -122,11 +122,11 @@ func (s *Silo) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				s.Description = value.String
 			}
-		case silo.FieldCreatedDate:
+		case silo.FieldDateCreated:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_date", values[i])
+				return fmt.Errorf("unexpected type %T for field date_created", values[i])
 			} else if value.Valid {
-				s.CreatedDate = value.Time
+				s.DateCreated = value.Time
 			}
 		default:
 			s.selectValues.Set(columns[i], values[i])
@@ -188,8 +188,8 @@ func (s *Silo) String() string {
 	builder.WriteString("description=")
 	builder.WriteString(s.Description)
 	builder.WriteString(", ")
-	builder.WriteString("created_date=")
-	builder.WriteString(s.CreatedDate.Format(time.ANSIC))
+	builder.WriteString("date_created=")
+	builder.WriteString(s.DateCreated.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

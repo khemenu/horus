@@ -33,8 +33,8 @@ func toProtoSilo(e *ent.Silo) (*horus.Silo, error) {
 	v := &horus.Silo{}
 	alias := e.Alias
 	v.Alias = alias
-	created_date := timestamppb.New(e.CreatedDate)
-	v.CreatedDate = created_date
+	date_created := timestamppb.New(e.DateCreated)
+	v.DateCreated = date_created
 	description := e.Description
 	v.Description = description
 	id, err := e.ID.MarshalBinary()
@@ -162,8 +162,8 @@ func (svc *SiloService) createBuilder(silo *horus.Silo) (*ent.SiloCreate, error)
 	m := svc.client.Silo.Create()
 	siloAlias := silo.GetAlias()
 	m.SetAlias(siloAlias)
-	siloCreatedDate := runtime.ExtractTime(silo.GetCreatedDate())
-	m.SetCreatedDate(siloCreatedDate)
+	siloDateCreated := runtime.ExtractTime(silo.GetDateCreated())
+	m.SetDateCreated(siloDateCreated)
 	siloDescription := silo.GetDescription()
 	m.SetDescription(siloDescription)
 	siloName := silo.GetName()

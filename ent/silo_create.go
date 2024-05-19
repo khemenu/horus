@@ -50,16 +50,16 @@ func (sc *SiloCreate) SetNillableDescription(s *string) *SiloCreate {
 	return sc
 }
 
-// SetCreatedDate sets the "created_date" field.
-func (sc *SiloCreate) SetCreatedDate(t time.Time) *SiloCreate {
-	sc.mutation.SetCreatedDate(t)
+// SetDateCreated sets the "date_created" field.
+func (sc *SiloCreate) SetDateCreated(t time.Time) *SiloCreate {
+	sc.mutation.SetDateCreated(t)
 	return sc
 }
 
-// SetNillableCreatedDate sets the "created_date" field if the given value is not nil.
-func (sc *SiloCreate) SetNillableCreatedDate(t *time.Time) *SiloCreate {
+// SetNillableDateCreated sets the "date_created" field if the given value is not nil.
+func (sc *SiloCreate) SetNillableDateCreated(t *time.Time) *SiloCreate {
 	if t != nil {
-		sc.SetCreatedDate(*t)
+		sc.SetDateCreated(*t)
 	}
 	return sc
 }
@@ -162,9 +162,9 @@ func (sc *SiloCreate) defaults() {
 		v := silo.DefaultDescription
 		sc.mutation.SetDescription(v)
 	}
-	if _, ok := sc.mutation.CreatedDate(); !ok {
-		v := silo.DefaultCreatedDate()
-		sc.mutation.SetCreatedDate(v)
+	if _, ok := sc.mutation.DateCreated(); !ok {
+		v := silo.DefaultDateCreated()
+		sc.mutation.SetDateCreated(v)
 	}
 	if _, ok := sc.mutation.ID(); !ok {
 		v := silo.DefaultID()
@@ -198,8 +198,8 @@ func (sc *SiloCreate) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Silo.description": %w`, err)}
 		}
 	}
-	if _, ok := sc.mutation.CreatedDate(); !ok {
-		return &ValidationError{Name: "created_date", err: errors.New(`ent: missing required field "Silo.created_date"`)}
+	if _, ok := sc.mutation.DateCreated(); !ok {
+		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Silo.date_created"`)}
 	}
 	return nil
 }
@@ -248,9 +248,9 @@ func (sc *SiloCreate) createSpec() (*Silo, *sqlgraph.CreateSpec) {
 		_spec.SetField(silo.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := sc.mutation.CreatedDate(); ok {
-		_spec.SetField(silo.FieldCreatedDate, field.TypeTime, value)
-		_node.CreatedDate = value
+	if value, ok := sc.mutation.DateCreated(); ok {
+		_spec.SetField(silo.FieldDateCreated, field.TypeTime, value)
+		_node.DateCreated = value
 	}
 	if nodes := sc.mutation.MembersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

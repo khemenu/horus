@@ -57,7 +57,7 @@ func HandleAuth(mux *http.ServeMux, svc horus.Service) {
 	mux.HandleFunc("/auth/sign-out", func(w http.ResponseWriter, r *http.Request) {
 		if cookie, err := r.Cookie(horus.TokenKeyName); err != nil {
 			// No token found
-		} else if _, err := svc.Auth().SignOut(r.Context(), &horus.SingOutRequest{Token: &horus.Token{Value: cookie.Value}}); err == nil {
+		} else if _, err := svc.Auth().SignOut(r.Context(), &horus.SingOutRequest{Token: cookie.Value}); err == nil {
 			// Ok
 		} else {
 			// TODO: log

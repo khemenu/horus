@@ -165,10 +165,10 @@ func init() {
 	silo.DefaultDescription = siloDescDescription.Default.(string)
 	// silo.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	silo.DescriptionValidator = siloDescDescription.Validators[0].(func(string) error)
-	// siloDescCreatedDate is the schema descriptor for created_date field.
-	siloDescCreatedDate := siloFields[4].Descriptor()
-	// silo.DefaultCreatedDate holds the default value on creation for the created_date field.
-	silo.DefaultCreatedDate = siloDescCreatedDate.Default.(func() time.Time)
+	// siloDescDateCreated is the schema descriptor for date_created field.
+	siloDescDateCreated := siloFields[4].Descriptor()
+	// silo.DefaultDateCreated holds the default value on creation for the date_created field.
+	silo.DefaultDateCreated = siloDescDateCreated.Default.(func() time.Time)
 	// siloDescID is the schema descriptor for id field.
 	siloDescID := siloFields[0].Descriptor()
 	// silo.DefaultID holds the default value on creation for the id field.

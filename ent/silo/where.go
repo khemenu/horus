@@ -71,9 +71,9 @@ func Description(v string) predicate.Silo {
 	return predicate.Silo(sql.FieldEQ(FieldDescription, v))
 }
 
-// CreatedDate applies equality check predicate on the "created_date" field. It's identical to CreatedDateEQ.
-func CreatedDate(v time.Time) predicate.Silo {
-	return predicate.Silo(sql.FieldEQ(FieldCreatedDate, v))
+// DateCreated applies equality check predicate on the "date_created" field. It's identical to DateCreatedEQ.
+func DateCreated(v time.Time) predicate.Silo {
+	return predicate.Silo(sql.FieldEQ(FieldDateCreated, v))
 }
 
 // AliasEQ applies the EQ predicate on the "alias" field.
@@ -271,44 +271,44 @@ func DescriptionContainsFold(v string) predicate.Silo {
 	return predicate.Silo(sql.FieldContainsFold(FieldDescription, v))
 }
 
-// CreatedDateEQ applies the EQ predicate on the "created_date" field.
-func CreatedDateEQ(v time.Time) predicate.Silo {
-	return predicate.Silo(sql.FieldEQ(FieldCreatedDate, v))
+// DateCreatedEQ applies the EQ predicate on the "date_created" field.
+func DateCreatedEQ(v time.Time) predicate.Silo {
+	return predicate.Silo(sql.FieldEQ(FieldDateCreated, v))
 }
 
-// CreatedDateNEQ applies the NEQ predicate on the "created_date" field.
-func CreatedDateNEQ(v time.Time) predicate.Silo {
-	return predicate.Silo(sql.FieldNEQ(FieldCreatedDate, v))
+// DateCreatedNEQ applies the NEQ predicate on the "date_created" field.
+func DateCreatedNEQ(v time.Time) predicate.Silo {
+	return predicate.Silo(sql.FieldNEQ(FieldDateCreated, v))
 }
 
-// CreatedDateIn applies the In predicate on the "created_date" field.
-func CreatedDateIn(vs ...time.Time) predicate.Silo {
-	return predicate.Silo(sql.FieldIn(FieldCreatedDate, vs...))
+// DateCreatedIn applies the In predicate on the "date_created" field.
+func DateCreatedIn(vs ...time.Time) predicate.Silo {
+	return predicate.Silo(sql.FieldIn(FieldDateCreated, vs...))
 }
 
-// CreatedDateNotIn applies the NotIn predicate on the "created_date" field.
-func CreatedDateNotIn(vs ...time.Time) predicate.Silo {
-	return predicate.Silo(sql.FieldNotIn(FieldCreatedDate, vs...))
+// DateCreatedNotIn applies the NotIn predicate on the "date_created" field.
+func DateCreatedNotIn(vs ...time.Time) predicate.Silo {
+	return predicate.Silo(sql.FieldNotIn(FieldDateCreated, vs...))
 }
 
-// CreatedDateGT applies the GT predicate on the "created_date" field.
-func CreatedDateGT(v time.Time) predicate.Silo {
-	return predicate.Silo(sql.FieldGT(FieldCreatedDate, v))
+// DateCreatedGT applies the GT predicate on the "date_created" field.
+func DateCreatedGT(v time.Time) predicate.Silo {
+	return predicate.Silo(sql.FieldGT(FieldDateCreated, v))
 }
 
-// CreatedDateGTE applies the GTE predicate on the "created_date" field.
-func CreatedDateGTE(v time.Time) predicate.Silo {
-	return predicate.Silo(sql.FieldGTE(FieldCreatedDate, v))
+// DateCreatedGTE applies the GTE predicate on the "date_created" field.
+func DateCreatedGTE(v time.Time) predicate.Silo {
+	return predicate.Silo(sql.FieldGTE(FieldDateCreated, v))
 }
 
-// CreatedDateLT applies the LT predicate on the "created_date" field.
-func CreatedDateLT(v time.Time) predicate.Silo {
-	return predicate.Silo(sql.FieldLT(FieldCreatedDate, v))
+// DateCreatedLT applies the LT predicate on the "date_created" field.
+func DateCreatedLT(v time.Time) predicate.Silo {
+	return predicate.Silo(sql.FieldLT(FieldDateCreated, v))
 }
 
-// CreatedDateLTE applies the LTE predicate on the "created_date" field.
-func CreatedDateLTE(v time.Time) predicate.Silo {
-	return predicate.Silo(sql.FieldLTE(FieldCreatedDate, v))
+// DateCreatedLTE applies the LTE predicate on the "date_created" field.
+func DateCreatedLTE(v time.Time) predicate.Silo {
+	return predicate.Silo(sql.FieldLTE(FieldDateCreated, v))
 }
 
 // HasMembers applies the HasEdge predicate on the "members" edge.

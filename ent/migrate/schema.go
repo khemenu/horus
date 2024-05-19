@@ -135,7 +135,7 @@ var (
 		{Name: "alias", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString, Size: 64},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
-		{Name: "created_date", Type: field.TypeTime},
+		{Name: "date_created", Type: field.TypeTime},
 	}
 	// SilosTable holds the schema information for the "silos" table.
 	SilosTable = &schema.Table{
@@ -149,7 +149,7 @@ var (
 		{Name: "alias", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString, Size: 64},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
-		{Name: "inter_visibility", Type: field.TypeEnum, Enums: []string{"PUBLIC", "PRIVATE"}},
+		{Name: "inter_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}},
 		{Name: "intra_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}},
 		{Name: "created_date", Type: field.TypeTime},
 		{Name: "silo_id", Type: field.TypeUUID},

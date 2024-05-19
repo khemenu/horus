@@ -21,8 +21,8 @@ const (
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
-	// FieldCreatedDate holds the string denoting the created_date field in the database.
-	FieldCreatedDate = "created_date"
+	// FieldDateCreated holds the string denoting the date_created field in the database.
+	FieldDateCreated = "date_created"
 	// EdgeMembers holds the string denoting the members edge name in mutations.
 	EdgeMembers = "members"
 	// EdgeTeams holds the string denoting the teams edge name in mutations.
@@ -60,7 +60,7 @@ var Columns = []string{
 	FieldAlias,
 	FieldName,
 	FieldDescription,
-	FieldCreatedDate,
+	FieldDateCreated,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -82,8 +82,8 @@ var (
 	DefaultDescription string
 	// DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	DescriptionValidator func(string) error
-	// DefaultCreatedDate holds the default value on creation for the "created_date" field.
-	DefaultCreatedDate func() time.Time
+	// DefaultDateCreated holds the default value on creation for the "date_created" field.
+	DefaultDateCreated func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -111,9 +111,9 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
-// ByCreatedDate orders the results by the created_date field.
-func ByCreatedDate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreatedDate, opts...).ToFunc()
+// ByDateCreated orders the results by the date_created field.
+func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
 }
 
 // ByMembersCount orders the results by members count.

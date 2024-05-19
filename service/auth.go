@@ -75,7 +75,7 @@ func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInReq
 	token, err := s.client.Token.Query().
 		Where(
 			token.And(
-				token.ValueEQ(req.Token.Value),
+				token.ValueEQ(req.Token),
 				token.Type(horus.TokenTypeAccess),
 			),
 		).
@@ -98,7 +98,7 @@ func (s *AuthService) Refresh(ctx context.Context, req *horus.RefreshRequest) (*
 	return entutils.WithTxV(ctx, s.client, func(tx *ent.Tx) (*horus.RefreshResponse, error) {
 		refresh_token, err := tx.Token.Query().
 			Where(token.And(
-				token.ValueEQ(req.Token.Value),
+				token.ValueEQ(req.Token),
 				token.Type(horus.TokenTypeRefresh),
 				token.DateExpiredGT(time.Now()),
 			)).
@@ -166,7 +166,7 @@ func (s *AuthService) SignOut(ctx context.Context, req *horus.SingOutRequest) (*
 	token, err := s.client.Token.Query().
 		Where(
 			token.And(
-				token.ValueEQ(req.Token.Value),
+				token.ValueEQ(req.Token),
 				token.Type(horus.TokenTypeAccess),
 			),
 		).

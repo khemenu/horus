@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package khepri.horus;
 
-import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto";
 import "khepri/horus/horus.proto";
 
 option go_package = "khepri.dev/horus";
@@ -42,14 +40,14 @@ message BasicSignInResponse {
 }
 
 message TokenSignInRequest {
-	Token token = 1;
+	string token = 1; // Access token.
 }
 message TokenSignInResponse {
-	Token token = 1;
+	Token token = 1; // Access token.
 }
 
 message RefreshRequest {
-	Token token = 1; // Refresh token.
+	string token = 1; // Refresh token.
 }
 message RefreshResponse {
 	Token token = 1; // Access token.
@@ -59,10 +57,11 @@ message VerifyOtpRequest {
 	string value = 1;
 }
 message VerifyOtpResponse {
+	Token token = 1;
 }
 
 message SingOutRequest {
-	Token token = 1;
+	string token = 1; // Access token.
 }
 message SingOutResponse {
 }

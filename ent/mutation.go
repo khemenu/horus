@@ -2735,7 +2735,7 @@ type SiloMutation struct {
 	alias              *string
 	name               *string
 	description        *string
-	created_date       *time.Time
+	date_created       *time.Time
 	clearedFields      map[string]struct{}
 	members            map[uuid.UUID]struct{}
 	removedmembers     map[uuid.UUID]struct{}
@@ -2963,40 +2963,40 @@ func (m *SiloMutation) ResetDescription() {
 	m.description = nil
 }
 
-// SetCreatedDate sets the "created_date" field.
-func (m *SiloMutation) SetCreatedDate(t time.Time) {
-	m.created_date = &t
+// SetDateCreated sets the "date_created" field.
+func (m *SiloMutation) SetDateCreated(t time.Time) {
+	m.date_created = &t
 }
 
-// CreatedDate returns the value of the "created_date" field in the mutation.
-func (m *SiloMutation) CreatedDate() (r time.Time, exists bool) {
-	v := m.created_date
+// DateCreated returns the value of the "date_created" field in the mutation.
+func (m *SiloMutation) DateCreated() (r time.Time, exists bool) {
+	v := m.date_created
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCreatedDate returns the old "created_date" field's value of the Silo entity.
+// OldDateCreated returns the old "date_created" field's value of the Silo entity.
 // If the Silo object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SiloMutation) OldCreatedDate(ctx context.Context) (v time.Time, err error) {
+func (m *SiloMutation) OldDateCreated(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatedDate is only allowed on UpdateOne operations")
+		return v, errors.New("OldDateCreated is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedDate requires an ID field in the mutation")
+		return v, errors.New("OldDateCreated requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatedDate: %w", err)
+		return v, fmt.Errorf("querying old value for OldDateCreated: %w", err)
 	}
-	return oldValue.CreatedDate, nil
+	return oldValue.DateCreated, nil
 }
 
-// ResetCreatedDate resets all changes to the "created_date" field.
-func (m *SiloMutation) ResetCreatedDate() {
-	m.created_date = nil
+// ResetDateCreated resets all changes to the "date_created" field.
+func (m *SiloMutation) ResetDateCreated() {
+	m.date_created = nil
 }
 
 // AddMemberIDs adds the "members" edge to the Account entity by ids.
@@ -3205,8 +3205,8 @@ func (m *SiloMutation) Fields() []string {
 	if m.description != nil {
 		fields = append(fields, silo.FieldDescription)
 	}
-	if m.created_date != nil {
-		fields = append(fields, silo.FieldCreatedDate)
+	if m.date_created != nil {
+		fields = append(fields, silo.FieldDateCreated)
 	}
 	return fields
 }
@@ -3222,8 +3222,8 @@ func (m *SiloMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case silo.FieldDescription:
 		return m.Description()
-	case silo.FieldCreatedDate:
-		return m.CreatedDate()
+	case silo.FieldDateCreated:
+		return m.DateCreated()
 	}
 	return nil, false
 }
@@ -3239,8 +3239,8 @@ func (m *SiloMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldName(ctx)
 	case silo.FieldDescription:
 		return m.OldDescription(ctx)
-	case silo.FieldCreatedDate:
-		return m.OldCreatedDate(ctx)
+	case silo.FieldDateCreated:
+		return m.OldDateCreated(ctx)
 	}
 	return nil, fmt.Errorf("unknown Silo field %s", name)
 }
@@ -3271,12 +3271,12 @@ func (m *SiloMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDescription(v)
 		return nil
-	case silo.FieldCreatedDate:
+	case silo.FieldDateCreated:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCreatedDate(v)
+		m.SetDateCreated(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Silo field %s", name)
@@ -3336,8 +3336,8 @@ func (m *SiloMutation) ResetField(name string) error {
 	case silo.FieldDescription:
 		m.ResetDescription()
 		return nil
-	case silo.FieldCreatedDate:
-		m.ResetCreatedDate()
+	case silo.FieldDateCreated:
+		m.ResetDateCreated()
 		return nil
 	}
 	return fmt.Errorf("unknown Silo field %s", name)

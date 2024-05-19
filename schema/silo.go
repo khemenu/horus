@@ -26,14 +26,15 @@ func (Silo) Fields() []ent.Field {
 			Annotations(entproto.Field(2)),
 
 		field.String("name").
-			NotEmpty().MaxLen(64).
+			NotEmpty().
+			MaxLen(64).
 			Annotations(entproto.Field(3)),
 		field.String("description").
 			MaxLen(256).
 			Default("").
 			Annotations(entproto.Field(4)),
 
-		field.Time("created_date").
+		field.Time("date_created").
 			Immutable().
 			Default(utcNow).
 			Annotations(entproto.Field(15)),
@@ -44,10 +45,19 @@ func (Silo) Edges() []ent.Edge {
 	return []ent.Edge{
 		// edge.From("members", Account.Type).Ref("silo"),
 		edge.To("members", Account.Type).
-			Annotations(entsql.OnDelete(entsql.Cascade), entproto.Skip()),
+			Annotations(
+				entsql.OnDelete(entsql.Cascade),
+				entproto.Skip(),
+			),
 		edge.To("teams", Team.Type).
-			Annotations(entsql.OnDelete(entsql.Cascade), entproto.Skip()),
+			Annotations(
+				entsql.OnDelete(entsql.Cascade),
+				entproto.Skip(),
+			),
 		edge.To("invitations", Invitation.Type).
-			Annotations(entsql.OnDelete(entsql.Cascade), entproto.Skip()),
+			Annotations(
+				entsql.OnDelete(entsql.Cascade),
+				entproto.Skip(),
+			),
 	}
 }

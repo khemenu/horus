@@ -39,7 +39,7 @@ func AuthUnaryInterceptor(signIn func(ctx context.Context, in *TokenSignInReques
 		}
 
 		res, err := signIn(metadata.NewOutgoingContext(ctx, metadata.MD{}), &TokenSignInRequest{
-			Token: &Token{Value: token},
+			Token: token,
 		})
 		if err != nil {
 			return nil, err
