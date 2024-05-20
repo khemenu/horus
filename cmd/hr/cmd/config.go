@@ -69,11 +69,16 @@ func ReadConfig(path string) (*Config, error) {
 		}
 	}
 
+	return c, nil
+}
+
+func (c *Config) Evaluate() error {
 	fx.Default(&c.Grpc.Host, "localhost")
 	fx.Default(&c.Grpc.Port, 35122)
-	fx.Default(&c.Log.Format, "text")
 	fx.Default(&c.Client.Db.Driver, c.Db.Driver)
 	fx.Default(&c.Client.Db.Source, c.Db.Source)
+	fx.Default(&c.Log.Enabled, fx.Addr(true))
+	fx.Default(&c.Log.Format, "text")
 
 	if c.Grpc.Host == "0.0.0.0" {
 		c.Grpc.Host = "localhost"
@@ -91,10 +96,10 @@ func ReadConfig(path string) (*Config, error) {
 	}
 
 	if len(errs) != 0 {
-		return nil, errors.Join(errs...)
+		return errors.Join(errs...)
 	}
 
-	return c, nil
+	return nil
 }
 
 type confCtxKey struct{}

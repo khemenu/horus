@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Config
+
+clusters:
+  - cluster:
+      server: https://k3s:6443
+      insecure-skip-tls-verify: true
+    name: default
+
+users:
+  - name: default
+    user:
+      token: asdf
+
+current-context: default
+contexts:
+  - context:
+      cluster: default
+      namespace: horus
+      user: default
+    name: default

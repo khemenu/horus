@@ -1,0 +1,63 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: horus
+spec:
+  selector:
+    matchLabels:
+      name: horus
+  template:
+    metadata:
+      labels:
+        name: horus
+    spec:
+      containers:
+        - name: horus
+          image: registry:5000/khepri/horus:latest
+          imagePullPolicy: Always
+          workingDir: /app
+          command:
+            - horus
+            - --conf=conf/horus.yaml
+          ports:
+            - containerPort: 35123
+              hostPort: 35123
+          volumeMounts:
+            - name: config
+              mountPath: /app/conf
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: horus
+            items:
+              - key: horus.yaml
+                path: horus.yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: horus
+data:
+  horus.yaml: |
+    grpc:
+      host: 0.0.0.0
+      port: 35122
+
+    http:
+      host: 0.0.0.0
+      port: 35123
+
+    db:
+      driver: sqlite3
+      source: file:horus.db?cache=shared&_fk=1
+
+    client:
+      db:
+        enabled: true
+        use_bare: true
+
+    debug:
+      enabled: true
+      unsecured: true

@@ -6,9 +6,6 @@ http:
   host: 0.0.0.0
   port: 35123
 
-kube:
-  enabled: true
-
 db:
   driver:
   source:

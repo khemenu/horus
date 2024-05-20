@@ -1,0 +1,2 @@
+kube-apiserver-arg:
+  - --authentication-token-webhook-config-file=/etc/rancher/k3s/webhook-config.yaml

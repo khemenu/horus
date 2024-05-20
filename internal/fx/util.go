@@ -1,5 +1,9 @@
 package fx
 
+func Addr[T any](v T) *T {
+	return &v
+}
+
 func Default[T comparable](target *T, v T) {
 	var zero T
 	if *target == zero {

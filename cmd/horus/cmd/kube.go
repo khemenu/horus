@@ -13,7 +13,9 @@ import (
 	"google.golang.org/grpc/status"
 	authnV1 "k8s.io/api/authentication/v1"
 	"khepri.dev/horus"
+	"khepri.dev/horus/ent"
 	"khepri.dev/horus/log"
+	"khepri.dev/horus/service/frame"
 )
 
 func HandleKubeWebhook(mux *http.ServeMux, svc horus.Service) {
@@ -50,7 +52,7 @@ Supported API versions are: %s
 		reviewed := authnV1.TokenReview{
 			TypeMeta: review.TypeMeta,
 			Status: authnV1.TokenReviewStatus{
-				Authenticated: false,
+				Authenticated: true,
 			},
 		}
 
@@ -58,6 +60,8 @@ Supported API versions are: %s
 			Token: review.Spec.Token,
 		})
 		if err != nil {
+			review.Status.Authenticated = false
+
 			s, _ := status.FromError(err)
 			if s.Code() != codes.Unauthenticated {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -66,7 +70,7 @@ Supported API versions are: %s
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		if !review.Status.Authenticated {
+		if !reviewed.Status.Authenticated {
 			if err := json.NewEncoder(w).Encode(&reviewed); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 			}
@@ -74,9 +78,10 @@ Supported API versions are: %s
 			return
 		}
 
-		user, err := svc.User().Get(r.Context(), &horus.GetUserRequest{
-			Id: sign_in.Token.Owner.Id,
+		ctx := frame.WithContext(r.Context(), &frame.Frame{
+			Actor: &ent.User{ID: uuid.UUID(sign_in.Token.Owner.Id)},
 		})
+		user, err := svc.User().Get(ctx, &horus.GetUserRequest{})
 		if err != nil {
 			l.Error("get user details", slog.String("err", err.Error()))
 			w.WriteHeader(http.StatusInternalServerError)

@@ -16,6 +16,9 @@ services:
       - type: bind
         source: ${HOME}/workspace
         target: /workspace
+      - type: bind
+        source: ./k3s/
+        target: /etc/rancher/k3s/
 
     expose:
       - 35122
@@ -35,3 +38,27 @@ services:
         source: ./envoy.yaml
         target: /etc/envoy/envoy.yaml
         read_only: true
+
+  docker:
+    image: library/docker:26-dind
+    command: 
+      - --tlsverify=false
+      - --insecure-registry=registry:5000
+
+    privileged: true
+
+  registry:
+    image: library/registry:2.8.3
+
+  k3s:
+    image: rancher/k3s:v1.30.0-k3s1
+    command:
+      - server
+      - --tls-san-security=false
+    
+    privileged: true
+
+    volumes:
+      - type: bind
+        source: ./k3s/
+        target: /etc/rancher/k3s/

@@ -14,5 +14,10 @@
 		"options": [
 			"--proto_path=${workspaceRoot}/ent/proto",
 		]
+	},
+	"yaml.schemas": {
+		"Kubernetes": [
+			"scripts/dev-horus.yaml"
+		]
 	}
 }

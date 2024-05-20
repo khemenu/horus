@@ -23,6 +23,11 @@ func main() {
 				Value:   "horus.yaml",
 				Usage:   "path to a config file",
 			},
+			&cli.BoolFlag{
+				Name:  "no-log",
+				Value: false,
+				Usage: "disable logging",
+			},
 		},
 		Before: func(ctx *cli.Context) error {
 			p := ctx.String("conf")
@@ -30,6 +35,14 @@ func main() {
 			conf, err = cmd.ReadConfig(p)
 			if err != nil {
 				return fmt.Errorf("read config: %w", err)
+			}
+
+			if ctx.Bool("no-log") {
+				b := false
+				conf.Log.Enabled = &b
+			}
+			if err := conf.Evaluate(); err != nil {
+				return fmt.Errorf("invalid config: %w", err)
 			}
 
 			l := conf.Log.NewLogger()

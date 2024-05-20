@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Config
+clusters:
+  - name: webhook
+    cluster:
+      server: http://localhost:35123/auth/kube
+      insecure-skip-tls-verify: true
+
+users:
+  - name: webhook
+
+current-context: webhook
+contexts:
+  - name: webhook
+    context:
+      cluster: webhook
+      user: webhook

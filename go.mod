@@ -8,7 +8,7 @@ require (
 	entgo.io/contrib v0.4.6-0.20231111095018-6ed0397cd307
 	entgo.io/ent v0.12.5
 	github.com/google/uuid v1.6.0
-	github.com/mattn/go-sqlite3 v1.14.18
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/rs/xid v1.5.0
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli/v2 v2.27.2
