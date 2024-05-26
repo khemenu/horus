@@ -31,18 +31,52 @@ func (uu *UserUpdate) Where(ps ...predicate.User) *UserUpdate {
 	return uu
 }
 
-// SetName sets the "name" field.
-func (uu *UserUpdate) SetName(s string) *UserUpdate {
-	uu.mutation.SetName(s)
+// SetAlias sets the "alias" field.
+func (uu *UserUpdate) SetAlias(s string) *UserUpdate {
+	uu.mutation.SetAlias(s)
 	return uu
 }
 
-// SetNillableName sets the "name" field if the given value is not nil.
-func (uu *UserUpdate) SetNillableName(s *string) *UserUpdate {
+// SetNillableAlias sets the "alias" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableAlias(s *string) *UserUpdate {
 	if s != nil {
-		uu.SetName(*s)
+		uu.SetAlias(*s)
 	}
 	return uu
+}
+
+// SetParentID sets the "parent" edge to the User entity by ID.
+func (uu *UserUpdate) SetParentID(id uuid.UUID) *UserUpdate {
+	uu.mutation.SetParentID(id)
+	return uu
+}
+
+// SetNillableParentID sets the "parent" edge to the User entity by ID if the given value is not nil.
+func (uu *UserUpdate) SetNillableParentID(id *uuid.UUID) *UserUpdate {
+	if id != nil {
+		uu = uu.SetParentID(*id)
+	}
+	return uu
+}
+
+// SetParent sets the "parent" edge to the User entity.
+func (uu *UserUpdate) SetParent(u *User) *UserUpdate {
+	return uu.SetParentID(u.ID)
+}
+
+// AddChildIDs adds the "children" edge to the User entity by IDs.
+func (uu *UserUpdate) AddChildIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddChildIDs(ids...)
+	return uu
+}
+
+// AddChildren adds the "children" edges to the User entity.
+func (uu *UserUpdate) AddChildren(u ...*User) *UserUpdate {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return uu.AddChildIDs(ids...)
 }
 
 // AddIdentityIDs adds the "identities" edge to the Identity entity by IDs.
@@ -93,6 +127,33 @@ func (uu *UserUpdate) AddTokens(t ...*Token) *UserUpdate {
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
+}
+
+// ClearParent clears the "parent" edge to the User entity.
+func (uu *UserUpdate) ClearParent() *UserUpdate {
+	uu.mutation.ClearParent()
+	return uu
+}
+
+// ClearChildren clears all "children" edges to the User entity.
+func (uu *UserUpdate) ClearChildren() *UserUpdate {
+	uu.mutation.ClearChildren()
+	return uu
+}
+
+// RemoveChildIDs removes the "children" edge to User entities by IDs.
+func (uu *UserUpdate) RemoveChildIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveChildIDs(ids...)
+	return uu
+}
+
+// RemoveChildren removes "children" edges to User entities.
+func (uu *UserUpdate) RemoveChildren(u ...*User) *UserUpdate {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return uu.RemoveChildIDs(ids...)
 }
 
 // ClearIdentities clears all "identities" edges to the Identity entity.
@@ -187,9 +248,9 @@ func (uu *UserUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (uu *UserUpdate) check() error {
-	if v, ok := uu.mutation.Name(); ok {
-		if err := user.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
+	if v, ok := uu.mutation.Alias(); ok {
+		if err := user.AliasValidator(v); err != nil {
+			return &ValidationError{Name: "alias", err: fmt.Errorf(`ent: validator failed for field "User.alias": %w`, err)}
 		}
 	}
 	return nil
@@ -207,8 +268,82 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := uu.mutation.Name(); ok {
-		_spec.SetField(user.FieldName, field.TypeString, value)
+	if value, ok := uu.mutation.Alias(); ok {
+		_spec.SetField(user.FieldAlias, field.TypeString, value)
+	}
+	if uu.mutation.ParentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.ParentTable,
+			Columns: []string{user.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ParentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.ParentTable,
+			Columns: []string{user.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChildrenTable,
+			Columns: []string{user.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !uu.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChildrenTable,
+			Columns: []string{user.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChildrenTable,
+			Columns: []string{user.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if uu.mutation.IdentitiesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -365,18 +500,52 @@ type UserUpdateOne struct {
 	mutation *UserMutation
 }
 
-// SetName sets the "name" field.
-func (uuo *UserUpdateOne) SetName(s string) *UserUpdateOne {
-	uuo.mutation.SetName(s)
+// SetAlias sets the "alias" field.
+func (uuo *UserUpdateOne) SetAlias(s string) *UserUpdateOne {
+	uuo.mutation.SetAlias(s)
 	return uuo
 }
 
-// SetNillableName sets the "name" field if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableName(s *string) *UserUpdateOne {
+// SetNillableAlias sets the "alias" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableAlias(s *string) *UserUpdateOne {
 	if s != nil {
-		uuo.SetName(*s)
+		uuo.SetAlias(*s)
 	}
 	return uuo
+}
+
+// SetParentID sets the "parent" edge to the User entity by ID.
+func (uuo *UserUpdateOne) SetParentID(id uuid.UUID) *UserUpdateOne {
+	uuo.mutation.SetParentID(id)
+	return uuo
+}
+
+// SetNillableParentID sets the "parent" edge to the User entity by ID if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableParentID(id *uuid.UUID) *UserUpdateOne {
+	if id != nil {
+		uuo = uuo.SetParentID(*id)
+	}
+	return uuo
+}
+
+// SetParent sets the "parent" edge to the User entity.
+func (uuo *UserUpdateOne) SetParent(u *User) *UserUpdateOne {
+	return uuo.SetParentID(u.ID)
+}
+
+// AddChildIDs adds the "children" edge to the User entity by IDs.
+func (uuo *UserUpdateOne) AddChildIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddChildIDs(ids...)
+	return uuo
+}
+
+// AddChildren adds the "children" edges to the User entity.
+func (uuo *UserUpdateOne) AddChildren(u ...*User) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return uuo.AddChildIDs(ids...)
 }
 
 // AddIdentityIDs adds the "identities" edge to the Identity entity by IDs.
@@ -427,6 +596,33 @@ func (uuo *UserUpdateOne) AddTokens(t ...*Token) *UserUpdateOne {
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
+}
+
+// ClearParent clears the "parent" edge to the User entity.
+func (uuo *UserUpdateOne) ClearParent() *UserUpdateOne {
+	uuo.mutation.ClearParent()
+	return uuo
+}
+
+// ClearChildren clears all "children" edges to the User entity.
+func (uuo *UserUpdateOne) ClearChildren() *UserUpdateOne {
+	uuo.mutation.ClearChildren()
+	return uuo
+}
+
+// RemoveChildIDs removes the "children" edge to User entities by IDs.
+func (uuo *UserUpdateOne) RemoveChildIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveChildIDs(ids...)
+	return uuo
+}
+
+// RemoveChildren removes "children" edges to User entities.
+func (uuo *UserUpdateOne) RemoveChildren(u ...*User) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return uuo.RemoveChildIDs(ids...)
 }
 
 // ClearIdentities clears all "identities" edges to the Identity entity.
@@ -534,9 +730,9 @@ func (uuo *UserUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (uuo *UserUpdateOne) check() error {
-	if v, ok := uuo.mutation.Name(); ok {
-		if err := user.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
+	if v, ok := uuo.mutation.Alias(); ok {
+		if err := user.AliasValidator(v); err != nil {
+			return &ValidationError{Name: "alias", err: fmt.Errorf(`ent: validator failed for field "User.alias": %w`, err)}
 		}
 	}
 	return nil
@@ -571,8 +767,82 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			}
 		}
 	}
-	if value, ok := uuo.mutation.Name(); ok {
-		_spec.SetField(user.FieldName, field.TypeString, value)
+	if value, ok := uuo.mutation.Alias(); ok {
+		_spec.SetField(user.FieldAlias, field.TypeString, value)
+	}
+	if uuo.mutation.ParentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.ParentTable,
+			Columns: []string{user.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ParentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.ParentTable,
+			Columns: []string{user.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChildrenTable,
+			Columns: []string{user.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !uuo.mutation.ChildrenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChildrenTable,
+			Columns: []string{user.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChildrenTable,
+			Columns: []string{user.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if uuo.mutation.IdentitiesCleared() {
 		edge := &sqlgraph.EdgeSpec{

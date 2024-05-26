@@ -14,6 +14,7 @@ import (
 	ent "khepri.dev/horus/ent"
 	identity "khepri.dev/horus/ent/identity"
 	user "khepri.dev/horus/ent/user"
+	reflect "reflect"
 )
 
 // IdentityService implements IdentityServiceServer
@@ -161,11 +162,15 @@ func (svc *IdentityService) Delete(ctx context.Context, req *horus.DeleteIdentit
 func (svc *IdentityService) createBuilder(identity *horus.Identity) (*ent.IdentityCreate, error) {
 	m := svc.client.Identity.Create()
 	identityCreatedDate := runtime.ExtractTime(identity.GetCreatedDate())
-	m.SetCreatedDate(identityCreatedDate)
+	if !reflect.ValueOf(identity.GetCreatedDate()).IsZero() {
+		m.SetCreatedDate(identityCreatedDate)
+	}
 	identityKind := identity.GetKind()
 	m.SetKind(identityKind)
 	identityName := identity.GetName()
-	m.SetName(identityName)
+	if !reflect.ValueOf(identity.GetName()).IsZero() {
+		m.SetName(identityName)
+	}
 	identityVerifier := identity.GetVerifier()
 	m.SetVerifier(identityVerifier)
 	if identity.GetOwner() != nil {

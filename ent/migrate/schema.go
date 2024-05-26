@@ -149,8 +149,8 @@ var (
 		{Name: "alias", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString, Size: 64},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
-		{Name: "inter_visibility", Type: field.TypeEnum, Enums: []string{"PUBLIC", "PRIVATE"}},
-		{Name: "intra_visibility", Type: field.TypeEnum, Enums: []string{"PUBLIC", "PRIVATE"}},
+		{Name: "inter_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}},
+		{Name: "intra_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}},
 		{Name: "created_date", Type: field.TypeTime},
 		{Name: "silo_id", Type: field.TypeUUID},
 	}
@@ -209,14 +209,23 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "name", Type: field.TypeString, Unique: true},
-		{Name: "created_date", Type: field.TypeTime},
+		{Name: "alias", Type: field.TypeString, Unique: true, Size: 32},
+		{Name: "date_created", Type: field.TypeTime},
+		{Name: "user_children", Type: field.TypeUUID, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "users_users_children",
+				Columns:    []*schema.Column{UsersColumns[3]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
@@ -242,4 +251,5 @@ func init() {
 	TeamsTable.ForeignKeys[0].RefTable = SilosTable
 	TokensTable.ForeignKeys[0].RefTable = TokensTable
 	TokensTable.ForeignKeys[1].RefTable = UsersTable
+	UsersTable.ForeignKeys[0].RefTable = UsersTable
 }

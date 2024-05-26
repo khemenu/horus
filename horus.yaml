@@ -23,5 +23,5 @@ debug:
   mem_db:
     enabled: true
     users:
-      - name: ra
+      - alias: ra
         password: 1234

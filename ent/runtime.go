@@ -251,14 +251,31 @@ func init() {
 	token.DefaultID = tokenDescID.Default.(func() uuid.UUID)
 	userFields := schema.User{}.Fields()
 	_ = userFields
-	// userDescName is the schema descriptor for name field.
-	userDescName := userFields[1].Descriptor()
-	// user.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	user.NameValidator = userDescName.Validators[0].(func(string) error)
-	// userDescCreatedDate is the schema descriptor for created_date field.
-	userDescCreatedDate := userFields[2].Descriptor()
-	// user.DefaultCreatedDate holds the default value on creation for the created_date field.
-	user.DefaultCreatedDate = userDescCreatedDate.Default.(func() time.Time)
+	// userDescAlias is the schema descriptor for alias field.
+	userDescAlias := userFields[1].Descriptor()
+	// user.DefaultAlias holds the default value on creation for the alias field.
+	user.DefaultAlias = userDescAlias.Default.(func() string)
+	// user.AliasValidator is a validator for the "alias" field. It is called by the builders before save.
+	user.AliasValidator = func() func(string) error {
+		validators := userDescAlias.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(alias string) error {
+			for _, fn := range fns {
+				if err := fn(alias); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// userDescDateCreated is the schema descriptor for date_created field.
+	userDescDateCreated := userFields[2].Descriptor()
+	// user.DefaultDateCreated holds the default value on creation for the date_created field.
+	user.DefaultDateCreated = userDescDateCreated.Default.(func() time.Time)
 	// userDescID is the schema descriptor for id field.
 	userDescID := userFields[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.

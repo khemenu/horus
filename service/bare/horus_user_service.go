@@ -15,6 +15,7 @@ import (
 	account "khepri.dev/horus/ent/account"
 	identity "khepri.dev/horus/ent/identity"
 	user "khepri.dev/horus/ent/user"
+	reflect "reflect"
 )
 
 // UserService implements UserServiceServer
@@ -33,15 +34,15 @@ func NewUserService(client *ent.Client) *UserService {
 // toProtoUser transforms the ent type to the pb type
 func toProtoUser(e *ent.User) (*horus.User, error) {
 	v := &horus.User{}
-	created_date := timestamppb.New(e.CreatedDate)
-	v.CreatedDate = created_date
+	alias := e.Alias
+	v.Alias = alias
+	date_created := timestamppb.New(e.DateCreated)
+	v.DateCreated = date_created
 	id, err := e.ID.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
 	v.Id = id
-	name := e.Name
-	v.Name = name
 
 	for _, edg := range e.Edges.Accounts {
 		id, err := edg.ID.MarshalBinary()
@@ -53,11 +54,31 @@ func toProtoUser(e *ent.User) (*horus.User, error) {
 		})
 	}
 
+	for _, edg := range e.Edges.Children {
+		id, err := edg.ID.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		v.Children = append(v.Children, &horus.User{
+			Id: id,
+		})
+	}
+
 	for _, edg := range e.Edges.Identities {
 		id := edg.ID
 		v.Identities = append(v.Identities, &horus.Identity{
 			Id: id,
 		})
+	}
+
+	if edg := e.Edges.Parent; edg != nil {
+		id, err := edg.ID.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		v.Parent = &horus.User{
+			Id: id,
+		}
 	}
 	return v, nil
 }
@@ -109,8 +130,14 @@ func (svc *UserService) Get(ctx context.Context, req *horus.GetUserRequest) (*ho
 			WithAccounts(func(query *ent.AccountQuery) {
 				query.Select(account.FieldID)
 			}).
+			WithChildren(func(query *ent.UserQuery) {
+				query.Select(user.FieldID)
+			}).
 			WithIdentities(func(query *ent.IdentityQuery) {
 				query.Select(identity.FieldID)
+			}).
+			WithParent(func(query *ent.UserQuery) {
+				query.Select(user.FieldID)
 			}).
 			Only(ctx)
 	default:
@@ -135,8 +162,8 @@ func (svc *UserService) Update(ctx context.Context, req *horus.UpdateUserRequest
 		return nil, status.Errorf(codes.InvalidArgument, "invalid argument: %s", err)
 	}
 	m := svc.client.User.UpdateOneID(userID)
-	userName := user.GetName()
-	m.SetName(userName)
+	userAlias := user.GetAlias()
+	m.SetAlias(userAlias)
 	for _, item := range user.GetAccounts() {
 		var accounts uuid.UUID
 		if err := (&accounts).UnmarshalBinary(item.GetId()); err != nil {
@@ -144,9 +171,23 @@ func (svc *UserService) Update(ctx context.Context, req *horus.UpdateUserRequest
 		}
 		m.AddAccountIDs(accounts)
 	}
+	for _, item := range user.GetChildren() {
+		var children uuid.UUID
+		if err := (&children).UnmarshalBinary(item.GetId()); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid argument: %s", err)
+		}
+		m.AddChildIDs(children)
+	}
 	for _, item := range user.GetIdentities() {
 		identities := item.GetId()
 		m.AddIdentityIDs(identities)
+	}
+	if user.GetParent() != nil {
+		var userParent uuid.UUID
+		if err := (&userParent).UnmarshalBinary(user.GetParent().GetId()); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid argument: %s", err)
+		}
+		m.SetParentID(userParent)
 	}
 
 	res, err := m.Save(ctx)
@@ -188,10 +229,14 @@ func (svc *UserService) Delete(ctx context.Context, req *horus.DeleteUserRequest
 
 func (svc *UserService) createBuilder(user *horus.User) (*ent.UserCreate, error) {
 	m := svc.client.User.Create()
-	userCreatedDate := runtime.ExtractTime(user.GetCreatedDate())
-	m.SetCreatedDate(userCreatedDate)
-	userName := user.GetName()
-	m.SetName(userName)
+	userAlias := user.GetAlias()
+	if !reflect.ValueOf(user.GetAlias()).IsZero() {
+		m.SetAlias(userAlias)
+	}
+	userDateCreated := runtime.ExtractTime(user.GetDateCreated())
+	if !reflect.ValueOf(user.GetDateCreated()).IsZero() {
+		m.SetDateCreated(userDateCreated)
+	}
 	for _, item := range user.GetAccounts() {
 		var accounts uuid.UUID
 		if err := (&accounts).UnmarshalBinary(item.GetId()); err != nil {
@@ -199,9 +244,23 @@ func (svc *UserService) createBuilder(user *horus.User) (*ent.UserCreate, error)
 		}
 		m.AddAccountIDs(accounts)
 	}
+	for _, item := range user.GetChildren() {
+		var children uuid.UUID
+		if err := (&children).UnmarshalBinary(item.GetId()); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid argument: %s", err)
+		}
+		m.AddChildIDs(children)
+	}
 	for _, item := range user.GetIdentities() {
 		identities := item.GetId()
 		m.AddIdentityIDs(identities)
+	}
+	if user.GetParent() != nil {
+		var userParent uuid.UUID
+		if err := (&userParent).UnmarshalBinary(user.GetParent().GetId()); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid argument: %s", err)
+		}
+		m.SetParentID(userParent)
 	}
 	return m, nil
 }

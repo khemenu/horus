@@ -159,7 +159,7 @@ func (s *TokenService) Delete(ctx context.Context, req *horus.DeleteTokenRequest
 
 		return nil, fmt.Errorf("get token: %w", err)
 	}
-	if !bytes.Equal(token.Owner.Id, f.Actor.ID[:]) {
+	if !bytes.Equal(token.GetOwner().Id, f.Actor.ID[:]) {
 		return nil, status.Error(codes.NotFound, "not found")
 	}
 

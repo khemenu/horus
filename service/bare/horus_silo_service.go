@@ -13,6 +13,7 @@ import (
 	horus "khepri.dev/horus"
 	ent "khepri.dev/horus/ent"
 	silo "khepri.dev/horus/ent/silo"
+	reflect "reflect"
 )
 
 // SiloService implements SiloServiceServer
@@ -163,9 +164,13 @@ func (svc *SiloService) createBuilder(silo *horus.Silo) (*ent.SiloCreate, error)
 	siloAlias := silo.GetAlias()
 	m.SetAlias(siloAlias)
 	siloDateCreated := runtime.ExtractTime(silo.GetDateCreated())
-	m.SetDateCreated(siloDateCreated)
+	if !reflect.ValueOf(silo.GetDateCreated()).IsZero() {
+		m.SetDateCreated(siloDateCreated)
+	}
 	siloDescription := silo.GetDescription()
-	m.SetDescription(siloDescription)
+	if !reflect.ValueOf(silo.GetDescription()).IsZero() {
+		m.SetDescription(siloDescription)
+	}
 	siloName := silo.GetName()
 	m.SetName(siloName)
 	return m, nil

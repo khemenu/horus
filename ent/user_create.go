@@ -24,22 +24,30 @@ type UserCreate struct {
 	hooks    []Hook
 }
 
-// SetName sets the "name" field.
-func (uc *UserCreate) SetName(s string) *UserCreate {
-	uc.mutation.SetName(s)
+// SetAlias sets the "alias" field.
+func (uc *UserCreate) SetAlias(s string) *UserCreate {
+	uc.mutation.SetAlias(s)
 	return uc
 }
 
-// SetCreatedDate sets the "created_date" field.
-func (uc *UserCreate) SetCreatedDate(t time.Time) *UserCreate {
-	uc.mutation.SetCreatedDate(t)
+// SetNillableAlias sets the "alias" field if the given value is not nil.
+func (uc *UserCreate) SetNillableAlias(s *string) *UserCreate {
+	if s != nil {
+		uc.SetAlias(*s)
+	}
 	return uc
 }
 
-// SetNillableCreatedDate sets the "created_date" field if the given value is not nil.
-func (uc *UserCreate) SetNillableCreatedDate(t *time.Time) *UserCreate {
+// SetDateCreated sets the "date_created" field.
+func (uc *UserCreate) SetDateCreated(t time.Time) *UserCreate {
+	uc.mutation.SetDateCreated(t)
+	return uc
+}
+
+// SetNillableDateCreated sets the "date_created" field if the given value is not nil.
+func (uc *UserCreate) SetNillableDateCreated(t *time.Time) *UserCreate {
 	if t != nil {
-		uc.SetCreatedDate(*t)
+		uc.SetDateCreated(*t)
 	}
 	return uc
 }
@@ -56,6 +64,40 @@ func (uc *UserCreate) SetNillableID(u *uuid.UUID) *UserCreate {
 		uc.SetID(*u)
 	}
 	return uc
+}
+
+// SetParentID sets the "parent" edge to the User entity by ID.
+func (uc *UserCreate) SetParentID(id uuid.UUID) *UserCreate {
+	uc.mutation.SetParentID(id)
+	return uc
+}
+
+// SetNillableParentID sets the "parent" edge to the User entity by ID if the given value is not nil.
+func (uc *UserCreate) SetNillableParentID(id *uuid.UUID) *UserCreate {
+	if id != nil {
+		uc = uc.SetParentID(*id)
+	}
+	return uc
+}
+
+// SetParent sets the "parent" edge to the User entity.
+func (uc *UserCreate) SetParent(u *User) *UserCreate {
+	return uc.SetParentID(u.ID)
+}
+
+// AddChildIDs adds the "children" edge to the User entity by IDs.
+func (uc *UserCreate) AddChildIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddChildIDs(ids...)
+	return uc
+}
+
+// AddChildren adds the "children" edges to the User entity.
+func (uc *UserCreate) AddChildren(u ...*User) *UserCreate {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return uc.AddChildIDs(ids...)
 }
 
 // AddIdentityIDs adds the "identities" edge to the Identity entity by IDs.
@@ -138,9 +180,13 @@ func (uc *UserCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (uc *UserCreate) defaults() {
-	if _, ok := uc.mutation.CreatedDate(); !ok {
-		v := user.DefaultCreatedDate()
-		uc.mutation.SetCreatedDate(v)
+	if _, ok := uc.mutation.Alias(); !ok {
+		v := user.DefaultAlias()
+		uc.mutation.SetAlias(v)
+	}
+	if _, ok := uc.mutation.DateCreated(); !ok {
+		v := user.DefaultDateCreated()
+		uc.mutation.SetDateCreated(v)
 	}
 	if _, ok := uc.mutation.ID(); !ok {
 		v := user.DefaultID()
@@ -150,16 +196,16 @@ func (uc *UserCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
-	if _, ok := uc.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "User.name"`)}
+	if _, ok := uc.mutation.Alias(); !ok {
+		return &ValidationError{Name: "alias", err: errors.New(`ent: missing required field "User.alias"`)}
 	}
-	if v, ok := uc.mutation.Name(); ok {
-		if err := user.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
+	if v, ok := uc.mutation.Alias(); ok {
+		if err := user.AliasValidator(v); err != nil {
+			return &ValidationError{Name: "alias", err: fmt.Errorf(`ent: validator failed for field "User.alias": %w`, err)}
 		}
 	}
-	if _, ok := uc.mutation.CreatedDate(); !ok {
-		return &ValidationError{Name: "created_date", err: errors.New(`ent: missing required field "User.created_date"`)}
+	if _, ok := uc.mutation.DateCreated(); !ok {
+		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "User.date_created"`)}
 	}
 	return nil
 }
@@ -196,13 +242,46 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := uc.mutation.Name(); ok {
-		_spec.SetField(user.FieldName, field.TypeString, value)
-		_node.Name = value
+	if value, ok := uc.mutation.Alias(); ok {
+		_spec.SetField(user.FieldAlias, field.TypeString, value)
+		_node.Alias = value
 	}
-	if value, ok := uc.mutation.CreatedDate(); ok {
-		_spec.SetField(user.FieldCreatedDate, field.TypeTime, value)
-		_node.CreatedDate = value
+	if value, ok := uc.mutation.DateCreated(); ok {
+		_spec.SetField(user.FieldDateCreated, field.TypeTime, value)
+		_node.DateCreated = value
+	}
+	if nodes := uc.mutation.ParentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.ParentTable,
+			Columns: []string{user.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_children = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ChildrenTable,
+			Columns: []string{user.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := uc.mutation.IdentitiesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

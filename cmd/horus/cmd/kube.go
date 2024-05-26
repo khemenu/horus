@@ -89,7 +89,7 @@ Supported API versions are: %s
 		}
 
 		reviewed.Status.User = authnV1.UserInfo{
-			Username: user.Name,
+			Username: user.Alias,
 			UID:      uuid.UUID(user.Id).String(),
 		}
 		if err := json.NewEncoder(w).Encode(&reviewed); err != nil {

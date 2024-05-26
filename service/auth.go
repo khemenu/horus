@@ -26,7 +26,7 @@ type AuthService struct {
 
 func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInRequest) (*horus.BasicSignInResponse, error) {
 	u, err := s.client.User.Query().
-		Where(user.NameEQ(req.Username)).
+		Where(user.AliasEQ(req.Username)).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -74,10 +74,8 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInRequest) (*horus.TokenSignInResponse, error) {
 	token, err := s.client.Token.Query().
 		Where(
-			token.And(
-				token.ValueEQ(req.Token),
-				token.Type(horus.TokenTypeAccess),
-			),
+			token.ValueEQ(req.Token),
+			token.Type(horus.TokenTypeAccess),
 		).
 		WithOwner().
 		Only(ctx)

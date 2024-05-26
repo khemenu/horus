@@ -320,17 +320,19 @@ message Token {
 
   string value = 2;
 
-  string type = 5;
+  string type = 3;
 
-  string name = 6;
+  string name = 4;
 
   google.protobuf.Timestamp date_created = 15;
 
   google.protobuf.Timestamp date_expired = 14;
 
-  User owner = 3;
+  User owner = 5;
 
-  Token parent = 4;
+  Token parent = 6;
+
+  repeated Token children = 7;
 }
 
 message CreateTokenRequest {
@@ -362,13 +364,17 @@ message DeleteTokenRequest {
 message User {
   bytes id = 1;
 
-  string name = 2;
+  string alias = 2;
 
-  google.protobuf.Timestamp created_date = 15;
+  google.protobuf.Timestamp date_created = 15;
 
-  repeated Identity identities = 3;
+  User parent = 3;
 
-  repeated Account accounts = 4;
+  repeated User children = 4;
+
+  repeated Identity identities = 5;
+
+  repeated Account accounts = 6;
 }
 
 message CreateUserRequest {

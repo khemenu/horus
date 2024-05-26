@@ -19,6 +19,7 @@ import (
 	membership "khepri.dev/horus/ent/membership"
 	silo "khepri.dev/horus/ent/silo"
 	user "khepri.dev/horus/ent/user"
+	reflect "reflect"
 	regexp "regexp"
 	strings "strings"
 )
@@ -326,11 +327,17 @@ func (svc *AccountService) List(ctx context.Context, req *horus.ListAccountReque
 func (svc *AccountService) createBuilder(account *horus.Account) (*ent.AccountCreate, error) {
 	m := svc.client.Account.Create()
 	accountAlias := account.GetAlias()
-	m.SetAlias(accountAlias)
+	if !reflect.ValueOf(account.GetAlias()).IsZero() {
+		m.SetAlias(accountAlias)
+	}
 	accountCreatedDate := runtime.ExtractTime(account.GetCreatedDate())
-	m.SetCreatedDate(accountCreatedDate)
+	if !reflect.ValueOf(account.GetCreatedDate()).IsZero() {
+		m.SetCreatedDate(accountCreatedDate)
+	}
 	accountDescription := account.GetDescription()
-	m.SetDescription(accountDescription)
+	if !reflect.ValueOf(account.GetDescription()).IsZero() {
+		m.SetDescription(accountDescription)
+	}
 	accountName := account.GetName()
 	m.SetName(accountName)
 	accountRole := toEntAccount_Role(account.GetRole())

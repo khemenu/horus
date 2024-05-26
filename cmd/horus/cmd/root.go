@@ -56,7 +56,7 @@ func Run(ctx context.Context, c *Config) error {
 	svc := service.NewService(db)
 	if c.Debug.Enabled && c.Debug.MemDb.Enabled {
 		for _, u := range c.Debug.MemDb.Users {
-			user, err := db.User.Create().SetName(u.Name).Save(ctx)
+			user, err := db.User.Create().SetAlias(u.Alias).Save(ctx)
 			if err != nil {
 				return fmt.Errorf("create user for mem DB: %w", err)
 			}
@@ -67,7 +67,7 @@ func Run(ctx context.Context, c *Config) error {
 				Value: u.Password,
 				Type:  horus.TokenTypeBasic,
 			}}); err != nil {
-				return fmt.Errorf("set password for user %s: %w", u.Name, err)
+				return fmt.Errorf("set password for user %s: %w", u.Alias, err)
 			}
 		}
 	}

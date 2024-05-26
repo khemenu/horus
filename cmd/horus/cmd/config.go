@@ -48,7 +48,7 @@ type DebugConfig struct {
 type MemDbConfig struct {
 	Enabled bool `yaml:"enabled"`
 	Users   []struct {
-		Name     string `yaml:"name"`
+		Alias    string `yaml:"alias"`
 		Password string `yaml:"password"`
 	} `yaml:"users"`
 }

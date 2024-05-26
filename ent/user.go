@@ -18,18 +18,23 @@ type User struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
-	// Name holds the value of the "name" field.
-	Name string `json:"name,omitempty"`
-	// CreatedDate holds the value of the "created_date" field.
-	CreatedDate time.Time `json:"created_date,omitempty"`
+	// Alias holds the value of the "alias" field.
+	Alias string `json:"alias,omitempty"`
+	// DateCreated holds the value of the "date_created" field.
+	DateCreated time.Time `json:"date_created,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
-	Edges        UserEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges         UserEdges `json:"edges"`
+	user_children *uuid.UUID
+	selectValues  sql.SelectValues
 }
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
+	// Parent holds the value of the parent edge.
+	Parent *User `json:"parent,omitempty"`
+	// Children holds the value of the children edge.
+	Children []*User `json:"children,omitempty"`
 	// Identities holds the value of the identities edge.
 	Identities []*Identity `json:"identities,omitempty"`
 	// Accounts holds the value of the accounts edge.
@@ -38,13 +43,35 @@ type UserEdges struct {
 	Tokens []*Token `json:"tokens,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [5]bool
+}
+
+// ParentOrErr returns the Parent value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserEdges) ParentOrErr() (*User, error) {
+	if e.loadedTypes[0] {
+		if e.Parent == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: user.Label}
+		}
+		return e.Parent, nil
+	}
+	return nil, &NotLoadedError{edge: "parent"}
+}
+
+// ChildrenOrErr returns the Children value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ChildrenOrErr() ([]*User, error) {
+	if e.loadedTypes[1] {
+		return e.Children, nil
+	}
+	return nil, &NotLoadedError{edge: "children"}
 }
 
 // IdentitiesOrErr returns the Identities value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) IdentitiesOrErr() ([]*Identity, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[2] {
 		return e.Identities, nil
 	}
 	return nil, &NotLoadedError{edge: "identities"}
@@ -53,7 +80,7 @@ func (e UserEdges) IdentitiesOrErr() ([]*Identity, error) {
 // AccountsOrErr returns the Accounts value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) AccountsOrErr() ([]*Account, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[3] {
 		return e.Accounts, nil
 	}
 	return nil, &NotLoadedError{edge: "accounts"}
@@ -62,7 +89,7 @@ func (e UserEdges) AccountsOrErr() ([]*Account, error) {
 // TokensOrErr returns the Tokens value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) TokensOrErr() ([]*Token, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[4] {
 		return e.Tokens, nil
 	}
 	return nil, &NotLoadedError{edge: "tokens"}
@@ -73,12 +100,14 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldName:
+		case user.FieldAlias:
 			values[i] = new(sql.NullString)
-		case user.FieldCreatedDate:
+		case user.FieldDateCreated:
 			values[i] = new(sql.NullTime)
 		case user.FieldID:
 			values[i] = new(uuid.UUID)
+		case user.ForeignKeys[0]: // user_children
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -100,17 +129,24 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				u.ID = *value
 			}
-		case user.FieldName:
+		case user.FieldAlias:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field name", values[i])
+				return fmt.Errorf("unexpected type %T for field alias", values[i])
 			} else if value.Valid {
-				u.Name = value.String
+				u.Alias = value.String
 			}
-		case user.FieldCreatedDate:
+		case user.FieldDateCreated:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_date", values[i])
+				return fmt.Errorf("unexpected type %T for field date_created", values[i])
 			} else if value.Valid {
-				u.CreatedDate = value.Time
+				u.DateCreated = value.Time
+			}
+		case user.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field user_children", values[i])
+			} else if value.Valid {
+				u.user_children = new(uuid.UUID)
+				*u.user_children = *value.S.(*uuid.UUID)
 			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
@@ -123,6 +159,16 @@ func (u *User) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
+}
+
+// QueryParent queries the "parent" edge of the User entity.
+func (u *User) QueryParent() *UserQuery {
+	return NewUserClient(u.config).QueryParent(u)
+}
+
+// QueryChildren queries the "children" edge of the User entity.
+func (u *User) QueryChildren() *UserQuery {
+	return NewUserClient(u.config).QueryChildren(u)
 }
 
 // QueryIdentities queries the "identities" edge of the User entity.
@@ -163,11 +209,11 @@ func (u *User) String() string {
 	var builder strings.Builder
 	builder.WriteString("User(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", u.ID))
-	builder.WriteString("name=")
-	builder.WriteString(u.Name)
+	builder.WriteString("alias=")
+	builder.WriteString(u.Alias)
 	builder.WriteString(", ")
-	builder.WriteString("created_date=")
-	builder.WriteString(u.CreatedDate.Format(time.ANSIC))
+	builder.WriteString("date_created=")
+	builder.WriteString(u.DateCreated.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

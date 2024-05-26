@@ -5039,9 +5039,14 @@ type UserMutation struct {
 	op                Op
 	typ               string
 	id                *uuid.UUID
-	name              *string
-	created_date      *time.Time
+	alias             *string
+	date_created      *time.Time
 	clearedFields     map[string]struct{}
+	parent            *uuid.UUID
+	clearedparent     bool
+	children          map[uuid.UUID]struct{}
+	removedchildren   map[uuid.UUID]struct{}
+	clearedchildren   bool
 	identities        map[string]struct{}
 	removedidentities map[string]struct{}
 	clearedidentities bool
@@ -5160,76 +5165,169 @@ func (m *UserMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	}
 }
 
-// SetName sets the "name" field.
-func (m *UserMutation) SetName(s string) {
-	m.name = &s
+// SetAlias sets the "alias" field.
+func (m *UserMutation) SetAlias(s string) {
+	m.alias = &s
 }
 
-// Name returns the value of the "name" field in the mutation.
-func (m *UserMutation) Name() (r string, exists bool) {
-	v := m.name
+// Alias returns the value of the "alias" field in the mutation.
+func (m *UserMutation) Alias() (r string, exists bool) {
+	v := m.alias
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldName returns the old "name" field's value of the User entity.
+// OldAlias returns the old "alias" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldName(ctx context.Context) (v string, err error) {
+func (m *UserMutation) OldAlias(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldName is only allowed on UpdateOne operations")
+		return v, errors.New("OldAlias is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldName requires an ID field in the mutation")
+		return v, errors.New("OldAlias requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldName: %w", err)
+		return v, fmt.Errorf("querying old value for OldAlias: %w", err)
 	}
-	return oldValue.Name, nil
+	return oldValue.Alias, nil
 }
 
-// ResetName resets all changes to the "name" field.
-func (m *UserMutation) ResetName() {
-	m.name = nil
+// ResetAlias resets all changes to the "alias" field.
+func (m *UserMutation) ResetAlias() {
+	m.alias = nil
 }
 
-// SetCreatedDate sets the "created_date" field.
-func (m *UserMutation) SetCreatedDate(t time.Time) {
-	m.created_date = &t
+// SetDateCreated sets the "date_created" field.
+func (m *UserMutation) SetDateCreated(t time.Time) {
+	m.date_created = &t
 }
 
-// CreatedDate returns the value of the "created_date" field in the mutation.
-func (m *UserMutation) CreatedDate() (r time.Time, exists bool) {
-	v := m.created_date
+// DateCreated returns the value of the "date_created" field in the mutation.
+func (m *UserMutation) DateCreated() (r time.Time, exists bool) {
+	v := m.date_created
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCreatedDate returns the old "created_date" field's value of the User entity.
+// OldDateCreated returns the old "date_created" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldCreatedDate(ctx context.Context) (v time.Time, err error) {
+func (m *UserMutation) OldDateCreated(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatedDate is only allowed on UpdateOne operations")
+		return v, errors.New("OldDateCreated is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedDate requires an ID field in the mutation")
+		return v, errors.New("OldDateCreated requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatedDate: %w", err)
+		return v, fmt.Errorf("querying old value for OldDateCreated: %w", err)
 	}
-	return oldValue.CreatedDate, nil
+	return oldValue.DateCreated, nil
 }
 
-// ResetCreatedDate resets all changes to the "created_date" field.
-func (m *UserMutation) ResetCreatedDate() {
-	m.created_date = nil
+// ResetDateCreated resets all changes to the "date_created" field.
+func (m *UserMutation) ResetDateCreated() {
+	m.date_created = nil
+}
+
+// SetParentID sets the "parent" edge to the User entity by id.
+func (m *UserMutation) SetParentID(id uuid.UUID) {
+	m.parent = &id
+}
+
+// ClearParent clears the "parent" edge to the User entity.
+func (m *UserMutation) ClearParent() {
+	m.clearedparent = true
+}
+
+// ParentCleared reports if the "parent" edge to the User entity was cleared.
+func (m *UserMutation) ParentCleared() bool {
+	return m.clearedparent
+}
+
+// ParentID returns the "parent" edge ID in the mutation.
+func (m *UserMutation) ParentID() (id uuid.UUID, exists bool) {
+	if m.parent != nil {
+		return *m.parent, true
+	}
+	return
+}
+
+// ParentIDs returns the "parent" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ParentID instead. It exists only for internal usage by the builders.
+func (m *UserMutation) ParentIDs() (ids []uuid.UUID) {
+	if id := m.parent; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetParent resets all changes to the "parent" edge.
+func (m *UserMutation) ResetParent() {
+	m.parent = nil
+	m.clearedparent = false
+}
+
+// AddChildIDs adds the "children" edge to the User entity by ids.
+func (m *UserMutation) AddChildIDs(ids ...uuid.UUID) {
+	if m.children == nil {
+		m.children = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.children[ids[i]] = struct{}{}
+	}
+}
+
+// ClearChildren clears the "children" edge to the User entity.
+func (m *UserMutation) ClearChildren() {
+	m.clearedchildren = true
+}
+
+// ChildrenCleared reports if the "children" edge to the User entity was cleared.
+func (m *UserMutation) ChildrenCleared() bool {
+	return m.clearedchildren
+}
+
+// RemoveChildIDs removes the "children" edge to the User entity by IDs.
+func (m *UserMutation) RemoveChildIDs(ids ...uuid.UUID) {
+	if m.removedchildren == nil {
+		m.removedchildren = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.children, ids[i])
+		m.removedchildren[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedChildren returns the removed IDs of the "children" edge to the User entity.
+func (m *UserMutation) RemovedChildrenIDs() (ids []uuid.UUID) {
+	for id := range m.removedchildren {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ChildrenIDs returns the "children" edge IDs in the mutation.
+func (m *UserMutation) ChildrenIDs() (ids []uuid.UUID) {
+	for id := range m.children {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetChildren resets all changes to the "children" edge.
+func (m *UserMutation) ResetChildren() {
+	m.children = nil
+	m.clearedchildren = false
+	m.removedchildren = nil
 }
 
 // AddIdentityIDs adds the "identities" edge to the Identity entity by ids.
@@ -5429,11 +5527,11 @@ func (m *UserMutation) Type() string {
 // AddedFields().
 func (m *UserMutation) Fields() []string {
 	fields := make([]string, 0, 2)
-	if m.name != nil {
-		fields = append(fields, user.FieldName)
+	if m.alias != nil {
+		fields = append(fields, user.FieldAlias)
 	}
-	if m.created_date != nil {
-		fields = append(fields, user.FieldCreatedDate)
+	if m.date_created != nil {
+		fields = append(fields, user.FieldDateCreated)
 	}
 	return fields
 }
@@ -5443,10 +5541,10 @@ func (m *UserMutation) Fields() []string {
 // schema.
 func (m *UserMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case user.FieldName:
-		return m.Name()
-	case user.FieldCreatedDate:
-		return m.CreatedDate()
+	case user.FieldAlias:
+		return m.Alias()
+	case user.FieldDateCreated:
+		return m.DateCreated()
 	}
 	return nil, false
 }
@@ -5456,10 +5554,10 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case user.FieldName:
-		return m.OldName(ctx)
-	case user.FieldCreatedDate:
-		return m.OldCreatedDate(ctx)
+	case user.FieldAlias:
+		return m.OldAlias(ctx)
+	case user.FieldDateCreated:
+		return m.OldDateCreated(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -5469,19 +5567,19 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 // type.
 func (m *UserMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case user.FieldName:
+	case user.FieldAlias:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetName(v)
+		m.SetAlias(v)
 		return nil
-	case user.FieldCreatedDate:
+	case user.FieldDateCreated:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCreatedDate(v)
+		m.SetDateCreated(v)
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
@@ -5532,11 +5630,11 @@ func (m *UserMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *UserMutation) ResetField(name string) error {
 	switch name {
-	case user.FieldName:
-		m.ResetName()
+	case user.FieldAlias:
+		m.ResetAlias()
 		return nil
-	case user.FieldCreatedDate:
-		m.ResetCreatedDate()
+	case user.FieldDateCreated:
+		m.ResetDateCreated()
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
@@ -5544,7 +5642,13 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
+	if m.parent != nil {
+		edges = append(edges, user.EdgeParent)
+	}
+	if m.children != nil {
+		edges = append(edges, user.EdgeChildren)
+	}
 	if m.identities != nil {
 		edges = append(edges, user.EdgeIdentities)
 	}
@@ -5561,6 +5665,16 @@ func (m *UserMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *UserMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case user.EdgeParent:
+		if id := m.parent; id != nil {
+			return []ent.Value{*id}
+		}
+	case user.EdgeChildren:
+		ids := make([]ent.Value, 0, len(m.children))
+		for id := range m.children {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeIdentities:
 		ids := make([]ent.Value, 0, len(m.identities))
 		for id := range m.identities {
@@ -5585,7 +5699,10 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
+	if m.removedchildren != nil {
+		edges = append(edges, user.EdgeChildren)
+	}
 	if m.removedidentities != nil {
 		edges = append(edges, user.EdgeIdentities)
 	}
@@ -5602,6 +5719,12 @@ func (m *UserMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case user.EdgeChildren:
+		ids := make([]ent.Value, 0, len(m.removedchildren))
+		for id := range m.removedchildren {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeIdentities:
 		ids := make([]ent.Value, 0, len(m.removedidentities))
 		for id := range m.removedidentities {
@@ -5626,7 +5749,13 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
+	if m.clearedparent {
+		edges = append(edges, user.EdgeParent)
+	}
+	if m.clearedchildren {
+		edges = append(edges, user.EdgeChildren)
+	}
 	if m.clearedidentities {
 		edges = append(edges, user.EdgeIdentities)
 	}
@@ -5643,6 +5772,10 @@ func (m *UserMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *UserMutation) EdgeCleared(name string) bool {
 	switch name {
+	case user.EdgeParent:
+		return m.clearedparent
+	case user.EdgeChildren:
+		return m.clearedchildren
 	case user.EdgeIdentities:
 		return m.clearedidentities
 	case user.EdgeAccounts:
@@ -5657,6 +5790,9 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *UserMutation) ClearEdge(name string) error {
 	switch name {
+	case user.EdgeParent:
+		m.ClearParent()
+		return nil
 	}
 	return fmt.Errorf("unknown User unique edge %s", name)
 }
@@ -5665,6 +5801,12 @@ func (m *UserMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *UserMutation) ResetEdge(name string) error {
 	switch name {
+	case user.EdgeParent:
+		m.ResetParent()
+		return nil
+	case user.EdgeChildren:
+		m.ResetChildren()
+		return nil
 	case user.EdgeIdentities:
 		m.ResetIdentities()
 		return nil

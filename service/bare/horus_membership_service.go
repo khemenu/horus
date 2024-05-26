@@ -15,6 +15,7 @@ import (
 	account "khepri.dev/horus/ent/account"
 	membership "khepri.dev/horus/ent/membership"
 	team "khepri.dev/horus/ent/team"
+	reflect "reflect"
 	regexp "regexp"
 	strings "strings"
 )
@@ -207,7 +208,9 @@ func (svc *MembershipService) Delete(ctx context.Context, req *horus.DeleteMembe
 func (svc *MembershipService) createBuilder(membership *horus.Membership) (*ent.MembershipCreate, error) {
 	m := svc.client.Membership.Create()
 	membershipCreatedDate := runtime.ExtractTime(membership.GetCreatedDate())
-	m.SetCreatedDate(membershipCreatedDate)
+	if !reflect.ValueOf(membership.GetCreatedDate()).IsZero() {
+		m.SetCreatedDate(membershipCreatedDate)
+	}
 	membershipRole := toEntMembership_Role(membership.GetRole())
 	m.SetRole(membershipRole)
 	if membership.GetAccount() != nil {

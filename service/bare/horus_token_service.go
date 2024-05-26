@@ -14,6 +14,7 @@ import (
 	ent "khepri.dev/horus/ent"
 	token "khepri.dev/horus/ent/token"
 	user "khepri.dev/horus/ent/user"
+	reflect "reflect"
 )
 
 // TokenService implements TokenServiceServer
@@ -47,6 +48,16 @@ func toProtoToken(e *ent.Token) (*horus.Token, error) {
 	v.Type = _type
 	value := e.Value
 	v.Value = value
+
+	for _, edg := range e.Edges.Children {
+		id, err := edg.ID.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		v.Children = append(v.Children, &horus.Token{
+			Id: id,
+		})
+	}
 
 	if edg := e.Edges.Owner; edg != nil {
 		id, err := edg.ID.MarshalBinary()
@@ -114,6 +125,9 @@ func (svc *TokenService) Get(ctx context.Context, req *horus.GetTokenRequest) (*
 	case horus.GetTokenRequest_WITH_EDGE_IDS:
 		get, err = svc.client.Token.Query().
 			Where(token.ID(id)).
+			WithChildren(func(query *ent.TokenQuery) {
+				query.Select(token.FieldID)
+			}).
 			WithOwner(func(query *ent.UserQuery) {
 				query.Select(user.FieldID)
 			}).
@@ -147,6 +161,13 @@ func (svc *TokenService) Update(ctx context.Context, req *horus.UpdateTokenReque
 	m.SetDateExpired(tokenDateExpired)
 	tokenName := token.GetName()
 	m.SetName(tokenName)
+	for _, item := range token.GetChildren() {
+		var children uuid.UUID
+		if err := (&children).UnmarshalBinary(item.GetId()); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid argument: %s", err)
+		}
+		m.AddChildIDs(children)
+	}
 
 	res, err := m.Save(ctx)
 	switch {
@@ -188,15 +209,26 @@ func (svc *TokenService) Delete(ctx context.Context, req *horus.DeleteTokenReque
 func (svc *TokenService) createBuilder(token *horus.Token) (*ent.TokenCreate, error) {
 	m := svc.client.Token.Create()
 	tokenDateCreated := runtime.ExtractTime(token.GetDateCreated())
-	m.SetDateCreated(tokenDateCreated)
+	if !reflect.ValueOf(token.GetDateCreated()).IsZero() {
+		m.SetDateCreated(tokenDateCreated)
+	}
 	tokenDateExpired := runtime.ExtractTime(token.GetDateExpired())
 	m.SetDateExpired(tokenDateExpired)
 	tokenName := token.GetName()
-	m.SetName(tokenName)
+	if !reflect.ValueOf(token.GetName()).IsZero() {
+		m.SetName(tokenName)
+	}
 	tokenType := token.GetType()
 	m.SetType(tokenType)
 	tokenValue := token.GetValue()
 	m.SetValue(tokenValue)
+	for _, item := range token.GetChildren() {
+		var children uuid.UUID
+		if err := (&children).UnmarshalBinary(item.GetId()); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid argument: %s", err)
+		}
+		m.AddChildIDs(children)
+	}
 	if token.GetOwner() != nil {
 		var tokenOwner uuid.UUID
 		if err := (&tokenOwner).UnmarshalBinary(token.GetOwner().GetId()); err != nil {

@@ -14,6 +14,7 @@ import (
 	ent "khepri.dev/horus/ent"
 	silo "khepri.dev/horus/ent/silo"
 	team "khepri.dev/horus/ent/team"
+	reflect "reflect"
 	regexp "regexp"
 	strings "strings"
 )
@@ -233,11 +234,17 @@ func (svc *TeamService) Delete(ctx context.Context, req *horus.DeleteTeamRequest
 func (svc *TeamService) createBuilder(team *horus.Team) (*ent.TeamCreate, error) {
 	m := svc.client.Team.Create()
 	teamAlias := team.GetAlias()
-	m.SetAlias(teamAlias)
+	if !reflect.ValueOf(team.GetAlias()).IsZero() {
+		m.SetAlias(teamAlias)
+	}
 	teamCreatedDate := runtime.ExtractTime(team.GetCreatedDate())
-	m.SetCreatedDate(teamCreatedDate)
+	if !reflect.ValueOf(team.GetCreatedDate()).IsZero() {
+		m.SetCreatedDate(teamCreatedDate)
+	}
 	teamDescription := team.GetDescription()
-	m.SetDescription(teamDescription)
+	if !reflect.ValueOf(team.GetDescription()).IsZero() {
+		m.SetDescription(teamDescription)
+	}
 	teamInterVisibility := toEntTeam_InterVisibility(team.GetInterVisibility())
 	m.SetInterVisibility(teamInterVisibility)
 	teamIntraVisibility := toEntTeam_IntraVisibility(team.GetIntraVisibility())

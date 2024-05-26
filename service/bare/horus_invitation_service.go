@@ -15,6 +15,7 @@ import (
 	account "khepri.dev/horus/ent/account"
 	invitation "khepri.dev/horus/ent/invitation"
 	silo "khepri.dev/horus/ent/silo"
+	reflect "reflect"
 )
 
 // InvitationService implements InvitationServiceServer
@@ -207,7 +208,9 @@ func (svc *InvitationService) createBuilder(invitation *horus.Invitation) (*ent.
 	invitationCanceledDate := runtime.ExtractTime(invitation.GetCanceledDate())
 	m.SetCanceledDate(invitationCanceledDate)
 	invitationCreatedDate := runtime.ExtractTime(invitation.GetCreatedDate())
-	m.SetCreatedDate(invitationCreatedDate)
+	if !reflect.ValueOf(invitation.GetCreatedDate()).IsZero() {
+		m.SetCreatedDate(invitationCreatedDate)
+	}
 	invitationDeclinedDate := runtime.ExtractTime(invitation.GetDeclinedDate())
 	m.SetDeclinedDate(invitationDeclinedDate)
 	invitationExpiredDate := runtime.ExtractTime(invitation.GetExpiredDate())

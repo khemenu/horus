@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
@@ -25,6 +26,7 @@ func NewSuiteWithSqliteStore() Suite {
 
 type Suite struct {
 	suite.Suite
+	*require.Assertions
 
 	driver_name string
 	source_name string
@@ -32,10 +34,17 @@ type Suite struct {
 	client *ent.Client
 	svc    horus.Service
 
-	frame *frame.Frame // Frame of actor.
+	me    *frame.Frame // Frame of actor.
 	other *frame.Frame // User who does not have any relation with the actor.
 
 	ctx context.Context
+}
+
+func (s *Suite) Run(name string, subtest func()) bool {
+	return s.Suite.Run(name, func() {
+		s.Assertions = s.Require()
+		subtest()
+	})
 }
 
 func (s *Suite) CtxOther() context.Context {
@@ -51,12 +60,12 @@ func (s *Suite) SetupSubTest() {
 	s.client = c
 	s.svc = service.NewService(c)
 
-	s.frame = frame.New()
+	s.me = frame.New()
 	s.other = frame.New()
-	s.ctx = frame.WithContext(context.Background(), s.frame)
+	s.ctx = frame.WithContext(context.Background(), s.me)
 
 	var err error
-	s.frame.Actor, err = c.User.Create().Save(s.ctx)
+	s.me.Actor, err = c.User.Create().Save(s.ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -68,7 +77,7 @@ func (s *Suite) SetupSubTest() {
 
 func (s *Suite) TearDownSubTest() {
 	s.ctx = nil
-	s.frame = nil
+	s.me = nil
 	s.other = nil
 	s.svc = nil
 
@@ -109,14 +118,14 @@ func (s *SuiteWithSilo) SetupSubTest() {
 			panic(err)
 		}
 
-		s.frame.ActingAccount, err = s.frame.Actor.QueryAccounts().
+		s.me.ActingAccount, err = s.me.Actor.QueryAccounts().
 			Where(account.SiloID(uuid.UUID(v.Id))).
 			Only(s.ctx)
 		if err != nil {
 			panic(err)
 		}
 
-		s.silo, err = s.frame.ActingAccount.QuerySilo().
+		s.silo, err = s.me.ActingAccount.QuerySilo().
 			Only(s.ctx)
 		if err != nil {
 			panic(err)
@@ -212,7 +221,7 @@ func (s *SuiteWithTeam) SetupSubTest() {
 		panic(err)
 	}
 
-	s.membership, err = s.frame.ActingAccount.QueryMemberships().
+	s.membership, err = s.me.ActingAccount.QueryMemberships().
 		Where(membership.HasTeamWith(team.ID(uuid.UUID(v.Id)))).
 		Only(s.ctx)
 	if err != nil {

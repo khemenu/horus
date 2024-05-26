@@ -31,10 +31,10 @@ func (Token) Fields() []ent.Field {
 		field.String("type").
 			Immutable().
 			NotEmpty().
-			Annotations(entproto.Field(5)),
+			Annotations(entproto.Field(3)),
 		field.String("name").
 			Default("").
-			Annotations(entproto.Field(6)),
+			Annotations(entproto.Field(4)),
 
 		field.Time("date_created").
 			Immutable().
@@ -55,12 +55,12 @@ func (Token) Edges() []ent.Edge {
 			Immutable().
 			Unique().
 			Required().
-			Annotations(entproto.Field(3)),
+			Annotations(entproto.Field(5)),
 		edge.To("children", Token.Type).
-			Annotations(entproto.Skip()).
+			Annotations(entproto.Field(7)).
 			From("parent").
 			Immutable().
 			Unique().
-			Annotations(entproto.Field(4)),
+			Annotations(entproto.Field(6)),
 	}
 }
