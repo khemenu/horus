@@ -1,4 +1,4 @@
-package service
+package server
 
 import (
 	"bytes"
@@ -15,15 +15,15 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"khepri.dev/horus"
-	"khepri.dev/horus/service/frame"
+	"khepri.dev/horus/server/frame"
 )
 
-type TokenService struct {
+type TokenServiceServer struct {
 	horus.UnimplementedTokenServiceServer
 	*base
 }
 
-func (s *TokenService) Create(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
+func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
 	switch req.Token.Type {
 	case horus.TokenTypeBasic:
 		return s.createBasic(ctx, req)
@@ -40,7 +40,7 @@ func (s *TokenService) Create(ctx context.Context, req *horus.CreateTokenRequest
 	return s.bare.Token().Create(ctx, req)
 }
 
-func (s *TokenService) createBasic(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
+func (s *TokenServiceServer) createBasic(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
 	f := frame.Must(ctx)
 
 	key, err := s.keyer.Key([]byte(req.Token.Value))
@@ -71,7 +71,7 @@ func (s *TokenService) createBasic(ctx context.Context, req *horus.CreateTokenRe
 	return token, nil
 }
 
-func (s *TokenService) createRefresh(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
+func (s *TokenServiceServer) createRefresh(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
 	f := frame.Must(ctx)
 	v, err := s.generateToken()
 	if err != nil {
@@ -88,7 +88,7 @@ func (s *TokenService) createRefresh(ctx context.Context, req *horus.CreateToken
 	})
 }
 
-func (s *TokenService) createAccess(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
+func (s *TokenServiceServer) createAccess(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
 	f := frame.Must(ctx)
 	v, err := s.generateToken()
 	if err != nil {
@@ -106,7 +106,7 @@ func (s *TokenService) createAccess(ctx context.Context, req *horus.CreateTokenR
 	})
 }
 
-func (*TokenService) generateToken() (string, error) {
+func (*TokenServiceServer) generateToken() (string, error) {
 	const Size = 128
 	charSet := []rune("-.ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz0123456789~")
 
@@ -125,7 +125,7 @@ func (*TokenService) generateToken() (string, error) {
 	return string(rst), nil
 }
 
-func (s *TokenService) Get(ctx context.Context, req *horus.GetTokenRequest) (*horus.Token, error) {
+func (s *TokenServiceServer) Get(ctx context.Context, req *horus.GetTokenRequest) (*horus.Token, error) {
 	f := frame.Must(ctx)
 
 	req.View = horus.GetTokenRequest_WITH_EDGE_IDS
@@ -145,11 +145,11 @@ func (s *TokenService) Get(ctx context.Context, req *horus.GetTokenRequest) (*ho
 	return token, nil
 }
 
-func (s *TokenService) Update(ctx context.Context, req *horus.UpdateTokenRequest) (*horus.Token, error) {
+func (s *TokenServiceServer) Update(ctx context.Context, req *horus.UpdateTokenRequest) (*horus.Token, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
 
-func (s *TokenService) Delete(ctx context.Context, req *horus.DeleteTokenRequest) (*emptypb.Empty, error) {
+func (s *TokenServiceServer) Delete(ctx context.Context, req *horus.DeleteTokenRequest) (*emptypb.Empty, error) {
 	f := frame.Must(ctx)
 	token, err := s.bare.Token().Get(ctx, &horus.GetTokenRequest{Id: req.Id})
 	if err != nil {

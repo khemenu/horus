@@ -11,7 +11,7 @@ import (
 	"khepri.dev/horus/log"
 )
 
-func HandleAuth(mux *http.ServeMux, svc horus.Service) {
+func HandleAuth(mux *http.ServeMux, svr horus.Server) {
 	mux.HandleFunc("/auth/basic/sign-in", func(w http.ResponseWriter, r *http.Request) {
 		l := log.From(r.Context())
 
@@ -21,7 +21,7 @@ func HandleAuth(mux *http.ServeMux, svc horus.Service) {
 			return
 		}
 
-		res, err := svc.Auth().BasicSignIn(r.Context(), &horus.BasicSignInRequest{
+		res, err := svr.Auth().BasicSignIn(r.Context(), &horus.BasicSignInRequest{
 			Username: username,
 			Password: password,
 		})
@@ -57,7 +57,7 @@ func HandleAuth(mux *http.ServeMux, svc horus.Service) {
 	mux.HandleFunc("/auth/sign-out", func(w http.ResponseWriter, r *http.Request) {
 		if cookie, err := r.Cookie(horus.TokenKeyName); err != nil {
 			// No token found
-		} else if _, err := svc.Auth().SignOut(r.Context(), &horus.SingOutRequest{Token: cookie.Value}); err == nil {
+		} else if _, err := svr.Auth().SignOut(r.Context(), &horus.SingOutRequest{Token: cookie.Value}); err == nil {
 			// Ok
 		} else {
 			// TODO: log

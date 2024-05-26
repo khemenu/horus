@@ -9,7 +9,7 @@ import (
 	"khepri.dev/horus/ent/predicate"
 	"khepri.dev/horus/ent/token"
 	"khepri.dev/horus/ent/user"
-	"khepri.dev/horus/service/frame"
+	"khepri.dev/horus/server/frame"
 )
 
 func actCreateToken(ctx *cli.Context, token_type string) error {
@@ -24,7 +24,7 @@ func actCreateToken(ctx *cli.Context, token_type string) error {
 	if user_id, err := uuid.Parse(ctx.Args().Get(0)); err == nil {
 		pred = user.IDEQ(user_id)
 	} else {
-		pred = user.NameEQ(ctx.Args().Get(0))
+		pred = user.AliasEQ(ctx.Args().Get(0))
 	}
 
 	user, err := s.client.User.Query().Where(pred).Only(ctx.Context)
@@ -93,7 +93,7 @@ var CmdDeleteAllAccessTokens = &cli.Command{
 				if user_id, err := uuid.Parse(ctx.Args().Get(0)); err == nil {
 					pred = user.IDEQ(user_id)
 				} else {
-					pred = user.NameEQ(ctx.Args().Get(0))
+					pred = user.AliasEQ(ctx.Args().Get(0))
 				}
 
 				owner, err := s.client.User.Query().Where(pred).Only(ctx.Context)

@@ -39,7 +39,7 @@ type DbConfig struct {
 type ClientConfig struct {
 	Db ClientDbConfig `yaml:"db"`
 
-	Svc horus.Service
+	Svc horus.Server
 }
 
 type ClientDbConfig struct {

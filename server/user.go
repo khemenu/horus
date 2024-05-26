@@ -1,4 +1,4 @@
-package service
+package server
 
 import (
 	"bytes"
@@ -8,15 +8,15 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"khepri.dev/horus"
-	"khepri.dev/horus/service/frame"
+	"khepri.dev/horus/server/frame"
 )
 
-type UserService struct {
+type UserServiceServer struct {
 	horus.UnimplementedUserServiceServer
 	*base
 }
 
-func (s *UserService) Create(ctx context.Context, req *horus.CreateUserRequest) (*horus.User, error) {
+func (s *UserServiceServer) Create(ctx context.Context, req *horus.CreateUserRequest) (*horus.User, error) {
 	f := frame.Must(ctx)
 	return s.bare.User().Create(ctx, &horus.CreateUserRequest{User: &horus.User{
 		Alias: req.GetUser().GetAlias(),
@@ -26,7 +26,7 @@ func (s *UserService) Create(ctx context.Context, req *horus.CreateUserRequest) 
 	}})
 }
 
-func (s *UserService) Get(ctx context.Context, req *horus.GetUserRequest) (*horus.User, error) {
+func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) (*horus.User, error) {
 	f := frame.Must(ctx)
 	id := req.GetId()
 	if id == nil {
@@ -49,10 +49,10 @@ func (s *UserService) Get(ctx context.Context, req *horus.GetUserRequest) (*horu
 	return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
 }
 
-func (s *UserService) Update(ctx context.Context, req *horus.UpdateUserRequest) (*horus.User, error) {
+func (s *UserServiceServer) Update(ctx context.Context, req *horus.UpdateUserRequest) (*horus.User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
 
-func (s *UserService) Delete(ctx context.Context, req *horus.DeleteUserRequest) (*emptypb.Empty, error) {
+func (s *UserServiceServer) Delete(ctx context.Context, req *horus.DeleteUserRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }

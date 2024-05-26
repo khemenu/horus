@@ -20,8 +20,8 @@ import (
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/log"
-	"khepri.dev/horus/service"
-	"khepri.dev/horus/service/frame"
+	service "khepri.dev/horus/server"
+	"khepri.dev/horus/server/frame"
 )
 
 func Run(ctx context.Context, c *Config) error {
@@ -53,7 +53,7 @@ func Run(ctx context.Context, c *Config) error {
 		return fmt.Errorf("create DB schema: %w", err)
 	}
 
-	svc := service.NewService(db)
+	horus_server := service.NewServer(db)
 	if c.Debug.Enabled && c.Debug.MemDb.Enabled {
 		for _, u := range c.Debug.MemDb.Users {
 			user, err := db.User.Create().SetAlias(u.Alias).Save(ctx)
@@ -63,7 +63,7 @@ func Run(ctx context.Context, c *Config) error {
 
 			f := frame.Frame{Actor: user}
 			ctx := frame.WithContext(ctx, &f)
-			if _, err := svc.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
+			if _, err := horus_server.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
 				Value: u.Password,
 				Type:  horus.TokenTypeBasic,
 			}}); err != nil {
@@ -91,8 +91,8 @@ func Run(ctx context.Context, c *Config) error {
 		grpc.ChainUnaryInterceptor(
 			log.UnaryInterceptor(l, slog.LevelInfo),
 			func() grpc.UnaryServerInterceptor {
-				auth_interceptor := horus.AuthUnaryInterceptor(svc.Auth().TokenSignIn)
-				svc_interceptor := service.UnaryInterceptor(svc, db)
+				auth_interceptor := horus.AuthUnaryInterceptor(horus_server.Auth().TokenSignIn)
+				svc_interceptor := service.UnaryInterceptor(horus_server, db)
 				return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 					if strings.HasPrefix(info.FullMethod, "/khepri.horus.AuthService/") {
 						return svc_interceptor(ctx, req, info, handler)
@@ -105,15 +105,15 @@ func Run(ctx context.Context, c *Config) error {
 			}(),
 		),
 	)
-	horus.GrpcRegister(svc, grpc_server)
+	horus.GrpcRegister(grpc_server, horus_server)
 	reflection.Register(grpc_server)
 
 	http_server := &http.Server{
 		Addr: http_addr,
 	}
 	http_mux := http.NewServeMux()
-	HandleAuth(http_mux, svc)
-	HandleKubeWebhook(http_mux, svc)
+	HandleAuth(http_mux, horus_server)
+	HandleKubeWebhook(http_mux, horus_server)
 	http_server.Handler = log.HttpLogger(l, slog.LevelInfo, http_mux)
 
 	shutdown := func() {

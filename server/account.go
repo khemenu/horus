@@ -1,4 +1,4 @@
-package service
+package server
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/account"
-	"khepri.dev/horus/service/frame"
+	"khepri.dev/horus/server/frame"
 )
 
 type AccountService struct {

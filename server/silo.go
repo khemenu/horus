@@ -1,4 +1,4 @@
-package service
+package server
 
 import (
 	"context"
@@ -15,16 +15,16 @@ import (
 	"khepri.dev/horus/ent/silo"
 	"khepri.dev/horus/internal/entutils"
 	"khepri.dev/horus/internal/fx"
-	"khepri.dev/horus/service/bare"
-	"khepri.dev/horus/service/frame"
+	"khepri.dev/horus/server/bare"
+	"khepri.dev/horus/server/frame"
 )
 
-type SiloService struct {
+type SiloServiceServer struct {
 	horus.UnimplementedSiloServiceServer
 	*base
 }
 
-func (s *SiloService) Create(ctx context.Context, req *horus.CreateSiloRequest) (*horus.Silo, error) {
+func (s *SiloServiceServer) Create(ctx context.Context, req *horus.CreateSiloRequest) (*horus.Silo, error) {
 	f := frame.Must(ctx)
 	return entutils.WithTxV(ctx, s.client, func(tx *ent.Tx) (*horus.Silo, error) {
 		c := tx.Client()
@@ -58,7 +58,7 @@ func (s *SiloService) Create(ctx context.Context, req *horus.CreateSiloRequest) 
 	})
 }
 
-func (s *SiloService) Get(ctx context.Context, req *horus.GetSiloRequest) (*horus.Silo, error) {
+func (s *SiloServiceServer) Get(ctx context.Context, req *horus.GetSiloRequest) (*horus.Silo, error) {
 	f := frame.Must(ctx)
 	res, err := s.bare.Silo().Get(ctx, req)
 	if err != nil {
@@ -79,7 +79,7 @@ func (s *SiloService) Get(ctx context.Context, req *horus.GetSiloRequest) (*horu
 	return nil, status.Errorf(codes.Internal, "internal error: %s", err)
 }
 
-func (s *SiloService) Update(ctx context.Context, req *horus.UpdateSiloRequest) (*horus.Silo, error) {
+func (s *SiloServiceServer) Update(ctx context.Context, req *horus.UpdateSiloRequest) (*horus.Silo, error) {
 	v, err := s.Get(ctx, &horus.GetSiloRequest{Id: req.Silo.Id})
 	if err != nil {
 		return nil, err
@@ -98,6 +98,6 @@ func (s *SiloService) Update(ctx context.Context, req *horus.UpdateSiloRequest) 
 	})
 }
 
-func (s *SiloService) Delete(ctx context.Context, req *horus.DeleteSiloRequest) (*emptypb.Empty, error) {
+func (s *SiloServiceServer) Delete(ctx context.Context, req *horus.DeleteSiloRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.PermissionDenied, "silo cannot be deleted manually")
 }

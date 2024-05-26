@@ -1,4 +1,4 @@
-package service
+package server
 
 import (
 	"context"
@@ -15,16 +15,16 @@ import (
 	"khepri.dev/horus/ent/team"
 	"khepri.dev/horus/internal/entutils"
 	"khepri.dev/horus/internal/fx"
-	"khepri.dev/horus/service/bare"
-	"khepri.dev/horus/service/frame"
+	"khepri.dev/horus/server/bare"
+	"khepri.dev/horus/server/frame"
 )
 
-type TeamService struct {
+type TeamServiceServer struct {
 	horus.UnimplementedTeamServiceServer
 	*base
 }
 
-func (s *TeamService) Create(ctx context.Context, req *horus.CreateTeamRequest) (*horus.Team, error) {
+func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamRequest) (*horus.Team, error) {
 	silo_id := req.GetTeam().GetSilo().GetId()
 	if silo_id == nil {
 		return nil, newErrMissingRequiredField("team.silo.id")
@@ -76,7 +76,7 @@ func (s *TeamService) Create(ctx context.Context, req *horus.CreateTeamRequest) 
 	})
 }
 
-func (s *TeamService) Get(ctx context.Context, req *horus.GetTeamRequest) (*horus.Team, error) {
+func (s *TeamServiceServer) Get(ctx context.Context, req *horus.GetTeamRequest) (*horus.Team, error) {
 	res, err := s.bare.Team().Get(ctx, &horus.GetTeamRequest{
 		Id:   req.Id,
 		View: horus.GetTeamRequest_WITH_EDGE_IDS,
@@ -119,7 +119,7 @@ func (s *TeamService) Get(ctx context.Context, req *horus.GetTeamRequest) (*horu
 	return res, nil
 }
 
-func (s *TeamService) Update(ctx context.Context, req *horus.UpdateTeamRequest) (*horus.Team, error) {
+func (s *TeamServiceServer) Update(ctx context.Context, req *horus.UpdateTeamRequest) (*horus.Team, error) {
 	team_id := req.Team.GetId()
 	if team_id == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "required: team.id")
@@ -158,6 +158,6 @@ func (s *TeamService) Update(ctx context.Context, req *horus.UpdateTeamRequest) 
 	return nil, ErrPermissionDenied
 }
 
-func (s *TeamService) Delete(ctx context.Context, req *horus.DeleteTeamRequest) (*emptypb.Empty, error) {
+func (s *TeamServiceServer) Delete(ctx context.Context, req *horus.DeleteTeamRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "team cannot be deleted manually")
 }

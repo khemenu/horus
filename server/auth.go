@@ -1,4 +1,4 @@
-package service
+package server
 
 import (
 	"context"
@@ -14,8 +14,8 @@ import (
 	"khepri.dev/horus/ent/user"
 	"khepri.dev/horus/internal/entutils"
 	"khepri.dev/horus/internal/fx"
-	"khepri.dev/horus/service/bare"
-	"khepri.dev/horus/service/frame"
+	"khepri.dev/horus/server/bare"
+	"khepri.dev/horus/server/frame"
 	"khepri.dev/horus/tokens"
 )
 
@@ -126,7 +126,7 @@ func (s *AuthService) Refresh(ctx context.Context, req *horus.RefreshRequest) (*
 		}
 
 		ctx = frame.WithContext(ctx, &frame.Frame{Actor: refresh_token.Edges.Owner})
-		access_token, err := (&TokenService{base: s.withClient(tx.Client())}).Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
+		access_token, err := (&TokenServiceServer{base: s.withClient(tx.Client())}).Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
 			Type:   horus.TokenTypeAccess,
 			Parent: &horus.Token{Id: refresh_token.ID[:]},
 		}})

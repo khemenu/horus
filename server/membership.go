@@ -1,4 +1,4 @@
-package service
+package server
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/membership"
 	"khepri.dev/horus/ent/team"
-	"khepri.dev/horus/service/frame"
+	"khepri.dev/horus/server/frame"
 )
 
 type MembershipService struct {

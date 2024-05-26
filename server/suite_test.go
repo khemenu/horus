@@ -1,4 +1,4 @@
-package service_test
+package server_test
 
 import (
 	"context"
@@ -13,8 +13,8 @@ import (
 	"khepri.dev/horus/ent/enttest"
 	"khepri.dev/horus/ent/membership"
 	"khepri.dev/horus/ent/team"
-	"khepri.dev/horus/service"
-	"khepri.dev/horus/service/frame"
+	service "khepri.dev/horus/server"
+	"khepri.dev/horus/server/frame"
 )
 
 func NewSuiteWithSqliteStore() Suite {
@@ -32,7 +32,7 @@ type Suite struct {
 	source_name string
 
 	client *ent.Client
-	svc    horus.Service
+	svc    horus.Server
 
 	me    *frame.Frame // Frame of actor.
 	other *frame.Frame // User who does not have any relation with the actor.
@@ -58,7 +58,7 @@ func (s *Suite) SetupSubTest() {
 	)
 
 	s.client = c
-	s.svc = service.NewService(c)
+	s.svc = service.NewServer(c)
 
 	s.me = frame.New()
 	s.other = frame.New()

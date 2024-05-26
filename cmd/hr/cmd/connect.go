@@ -7,11 +7,11 @@ import (
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/internal/fx"
-	"khepri.dev/horus/service"
-	"khepri.dev/horus/service/bare"
+	"khepri.dev/horus/server"
+	"khepri.dev/horus/server/bare"
 )
 
-func (c *ClientConfig) connect(ctx context.Context) (horus.Service, error) {
+func (c *ClientConfig) connect(ctx context.Context) (horus.Server, error) {
 	if c.Svc != nil {
 		return c.Svc, nil
 	}
@@ -27,7 +27,7 @@ func (c *ClientConfig) connect(ctx context.Context) (horus.Service, error) {
 		}
 	}
 
-	svc := service.NewService(db)
+	svc := server.NewServer(db)
 	if c.Db.UseBare {
 		c.Svc = &bare_service{
 			client: db,
@@ -41,7 +41,7 @@ func (c *ClientConfig) connect(ctx context.Context) (horus.Service, error) {
 	return c.Svc, nil
 }
 
-func (c *ClientConfig) mustConnect(ctx context.Context) horus.Service {
+func (c *ClientConfig) mustConnect(ctx context.Context) horus.Server {
 	return fx.Must(c.connect(ctx))
 }
 
@@ -59,7 +59,7 @@ func (c *ClientConfig) mustBareConnect(ctx context.Context) *bare_service {
 type bare_service struct {
 	client *ent.Client
 	horus.Store
-	svc horus.Service
+	svc horus.Server
 }
 
 func (s *bare_service) Auth() horus.AuthServiceServer {

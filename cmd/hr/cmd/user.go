@@ -11,19 +11,19 @@ import (
 var CmdCreateUser = &cli.Command{
 	Name:      "user",
 	Args:      true,
-	ArgsUsage: " USERNAME",
+	ArgsUsage: " USER_ALIAS",
 	Action: func(ctx *cli.Context) error {
 		c := ConfFrom(ctx.Context)
 		s := c.Client.mustConnect(ctx.Context)
 
 		if ctx.Args().Len() == 0 {
-			return fmt.Errorf("USERNAME not given")
+			return fmt.Errorf("USER_ALIAS not given")
 		}
 
-		name := ctx.Args().Get(0)
+		alias := ctx.Args().Get(0)
 		v, err := s.User().Create(ctx.Context, &horus.CreateUserRequest{
 			User: &horus.User{
-				Name: name,
+				Alias: alias,
 			},
 		})
 		if err != nil {

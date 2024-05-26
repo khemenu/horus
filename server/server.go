@@ -1,4 +1,4 @@
-package service
+package server
 
 import (
 	"context"
@@ -10,17 +10,17 @@ import (
 	"google.golang.org/grpc/status"
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
-	"khepri.dev/horus/service/bare"
-	"khepri.dev/horus/service/frame"
+	"khepri.dev/horus/server/bare"
+	"khepri.dev/horus/server/frame"
 	"khepri.dev/horus/tokens"
 )
 
-type service struct {
+type server struct {
 	auth horus.AuthServiceServer
 	store
 }
 
-func (s *service) Auth() horus.AuthServiceServer {
+func (s *server) Auth() horus.AuthServiceServer {
 	return s.auth
 }
 
@@ -60,7 +60,7 @@ func (s *store) Token() horus.TokenServiceServer {
 type base struct {
 	client  *ent.Client
 	bare    horus.Store
-	service horus.Service
+	service horus.Server
 
 	keyer tokens.Keyer
 }
@@ -71,7 +71,7 @@ func (b *base) withClient(client *ent.Client) *base {
 	return &b_
 }
 
-func NewService(client *ent.Client) horus.Service {
+func NewServer(client *ent.Client) horus.Server {
 	b := &base{
 		client: client,
 		bare:   bare.NewStore(client),
@@ -84,15 +84,15 @@ func NewService(client *ent.Client) horus.Service {
 		}),
 	}
 
-	svc := &service{
+	svc := &server{
 		auth: &AuthService{base: b},
 		store: store{
-			user:       &UserService{base: b},
+			user:       &UserServiceServer{base: b},
 			account:    &AccountService{base: b},
 			membership: &MembershipService{base: b},
-			silo:       &SiloService{base: b},
-			team:       &TeamService{base: b},
-			token:      &TokenService{base: b},
+			silo:       &SiloServiceServer{base: b},
+			team:       &TeamServiceServer{base: b},
+			token:      &TokenServiceServer{base: b},
 		},
 	}
 
@@ -100,7 +100,7 @@ func NewService(client *ent.Client) horus.Service {
 	return svc
 }
 
-func UnaryInterceptor(svc horus.Service, db *ent.Client) grpc.UnaryServerInterceptor {
+func UnaryInterceptor(svc horus.Server, db *ent.Client) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		if strings.HasPrefix(info.FullMethod, "/khepri.horus.AuthService/") {
 			return handler(ctx, req)

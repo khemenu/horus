@@ -15,10 +15,10 @@ import (
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/log"
-	"khepri.dev/horus/service/frame"
+	"khepri.dev/horus/server/frame"
 )
 
-func HandleKubeWebhook(mux *http.ServeMux, svc horus.Service) {
+func HandleKubeWebhook(mux *http.ServeMux, svr horus.Server) {
 	mux.HandleFunc("/auth/kube", func(w http.ResponseWriter, r *http.Request) {
 		l := log.From(r.Context())
 		if r.Method != http.MethodPost {
@@ -56,7 +56,7 @@ Supported API versions are: %s
 			},
 		}
 
-		sign_in, err := svc.Auth().TokenSignIn(r.Context(), &horus.TokenSignInRequest{
+		sign_in, err := svr.Auth().TokenSignIn(r.Context(), &horus.TokenSignInRequest{
 			Token: review.Spec.Token,
 		})
 		if err != nil {
@@ -81,7 +81,7 @@ Supported API versions are: %s
 		ctx := frame.WithContext(r.Context(), &frame.Frame{
 			Actor: &ent.User{ID: uuid.UUID(sign_in.Token.Owner.Id)},
 		})
-		user, err := svc.User().Get(ctx, &horus.GetUserRequest{})
+		user, err := svr.User().Get(ctx, &horus.GetUserRequest{})
 		if err != nil {
 			l.Error("get user details", slog.String("err", err.Error()))
 			w.WriteHeader(http.StatusInternalServerError)
