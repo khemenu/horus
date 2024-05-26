@@ -11,11 +11,11 @@ db:
   source:
 
 client:
+  connect_with: db
   db:
-    enabled: true
-    use_bare: true
     driver: sqlite3
     source: file:horus.db?cache=shared&_fk=1
+    use_bare: true
 
 debug:
   enabled: true

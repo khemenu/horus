@@ -20,7 +20,7 @@ import (
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/log"
-	service "khepri.dev/horus/server"
+	"khepri.dev/horus/server"
 	"khepri.dev/horus/server/frame"
 )
 
@@ -53,7 +53,7 @@ func Run(ctx context.Context, c *Config) error {
 		return fmt.Errorf("create DB schema: %w", err)
 	}
 
-	horus_server := service.NewServer(db)
+	horus_server := server.NewServer(db)
 	if c.Debug.Enabled && c.Debug.MemDb.Enabled {
 		for _, u := range c.Debug.MemDb.Users {
 			user, err := db.User.Create().SetAlias(u.Alias).Save(ctx)
@@ -92,7 +92,7 @@ func Run(ctx context.Context, c *Config) error {
 			log.UnaryInterceptor(l, slog.LevelInfo),
 			func() grpc.UnaryServerInterceptor {
 				auth_interceptor := horus.AuthUnaryInterceptor(horus_server.Auth().TokenSignIn)
-				svc_interceptor := service.UnaryInterceptor(horus_server, db)
+				svc_interceptor := server.UnaryInterceptor(horus_server, db)
 				return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 					if strings.HasPrefix(info.FullMethod, "/khepri.horus.AuthService/") {
 						return svc_interceptor(ctx, req, info, handler)

@@ -13,8 +13,8 @@ import (
 )
 
 func actCreateToken(ctx *cli.Context, token_type string) error {
-	c := ConfFrom(ctx.Context)
-	s := c.Client.mustBareConnect(ctx.Context)
+	conf := ConfFrom(ctx.Context)
+	s := conf.Client.mustBareServer(ctx.Context)
 
 	if ctx.Args().Len() == 0 {
 		return fmt.Errorf("USER_ID not given")
@@ -27,7 +27,7 @@ func actCreateToken(ctx *cli.Context, token_type string) error {
 		pred = user.AliasEQ(ctx.Args().Get(0))
 	}
 
-	user, err := s.client.User.Query().Where(pred).Only(ctx.Context)
+	user, err := s.db.User.Query().Where(pred).Only(ctx.Context)
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func actCreateToken(ctx *cli.Context, token_type string) error {
 	ctx.Context = frame.WithContext(ctx.Context, &frame.Frame{
 		Actor: user,
 	})
-	token, err := s.svc.Token().Create(ctx.Context, &horus.CreateTokenRequest{Token: &horus.Token{
+	token, err := s.cover.Token().Create(ctx.Context, &horus.CreateTokenRequest{Token: &horus.Token{
 		Type: token_type,
 	}})
 	if err != nil {
@@ -82,8 +82,8 @@ var CmdDeleteAllAccessTokens = &cli.Command{
 			Args:      true,
 			ArgsUsage: " USER_ID",
 			Action: func(ctx *cli.Context) error {
-				c := ConfFrom(ctx.Context)
-				s := c.Client.mustBareConnect(ctx.Context)
+				conf := ConfFrom(ctx.Context)
+				s := conf.Client.mustBareServer(ctx.Context)
 
 				if ctx.Args().Len() == 0 {
 					return fmt.Errorf("USER_ID not given")
@@ -96,12 +96,12 @@ var CmdDeleteAllAccessTokens = &cli.Command{
 					pred = user.AliasEQ(ctx.Args().Get(0))
 				}
 
-				owner, err := s.client.User.Query().Where(pred).Only(ctx.Context)
+				owner, err := s.db.User.Query().Where(pred).Only(ctx.Context)
 				if err != nil {
 					return err
 				}
 
-				n, err := s.client.Token.Delete().
+				n, err := s.db.Token.Delete().
 					Where(token.And(
 						token.TypeEQ(horus.TokenTypeAccess),
 						token.HasOwnerWith(user.IDEQ(owner.ID)),

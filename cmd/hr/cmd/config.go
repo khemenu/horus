@@ -27,8 +27,8 @@ type Config struct {
 }
 
 type GrpcConfig struct {
-	Host string `yaml:"host"`
-	Port int    `yaml:"port"`
+	Network string `yaml:"network"`
+	Address string `yaml:"address"`
 }
 
 type DbConfig struct {
@@ -37,18 +37,26 @@ type DbConfig struct {
 }
 
 type ClientConfig struct {
-	Db ClientDbConfig `yaml:"db"`
+	ConnectWith string `yaml:"connect_with"` // "target" | "db"
 
-	Svc horus.Server
+	Target ClientTargetConfig `yaml:"target"`
+	Db     ClientDbConfig     `yaml:"db"`
+
+	server *buff_server
+	client horus.Client
+}
+
+type ClientTargetConfig struct {
+	Schema  string `yaml:"schema"`
+	Address string `yaml:"address"`
 }
 
 type ClientDbConfig struct {
-	Enabled bool   `yaml:"enabled"`
-	UseBare bool   `yaml:"use_bare"`
-	Driver  string `yaml:"driver"`
-	Source  string `yaml:"source"`
+	Driver string `yaml:"driver"`
+	Source string `yaml:"source"`
 
-	WithInit bool
+	UseBare  bool `yaml:"use_bare"`
+	WithInit bool `yaml:"with_init"`
 }
 
 type DebugConfig struct {
@@ -73,23 +81,24 @@ func ReadConfig(path string) (*Config, error) {
 }
 
 func (c *Config) Evaluate() error {
-	fx.Default(&c.Grpc.Host, "localhost")
-	fx.Default(&c.Grpc.Port, 35122)
+	fx.Default(&c.Grpc.Network, "tcp")
+	fx.Default(&c.Grpc.Address, "localhost:35122")
+	fx.Default(&c.Client.ConnectWith, "target")
+	fx.Default(&c.Client.Target.Schema, "dns")
+	fx.Default(&c.Client.Target.Address, c.Grpc.Address)
 	fx.Default(&c.Client.Db.Driver, c.Db.Driver)
 	fx.Default(&c.Client.Db.Source, c.Db.Source)
 	fx.Default(&c.Log.Enabled, fx.Addr(true))
 	fx.Default(&c.Log.Format, "text")
 
-	if c.Grpc.Host == "0.0.0.0" {
-		c.Grpc.Host = "localhost"
-	}
+	c.Client.Target.Address = strings.Replace(c.Client.Target.Address, "0.0.0.0", "localhost", 1)
 	if c.Client.Db.Driver == "sqlite3" && strings.Contains(c.Client.Db.Source, "mode=memory") {
 		c.Client.Db.WithInit = true
 	}
 
 	errs := []error{}
-	if c.Client.Db.Enabled && (c.Client.Db.Driver == "" || c.Client.Db.Source == "") {
-		errs = append(errs, fmt.Errorf(`".client.db.driver" or ".client.db.source" cannot be empty when ".client.db.enabled" is true`))
+	if !slices.Contains([]string{"target", "db"}, c.Client.ConnectWith) {
+		errs = append(errs, fmt.Errorf(`".client.connect_with" must be one of "target" or "db"`))
 	}
 	if !slices.Contains([]string{"text", "json"}, c.Log.Format) {
 		errs = append(errs, fmt.Errorf(`log.format must be one of "text" or "json": %s`, c.Log.Format))
@@ -115,4 +124,16 @@ func ConfFrom(ctx context.Context) *Config {
 
 func ConfInto(ctx context.Context, conf *Config) context.Context {
 	return context.WithValue(ctx, confCtxKey{}, conf)
+}
+
+func (c *ClientConfig) CleanUp(ctx context.Context) error {
+	if s := c.server; s != nil {
+		s.grpc_server.GracefulStop()
+		s.wg.Wait()
+		if s.err != nil {
+			return s.err
+		}
+	}
+
+	return nil
 }

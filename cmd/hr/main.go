@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -52,6 +53,13 @@ func main() {
 
 			ctx.Context = log.Into(ctx.Context, l)
 			ctx.Context = cmd.ConfInto(ctx.Context, conf)
+			return nil
+		},
+		After: func(ctx *cli.Context) error {
+			l := log.From(ctx.Context)
+			if err := conf.Client.CleanUp(ctx.Context); err != nil {
+				l.Error("failed to clean up the client", slog.String("err", err.Error()))
+			}
 			return nil
 		},
 
