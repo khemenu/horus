@@ -15,6 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"khepri.dev/horus"
+	"khepri.dev/horus/ent"
 	"khepri.dev/horus/server/frame"
 )
 
@@ -28,9 +29,9 @@ func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenR
 	case horus.TokenTypeBasic:
 		return s.createBasic(ctx, req)
 	case horus.TokenTypeRefresh:
-		return s.createAccess(ctx, req)
+		return s.createBearer(ctx, req, horus.TokenTypeRefresh)
 	case horus.TokenTypeAccess:
-		return s.createAccess(ctx, req)
+		return s.createBearer(ctx, req, horus.TokenTypeAccess)
 	default:
 		break
 	}
@@ -71,37 +72,58 @@ func (s *TokenServiceServer) createBasic(ctx context.Context, req *horus.CreateT
 	return token, nil
 }
 
-func (s *TokenServiceServer) createRefresh(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
+func (s *TokenServiceServer) createBearer(ctx context.Context, req *horus.CreateTokenRequest, t string) (*horus.Token, error) {
 	f := frame.Must(ctx)
 	v, err := s.generateToken()
 	if err != nil {
 		return nil, fmt.Errorf("generate token: %w", err)
 	}
 
-	return s.bare.Token().Create(ctx, &horus.CreateTokenRequest{
-		Token: &horus.Token{
-			Value:       v,
-			Type:        horus.TokenTypeRefresh,
-			DateExpired: timestamppb.New(time.Now().Add(24 * time.Hour)),
-			Owner:       &horus.User{Id: f.Actor.ID[:]},
-		},
-	})
-}
+	var date_expired time.Time
+	switch t {
+	case horus.TokenTypeRefresh:
+		date_expired = time.Now().Add(10 * 365 * 24 * time.Hour)
+	case horus.TokenTypeAccess:
+		date_expired = time.Now().Add(24 * time.Hour)
 
-func (s *TokenServiceServer) createAccess(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
-	f := frame.Must(ctx)
-	v, err := s.generateToken()
-	if err != nil {
-		return nil, fmt.Errorf("generate token: %w", err)
+	default:
+		panic("invalid bearer token type")
+	}
+
+	var ts_expired *timestamppb.Timestamp
+	if d := req.GetToken().GetDateExpired(); d != nil {
+		ts_expired = d
+	} else {
+		ts_expired = timestamppb.New(date_expired)
+	}
+
+	owner_id := f.Actor.ID[:]
+	if owner := req.GetToken().GetOwner(); owner != nil {
+		user, err := s.service.User().Get(ctx, &horus.GetUserRequest{
+			Id:   owner.Id,
+			View: horus.GetUserRequest_WITH_EDGE_IDS,
+		})
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return nil, status.Error(codes.NotFound, codes.NotFound.String())
+			}
+
+			return nil, fmt.Errorf("get token owner: %w", err)
+		}
+
+		if !bytes.Equal(user.GetParent().GetId(), f.Actor.ID[:]) {
+			return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
+		}
+
+		owner_id = owner.Id
 	}
 
 	return s.bare.Token().Create(ctx, &horus.CreateTokenRequest{
 		Token: &horus.Token{
 			Value:       v,
-			Type:        horus.TokenTypeAccess,
-			DateExpired: timestamppb.New(time.Now().Add(24 * time.Hour)),
-			Owner:       &horus.User{Id: f.Actor.ID[:]},
-			Parent:      req.Token.GetParent(),
+			Type:        t,
+			DateExpired: ts_expired,
+			Owner:       &horus.User{Id: owner_id},
 		},
 	})
 }
@@ -133,7 +155,7 @@ func (s *TokenServiceServer) Get(ctx context.Context, req *horus.GetTokenRequest
 	if err != nil {
 		return nil, err
 	}
-	if !bytes.Equal(token.Id, f.Actor.ID[:]) {
+	if !bytes.Equal(token.Owner.Id, f.Actor.ID[:]) {
 		return nil, status.Error(codes.NotFound, "not found")
 	}
 

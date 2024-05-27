@@ -42,7 +42,7 @@ func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) 
 	if bytes.Equal(f.Actor.ID[:], v.Id) {
 		return v, nil
 	}
-	if bytes.Equal(f.Actor.ID[:], v.Parent.Id) {
+	if bytes.Equal(f.Actor.ID[:], v.GetParent().GetId()) {
 		return v, nil
 	}
 

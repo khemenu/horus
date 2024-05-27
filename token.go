@@ -2,6 +2,8 @@ package horus
 
 import (
 	"context"
+
+	"google.golang.org/grpc/metadata"
 )
 
 type tokenCtxKey struct{}
@@ -22,4 +24,8 @@ func Must(ctx context.Context) *Token {
 
 func ctxWithToken(ctx context.Context, token *Token) context.Context {
 	return context.WithValue(ctx, tokenCtxKey{}, token)
+}
+
+func WithToken(ctx context.Context, token string) context.Context {
+	return metadata.AppendToOutgoingContext(ctx, TokenKeyName, token)
 }
