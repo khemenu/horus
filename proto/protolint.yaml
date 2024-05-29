@@ -2,7 +2,7 @@
 lint:
   files:
     exclude:
-      - proto/khepri/horus/horus.proto
+      - khepri/horus/horus.proto
 
   rules:
     all_default: true

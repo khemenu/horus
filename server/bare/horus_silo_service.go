@@ -162,7 +162,9 @@ func (svc *SiloService) Delete(ctx context.Context, req *horus.DeleteSiloRequest
 func (svc *SiloService) createBuilder(silo *horus.Silo) (*ent.SiloCreate, error) {
 	m := svc.client.Silo.Create()
 	siloAlias := silo.GetAlias()
-	m.SetAlias(siloAlias)
+	if !reflect.ValueOf(silo.GetAlias()).IsZero() {
+		m.SetAlias(siloAlias)
+	}
 	siloDateCreated := runtime.ExtractTime(silo.GetDateCreated())
 	if !reflect.ValueOf(silo.GetDateCreated()).IsZero() {
 		m.SetDateCreated(siloDateCreated)
@@ -172,6 +174,8 @@ func (svc *SiloService) createBuilder(silo *horus.Silo) (*ent.SiloCreate, error)
 		m.SetDescription(siloDescription)
 	}
 	siloName := silo.GetName()
-	m.SetName(siloName)
+	if !reflect.ValueOf(silo.GetName()).IsZero() {
+		m.SetName(siloName)
+	}
 	return m, nil
 }

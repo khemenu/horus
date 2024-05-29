@@ -98,9 +98,9 @@ func (s *TokenServiceServer) createBearer(ctx context.Context, req *horus.Create
 	}
 
 	owner_id := f.Actor.ID[:]
-	if owner := req.GetToken().GetOwner(); owner != nil {
-		user, err := s.service.User().Get(ctx, &horus.GetUserRequest{
-			Id:   owner.Id,
+	if child_id := req.GetToken().GetOwner().GetId(); child_id != nil {
+		maybe_child, err := s.covered.User().Get(ctx, &horus.GetUserRequest{
+			Id:   child_id,
 			View: horus.GetUserRequest_WITH_EDGE_IDS,
 		})
 		if err != nil {
@@ -111,19 +111,20 @@ func (s *TokenServiceServer) createBearer(ctx context.Context, req *horus.Create
 			return nil, fmt.Errorf("get token owner: %w", err)
 		}
 
-		if !bytes.Equal(user.GetParent().GetId(), f.Actor.ID[:]) {
+		if !bytes.Equal(maybe_child.GetParent().GetId(), f.Actor.ID[:]) {
 			return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
 		}
 
-		owner_id = owner.Id
+		owner_id = maybe_child.Id
 	}
 
 	return s.bare.Token().Create(ctx, &horus.CreateTokenRequest{
 		Token: &horus.Token{
-			Value:       v,
-			Type:        t,
+			Value: v,
+			Type:  t,
+			Owner: &horus.User{Id: owner_id},
+
 			DateExpired: ts_expired,
-			Owner:       &horus.User{Id: owner_id},
 		},
 	})
 }

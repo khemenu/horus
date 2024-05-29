@@ -66,8 +66,8 @@ func toProtoAccount(e *ent.Account) (*horus.Account, error) {
 	v := &horus.Account{}
 	alias := e.Alias
 	v.Alias = alias
-	created_date := timestamppb.New(e.CreatedDate)
-	v.CreatedDate = created_date
+	date_created := timestamppb.New(e.DateCreated)
+	v.DateCreated = date_created
 	description := e.Description
 	v.Description = description
 	id, err := e.ID.MarshalBinary()
@@ -330,16 +330,18 @@ func (svc *AccountService) createBuilder(account *horus.Account) (*ent.AccountCr
 	if !reflect.ValueOf(account.GetAlias()).IsZero() {
 		m.SetAlias(accountAlias)
 	}
-	accountCreatedDate := runtime.ExtractTime(account.GetCreatedDate())
-	if !reflect.ValueOf(account.GetCreatedDate()).IsZero() {
-		m.SetCreatedDate(accountCreatedDate)
+	accountDateCreated := runtime.ExtractTime(account.GetDateCreated())
+	if !reflect.ValueOf(account.GetDateCreated()).IsZero() {
+		m.SetDateCreated(accountDateCreated)
 	}
 	accountDescription := account.GetDescription()
 	if !reflect.ValueOf(account.GetDescription()).IsZero() {
 		m.SetDescription(accountDescription)
 	}
 	accountName := account.GetName()
-	m.SetName(accountName)
+	if !reflect.ValueOf(account.GetName()).IsZero() {
+		m.SetName(accountName)
+	}
 	accountRole := toEntAccount_Role(account.GetRole())
 	m.SetRole(accountRole)
 	for _, item := range account.GetMemberships() {

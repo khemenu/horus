@@ -30,9 +30,25 @@ func (sc *SiloCreate) SetAlias(s string) *SiloCreate {
 	return sc
 }
 
+// SetNillableAlias sets the "alias" field if the given value is not nil.
+func (sc *SiloCreate) SetNillableAlias(s *string) *SiloCreate {
+	if s != nil {
+		sc.SetAlias(*s)
+	}
+	return sc
+}
+
 // SetName sets the "name" field.
 func (sc *SiloCreate) SetName(s string) *SiloCreate {
 	sc.mutation.SetName(s)
+	return sc
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (sc *SiloCreate) SetNillableName(s *string) *SiloCreate {
+	if s != nil {
+		sc.SetName(*s)
+	}
 	return sc
 }
 
@@ -158,6 +174,14 @@ func (sc *SiloCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (sc *SiloCreate) defaults() {
+	if _, ok := sc.mutation.Alias(); !ok {
+		v := silo.DefaultAlias()
+		sc.mutation.SetAlias(v)
+	}
+	if _, ok := sc.mutation.Name(); !ok {
+		v := silo.DefaultName
+		sc.mutation.SetName(v)
+	}
 	if _, ok := sc.mutation.Description(); !ok {
 		v := silo.DefaultDescription
 		sc.mutation.SetDescription(v)

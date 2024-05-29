@@ -28,59 +28,77 @@ func (iu *InvitationUpdate) Where(ps ...predicate.Invitation) *InvitationUpdate 
 	return iu
 }
 
-// SetExpiredDate sets the "expired_date" field.
-func (iu *InvitationUpdate) SetExpiredDate(t time.Time) *InvitationUpdate {
-	iu.mutation.SetExpiredDate(t)
+// SetDateExpired sets the "date_expired" field.
+func (iu *InvitationUpdate) SetDateExpired(t time.Time) *InvitationUpdate {
+	iu.mutation.SetDateExpired(t)
 	return iu
 }
 
-// SetNillableExpiredDate sets the "expired_date" field if the given value is not nil.
-func (iu *InvitationUpdate) SetNillableExpiredDate(t *time.Time) *InvitationUpdate {
+// SetNillableDateExpired sets the "date_expired" field if the given value is not nil.
+func (iu *InvitationUpdate) SetNillableDateExpired(t *time.Time) *InvitationUpdate {
 	if t != nil {
-		iu.SetExpiredDate(*t)
+		iu.SetDateExpired(*t)
 	}
 	return iu
 }
 
-// SetAcceptedDate sets the "accepted_date" field.
-func (iu *InvitationUpdate) SetAcceptedDate(t time.Time) *InvitationUpdate {
-	iu.mutation.SetAcceptedDate(t)
+// SetDateAccepted sets the "date_accepted" field.
+func (iu *InvitationUpdate) SetDateAccepted(t time.Time) *InvitationUpdate {
+	iu.mutation.SetDateAccepted(t)
 	return iu
 }
 
-// SetNillableAcceptedDate sets the "accepted_date" field if the given value is not nil.
-func (iu *InvitationUpdate) SetNillableAcceptedDate(t *time.Time) *InvitationUpdate {
+// SetNillableDateAccepted sets the "date_accepted" field if the given value is not nil.
+func (iu *InvitationUpdate) SetNillableDateAccepted(t *time.Time) *InvitationUpdate {
 	if t != nil {
-		iu.SetAcceptedDate(*t)
+		iu.SetDateAccepted(*t)
 	}
 	return iu
 }
 
-// SetDeclinedDate sets the "declined_date" field.
-func (iu *InvitationUpdate) SetDeclinedDate(t time.Time) *InvitationUpdate {
-	iu.mutation.SetDeclinedDate(t)
+// ClearDateAccepted clears the value of the "date_accepted" field.
+func (iu *InvitationUpdate) ClearDateAccepted() *InvitationUpdate {
+	iu.mutation.ClearDateAccepted()
 	return iu
 }
 
-// SetNillableDeclinedDate sets the "declined_date" field if the given value is not nil.
-func (iu *InvitationUpdate) SetNillableDeclinedDate(t *time.Time) *InvitationUpdate {
+// SetDateDeclined sets the "date_declined" field.
+func (iu *InvitationUpdate) SetDateDeclined(t time.Time) *InvitationUpdate {
+	iu.mutation.SetDateDeclined(t)
+	return iu
+}
+
+// SetNillableDateDeclined sets the "date_declined" field if the given value is not nil.
+func (iu *InvitationUpdate) SetNillableDateDeclined(t *time.Time) *InvitationUpdate {
 	if t != nil {
-		iu.SetDeclinedDate(*t)
+		iu.SetDateDeclined(*t)
 	}
 	return iu
 }
 
-// SetCanceledDate sets the "canceled_date" field.
-func (iu *InvitationUpdate) SetCanceledDate(t time.Time) *InvitationUpdate {
-	iu.mutation.SetCanceledDate(t)
+// ClearDateDeclined clears the value of the "date_declined" field.
+func (iu *InvitationUpdate) ClearDateDeclined() *InvitationUpdate {
+	iu.mutation.ClearDateDeclined()
 	return iu
 }
 
-// SetNillableCanceledDate sets the "canceled_date" field if the given value is not nil.
-func (iu *InvitationUpdate) SetNillableCanceledDate(t *time.Time) *InvitationUpdate {
+// SetDateCanceled sets the "date_canceled" field.
+func (iu *InvitationUpdate) SetDateCanceled(t time.Time) *InvitationUpdate {
+	iu.mutation.SetDateCanceled(t)
+	return iu
+}
+
+// SetNillableDateCanceled sets the "date_canceled" field if the given value is not nil.
+func (iu *InvitationUpdate) SetNillableDateCanceled(t *time.Time) *InvitationUpdate {
 	if t != nil {
-		iu.SetCanceledDate(*t)
+		iu.SetDateCanceled(*t)
 	}
+	return iu
+}
+
+// ClearDateCanceled clears the value of the "date_canceled" field.
+func (iu *InvitationUpdate) ClearDateCanceled() *InvitationUpdate {
+	iu.mutation.ClearDateCanceled()
 	return iu
 }
 
@@ -139,17 +157,26 @@ func (iu *InvitationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := iu.mutation.ExpiredDate(); ok {
-		_spec.SetField(invitation.FieldExpiredDate, field.TypeTime, value)
+	if value, ok := iu.mutation.DateExpired(); ok {
+		_spec.SetField(invitation.FieldDateExpired, field.TypeTime, value)
 	}
-	if value, ok := iu.mutation.AcceptedDate(); ok {
-		_spec.SetField(invitation.FieldAcceptedDate, field.TypeTime, value)
+	if value, ok := iu.mutation.DateAccepted(); ok {
+		_spec.SetField(invitation.FieldDateAccepted, field.TypeTime, value)
 	}
-	if value, ok := iu.mutation.DeclinedDate(); ok {
-		_spec.SetField(invitation.FieldDeclinedDate, field.TypeTime, value)
+	if iu.mutation.DateAcceptedCleared() {
+		_spec.ClearField(invitation.FieldDateAccepted, field.TypeTime)
 	}
-	if value, ok := iu.mutation.CanceledDate(); ok {
-		_spec.SetField(invitation.FieldCanceledDate, field.TypeTime, value)
+	if value, ok := iu.mutation.DateDeclined(); ok {
+		_spec.SetField(invitation.FieldDateDeclined, field.TypeTime, value)
+	}
+	if iu.mutation.DateDeclinedCleared() {
+		_spec.ClearField(invitation.FieldDateDeclined, field.TypeTime)
+	}
+	if value, ok := iu.mutation.DateCanceled(); ok {
+		_spec.SetField(invitation.FieldDateCanceled, field.TypeTime, value)
+	}
+	if iu.mutation.DateCanceledCleared() {
+		_spec.ClearField(invitation.FieldDateCanceled, field.TypeTime)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -171,59 +198,77 @@ type InvitationUpdateOne struct {
 	mutation *InvitationMutation
 }
 
-// SetExpiredDate sets the "expired_date" field.
-func (iuo *InvitationUpdateOne) SetExpiredDate(t time.Time) *InvitationUpdateOne {
-	iuo.mutation.SetExpiredDate(t)
+// SetDateExpired sets the "date_expired" field.
+func (iuo *InvitationUpdateOne) SetDateExpired(t time.Time) *InvitationUpdateOne {
+	iuo.mutation.SetDateExpired(t)
 	return iuo
 }
 
-// SetNillableExpiredDate sets the "expired_date" field if the given value is not nil.
-func (iuo *InvitationUpdateOne) SetNillableExpiredDate(t *time.Time) *InvitationUpdateOne {
+// SetNillableDateExpired sets the "date_expired" field if the given value is not nil.
+func (iuo *InvitationUpdateOne) SetNillableDateExpired(t *time.Time) *InvitationUpdateOne {
 	if t != nil {
-		iuo.SetExpiredDate(*t)
+		iuo.SetDateExpired(*t)
 	}
 	return iuo
 }
 
-// SetAcceptedDate sets the "accepted_date" field.
-func (iuo *InvitationUpdateOne) SetAcceptedDate(t time.Time) *InvitationUpdateOne {
-	iuo.mutation.SetAcceptedDate(t)
+// SetDateAccepted sets the "date_accepted" field.
+func (iuo *InvitationUpdateOne) SetDateAccepted(t time.Time) *InvitationUpdateOne {
+	iuo.mutation.SetDateAccepted(t)
 	return iuo
 }
 
-// SetNillableAcceptedDate sets the "accepted_date" field if the given value is not nil.
-func (iuo *InvitationUpdateOne) SetNillableAcceptedDate(t *time.Time) *InvitationUpdateOne {
+// SetNillableDateAccepted sets the "date_accepted" field if the given value is not nil.
+func (iuo *InvitationUpdateOne) SetNillableDateAccepted(t *time.Time) *InvitationUpdateOne {
 	if t != nil {
-		iuo.SetAcceptedDate(*t)
+		iuo.SetDateAccepted(*t)
 	}
 	return iuo
 }
 
-// SetDeclinedDate sets the "declined_date" field.
-func (iuo *InvitationUpdateOne) SetDeclinedDate(t time.Time) *InvitationUpdateOne {
-	iuo.mutation.SetDeclinedDate(t)
+// ClearDateAccepted clears the value of the "date_accepted" field.
+func (iuo *InvitationUpdateOne) ClearDateAccepted() *InvitationUpdateOne {
+	iuo.mutation.ClearDateAccepted()
 	return iuo
 }
 
-// SetNillableDeclinedDate sets the "declined_date" field if the given value is not nil.
-func (iuo *InvitationUpdateOne) SetNillableDeclinedDate(t *time.Time) *InvitationUpdateOne {
+// SetDateDeclined sets the "date_declined" field.
+func (iuo *InvitationUpdateOne) SetDateDeclined(t time.Time) *InvitationUpdateOne {
+	iuo.mutation.SetDateDeclined(t)
+	return iuo
+}
+
+// SetNillableDateDeclined sets the "date_declined" field if the given value is not nil.
+func (iuo *InvitationUpdateOne) SetNillableDateDeclined(t *time.Time) *InvitationUpdateOne {
 	if t != nil {
-		iuo.SetDeclinedDate(*t)
+		iuo.SetDateDeclined(*t)
 	}
 	return iuo
 }
 
-// SetCanceledDate sets the "canceled_date" field.
-func (iuo *InvitationUpdateOne) SetCanceledDate(t time.Time) *InvitationUpdateOne {
-	iuo.mutation.SetCanceledDate(t)
+// ClearDateDeclined clears the value of the "date_declined" field.
+func (iuo *InvitationUpdateOne) ClearDateDeclined() *InvitationUpdateOne {
+	iuo.mutation.ClearDateDeclined()
 	return iuo
 }
 
-// SetNillableCanceledDate sets the "canceled_date" field if the given value is not nil.
-func (iuo *InvitationUpdateOne) SetNillableCanceledDate(t *time.Time) *InvitationUpdateOne {
+// SetDateCanceled sets the "date_canceled" field.
+func (iuo *InvitationUpdateOne) SetDateCanceled(t time.Time) *InvitationUpdateOne {
+	iuo.mutation.SetDateCanceled(t)
+	return iuo
+}
+
+// SetNillableDateCanceled sets the "date_canceled" field if the given value is not nil.
+func (iuo *InvitationUpdateOne) SetNillableDateCanceled(t *time.Time) *InvitationUpdateOne {
 	if t != nil {
-		iuo.SetCanceledDate(*t)
+		iuo.SetDateCanceled(*t)
 	}
+	return iuo
+}
+
+// ClearDateCanceled clears the value of the "date_canceled" field.
+func (iuo *InvitationUpdateOne) ClearDateCanceled() *InvitationUpdateOne {
+	iuo.mutation.ClearDateCanceled()
 	return iuo
 }
 
@@ -312,17 +357,26 @@ func (iuo *InvitationUpdateOne) sqlSave(ctx context.Context) (_node *Invitation,
 			}
 		}
 	}
-	if value, ok := iuo.mutation.ExpiredDate(); ok {
-		_spec.SetField(invitation.FieldExpiredDate, field.TypeTime, value)
+	if value, ok := iuo.mutation.DateExpired(); ok {
+		_spec.SetField(invitation.FieldDateExpired, field.TypeTime, value)
 	}
-	if value, ok := iuo.mutation.AcceptedDate(); ok {
-		_spec.SetField(invitation.FieldAcceptedDate, field.TypeTime, value)
+	if value, ok := iuo.mutation.DateAccepted(); ok {
+		_spec.SetField(invitation.FieldDateAccepted, field.TypeTime, value)
 	}
-	if value, ok := iuo.mutation.DeclinedDate(); ok {
-		_spec.SetField(invitation.FieldDeclinedDate, field.TypeTime, value)
+	if iuo.mutation.DateAcceptedCleared() {
+		_spec.ClearField(invitation.FieldDateAccepted, field.TypeTime)
 	}
-	if value, ok := iuo.mutation.CanceledDate(); ok {
-		_spec.SetField(invitation.FieldCanceledDate, field.TypeTime, value)
+	if value, ok := iuo.mutation.DateDeclined(); ok {
+		_spec.SetField(invitation.FieldDateDeclined, field.TypeTime, value)
+	}
+	if iuo.mutation.DateDeclinedCleared() {
+		_spec.ClearField(invitation.FieldDateDeclined, field.TypeTime)
+	}
+	if value, ok := iuo.mutation.DateCanceled(); ok {
+		_spec.SetField(invitation.FieldDateCanceled, field.TypeTime, value)
+	}
+	if iuo.mutation.DateCanceledCleared() {
+		_spec.ClearField(invitation.FieldDateCanceled, field.TypeTime)
 	}
 	_node = &Invitation{config: iuo.config}
 	_spec.Assign = _node.assignValues

@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/contrib/entproto"
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
@@ -54,7 +56,7 @@ func (Team) Fields() []ent.Field {
 
 		field.Time("created_date").
 			Immutable().
-			Default(utcNow).
+			Default(time.Now).
 			Annotations(entproto.Field(15)),
 	}
 }

@@ -26,8 +26,8 @@ const (
 	FieldDescription = "description"
 	// FieldRole holds the string denoting the role field in the database.
 	FieldRole = "role"
-	// FieldCreatedDate holds the string denoting the created_date field in the database.
-	FieldCreatedDate = "created_date"
+	// FieldDateCreated holds the string denoting the date_created field in the database.
+	FieldDateCreated = "date_created"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
 	// EdgeSilo holds the string denoting the silo edge name in mutations.
@@ -76,7 +76,7 @@ var Columns = []string{
 	FieldName,
 	FieldDescription,
 	FieldRole,
-	FieldCreatedDate,
+	FieldDateCreated,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "accounts"
@@ -105,14 +105,16 @@ var (
 	DefaultAlias func() string
 	// AliasValidator is a validator for the "alias" field. It is called by the builders before save.
 	AliasValidator func(string) error
+	// DefaultName holds the default value on creation for the "name" field.
+	DefaultName string
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
 	// DefaultDescription holds the default value on creation for the "description" field.
 	DefaultDescription string
 	// DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	DescriptionValidator func(string) error
-	// DefaultCreatedDate holds the default value on creation for the "created_date" field.
-	DefaultCreatedDate func() time.Time
+	// DefaultDateCreated holds the default value on creation for the "date_created" field.
+	DefaultDateCreated func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -122,8 +124,8 @@ type Role string
 
 // Role values.
 const (
-	RoleOWNER  Role = "OWNER"
 	RoleMEMBER Role = "MEMBER"
+	RoleOWNER  Role = "OWNER"
 )
 
 func (r Role) String() string {
@@ -133,7 +135,7 @@ func (r Role) String() string {
 // RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
 func RoleValidator(r Role) error {
 	switch r {
-	case RoleOWNER, RoleMEMBER:
+	case RoleMEMBER, RoleOWNER:
 		return nil
 	default:
 		return fmt.Errorf("account: invalid enum value for role field: %q", r)
@@ -173,9 +175,9 @@ func ByRole(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRole, opts...).ToFunc()
 }
 
-// ByCreatedDate orders the results by the created_date field.
-func ByCreatedDate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreatedDate, opts...).ToFunc()
+// ByDateCreated orders the results by the date_created field.
+func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
 }
 
 // ByOwnerField orders the results by owner field.

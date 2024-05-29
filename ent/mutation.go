@@ -52,7 +52,7 @@ type AccountMutation struct {
 	name               *string
 	description        *string
 	role               *account.Role
-	created_date       *time.Time
+	date_created       *time.Time
 	clearedFields      map[string]struct{}
 	owner              *uuid.UUID
 	clearedowner       bool
@@ -353,40 +353,40 @@ func (m *AccountMutation) ResetRole() {
 	m.role = nil
 }
 
-// SetCreatedDate sets the "created_date" field.
-func (m *AccountMutation) SetCreatedDate(t time.Time) {
-	m.created_date = &t
+// SetDateCreated sets the "date_created" field.
+func (m *AccountMutation) SetDateCreated(t time.Time) {
+	m.date_created = &t
 }
 
-// CreatedDate returns the value of the "created_date" field in the mutation.
-func (m *AccountMutation) CreatedDate() (r time.Time, exists bool) {
-	v := m.created_date
+// DateCreated returns the value of the "date_created" field in the mutation.
+func (m *AccountMutation) DateCreated() (r time.Time, exists bool) {
+	v := m.date_created
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCreatedDate returns the old "created_date" field's value of the Account entity.
+// OldDateCreated returns the old "date_created" field's value of the Account entity.
 // If the Account object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AccountMutation) OldCreatedDate(ctx context.Context) (v time.Time, err error) {
+func (m *AccountMutation) OldDateCreated(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatedDate is only allowed on UpdateOne operations")
+		return v, errors.New("OldDateCreated is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedDate requires an ID field in the mutation")
+		return v, errors.New("OldDateCreated requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatedDate: %w", err)
+		return v, fmt.Errorf("querying old value for OldDateCreated: %w", err)
 	}
-	return oldValue.CreatedDate, nil
+	return oldValue.DateCreated, nil
 }
 
-// ResetCreatedDate resets all changes to the "created_date" field.
-func (m *AccountMutation) ResetCreatedDate() {
-	m.created_date = nil
+// ResetDateCreated resets all changes to the "date_created" field.
+func (m *AccountMutation) ResetDateCreated() {
+	m.date_created = nil
 }
 
 // SetOwnerID sets the "owner" edge to the User entity by id.
@@ -613,8 +613,8 @@ func (m *AccountMutation) Fields() []string {
 	if m.role != nil {
 		fields = append(fields, account.FieldRole)
 	}
-	if m.created_date != nil {
-		fields = append(fields, account.FieldCreatedDate)
+	if m.date_created != nil {
+		fields = append(fields, account.FieldDateCreated)
 	}
 	return fields
 }
@@ -634,8 +634,8 @@ func (m *AccountMutation) Field(name string) (ent.Value, bool) {
 		return m.Description()
 	case account.FieldRole:
 		return m.Role()
-	case account.FieldCreatedDate:
-		return m.CreatedDate()
+	case account.FieldDateCreated:
+		return m.DateCreated()
 	}
 	return nil, false
 }
@@ -655,8 +655,8 @@ func (m *AccountMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldDescription(ctx)
 	case account.FieldRole:
 		return m.OldRole(ctx)
-	case account.FieldCreatedDate:
-		return m.OldCreatedDate(ctx)
+	case account.FieldDateCreated:
+		return m.OldDateCreated(ctx)
 	}
 	return nil, fmt.Errorf("unknown Account field %s", name)
 }
@@ -701,12 +701,12 @@ func (m *AccountMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRole(v)
 		return nil
-	case account.FieldCreatedDate:
+	case account.FieldDateCreated:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCreatedDate(v)
+		m.SetDateCreated(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Account field %s", name)
@@ -772,8 +772,8 @@ func (m *AccountMutation) ResetField(name string) error {
 	case account.FieldRole:
 		m.ResetRole()
 		return nil
-	case account.FieldCreatedDate:
-		m.ResetCreatedDate()
+	case account.FieldDateCreated:
+		m.ResetDateCreated()
 		return nil
 	}
 	return fmt.Errorf("unknown Account field %s", name)
@@ -1493,11 +1493,12 @@ type InvitationMutation struct {
 	typ            string
 	id             *uuid.UUID
 	invitee        *string
-	created_date   *time.Time
-	expired_date   *time.Time
-	accepted_date  *time.Time
-	declined_date  *time.Time
-	canceled_date  *time.Time
+	_type          *string
+	date_created   *time.Time
+	date_expired   *time.Time
+	date_accepted  *time.Time
+	date_declined  *time.Time
+	date_canceled  *time.Time
 	clearedFields  map[string]struct{}
 	silo           *uuid.UUID
 	clearedsilo    bool
@@ -1648,184 +1649,259 @@ func (m *InvitationMutation) ResetInvitee() {
 	m.invitee = nil
 }
 
-// SetCreatedDate sets the "created_date" field.
-func (m *InvitationMutation) SetCreatedDate(t time.Time) {
-	m.created_date = &t
+// SetType sets the "type" field.
+func (m *InvitationMutation) SetType(s string) {
+	m._type = &s
 }
 
-// CreatedDate returns the value of the "created_date" field in the mutation.
-func (m *InvitationMutation) CreatedDate() (r time.Time, exists bool) {
-	v := m.created_date
+// GetType returns the value of the "type" field in the mutation.
+func (m *InvitationMutation) GetType() (r string, exists bool) {
+	v := m._type
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCreatedDate returns the old "created_date" field's value of the Invitation entity.
+// OldType returns the old "type" field's value of the Invitation entity.
 // If the Invitation object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *InvitationMutation) OldCreatedDate(ctx context.Context) (v time.Time, err error) {
+func (m *InvitationMutation) OldType(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatedDate is only allowed on UpdateOne operations")
+		return v, errors.New("OldType is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedDate requires an ID field in the mutation")
+		return v, errors.New("OldType requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatedDate: %w", err)
+		return v, fmt.Errorf("querying old value for OldType: %w", err)
 	}
-	return oldValue.CreatedDate, nil
+	return oldValue.Type, nil
 }
 
-// ResetCreatedDate resets all changes to the "created_date" field.
-func (m *InvitationMutation) ResetCreatedDate() {
-	m.created_date = nil
+// ResetType resets all changes to the "type" field.
+func (m *InvitationMutation) ResetType() {
+	m._type = nil
 }
 
-// SetExpiredDate sets the "expired_date" field.
-func (m *InvitationMutation) SetExpiredDate(t time.Time) {
-	m.expired_date = &t
+// SetDateCreated sets the "date_created" field.
+func (m *InvitationMutation) SetDateCreated(t time.Time) {
+	m.date_created = &t
 }
 
-// ExpiredDate returns the value of the "expired_date" field in the mutation.
-func (m *InvitationMutation) ExpiredDate() (r time.Time, exists bool) {
-	v := m.expired_date
+// DateCreated returns the value of the "date_created" field in the mutation.
+func (m *InvitationMutation) DateCreated() (r time.Time, exists bool) {
+	v := m.date_created
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldExpiredDate returns the old "expired_date" field's value of the Invitation entity.
+// OldDateCreated returns the old "date_created" field's value of the Invitation entity.
 // If the Invitation object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *InvitationMutation) OldExpiredDate(ctx context.Context) (v *time.Time, err error) {
+func (m *InvitationMutation) OldDateCreated(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldExpiredDate is only allowed on UpdateOne operations")
+		return v, errors.New("OldDateCreated is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldExpiredDate requires an ID field in the mutation")
+		return v, errors.New("OldDateCreated requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldExpiredDate: %w", err)
+		return v, fmt.Errorf("querying old value for OldDateCreated: %w", err)
 	}
-	return oldValue.ExpiredDate, nil
+	return oldValue.DateCreated, nil
 }
 
-// ResetExpiredDate resets all changes to the "expired_date" field.
-func (m *InvitationMutation) ResetExpiredDate() {
-	m.expired_date = nil
+// ResetDateCreated resets all changes to the "date_created" field.
+func (m *InvitationMutation) ResetDateCreated() {
+	m.date_created = nil
 }
 
-// SetAcceptedDate sets the "accepted_date" field.
-func (m *InvitationMutation) SetAcceptedDate(t time.Time) {
-	m.accepted_date = &t
+// SetDateExpired sets the "date_expired" field.
+func (m *InvitationMutation) SetDateExpired(t time.Time) {
+	m.date_expired = &t
 }
 
-// AcceptedDate returns the value of the "accepted_date" field in the mutation.
-func (m *InvitationMutation) AcceptedDate() (r time.Time, exists bool) {
-	v := m.accepted_date
+// DateExpired returns the value of the "date_expired" field in the mutation.
+func (m *InvitationMutation) DateExpired() (r time.Time, exists bool) {
+	v := m.date_expired
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldAcceptedDate returns the old "accepted_date" field's value of the Invitation entity.
+// OldDateExpired returns the old "date_expired" field's value of the Invitation entity.
 // If the Invitation object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *InvitationMutation) OldAcceptedDate(ctx context.Context) (v *time.Time, err error) {
+func (m *InvitationMutation) OldDateExpired(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAcceptedDate is only allowed on UpdateOne operations")
+		return v, errors.New("OldDateExpired is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAcceptedDate requires an ID field in the mutation")
+		return v, errors.New("OldDateExpired requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAcceptedDate: %w", err)
+		return v, fmt.Errorf("querying old value for OldDateExpired: %w", err)
 	}
-	return oldValue.AcceptedDate, nil
+	return oldValue.DateExpired, nil
 }
 
-// ResetAcceptedDate resets all changes to the "accepted_date" field.
-func (m *InvitationMutation) ResetAcceptedDate() {
-	m.accepted_date = nil
+// ResetDateExpired resets all changes to the "date_expired" field.
+func (m *InvitationMutation) ResetDateExpired() {
+	m.date_expired = nil
 }
 
-// SetDeclinedDate sets the "declined_date" field.
-func (m *InvitationMutation) SetDeclinedDate(t time.Time) {
-	m.declined_date = &t
+// SetDateAccepted sets the "date_accepted" field.
+func (m *InvitationMutation) SetDateAccepted(t time.Time) {
+	m.date_accepted = &t
 }
 
-// DeclinedDate returns the value of the "declined_date" field in the mutation.
-func (m *InvitationMutation) DeclinedDate() (r time.Time, exists bool) {
-	v := m.declined_date
+// DateAccepted returns the value of the "date_accepted" field in the mutation.
+func (m *InvitationMutation) DateAccepted() (r time.Time, exists bool) {
+	v := m.date_accepted
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldDeclinedDate returns the old "declined_date" field's value of the Invitation entity.
+// OldDateAccepted returns the old "date_accepted" field's value of the Invitation entity.
 // If the Invitation object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *InvitationMutation) OldDeclinedDate(ctx context.Context) (v *time.Time, err error) {
+func (m *InvitationMutation) OldDateAccepted(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDeclinedDate is only allowed on UpdateOne operations")
+		return v, errors.New("OldDateAccepted is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDeclinedDate requires an ID field in the mutation")
+		return v, errors.New("OldDateAccepted requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeclinedDate: %w", err)
+		return v, fmt.Errorf("querying old value for OldDateAccepted: %w", err)
 	}
-	return oldValue.DeclinedDate, nil
+	return oldValue.DateAccepted, nil
 }
 
-// ResetDeclinedDate resets all changes to the "declined_date" field.
-func (m *InvitationMutation) ResetDeclinedDate() {
-	m.declined_date = nil
+// ClearDateAccepted clears the value of the "date_accepted" field.
+func (m *InvitationMutation) ClearDateAccepted() {
+	m.date_accepted = nil
+	m.clearedFields[invitation.FieldDateAccepted] = struct{}{}
 }
 
-// SetCanceledDate sets the "canceled_date" field.
-func (m *InvitationMutation) SetCanceledDate(t time.Time) {
-	m.canceled_date = &t
+// DateAcceptedCleared returns if the "date_accepted" field was cleared in this mutation.
+func (m *InvitationMutation) DateAcceptedCleared() bool {
+	_, ok := m.clearedFields[invitation.FieldDateAccepted]
+	return ok
 }
 
-// CanceledDate returns the value of the "canceled_date" field in the mutation.
-func (m *InvitationMutation) CanceledDate() (r time.Time, exists bool) {
-	v := m.canceled_date
+// ResetDateAccepted resets all changes to the "date_accepted" field.
+func (m *InvitationMutation) ResetDateAccepted() {
+	m.date_accepted = nil
+	delete(m.clearedFields, invitation.FieldDateAccepted)
+}
+
+// SetDateDeclined sets the "date_declined" field.
+func (m *InvitationMutation) SetDateDeclined(t time.Time) {
+	m.date_declined = &t
+}
+
+// DateDeclined returns the value of the "date_declined" field in the mutation.
+func (m *InvitationMutation) DateDeclined() (r time.Time, exists bool) {
+	v := m.date_declined
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCanceledDate returns the old "canceled_date" field's value of the Invitation entity.
+// OldDateDeclined returns the old "date_declined" field's value of the Invitation entity.
 // If the Invitation object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *InvitationMutation) OldCanceledDate(ctx context.Context) (v *time.Time, err error) {
+func (m *InvitationMutation) OldDateDeclined(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCanceledDate is only allowed on UpdateOne operations")
+		return v, errors.New("OldDateDeclined is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCanceledDate requires an ID field in the mutation")
+		return v, errors.New("OldDateDeclined requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCanceledDate: %w", err)
+		return v, fmt.Errorf("querying old value for OldDateDeclined: %w", err)
 	}
-	return oldValue.CanceledDate, nil
+	return oldValue.DateDeclined, nil
 }
 
-// ResetCanceledDate resets all changes to the "canceled_date" field.
-func (m *InvitationMutation) ResetCanceledDate() {
-	m.canceled_date = nil
+// ClearDateDeclined clears the value of the "date_declined" field.
+func (m *InvitationMutation) ClearDateDeclined() {
+	m.date_declined = nil
+	m.clearedFields[invitation.FieldDateDeclined] = struct{}{}
+}
+
+// DateDeclinedCleared returns if the "date_declined" field was cleared in this mutation.
+func (m *InvitationMutation) DateDeclinedCleared() bool {
+	_, ok := m.clearedFields[invitation.FieldDateDeclined]
+	return ok
+}
+
+// ResetDateDeclined resets all changes to the "date_declined" field.
+func (m *InvitationMutation) ResetDateDeclined() {
+	m.date_declined = nil
+	delete(m.clearedFields, invitation.FieldDateDeclined)
+}
+
+// SetDateCanceled sets the "date_canceled" field.
+func (m *InvitationMutation) SetDateCanceled(t time.Time) {
+	m.date_canceled = &t
+}
+
+// DateCanceled returns the value of the "date_canceled" field in the mutation.
+func (m *InvitationMutation) DateCanceled() (r time.Time, exists bool) {
+	v := m.date_canceled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDateCanceled returns the old "date_canceled" field's value of the Invitation entity.
+// If the Invitation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InvitationMutation) OldDateCanceled(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDateCanceled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDateCanceled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDateCanceled: %w", err)
+	}
+	return oldValue.DateCanceled, nil
+}
+
+// ClearDateCanceled clears the value of the "date_canceled" field.
+func (m *InvitationMutation) ClearDateCanceled() {
+	m.date_canceled = nil
+	m.clearedFields[invitation.FieldDateCanceled] = struct{}{}
+}
+
+// DateCanceledCleared returns if the "date_canceled" field was cleared in this mutation.
+func (m *InvitationMutation) DateCanceledCleared() bool {
+	_, ok := m.clearedFields[invitation.FieldDateCanceled]
+	return ok
+}
+
+// ResetDateCanceled resets all changes to the "date_canceled" field.
+func (m *InvitationMutation) ResetDateCanceled() {
+	m.date_canceled = nil
+	delete(m.clearedFields, invitation.FieldDateCanceled)
 }
 
 // SetSiloID sets the "silo" edge to the Silo entity by id.
@@ -1940,24 +2016,27 @@ func (m *InvitationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *InvitationMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 7)
 	if m.invitee != nil {
 		fields = append(fields, invitation.FieldInvitee)
 	}
-	if m.created_date != nil {
-		fields = append(fields, invitation.FieldCreatedDate)
+	if m._type != nil {
+		fields = append(fields, invitation.FieldType)
 	}
-	if m.expired_date != nil {
-		fields = append(fields, invitation.FieldExpiredDate)
+	if m.date_created != nil {
+		fields = append(fields, invitation.FieldDateCreated)
 	}
-	if m.accepted_date != nil {
-		fields = append(fields, invitation.FieldAcceptedDate)
+	if m.date_expired != nil {
+		fields = append(fields, invitation.FieldDateExpired)
 	}
-	if m.declined_date != nil {
-		fields = append(fields, invitation.FieldDeclinedDate)
+	if m.date_accepted != nil {
+		fields = append(fields, invitation.FieldDateAccepted)
 	}
-	if m.canceled_date != nil {
-		fields = append(fields, invitation.FieldCanceledDate)
+	if m.date_declined != nil {
+		fields = append(fields, invitation.FieldDateDeclined)
+	}
+	if m.date_canceled != nil {
+		fields = append(fields, invitation.FieldDateCanceled)
 	}
 	return fields
 }
@@ -1969,16 +2048,18 @@ func (m *InvitationMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case invitation.FieldInvitee:
 		return m.Invitee()
-	case invitation.FieldCreatedDate:
-		return m.CreatedDate()
-	case invitation.FieldExpiredDate:
-		return m.ExpiredDate()
-	case invitation.FieldAcceptedDate:
-		return m.AcceptedDate()
-	case invitation.FieldDeclinedDate:
-		return m.DeclinedDate()
-	case invitation.FieldCanceledDate:
-		return m.CanceledDate()
+	case invitation.FieldType:
+		return m.GetType()
+	case invitation.FieldDateCreated:
+		return m.DateCreated()
+	case invitation.FieldDateExpired:
+		return m.DateExpired()
+	case invitation.FieldDateAccepted:
+		return m.DateAccepted()
+	case invitation.FieldDateDeclined:
+		return m.DateDeclined()
+	case invitation.FieldDateCanceled:
+		return m.DateCanceled()
 	}
 	return nil, false
 }
@@ -1990,16 +2071,18 @@ func (m *InvitationMutation) OldField(ctx context.Context, name string) (ent.Val
 	switch name {
 	case invitation.FieldInvitee:
 		return m.OldInvitee(ctx)
-	case invitation.FieldCreatedDate:
-		return m.OldCreatedDate(ctx)
-	case invitation.FieldExpiredDate:
-		return m.OldExpiredDate(ctx)
-	case invitation.FieldAcceptedDate:
-		return m.OldAcceptedDate(ctx)
-	case invitation.FieldDeclinedDate:
-		return m.OldDeclinedDate(ctx)
-	case invitation.FieldCanceledDate:
-		return m.OldCanceledDate(ctx)
+	case invitation.FieldType:
+		return m.OldType(ctx)
+	case invitation.FieldDateCreated:
+		return m.OldDateCreated(ctx)
+	case invitation.FieldDateExpired:
+		return m.OldDateExpired(ctx)
+	case invitation.FieldDateAccepted:
+		return m.OldDateAccepted(ctx)
+	case invitation.FieldDateDeclined:
+		return m.OldDateDeclined(ctx)
+	case invitation.FieldDateCanceled:
+		return m.OldDateCanceled(ctx)
 	}
 	return nil, fmt.Errorf("unknown Invitation field %s", name)
 }
@@ -2016,40 +2099,47 @@ func (m *InvitationMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetInvitee(v)
 		return nil
-	case invitation.FieldCreatedDate:
-		v, ok := value.(time.Time)
+	case invitation.FieldType:
+		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCreatedDate(v)
+		m.SetType(v)
 		return nil
-	case invitation.FieldExpiredDate:
+	case invitation.FieldDateCreated:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetExpiredDate(v)
+		m.SetDateCreated(v)
 		return nil
-	case invitation.FieldAcceptedDate:
+	case invitation.FieldDateExpired:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetAcceptedDate(v)
+		m.SetDateExpired(v)
 		return nil
-	case invitation.FieldDeclinedDate:
+	case invitation.FieldDateAccepted:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetDeclinedDate(v)
+		m.SetDateAccepted(v)
 		return nil
-	case invitation.FieldCanceledDate:
+	case invitation.FieldDateDeclined:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCanceledDate(v)
+		m.SetDateDeclined(v)
+		return nil
+	case invitation.FieldDateCanceled:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDateCanceled(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Invitation field %s", name)
@@ -2080,7 +2170,17 @@ func (m *InvitationMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *InvitationMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(invitation.FieldDateAccepted) {
+		fields = append(fields, invitation.FieldDateAccepted)
+	}
+	if m.FieldCleared(invitation.FieldDateDeclined) {
+		fields = append(fields, invitation.FieldDateDeclined)
+	}
+	if m.FieldCleared(invitation.FieldDateCanceled) {
+		fields = append(fields, invitation.FieldDateCanceled)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -2093,6 +2193,17 @@ func (m *InvitationMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *InvitationMutation) ClearField(name string) error {
+	switch name {
+	case invitation.FieldDateAccepted:
+		m.ClearDateAccepted()
+		return nil
+	case invitation.FieldDateDeclined:
+		m.ClearDateDeclined()
+		return nil
+	case invitation.FieldDateCanceled:
+		m.ClearDateCanceled()
+		return nil
+	}
 	return fmt.Errorf("unknown Invitation nullable field %s", name)
 }
 
@@ -2103,20 +2214,23 @@ func (m *InvitationMutation) ResetField(name string) error {
 	case invitation.FieldInvitee:
 		m.ResetInvitee()
 		return nil
-	case invitation.FieldCreatedDate:
-		m.ResetCreatedDate()
+	case invitation.FieldType:
+		m.ResetType()
 		return nil
-	case invitation.FieldExpiredDate:
-		m.ResetExpiredDate()
+	case invitation.FieldDateCreated:
+		m.ResetDateCreated()
 		return nil
-	case invitation.FieldAcceptedDate:
-		m.ResetAcceptedDate()
+	case invitation.FieldDateExpired:
+		m.ResetDateExpired()
 		return nil
-	case invitation.FieldDeclinedDate:
-		m.ResetDeclinedDate()
+	case invitation.FieldDateAccepted:
+		m.ResetDateAccepted()
 		return nil
-	case invitation.FieldCanceledDate:
-		m.ResetCanceledDate()
+	case invitation.FieldDateDeclined:
+		m.ResetDateDeclined()
+		return nil
+	case invitation.FieldDateCanceled:
+		m.ResetDateCanceled()
 		return nil
 	}
 	return fmt.Errorf("unknown Invitation field %s", name)

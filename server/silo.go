@@ -9,12 +9,10 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"khepri.dev/horus"
-	"khepri.dev/horus/alias"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/silo"
 	"khepri.dev/horus/internal/entutils"
-	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/server/bare"
 	"khepri.dev/horus/server/frame"
 )
@@ -26,14 +24,11 @@ type SiloServiceServer struct {
 
 func (s *SiloServiceServer) Create(ctx context.Context, req *horus.CreateSiloRequest) (*horus.Silo, error) {
 	f := frame.Must(ctx)
-	return entutils.WithTxV(ctx, s.client, func(tx *ent.Tx) (*horus.Silo, error) {
+	return entutils.WithTxV(ctx, s.db, func(tx *ent.Tx) (*horus.Silo, error) {
 		c := tx.Client()
-		res, err := bare.NewSiloService(c).Create(ctx, &horus.CreateSiloRequest{
-			Silo: &horus.Silo{
-				Alias: fx.CoalesceOr(req.Silo.GetAlias(), alias.New()),
-				Name:  req.Silo.GetName(),
-			},
-		})
+		v, err := bare.NewSiloService(c).Create(ctx, &horus.CreateSiloRequest{Silo: &horus.Silo{
+			Alias: req.GetSilo().GetAlias(),
+		}})
 		if err != nil {
 			return nil, err
 		}
@@ -42,19 +37,19 @@ func (s *SiloServiceServer) Create(ctx context.Context, req *horus.CreateSiloReq
 			Account: &horus.Account{
 				Alias:       "founder",
 				Name:        "Founder",
-				Description: fmt.Sprintf("Founder of %s", res.Name),
+				Description: fmt.Sprintf("Founder of %s", v.Name),
 
 				Role: horus.Account_ROLE_OWNER,
 
 				Owner: &horus.User{Id: f.Actor.ID[:]},
-				Silo:  &horus.Silo{Id: res.Id},
+				Silo:  &horus.Silo{Id: v.Id},
 			},
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		return res, nil
+		return v, nil
 	})
 }
 

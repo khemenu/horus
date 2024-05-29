@@ -7,16 +7,18 @@ import "google/protobuf/empty.proto";
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "khepri.dev/horus";
+import "google/protobuf/wrappers.proto";
+
+option go_package = "khepri.dev/horus/ent/proto/khepri/horus";
 
 message Account {
   bytes id = 1;
 
   string alias = 2;
 
-  string name = 6;
+  google.protobuf.StringValue name = 6;
 
-  string description = 7;
+  google.protobuf.StringValue description = 7;
 
   Role role = 8;
 
@@ -31,9 +33,9 @@ message Account {
   enum Role {
     ROLE_UNSPECIFIED = 0;
 
-    ROLE_MEMBER = 20;
-
     ROLE_OWNER = 10;
+
+    ROLE_MEMBER = 20;
   }
 }
 
@@ -169,10 +171,6 @@ message UpdateInvitationRequest {
   Invitation invitation = 1;
 }
 
-message AcceptInvitationRequest {
-  bytes id = 1;
-}
-
 message DeleteInvitationRequest {
   bytes id = 1;
 }
@@ -228,9 +226,9 @@ message Silo {
 
   string alias = 2;
 
-  string name = 3;
+  google.protobuf.StringValue name = 3;
 
-  string description = 4;
+  google.protobuf.StringValue description = 4;
 
   google.protobuf.Timestamp date_created = 15;
 }
@@ -281,9 +279,9 @@ message Team {
   enum InterVisibility {
     INTER_VISIBILITY_UNSPECIFIED = 0;
 
-    INTER_VISIBILITY_PUBLIC = 20;
-
     INTER_VISIBILITY_PRIVATE = 10;
+
+    INTER_VISIBILITY_PUBLIC = 20;
   }
 
   enum IntraVisibility {
@@ -437,8 +435,6 @@ service InvitationService {
   rpc Get ( GetInvitationRequest ) returns ( Invitation );
 
   rpc Update ( UpdateInvitationRequest ) returns ( Invitation );
-
-  rpc Accept ( AcceptInvitationRequest ) returns ( google.protobuf.Empty );
 
   rpc Delete ( DeleteInvitationRequest ) returns ( google.protobuf.Empty );
 }

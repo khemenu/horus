@@ -21,6 +21,10 @@ func (s *store) Account() horus.AccountServiceServer {
 	return NewAccountService(s.client)
 }
 
+func (s *store) Invitation() horus.InvitationServiceServer {
+	return NewInvitationService(s.client)
+}
+
 func (s *store) Membership() horus.MembershipServiceServer {
 	return NewMembershipService(s.client)
 }

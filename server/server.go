@@ -27,6 +27,7 @@ func (s *server) Auth() horus.AuthServiceServer {
 type store struct {
 	user       horus.UserServiceServer
 	account    horus.AccountServiceServer
+	invitation horus.InvitationServiceServer
 	membership horus.MembershipServiceServer
 	silo       horus.SiloServiceServer
 	team       horus.TeamServiceServer
@@ -39,6 +40,10 @@ func (s *store) User() horus.UserServiceServer {
 
 func (s *store) Account() horus.AccountServiceServer {
 	return s.account
+}
+
+func (s *store) Invitation() horus.InvitationServiceServer {
+	return s.invitation
 }
 
 func (s *store) Membership() horus.MembershipServiceServer {
@@ -58,23 +63,23 @@ func (s *store) Token() horus.TokenServiceServer {
 }
 
 type base struct {
-	client  *ent.Client
+	db      *ent.Client
 	bare    horus.Store
-	service horus.Server
+	covered horus.Server
 
 	keyer tokens.Keyer
 }
 
 func (b *base) withClient(client *ent.Client) *base {
 	b_ := *b
-	b_.client = client
+	b_.db = client
 	return &b_
 }
 
 func NewServer(client *ent.Client) horus.Server {
 	b := &base{
-		client: client,
-		bare:   bare.NewStore(client),
+		db:   client,
+		bare: bare.NewStore(client),
 
 		keyer: tokens.NewArgon2i(&tokens.Argon2State{
 			Parallelism: 4,
@@ -88,15 +93,16 @@ func NewServer(client *ent.Client) horus.Server {
 		auth: &AuthService{base: b},
 		store: store{
 			user:       &UserServiceServer{base: b},
-			account:    &AccountService{base: b},
-			membership: &MembershipService{base: b},
+			account:    &AccountServiceServer{base: b},
+			invitation: &InvitationServiceServer{base: b},
+			membership: &MembershipServiceServer{base: b},
 			silo:       &SiloServiceServer{base: b},
 			team:       &TeamServiceServer{base: b},
 			token:      &TokenServiceServer{base: b},
 		},
 	}
 
-	b.service = svc
+	b.covered = svc
 	return svc
 }
 

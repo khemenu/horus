@@ -17,16 +17,18 @@ const (
 	FieldID = "id"
 	// FieldInvitee holds the string denoting the invitee field in the database.
 	FieldInvitee = "invitee"
-	// FieldCreatedDate holds the string denoting the created_date field in the database.
-	FieldCreatedDate = "created_date"
-	// FieldExpiredDate holds the string denoting the expired_date field in the database.
-	FieldExpiredDate = "expired_date"
-	// FieldAcceptedDate holds the string denoting the accepted_date field in the database.
-	FieldAcceptedDate = "accepted_date"
-	// FieldDeclinedDate holds the string denoting the declined_date field in the database.
-	FieldDeclinedDate = "declined_date"
-	// FieldCanceledDate holds the string denoting the canceled_date field in the database.
-	FieldCanceledDate = "canceled_date"
+	// FieldType holds the string denoting the type field in the database.
+	FieldType = "type"
+	// FieldDateCreated holds the string denoting the date_created field in the database.
+	FieldDateCreated = "date_created"
+	// FieldDateExpired holds the string denoting the date_expired field in the database.
+	FieldDateExpired = "date_expired"
+	// FieldDateAccepted holds the string denoting the date_accepted field in the database.
+	FieldDateAccepted = "date_accepted"
+	// FieldDateDeclined holds the string denoting the date_declined field in the database.
+	FieldDateDeclined = "date_declined"
+	// FieldDateCanceled holds the string denoting the date_canceled field in the database.
+	FieldDateCanceled = "date_canceled"
 	// EdgeSilo holds the string denoting the silo edge name in mutations.
 	EdgeSilo = "silo"
 	// EdgeInviter holds the string denoting the inviter edge name in mutations.
@@ -53,11 +55,12 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldInvitee,
-	FieldCreatedDate,
-	FieldExpiredDate,
-	FieldAcceptedDate,
-	FieldDeclinedDate,
-	FieldCanceledDate,
+	FieldType,
+	FieldDateCreated,
+	FieldDateExpired,
+	FieldDateAccepted,
+	FieldDateDeclined,
+	FieldDateCanceled,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "invitations"
@@ -85,8 +88,10 @@ func ValidColumn(column string) bool {
 var (
 	// InviteeValidator is a validator for the "invitee" field. It is called by the builders before save.
 	InviteeValidator func(string) error
-	// DefaultCreatedDate holds the default value on creation for the "created_date" field.
-	DefaultCreatedDate func() time.Time
+	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	TypeValidator func(string) error
+	// DefaultDateCreated holds the default value on creation for the "date_created" field.
+	DefaultDateCreated func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -104,29 +109,34 @@ func ByInvitee(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldInvitee, opts...).ToFunc()
 }
 
-// ByCreatedDate orders the results by the created_date field.
-func ByCreatedDate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreatedDate, opts...).ToFunc()
+// ByType orders the results by the type field.
+func ByType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldType, opts...).ToFunc()
 }
 
-// ByExpiredDate orders the results by the expired_date field.
-func ByExpiredDate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldExpiredDate, opts...).ToFunc()
+// ByDateCreated orders the results by the date_created field.
+func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
 }
 
-// ByAcceptedDate orders the results by the accepted_date field.
-func ByAcceptedDate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAcceptedDate, opts...).ToFunc()
+// ByDateExpired orders the results by the date_expired field.
+func ByDateExpired(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateExpired, opts...).ToFunc()
 }
 
-// ByDeclinedDate orders the results by the declined_date field.
-func ByDeclinedDate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDeclinedDate, opts...).ToFunc()
+// ByDateAccepted orders the results by the date_accepted field.
+func ByDateAccepted(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateAccepted, opts...).ToFunc()
 }
 
-// ByCanceledDate orders the results by the canceled_date field.
-func ByCanceledDate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCanceledDate, opts...).ToFunc()
+// ByDateDeclined orders the results by the date_declined field.
+func ByDateDeclined(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateDeclined, opts...).ToFunc()
+}
+
+// ByDateCanceled orders the results by the date_canceled field.
+func ByDateCanceled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateCanceled, opts...).ToFunc()
 }
 
 // BySiloField orders the results by silo field.

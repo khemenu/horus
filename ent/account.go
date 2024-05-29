@@ -30,8 +30,8 @@ type Account struct {
 	Description string `json:"description,omitempty"`
 	// Role holds the value of the "role" field.
 	Role account.Role `json:"role,omitempty"`
-	// CreatedDate holds the value of the "created_date" field.
-	CreatedDate time.Time `json:"created_date,omitempty"`
+	// DateCreated holds the value of the "date_created" field.
+	DateCreated time.Time `json:"date_created,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccountQuery when eager-loading is set.
 	Edges         AccountEdges `json:"edges"`
@@ -105,7 +105,7 @@ func (*Account) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case account.FieldAlias, account.FieldName, account.FieldDescription, account.FieldRole:
 			values[i] = new(sql.NullString)
-		case account.FieldCreatedDate:
+		case account.FieldDateCreated:
 			values[i] = new(sql.NullTime)
 		case account.FieldID, account.FieldSiloID:
 			values[i] = new(uuid.UUID)
@@ -162,11 +162,11 @@ func (a *Account) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				a.Role = account.Role(value.String)
 			}
-		case account.FieldCreatedDate:
+		case account.FieldDateCreated:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_date", values[i])
+				return fmt.Errorf("unexpected type %T for field date_created", values[i])
 			} else if value.Valid {
-				a.CreatedDate = value.Time
+				a.DateCreated = value.Time
 			}
 		case account.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
@@ -246,8 +246,8 @@ func (a *Account) String() string {
 	builder.WriteString("role=")
 	builder.WriteString(fmt.Sprintf("%v", a.Role))
 	builder.WriteString(", ")
-	builder.WriteString("created_date=")
-	builder.WriteString(a.CreatedDate.Format(time.ANSIC))
+	builder.WriteString("date_created=")
+	builder.WriteString(a.DateCreated.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

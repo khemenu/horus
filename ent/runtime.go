@@ -45,32 +45,20 @@ func init() {
 	}()
 	// accountDescName is the schema descriptor for name field.
 	accountDescName := accountFields[3].Descriptor()
+	// account.DefaultName holds the default value on creation for the name field.
+	account.DefaultName = accountDescName.Default.(string)
 	// account.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	account.NameValidator = func() func(string) error {
-		validators := accountDescName.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-		}
-		return func(name string) error {
-			for _, fn := range fns {
-				if err := fn(name); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
+	account.NameValidator = accountDescName.Validators[0].(func(string) error)
 	// accountDescDescription is the schema descriptor for description field.
 	accountDescDescription := accountFields[4].Descriptor()
 	// account.DefaultDescription holds the default value on creation for the description field.
 	account.DefaultDescription = accountDescDescription.Default.(string)
 	// account.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	account.DescriptionValidator = accountDescDescription.Validators[0].(func(string) error)
-	// accountDescCreatedDate is the schema descriptor for created_date field.
-	accountDescCreatedDate := accountFields[6].Descriptor()
-	// account.DefaultCreatedDate holds the default value on creation for the created_date field.
-	account.DefaultCreatedDate = accountDescCreatedDate.Default.(func() time.Time)
+	// accountDescDateCreated is the schema descriptor for date_created field.
+	accountDescDateCreated := accountFields[6].Descriptor()
+	// account.DefaultDateCreated holds the default value on creation for the date_created field.
+	account.DefaultDateCreated = accountDescDateCreated.Default.(func() time.Time)
 	// accountDescID is the schema descriptor for id field.
 	accountDescID := accountFields[0].Descriptor()
 	// account.DefaultID holds the default value on creation for the id field.
@@ -103,10 +91,14 @@ func init() {
 	invitationDescInvitee := invitationFields[1].Descriptor()
 	// invitation.InviteeValidator is a validator for the "invitee" field. It is called by the builders before save.
 	invitation.InviteeValidator = invitationDescInvitee.Validators[0].(func(string) error)
-	// invitationDescCreatedDate is the schema descriptor for created_date field.
-	invitationDescCreatedDate := invitationFields[2].Descriptor()
-	// invitation.DefaultCreatedDate holds the default value on creation for the created_date field.
-	invitation.DefaultCreatedDate = invitationDescCreatedDate.Default.(func() time.Time)
+	// invitationDescType is the schema descriptor for type field.
+	invitationDescType := invitationFields[2].Descriptor()
+	// invitation.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	invitation.TypeValidator = invitationDescType.Validators[0].(func(string) error)
+	// invitationDescDateCreated is the schema descriptor for date_created field.
+	invitationDescDateCreated := invitationFields[3].Descriptor()
+	// invitation.DefaultDateCreated holds the default value on creation for the date_created field.
+	invitation.DefaultDateCreated = invitationDescDateCreated.Default.(func() time.Time)
 	// invitationDescID is the schema descriptor for id field.
 	invitationDescID := invitationFields[0].Descriptor()
 	// invitation.DefaultID holds the default value on creation for the id field.
@@ -125,6 +117,8 @@ func init() {
 	_ = siloFields
 	// siloDescAlias is the schema descriptor for alias field.
 	siloDescAlias := siloFields[1].Descriptor()
+	// silo.DefaultAlias holds the default value on creation for the alias field.
+	silo.DefaultAlias = siloDescAlias.Default.(func() string)
 	// silo.AliasValidator is a validator for the "alias" field. It is called by the builders before save.
 	silo.AliasValidator = func() func(string) error {
 		validators := siloDescAlias.Validators
@@ -143,22 +137,10 @@ func init() {
 	}()
 	// siloDescName is the schema descriptor for name field.
 	siloDescName := siloFields[2].Descriptor()
+	// silo.DefaultName holds the default value on creation for the name field.
+	silo.DefaultName = siloDescName.Default.(string)
 	// silo.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	silo.NameValidator = func() func(string) error {
-		validators := siloDescName.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-		}
-		return func(name string) error {
-			for _, fn := range fns {
-				if err := fn(name); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
+	silo.NameValidator = siloDescName.Validators[0].(func(string) error)
 	// siloDescDescription is the schema descriptor for description field.
 	siloDescDescription := siloFields[3].Descriptor()
 	// silo.DefaultDescription holds the default value on creation for the description field.

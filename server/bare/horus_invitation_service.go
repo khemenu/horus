@@ -34,24 +34,22 @@ func NewInvitationService(client *ent.Client) *InvitationService {
 // toProtoInvitation transforms the ent type to the pb type
 func toProtoInvitation(e *ent.Invitation) (*horus.Invitation, error) {
 	v := &horus.Invitation{}
-	if e.AcceptedDate != nil {
-		accepted_date := timestamppb.New(*e.AcceptedDate)
-		v.AcceptedDate = accepted_date
+	if e.DateAccepted != nil {
+		date_accepted := timestamppb.New(*e.DateAccepted)
+		v.DateAccepted = date_accepted
 	}
-	if e.CanceledDate != nil {
-		canceled_date := timestamppb.New(*e.CanceledDate)
-		v.CanceledDate = canceled_date
+	if e.DateCanceled != nil {
+		date_canceled := timestamppb.New(*e.DateCanceled)
+		v.DateCanceled = date_canceled
 	}
-	created_date := timestamppb.New(e.CreatedDate)
-	v.CreatedDate = created_date
-	if e.DeclinedDate != nil {
-		declined_date := timestamppb.New(*e.DeclinedDate)
-		v.DeclinedDate = declined_date
+	date_created := timestamppb.New(e.DateCreated)
+	v.DateCreated = date_created
+	if e.DateDeclined != nil {
+		date_declined := timestamppb.New(*e.DateDeclined)
+		v.DateDeclined = date_declined
 	}
-	if e.ExpiredDate != nil {
-		expired_date := timestamppb.New(*e.ExpiredDate)
-		v.ExpiredDate = expired_date
-	}
+	date_expired := timestamppb.New(e.DateExpired)
+	v.DateExpired = date_expired
 	id, err := e.ID.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -59,6 +57,8 @@ func toProtoInvitation(e *ent.Invitation) (*horus.Invitation, error) {
 	v.Id = id
 	invitee := e.Invitee
 	v.Invitee = invitee
+	_type := e.Type
+	v.Type = _type
 
 	if edg := e.Edges.Inviter; edg != nil {
 		id, err := edg.ID.MarshalBinary()
@@ -155,14 +155,20 @@ func (svc *InvitationService) Update(ctx context.Context, req *horus.UpdateInvit
 		return nil, status.Errorf(codes.InvalidArgument, "invalid argument: %s", err)
 	}
 	m := svc.client.Invitation.UpdateOneID(invitationID)
-	invitationAcceptedDate := runtime.ExtractTime(invitation.GetAcceptedDate())
-	m.SetAcceptedDate(invitationAcceptedDate)
-	invitationCanceledDate := runtime.ExtractTime(invitation.GetCanceledDate())
-	m.SetCanceledDate(invitationCanceledDate)
-	invitationDeclinedDate := runtime.ExtractTime(invitation.GetDeclinedDate())
-	m.SetDeclinedDate(invitationDeclinedDate)
-	invitationExpiredDate := runtime.ExtractTime(invitation.GetExpiredDate())
-	m.SetExpiredDate(invitationExpiredDate)
+	if invitation.GetDateAccepted() != nil {
+		invitationDateAccepted := runtime.ExtractTime(invitation.GetDateAccepted())
+		m.SetDateAccepted(invitationDateAccepted)
+	}
+	if invitation.GetDateCanceled() != nil {
+		invitationDateCanceled := runtime.ExtractTime(invitation.GetDateCanceled())
+		m.SetDateCanceled(invitationDateCanceled)
+	}
+	if invitation.GetDateDeclined() != nil {
+		invitationDateDeclined := runtime.ExtractTime(invitation.GetDateDeclined())
+		m.SetDateDeclined(invitationDateDeclined)
+	}
+	invitationDateExpired := runtime.ExtractTime(invitation.GetDateExpired())
+	m.SetDateExpired(invitationDateExpired)
 
 	res, err := m.Save(ctx)
 	switch {
@@ -203,20 +209,28 @@ func (svc *InvitationService) Delete(ctx context.Context, req *horus.DeleteInvit
 
 func (svc *InvitationService) createBuilder(invitation *horus.Invitation) (*ent.InvitationCreate, error) {
 	m := svc.client.Invitation.Create()
-	invitationAcceptedDate := runtime.ExtractTime(invitation.GetAcceptedDate())
-	m.SetAcceptedDate(invitationAcceptedDate)
-	invitationCanceledDate := runtime.ExtractTime(invitation.GetCanceledDate())
-	m.SetCanceledDate(invitationCanceledDate)
-	invitationCreatedDate := runtime.ExtractTime(invitation.GetCreatedDate())
-	if !reflect.ValueOf(invitation.GetCreatedDate()).IsZero() {
-		m.SetCreatedDate(invitationCreatedDate)
+	if invitation.GetDateAccepted() != nil {
+		invitationDateAccepted := runtime.ExtractTime(invitation.GetDateAccepted())
+		m.SetDateAccepted(invitationDateAccepted)
 	}
-	invitationDeclinedDate := runtime.ExtractTime(invitation.GetDeclinedDate())
-	m.SetDeclinedDate(invitationDeclinedDate)
-	invitationExpiredDate := runtime.ExtractTime(invitation.GetExpiredDate())
-	m.SetExpiredDate(invitationExpiredDate)
+	if invitation.GetDateCanceled() != nil {
+		invitationDateCanceled := runtime.ExtractTime(invitation.GetDateCanceled())
+		m.SetDateCanceled(invitationDateCanceled)
+	}
+	invitationDateCreated := runtime.ExtractTime(invitation.GetDateCreated())
+	if !reflect.ValueOf(invitation.GetDateCreated()).IsZero() {
+		m.SetDateCreated(invitationDateCreated)
+	}
+	if invitation.GetDateDeclined() != nil {
+		invitationDateDeclined := runtime.ExtractTime(invitation.GetDateDeclined())
+		m.SetDateDeclined(invitationDateDeclined)
+	}
+	invitationDateExpired := runtime.ExtractTime(invitation.GetDateExpired())
+	m.SetDateExpired(invitationDateExpired)
 	invitationInvitee := invitation.GetInvitee()
 	m.SetInvitee(invitationInvitee)
+	invitationType := invitation.GetType()
+	m.SetType(invitationType)
 	if invitation.GetInviter() != nil {
 		var invitationInviter uuid.UUID
 		if err := (&invitationInviter).UnmarshalBinary(invitation.GetInviter().GetId()); err != nil {

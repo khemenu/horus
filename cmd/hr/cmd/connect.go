@@ -6,14 +6,19 @@ import (
 	"net"
 	"sync"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
-	"khepri.dev/horus/internal/fx"
+	"khepri.dev/horus/log"
 	"khepri.dev/horus/server"
 	"khepri.dev/horus/server/bare"
+	"khepri.dev/horus/server/frame"
 )
 
 func (c *ClientConfig) connect(ctx context.Context) (horus.Client, error) {
@@ -21,6 +26,7 @@ func (c *ClientConfig) connect(ctx context.Context) (horus.Client, error) {
 		return c.client, nil
 	}
 
+	l := log.From(ctx)
 	var (
 		conn grpc.ClientConnInterface
 		err  error
@@ -33,32 +39,57 @@ func (c *ClientConfig) connect(ctx context.Context) (horus.Client, error) {
 		)
 
 	case "db":
-		var db *ent.Client
-		db, err = ent.Open(c.Db.Driver, c.Db.Source)
+		c.db, err = ent.Open(c.Db.Driver, c.Db.Source)
 		if err != nil {
 			return nil, fmt.Errorf("open Ent client: %w", err)
 		}
 		if c.Db.WithInit {
-			if err := db.Schema.Create(ctx); err != nil {
+			if err := c.db.Schema.Create(ctx); err != nil {
 				return nil, fmt.Errorf("create DB schema: %w", err)
 			}
 		}
 
-		horus_server := server.NewServer(db)
-		if c.Db.UseBare {
+		var horus_server horus.Server
+		if c.isBareServer() {
+			l.Warn("bare server is enabled since no token or actor is provided")
 			horus_server = &bare_server{
-				db:    db,
-				Store: bare.NewStore(db),
-				cover: horus_server,
+				covered: server.NewServer(c.db),
+				Store:   bare.NewStore(c.db),
+			}
+		} else {
+			horus_server = &covered_server{
+				bare:   bare.NewStore(c.db),
+				Server: server.NewServer(c.db),
 			}
 		}
 
-		buff_server := &buff_server{
-			listener:    bufconn.Listen(1024 * 1024),
-			grpc_server: grpc.NewServer(), // TODO: interceptor
-		}
+		grpc_server := grpc.NewServer(grpc.ChainUnaryInterceptor(
+			func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+				if vs := metadata.ValueFromIncomingContext(ctx, "actor-uuid"); len(vs) > 0 {
+					id, err := uuid.Parse(vs[0])
+					if err != nil {
+						return nil, status.Errorf(codes.Internal, "invalid actor UUID")
+					}
+					user, err := c.db.User.Get(ctx, id)
+					if err != nil {
+						return nil, status.Errorf(codes.Internal, "get user for actor")
+					}
 
-		horus.GrpcRegister(buff_server.grpc_server, horus_server)
+					ctx = frame.WithContext(ctx, &frame.Frame{
+						Actor: user,
+					})
+				}
+
+				return handler(ctx, req)
+			},
+		))
+		horus.GrpcRegister(grpc_server, horus_server)
+
+		buff_server := &buff_server{
+			listener:     bufconn.Listen(1024 * 1024),
+			horus_server: horus_server,
+			grpc_server:  grpc_server,
+		}
 		buff_server.wg.Add(1)
 		go func() {
 			defer buff_server.wg.Done()
@@ -84,40 +115,33 @@ func (c *ClientConfig) connect(ctx context.Context) (horus.Client, error) {
 	return c.client, nil
 }
 
-func (c *ClientConfig) mustConnect(ctx context.Context) horus.Client {
-	return fx.Must(c.connect(ctx))
-}
-
-func (c *ClientConfig) mustBareServer(ctx context.Context) *bare_server {
-	c.mustConnect(ctx)
-	if c.server == nil {
-		panic("client must be connected with DB for this operation")
+func (c *ClientConfig) connectDbServer(ctx context.Context) (horus.Client, error) {
+	if c.ConnectWith != "db" {
+		return nil, fmt.Errorf(`".client.connect_with" must be "db" for this operation`)
 	}
 
-	server, ok := c.server.Server.(*bare_server)
-	if !ok {
-		panic("server must be bare server for this operation")
-	}
-
-	return server
+	return c.connect(ctx)
 }
 
 type bare_server struct {
-	db *ent.Client
+	covered horus.Server
 	horus.Store
-	cover horus.Server
 }
 
 func (s *bare_server) Auth() horus.AuthServiceServer {
-	return s.cover.Auth()
+	return s.covered.Auth()
+}
+
+type covered_server struct {
+	bare horus.Store
+	horus.Server
 }
 
 type buff_server struct {
-	horus.Server
+	listener     *bufconn.Listener
+	grpc_server  *grpc.Server
+	horus_server horus.Server
 
-	listener    *bufconn.Listener
-	grpc_server *grpc.Server
-	wg          sync.WaitGroup
-
+	wg  sync.WaitGroup
 	err error
 }

@@ -8,9 +8,13 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/urfave/cli/v2"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"gopkg.in/yaml.v2"
 	"khepri.dev/horus"
 	"khepri.dev/horus/cmd/conf"
+	"khepri.dev/horus/ent"
 	"khepri.dev/horus/internal/fx"
 )
 
@@ -19,8 +23,9 @@ type Config struct {
 
 	Grpc GrpcConfig `yaml:"grpc"`
 
-	Db     DbConfig     `yaml:"db"`
-	Client ClientConfig `yaml:"client"`
+	Db       DbConfig       `yaml:"db"`
+	Client   ClientConfig   `yaml:"client"`
+	Reporter ReporterConfig `yaml:"reporter"`
 
 	Log   conf.LogConfig `yaml:"log"`
 	Debug DebugConfig    `yaml:"debug"`
@@ -42,8 +47,55 @@ type ClientConfig struct {
 	Target ClientTargetConfig `yaml:"target"`
 	Db     ClientDbConfig     `yaml:"db"`
 
+	has_token bool
+	has_actor bool
+
+	db     *ent.Client
 	server *buff_server
 	client horus.Client
+}
+
+func (c *ClientConfig) isBareServer() bool {
+	return !(c.has_token || c.has_actor)
+}
+
+func (c *ClientConfig) notToBeBareServe() error {
+	if c.isBareServer() {
+		return fmt.Errorf("this operation cannot be run on the bare server; please provide a token or an actor")
+	}
+
+	return nil
+}
+
+type ReporterConfig struct {
+	Format   string `yaml:"format"` // <"plain"> | "template" | "json"
+	Template string `yaml:"template"`
+
+	reporter Reporter
+}
+
+func (c *ReporterConfig) Report(v any, plain string) (err error) {
+	o := plain
+	if c.reporter != nil {
+		o, err = c.reporter.Report(v)
+		if err != nil {
+			return err
+		}
+	}
+
+	fmt.Println(o)
+	return nil
+}
+
+func (c *ReporterConfig) ExitWithErr(err error) cli.ExitCoder {
+	if s, ok := status.FromError(err); ok {
+		return cli.Exit(err.Error(), int(s.Code()))
+	}
+	if ent.IsNotFound(err) {
+		return cli.Exit(err.Error(), int(codes.NotFound))
+	}
+
+	return cli.Exit(err.Error(), 1)
 }
 
 type ClientTargetConfig struct {
@@ -55,7 +107,6 @@ type ClientDbConfig struct {
 	Driver string `yaml:"driver"`
 	Source string `yaml:"source"`
 
-	UseBare  bool `yaml:"use_bare"`
 	WithInit bool `yaml:"with_init"`
 }
 
@@ -88,6 +139,7 @@ func (c *Config) Evaluate() error {
 	fx.Default(&c.Client.Target.Address, c.Grpc.Address)
 	fx.Default(&c.Client.Db.Driver, c.Db.Driver)
 	fx.Default(&c.Client.Db.Source, c.Db.Source)
+	fx.Default(&c.Reporter.Format, "plain")
 	fx.Default(&c.Log.Enabled, fx.Addr(true))
 	fx.Default(&c.Log.Format, "text")
 
@@ -136,4 +188,18 @@ func (c *ClientConfig) CleanUp(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+var CmdGetConfig = &cli.Command{
+	Name: "config",
+	Action: func(ctx *cli.Context) error {
+		conf := ConfFrom(ctx.Context)
+
+		o, err := yaml.Marshal(conf)
+		if err != nil {
+			panic(fmt.Errorf("marshal config into YAML: %w", err))
+		}
+
+		return conf.Reporter.Report(conf, string(o))
+	},
 }

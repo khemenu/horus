@@ -9,6 +9,7 @@ type Client interface {
 
 	User() UserServiceClient
 	Account() AccountServiceClient
+	Invitation() InvitationServiceClient
 	Membership() MembershipServiceClient
 	Silo() SiloServiceClient
 	Team() TeamServiceClient
@@ -20,6 +21,7 @@ type client struct {
 
 	user       UserServiceClient
 	account    AccountServiceClient
+	invitation InvitationServiceClient
 	membership MembershipServiceClient
 	silo       SiloServiceClient
 	team       TeamServiceClient
@@ -32,6 +34,7 @@ func NewClient(conn grpc.ClientConnInterface) Client {
 
 		user:       NewUserServiceClient(conn),
 		account:    NewAccountServiceClient(conn),
+		invitation: NewInvitationServiceClient(conn),
 		membership: NewMembershipServiceClient(conn),
 		silo:       NewSiloServiceClient(conn),
 		team:       NewTeamServiceClient(conn),
@@ -49,6 +52,10 @@ func (c *client) User() UserServiceClient {
 
 func (c *client) Account() AccountServiceClient {
 	return c.account
+}
+
+func (c *client) Invitation() InvitationServiceClient {
+	return c.invitation
 }
 
 func (c *client) Membership() MembershipServiceClient {

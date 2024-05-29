@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/contrib/entproto"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
@@ -24,7 +26,7 @@ func (Identity) Fields() []ent.Field {
 		field.String("name").Default("").
 			Annotations(entproto.Field(5)),
 
-		field.Time("created_date").Immutable().Default(utcNow).
+		field.Time("created_date").Immutable().Default(time.Now).
 			Annotations(entproto.Field(15)),
 	}
 }

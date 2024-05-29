@@ -464,6 +464,7 @@ const (
 	InvitationService_Create_FullMethodName = "/khepri.horus.InvitationService/Create"
 	InvitationService_Get_FullMethodName    = "/khepri.horus.InvitationService/Get"
 	InvitationService_Update_FullMethodName = "/khepri.horus.InvitationService/Update"
+	InvitationService_Accept_FullMethodName = "/khepri.horus.InvitationService/Accept"
 	InvitationService_Delete_FullMethodName = "/khepri.horus.InvitationService/Delete"
 )
 
@@ -474,6 +475,7 @@ type InvitationServiceClient interface {
 	Create(ctx context.Context, in *CreateInvitationRequest, opts ...grpc.CallOption) (*Invitation, error)
 	Get(ctx context.Context, in *GetInvitationRequest, opts ...grpc.CallOption) (*Invitation, error)
 	Update(ctx context.Context, in *UpdateInvitationRequest, opts ...grpc.CallOption) (*Invitation, error)
+	Accept(ctx context.Context, in *AcceptInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Delete(ctx context.Context, in *DeleteInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -512,6 +514,15 @@ func (c *invitationServiceClient) Update(ctx context.Context, in *UpdateInvitati
 	return out, nil
 }
 
+func (c *invitationServiceClient) Accept(ctx context.Context, in *AcceptInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, InvitationService_Accept_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *invitationServiceClient) Delete(ctx context.Context, in *DeleteInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, InvitationService_Delete_FullMethodName, in, out, opts...)
@@ -528,6 +539,7 @@ type InvitationServiceServer interface {
 	Create(context.Context, *CreateInvitationRequest) (*Invitation, error)
 	Get(context.Context, *GetInvitationRequest) (*Invitation, error)
 	Update(context.Context, *UpdateInvitationRequest) (*Invitation, error)
+	Accept(context.Context, *AcceptInvitationRequest) (*emptypb.Empty, error)
 	Delete(context.Context, *DeleteInvitationRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedInvitationServiceServer()
 }
@@ -544,6 +556,9 @@ func (UnimplementedInvitationServiceServer) Get(context.Context, *GetInvitationR
 }
 func (UnimplementedInvitationServiceServer) Update(context.Context, *UpdateInvitationRequest) (*Invitation, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (UnimplementedInvitationServiceServer) Accept(context.Context, *AcceptInvitationRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Accept not implemented")
 }
 func (UnimplementedInvitationServiceServer) Delete(context.Context, *DeleteInvitationRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
@@ -615,6 +630,24 @@ func _InvitationService_Update_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InvitationService_Accept_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AcceptInvitationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvitationServiceServer).Accept(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InvitationService_Accept_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvitationServiceServer).Accept(ctx, req.(*AcceptInvitationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _InvitationService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteInvitationRequest)
 	if err := dec(in); err != nil {
@@ -651,6 +684,10 @@ var InvitationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Update",
 			Handler:    _InvitationService_Update_Handler,
+		},
+		{
+			MethodName: "Accept",
+			Handler:    _InvitationService_Accept_Handler,
 		},
 		{
 			MethodName: "Delete",

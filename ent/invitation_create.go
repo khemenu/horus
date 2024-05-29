@@ -29,41 +29,71 @@ func (ic *InvitationCreate) SetInvitee(s string) *InvitationCreate {
 	return ic
 }
 
-// SetCreatedDate sets the "created_date" field.
-func (ic *InvitationCreate) SetCreatedDate(t time.Time) *InvitationCreate {
-	ic.mutation.SetCreatedDate(t)
+// SetType sets the "type" field.
+func (ic *InvitationCreate) SetType(s string) *InvitationCreate {
+	ic.mutation.SetType(s)
 	return ic
 }
 
-// SetNillableCreatedDate sets the "created_date" field if the given value is not nil.
-func (ic *InvitationCreate) SetNillableCreatedDate(t *time.Time) *InvitationCreate {
+// SetDateCreated sets the "date_created" field.
+func (ic *InvitationCreate) SetDateCreated(t time.Time) *InvitationCreate {
+	ic.mutation.SetDateCreated(t)
+	return ic
+}
+
+// SetNillableDateCreated sets the "date_created" field if the given value is not nil.
+func (ic *InvitationCreate) SetNillableDateCreated(t *time.Time) *InvitationCreate {
 	if t != nil {
-		ic.SetCreatedDate(*t)
+		ic.SetDateCreated(*t)
 	}
 	return ic
 }
 
-// SetExpiredDate sets the "expired_date" field.
-func (ic *InvitationCreate) SetExpiredDate(t time.Time) *InvitationCreate {
-	ic.mutation.SetExpiredDate(t)
+// SetDateExpired sets the "date_expired" field.
+func (ic *InvitationCreate) SetDateExpired(t time.Time) *InvitationCreate {
+	ic.mutation.SetDateExpired(t)
 	return ic
 }
 
-// SetAcceptedDate sets the "accepted_date" field.
-func (ic *InvitationCreate) SetAcceptedDate(t time.Time) *InvitationCreate {
-	ic.mutation.SetAcceptedDate(t)
+// SetDateAccepted sets the "date_accepted" field.
+func (ic *InvitationCreate) SetDateAccepted(t time.Time) *InvitationCreate {
+	ic.mutation.SetDateAccepted(t)
 	return ic
 }
 
-// SetDeclinedDate sets the "declined_date" field.
-func (ic *InvitationCreate) SetDeclinedDate(t time.Time) *InvitationCreate {
-	ic.mutation.SetDeclinedDate(t)
+// SetNillableDateAccepted sets the "date_accepted" field if the given value is not nil.
+func (ic *InvitationCreate) SetNillableDateAccepted(t *time.Time) *InvitationCreate {
+	if t != nil {
+		ic.SetDateAccepted(*t)
+	}
 	return ic
 }
 
-// SetCanceledDate sets the "canceled_date" field.
-func (ic *InvitationCreate) SetCanceledDate(t time.Time) *InvitationCreate {
-	ic.mutation.SetCanceledDate(t)
+// SetDateDeclined sets the "date_declined" field.
+func (ic *InvitationCreate) SetDateDeclined(t time.Time) *InvitationCreate {
+	ic.mutation.SetDateDeclined(t)
+	return ic
+}
+
+// SetNillableDateDeclined sets the "date_declined" field if the given value is not nil.
+func (ic *InvitationCreate) SetNillableDateDeclined(t *time.Time) *InvitationCreate {
+	if t != nil {
+		ic.SetDateDeclined(*t)
+	}
+	return ic
+}
+
+// SetDateCanceled sets the "date_canceled" field.
+func (ic *InvitationCreate) SetDateCanceled(t time.Time) *InvitationCreate {
+	ic.mutation.SetDateCanceled(t)
+	return ic
+}
+
+// SetNillableDateCanceled sets the "date_canceled" field if the given value is not nil.
+func (ic *InvitationCreate) SetNillableDateCanceled(t *time.Time) *InvitationCreate {
+	if t != nil {
+		ic.SetDateCanceled(*t)
+	}
 	return ic
 }
 
@@ -138,9 +168,9 @@ func (ic *InvitationCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (ic *InvitationCreate) defaults() {
-	if _, ok := ic.mutation.CreatedDate(); !ok {
-		v := invitation.DefaultCreatedDate()
-		ic.mutation.SetCreatedDate(v)
+	if _, ok := ic.mutation.DateCreated(); !ok {
+		v := invitation.DefaultDateCreated()
+		ic.mutation.SetDateCreated(v)
 	}
 	if _, ok := ic.mutation.ID(); !ok {
 		v := invitation.DefaultID()
@@ -158,20 +188,19 @@ func (ic *InvitationCreate) check() error {
 			return &ValidationError{Name: "invitee", err: fmt.Errorf(`ent: validator failed for field "Invitation.invitee": %w`, err)}
 		}
 	}
-	if _, ok := ic.mutation.CreatedDate(); !ok {
-		return &ValidationError{Name: "created_date", err: errors.New(`ent: missing required field "Invitation.created_date"`)}
+	if _, ok := ic.mutation.GetType(); !ok {
+		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Invitation.type"`)}
 	}
-	if _, ok := ic.mutation.ExpiredDate(); !ok {
-		return &ValidationError{Name: "expired_date", err: errors.New(`ent: missing required field "Invitation.expired_date"`)}
+	if v, ok := ic.mutation.GetType(); ok {
+		if err := invitation.TypeValidator(v); err != nil {
+			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Invitation.type": %w`, err)}
+		}
 	}
-	if _, ok := ic.mutation.AcceptedDate(); !ok {
-		return &ValidationError{Name: "accepted_date", err: errors.New(`ent: missing required field "Invitation.accepted_date"`)}
+	if _, ok := ic.mutation.DateCreated(); !ok {
+		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Invitation.date_created"`)}
 	}
-	if _, ok := ic.mutation.DeclinedDate(); !ok {
-		return &ValidationError{Name: "declined_date", err: errors.New(`ent: missing required field "Invitation.declined_date"`)}
-	}
-	if _, ok := ic.mutation.CanceledDate(); !ok {
-		return &ValidationError{Name: "canceled_date", err: errors.New(`ent: missing required field "Invitation.canceled_date"`)}
+	if _, ok := ic.mutation.DateExpired(); !ok {
+		return &ValidationError{Name: "date_expired", err: errors.New(`ent: missing required field "Invitation.date_expired"`)}
 	}
 	if _, ok := ic.mutation.SiloID(); !ok {
 		return &ValidationError{Name: "silo", err: errors.New(`ent: missing required edge "Invitation.silo"`)}
@@ -218,25 +247,29 @@ func (ic *InvitationCreate) createSpec() (*Invitation, *sqlgraph.CreateSpec) {
 		_spec.SetField(invitation.FieldInvitee, field.TypeString, value)
 		_node.Invitee = value
 	}
-	if value, ok := ic.mutation.CreatedDate(); ok {
-		_spec.SetField(invitation.FieldCreatedDate, field.TypeTime, value)
-		_node.CreatedDate = value
+	if value, ok := ic.mutation.GetType(); ok {
+		_spec.SetField(invitation.FieldType, field.TypeString, value)
+		_node.Type = value
 	}
-	if value, ok := ic.mutation.ExpiredDate(); ok {
-		_spec.SetField(invitation.FieldExpiredDate, field.TypeTime, value)
-		_node.ExpiredDate = &value
+	if value, ok := ic.mutation.DateCreated(); ok {
+		_spec.SetField(invitation.FieldDateCreated, field.TypeTime, value)
+		_node.DateCreated = value
 	}
-	if value, ok := ic.mutation.AcceptedDate(); ok {
-		_spec.SetField(invitation.FieldAcceptedDate, field.TypeTime, value)
-		_node.AcceptedDate = &value
+	if value, ok := ic.mutation.DateExpired(); ok {
+		_spec.SetField(invitation.FieldDateExpired, field.TypeTime, value)
+		_node.DateExpired = value
 	}
-	if value, ok := ic.mutation.DeclinedDate(); ok {
-		_spec.SetField(invitation.FieldDeclinedDate, field.TypeTime, value)
-		_node.DeclinedDate = &value
+	if value, ok := ic.mutation.DateAccepted(); ok {
+		_spec.SetField(invitation.FieldDateAccepted, field.TypeTime, value)
+		_node.DateAccepted = &value
 	}
-	if value, ok := ic.mutation.CanceledDate(); ok {
-		_spec.SetField(invitation.FieldCanceledDate, field.TypeTime, value)
-		_node.CanceledDate = &value
+	if value, ok := ic.mutation.DateDeclined(); ok {
+		_spec.SetField(invitation.FieldDateDeclined, field.TypeTime, value)
+		_node.DateDeclined = &value
+	}
+	if value, ok := ic.mutation.DateCanceled(); ok {
+		_spec.SetField(invitation.FieldDateCanceled, field.TypeTime, value)
+		_node.DateCanceled = &value
 	}
 	if nodes := ic.mutation.SiloIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

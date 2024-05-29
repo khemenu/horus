@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/contrib/entproto"
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
@@ -21,29 +23,30 @@ func (Silo) Fields() []ent.Field {
 			Default(uuid.New).
 			Annotations(entproto.Field(1)),
 		field.String("alias").
-			Unique().NotEmpty().
+			Unique().
+			NotEmpty().
+			DefaultFunc(alias.New).
 			Validate(alias.ValidateE).
 			Annotations(entproto.Field(2)),
 
 		field.String("name").
-			NotEmpty().
+			Default("").
 			MaxLen(64).
 			Annotations(entproto.Field(3)),
 		field.String("description").
-			MaxLen(256).
 			Default("").
+			MaxLen(256).
 			Annotations(entproto.Field(4)),
 
 		field.Time("date_created").
 			Immutable().
-			Default(utcNow).
+			Default(time.Now).
 			Annotations(entproto.Field(15)),
 	}
 }
 
 func (Silo) Edges() []ent.Edge {
 	return []ent.Edge{
-		// edge.From("members", Account.Type).Ref("silo"),
 		edge.To("members", Account.Type).
 			Annotations(
 				entsql.OnDelete(entsql.Cascade),

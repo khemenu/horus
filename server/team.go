@@ -45,7 +45,7 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamReq
 		return nil, status.Error(codes.PermissionDenied, "only owner can create a team")
 	}
 
-	return entutils.WithTxV(ctx, s.client, func(tx *ent.Tx) (*horus.Team, error) {
+	return entutils.WithTxV(ctx, s.db, func(tx *ent.Tx) (*horus.Team, error) {
 		c := tx.Client()
 		res, err := bare.NewTeamService(c).Create(ctx, &horus.CreateTeamRequest{
 			Team: &horus.Team{

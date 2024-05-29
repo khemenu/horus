@@ -23,7 +23,7 @@ tar -cf "${TEMP}" \
 	./log/ \
 	./proto/ \
 	./schema/ \
-	./service/ \
+	./server/ \
 	./tokens/ \
 	./Dockerfile \
 	./go.mod \

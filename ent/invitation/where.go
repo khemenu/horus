@@ -61,29 +61,34 @@ func Invitee(v string) predicate.Invitation {
 	return predicate.Invitation(sql.FieldEQ(FieldInvitee, v))
 }
 
-// CreatedDate applies equality check predicate on the "created_date" field. It's identical to CreatedDateEQ.
-func CreatedDate(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldEQ(FieldCreatedDate, v))
+// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
+func Type(v string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldEQ(FieldType, v))
 }
 
-// ExpiredDate applies equality check predicate on the "expired_date" field. It's identical to ExpiredDateEQ.
-func ExpiredDate(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldEQ(FieldExpiredDate, v))
+// DateCreated applies equality check predicate on the "date_created" field. It's identical to DateCreatedEQ.
+func DateCreated(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldEQ(FieldDateCreated, v))
 }
 
-// AcceptedDate applies equality check predicate on the "accepted_date" field. It's identical to AcceptedDateEQ.
-func AcceptedDate(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldEQ(FieldAcceptedDate, v))
+// DateExpired applies equality check predicate on the "date_expired" field. It's identical to DateExpiredEQ.
+func DateExpired(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldEQ(FieldDateExpired, v))
 }
 
-// DeclinedDate applies equality check predicate on the "declined_date" field. It's identical to DeclinedDateEQ.
-func DeclinedDate(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldEQ(FieldDeclinedDate, v))
+// DateAccepted applies equality check predicate on the "date_accepted" field. It's identical to DateAcceptedEQ.
+func DateAccepted(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldEQ(FieldDateAccepted, v))
 }
 
-// CanceledDate applies equality check predicate on the "canceled_date" field. It's identical to CanceledDateEQ.
-func CanceledDate(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldEQ(FieldCanceledDate, v))
+// DateDeclined applies equality check predicate on the "date_declined" field. It's identical to DateDeclinedEQ.
+func DateDeclined(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldEQ(FieldDateDeclined, v))
+}
+
+// DateCanceled applies equality check predicate on the "date_canceled" field. It's identical to DateCanceledEQ.
+func DateCanceled(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldEQ(FieldDateCanceled, v))
 }
 
 // InviteeEQ applies the EQ predicate on the "invitee" field.
@@ -151,204 +156,299 @@ func InviteeContainsFold(v string) predicate.Invitation {
 	return predicate.Invitation(sql.FieldContainsFold(FieldInvitee, v))
 }
 
-// CreatedDateEQ applies the EQ predicate on the "created_date" field.
-func CreatedDateEQ(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldEQ(FieldCreatedDate, v))
+// TypeEQ applies the EQ predicate on the "type" field.
+func TypeEQ(v string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldEQ(FieldType, v))
 }
 
-// CreatedDateNEQ applies the NEQ predicate on the "created_date" field.
-func CreatedDateNEQ(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldNEQ(FieldCreatedDate, v))
+// TypeNEQ applies the NEQ predicate on the "type" field.
+func TypeNEQ(v string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldNEQ(FieldType, v))
 }
 
-// CreatedDateIn applies the In predicate on the "created_date" field.
-func CreatedDateIn(vs ...time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldIn(FieldCreatedDate, vs...))
+// TypeIn applies the In predicate on the "type" field.
+func TypeIn(vs ...string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldIn(FieldType, vs...))
 }
 
-// CreatedDateNotIn applies the NotIn predicate on the "created_date" field.
-func CreatedDateNotIn(vs ...time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldNotIn(FieldCreatedDate, vs...))
+// TypeNotIn applies the NotIn predicate on the "type" field.
+func TypeNotIn(vs ...string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldNotIn(FieldType, vs...))
 }
 
-// CreatedDateGT applies the GT predicate on the "created_date" field.
-func CreatedDateGT(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldGT(FieldCreatedDate, v))
+// TypeGT applies the GT predicate on the "type" field.
+func TypeGT(v string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldGT(FieldType, v))
 }
 
-// CreatedDateGTE applies the GTE predicate on the "created_date" field.
-func CreatedDateGTE(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldGTE(FieldCreatedDate, v))
+// TypeGTE applies the GTE predicate on the "type" field.
+func TypeGTE(v string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldGTE(FieldType, v))
 }
 
-// CreatedDateLT applies the LT predicate on the "created_date" field.
-func CreatedDateLT(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldLT(FieldCreatedDate, v))
+// TypeLT applies the LT predicate on the "type" field.
+func TypeLT(v string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldLT(FieldType, v))
 }
 
-// CreatedDateLTE applies the LTE predicate on the "created_date" field.
-func CreatedDateLTE(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldLTE(FieldCreatedDate, v))
+// TypeLTE applies the LTE predicate on the "type" field.
+func TypeLTE(v string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldLTE(FieldType, v))
 }
 
-// ExpiredDateEQ applies the EQ predicate on the "expired_date" field.
-func ExpiredDateEQ(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldEQ(FieldExpiredDate, v))
+// TypeContains applies the Contains predicate on the "type" field.
+func TypeContains(v string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldContains(FieldType, v))
 }
 
-// ExpiredDateNEQ applies the NEQ predicate on the "expired_date" field.
-func ExpiredDateNEQ(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldNEQ(FieldExpiredDate, v))
+// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
+func TypeHasPrefix(v string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldHasPrefix(FieldType, v))
 }
 
-// ExpiredDateIn applies the In predicate on the "expired_date" field.
-func ExpiredDateIn(vs ...time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldIn(FieldExpiredDate, vs...))
+// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
+func TypeHasSuffix(v string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldHasSuffix(FieldType, v))
 }
 
-// ExpiredDateNotIn applies the NotIn predicate on the "expired_date" field.
-func ExpiredDateNotIn(vs ...time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldNotIn(FieldExpiredDate, vs...))
+// TypeEqualFold applies the EqualFold predicate on the "type" field.
+func TypeEqualFold(v string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldEqualFold(FieldType, v))
 }
 
-// ExpiredDateGT applies the GT predicate on the "expired_date" field.
-func ExpiredDateGT(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldGT(FieldExpiredDate, v))
+// TypeContainsFold applies the ContainsFold predicate on the "type" field.
+func TypeContainsFold(v string) predicate.Invitation {
+	return predicate.Invitation(sql.FieldContainsFold(FieldType, v))
 }
 
-// ExpiredDateGTE applies the GTE predicate on the "expired_date" field.
-func ExpiredDateGTE(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldGTE(FieldExpiredDate, v))
+// DateCreatedEQ applies the EQ predicate on the "date_created" field.
+func DateCreatedEQ(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldEQ(FieldDateCreated, v))
 }
 
-// ExpiredDateLT applies the LT predicate on the "expired_date" field.
-func ExpiredDateLT(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldLT(FieldExpiredDate, v))
+// DateCreatedNEQ applies the NEQ predicate on the "date_created" field.
+func DateCreatedNEQ(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldNEQ(FieldDateCreated, v))
 }
 
-// ExpiredDateLTE applies the LTE predicate on the "expired_date" field.
-func ExpiredDateLTE(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldLTE(FieldExpiredDate, v))
+// DateCreatedIn applies the In predicate on the "date_created" field.
+func DateCreatedIn(vs ...time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldIn(FieldDateCreated, vs...))
 }
 
-// AcceptedDateEQ applies the EQ predicate on the "accepted_date" field.
-func AcceptedDateEQ(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldEQ(FieldAcceptedDate, v))
+// DateCreatedNotIn applies the NotIn predicate on the "date_created" field.
+func DateCreatedNotIn(vs ...time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldNotIn(FieldDateCreated, vs...))
 }
 
-// AcceptedDateNEQ applies the NEQ predicate on the "accepted_date" field.
-func AcceptedDateNEQ(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldNEQ(FieldAcceptedDate, v))
+// DateCreatedGT applies the GT predicate on the "date_created" field.
+func DateCreatedGT(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldGT(FieldDateCreated, v))
 }
 
-// AcceptedDateIn applies the In predicate on the "accepted_date" field.
-func AcceptedDateIn(vs ...time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldIn(FieldAcceptedDate, vs...))
+// DateCreatedGTE applies the GTE predicate on the "date_created" field.
+func DateCreatedGTE(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldGTE(FieldDateCreated, v))
 }
 
-// AcceptedDateNotIn applies the NotIn predicate on the "accepted_date" field.
-func AcceptedDateNotIn(vs ...time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldNotIn(FieldAcceptedDate, vs...))
+// DateCreatedLT applies the LT predicate on the "date_created" field.
+func DateCreatedLT(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldLT(FieldDateCreated, v))
 }
 
-// AcceptedDateGT applies the GT predicate on the "accepted_date" field.
-func AcceptedDateGT(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldGT(FieldAcceptedDate, v))
+// DateCreatedLTE applies the LTE predicate on the "date_created" field.
+func DateCreatedLTE(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldLTE(FieldDateCreated, v))
 }
 
-// AcceptedDateGTE applies the GTE predicate on the "accepted_date" field.
-func AcceptedDateGTE(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldGTE(FieldAcceptedDate, v))
+// DateExpiredEQ applies the EQ predicate on the "date_expired" field.
+func DateExpiredEQ(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldEQ(FieldDateExpired, v))
 }
 
-// AcceptedDateLT applies the LT predicate on the "accepted_date" field.
-func AcceptedDateLT(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldLT(FieldAcceptedDate, v))
+// DateExpiredNEQ applies the NEQ predicate on the "date_expired" field.
+func DateExpiredNEQ(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldNEQ(FieldDateExpired, v))
 }
 
-// AcceptedDateLTE applies the LTE predicate on the "accepted_date" field.
-func AcceptedDateLTE(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldLTE(FieldAcceptedDate, v))
+// DateExpiredIn applies the In predicate on the "date_expired" field.
+func DateExpiredIn(vs ...time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldIn(FieldDateExpired, vs...))
 }
 
-// DeclinedDateEQ applies the EQ predicate on the "declined_date" field.
-func DeclinedDateEQ(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldEQ(FieldDeclinedDate, v))
+// DateExpiredNotIn applies the NotIn predicate on the "date_expired" field.
+func DateExpiredNotIn(vs ...time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldNotIn(FieldDateExpired, vs...))
 }
 
-// DeclinedDateNEQ applies the NEQ predicate on the "declined_date" field.
-func DeclinedDateNEQ(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldNEQ(FieldDeclinedDate, v))
+// DateExpiredGT applies the GT predicate on the "date_expired" field.
+func DateExpiredGT(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldGT(FieldDateExpired, v))
 }
 
-// DeclinedDateIn applies the In predicate on the "declined_date" field.
-func DeclinedDateIn(vs ...time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldIn(FieldDeclinedDate, vs...))
+// DateExpiredGTE applies the GTE predicate on the "date_expired" field.
+func DateExpiredGTE(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldGTE(FieldDateExpired, v))
 }
 
-// DeclinedDateNotIn applies the NotIn predicate on the "declined_date" field.
-func DeclinedDateNotIn(vs ...time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldNotIn(FieldDeclinedDate, vs...))
+// DateExpiredLT applies the LT predicate on the "date_expired" field.
+func DateExpiredLT(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldLT(FieldDateExpired, v))
 }
 
-// DeclinedDateGT applies the GT predicate on the "declined_date" field.
-func DeclinedDateGT(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldGT(FieldDeclinedDate, v))
+// DateExpiredLTE applies the LTE predicate on the "date_expired" field.
+func DateExpiredLTE(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldLTE(FieldDateExpired, v))
 }
 
-// DeclinedDateGTE applies the GTE predicate on the "declined_date" field.
-func DeclinedDateGTE(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldGTE(FieldDeclinedDate, v))
+// DateAcceptedEQ applies the EQ predicate on the "date_accepted" field.
+func DateAcceptedEQ(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldEQ(FieldDateAccepted, v))
 }
 
-// DeclinedDateLT applies the LT predicate on the "declined_date" field.
-func DeclinedDateLT(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldLT(FieldDeclinedDate, v))
+// DateAcceptedNEQ applies the NEQ predicate on the "date_accepted" field.
+func DateAcceptedNEQ(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldNEQ(FieldDateAccepted, v))
 }
 
-// DeclinedDateLTE applies the LTE predicate on the "declined_date" field.
-func DeclinedDateLTE(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldLTE(FieldDeclinedDate, v))
+// DateAcceptedIn applies the In predicate on the "date_accepted" field.
+func DateAcceptedIn(vs ...time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldIn(FieldDateAccepted, vs...))
 }
 
-// CanceledDateEQ applies the EQ predicate on the "canceled_date" field.
-func CanceledDateEQ(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldEQ(FieldCanceledDate, v))
+// DateAcceptedNotIn applies the NotIn predicate on the "date_accepted" field.
+func DateAcceptedNotIn(vs ...time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldNotIn(FieldDateAccepted, vs...))
 }
 
-// CanceledDateNEQ applies the NEQ predicate on the "canceled_date" field.
-func CanceledDateNEQ(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldNEQ(FieldCanceledDate, v))
+// DateAcceptedGT applies the GT predicate on the "date_accepted" field.
+func DateAcceptedGT(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldGT(FieldDateAccepted, v))
 }
 
-// CanceledDateIn applies the In predicate on the "canceled_date" field.
-func CanceledDateIn(vs ...time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldIn(FieldCanceledDate, vs...))
+// DateAcceptedGTE applies the GTE predicate on the "date_accepted" field.
+func DateAcceptedGTE(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldGTE(FieldDateAccepted, v))
 }
 
-// CanceledDateNotIn applies the NotIn predicate on the "canceled_date" field.
-func CanceledDateNotIn(vs ...time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldNotIn(FieldCanceledDate, vs...))
+// DateAcceptedLT applies the LT predicate on the "date_accepted" field.
+func DateAcceptedLT(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldLT(FieldDateAccepted, v))
 }
 
-// CanceledDateGT applies the GT predicate on the "canceled_date" field.
-func CanceledDateGT(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldGT(FieldCanceledDate, v))
+// DateAcceptedLTE applies the LTE predicate on the "date_accepted" field.
+func DateAcceptedLTE(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldLTE(FieldDateAccepted, v))
 }
 
-// CanceledDateGTE applies the GTE predicate on the "canceled_date" field.
-func CanceledDateGTE(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldGTE(FieldCanceledDate, v))
+// DateAcceptedIsNil applies the IsNil predicate on the "date_accepted" field.
+func DateAcceptedIsNil() predicate.Invitation {
+	return predicate.Invitation(sql.FieldIsNull(FieldDateAccepted))
 }
 
-// CanceledDateLT applies the LT predicate on the "canceled_date" field.
-func CanceledDateLT(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldLT(FieldCanceledDate, v))
+// DateAcceptedNotNil applies the NotNil predicate on the "date_accepted" field.
+func DateAcceptedNotNil() predicate.Invitation {
+	return predicate.Invitation(sql.FieldNotNull(FieldDateAccepted))
 }
 
-// CanceledDateLTE applies the LTE predicate on the "canceled_date" field.
-func CanceledDateLTE(v time.Time) predicate.Invitation {
-	return predicate.Invitation(sql.FieldLTE(FieldCanceledDate, v))
+// DateDeclinedEQ applies the EQ predicate on the "date_declined" field.
+func DateDeclinedEQ(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldEQ(FieldDateDeclined, v))
+}
+
+// DateDeclinedNEQ applies the NEQ predicate on the "date_declined" field.
+func DateDeclinedNEQ(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldNEQ(FieldDateDeclined, v))
+}
+
+// DateDeclinedIn applies the In predicate on the "date_declined" field.
+func DateDeclinedIn(vs ...time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldIn(FieldDateDeclined, vs...))
+}
+
+// DateDeclinedNotIn applies the NotIn predicate on the "date_declined" field.
+func DateDeclinedNotIn(vs ...time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldNotIn(FieldDateDeclined, vs...))
+}
+
+// DateDeclinedGT applies the GT predicate on the "date_declined" field.
+func DateDeclinedGT(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldGT(FieldDateDeclined, v))
+}
+
+// DateDeclinedGTE applies the GTE predicate on the "date_declined" field.
+func DateDeclinedGTE(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldGTE(FieldDateDeclined, v))
+}
+
+// DateDeclinedLT applies the LT predicate on the "date_declined" field.
+func DateDeclinedLT(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldLT(FieldDateDeclined, v))
+}
+
+// DateDeclinedLTE applies the LTE predicate on the "date_declined" field.
+func DateDeclinedLTE(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldLTE(FieldDateDeclined, v))
+}
+
+// DateDeclinedIsNil applies the IsNil predicate on the "date_declined" field.
+func DateDeclinedIsNil() predicate.Invitation {
+	return predicate.Invitation(sql.FieldIsNull(FieldDateDeclined))
+}
+
+// DateDeclinedNotNil applies the NotNil predicate on the "date_declined" field.
+func DateDeclinedNotNil() predicate.Invitation {
+	return predicate.Invitation(sql.FieldNotNull(FieldDateDeclined))
+}
+
+// DateCanceledEQ applies the EQ predicate on the "date_canceled" field.
+func DateCanceledEQ(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldEQ(FieldDateCanceled, v))
+}
+
+// DateCanceledNEQ applies the NEQ predicate on the "date_canceled" field.
+func DateCanceledNEQ(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldNEQ(FieldDateCanceled, v))
+}
+
+// DateCanceledIn applies the In predicate on the "date_canceled" field.
+func DateCanceledIn(vs ...time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldIn(FieldDateCanceled, vs...))
+}
+
+// DateCanceledNotIn applies the NotIn predicate on the "date_canceled" field.
+func DateCanceledNotIn(vs ...time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldNotIn(FieldDateCanceled, vs...))
+}
+
+// DateCanceledGT applies the GT predicate on the "date_canceled" field.
+func DateCanceledGT(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldGT(FieldDateCanceled, v))
+}
+
+// DateCanceledGTE applies the GTE predicate on the "date_canceled" field.
+func DateCanceledGTE(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldGTE(FieldDateCanceled, v))
+}
+
+// DateCanceledLT applies the LT predicate on the "date_canceled" field.
+func DateCanceledLT(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldLT(FieldDateCanceled, v))
+}
+
+// DateCanceledLTE applies the LTE predicate on the "date_canceled" field.
+func DateCanceledLTE(v time.Time) predicate.Invitation {
+	return predicate.Invitation(sql.FieldLTE(FieldDateCanceled, v))
+}
+
+// DateCanceledIsNil applies the IsNil predicate on the "date_canceled" field.
+func DateCanceledIsNil() predicate.Invitation {
+	return predicate.Invitation(sql.FieldIsNull(FieldDateCanceled))
+}
+
+// DateCanceledNotNil applies the NotNil predicate on the "date_canceled" field.
+func DateCanceledNotNil() predicate.Invitation {
+	return predicate.Invitation(sql.FieldNotNull(FieldDateCanceled))
 }
 
 // HasSilo applies the HasEdge predicate on the "silo" edge.

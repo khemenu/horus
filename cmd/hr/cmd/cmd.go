@@ -20,5 +20,7 @@ var Commands = []*cli.Command{
 	},
 	CmdCreate,
 	CmdGet,
-	CmdDelete,
+	// CmdDelete,
+	CmdInvite,
+	CmdAccept,
 }

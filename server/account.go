@@ -14,16 +14,16 @@ import (
 	"khepri.dev/horus/server/frame"
 )
 
-type AccountService struct {
+type AccountServiceServer struct {
 	horus.UnimplementedAccountServiceServer
 	*base
 }
 
-func (s *AccountService) Create(ctx context.Context, req *horus.CreateAccountRequest) (*horus.Account, error) {
+func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAccountRequest) (*horus.Account, error) {
 	return nil, status.Errorf(codes.PermissionDenied, "account cannot be created manually")
 }
 
-func (s *AccountService) Get(ctx context.Context, req *horus.GetAccountRequest) (*horus.Account, error) {
+func (s *AccountServiceServer) Get(ctx context.Context, req *horus.GetAccountRequest) (*horus.Account, error) {
 	res, err := s.bare.Account().Get(ctx, &horus.GetAccountRequest{
 		Id:   req.Id,
 		View: horus.GetAccountRequest_WITH_EDGE_IDS,
@@ -51,7 +51,7 @@ func (s *AccountService) Get(ctx context.Context, req *horus.GetAccountRequest) 
 	return nil, status.Errorf(codes.Internal, err.Error())
 }
 
-func (s *AccountService) List(ctx context.Context, req *horus.ListAccountRequest) (*horus.ListAccountResponse, error) {
+func (s *AccountServiceServer) List(ctx context.Context, req *horus.ListAccountRequest) (*horus.ListAccountResponse, error) {
 	// f := frame.Must(ctx)
 	// vs, err := f.Actor.QueryAccounts().
 	// 	WithSilo().
@@ -77,7 +77,7 @@ func (s *AccountService) List(ctx context.Context, req *horus.ListAccountRequest
 	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
 
-func (s *AccountService) Update(ctx context.Context, req *horus.UpdateAccountRequest) (*horus.Account, error) {
+func (s *AccountServiceServer) Update(ctx context.Context, req *horus.UpdateAccountRequest) (*horus.Account, error) {
 	v, err := s.Get(ctx, &horus.GetAccountRequest{Id: req.Account.Id})
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (s *AccountService) Update(ctx context.Context, req *horus.UpdateAccountReq
 	})
 }
 
-func (s *AccountService) Delete(ctx context.Context, req *horus.DeleteAccountRequest) (*emptypb.Empty, error) {
+func (s *AccountServiceServer) Delete(ctx context.Context, req *horus.DeleteAccountRequest) (*emptypb.Empty, error) {
 	f := frame.Must(ctx)
 	v, err := s.Get(ctx, &horus.GetAccountRequest{Id: req.Id})
 	if err != nil {

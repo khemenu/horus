@@ -22,16 +22,18 @@ type Invitation struct {
 	ID uuid.UUID `json:"id,omitempty"`
 	// Invitee holds the value of the "invitee" field.
 	Invitee string `json:"invitee,omitempty"`
-	// CreatedDate holds the value of the "created_date" field.
-	CreatedDate time.Time `json:"created_date,omitempty"`
-	// ExpiredDate holds the value of the "expired_date" field.
-	ExpiredDate *time.Time `json:"expired_date,omitempty"`
-	// AcceptedDate holds the value of the "accepted_date" field.
-	AcceptedDate *time.Time `json:"accepted_date,omitempty"`
-	// DeclinedDate holds the value of the "declined_date" field.
-	DeclinedDate *time.Time `json:"declined_date,omitempty"`
-	// CanceledDate holds the value of the "canceled_date" field.
-	CanceledDate *time.Time `json:"canceled_date,omitempty"`
+	// Type holds the value of the "type" field.
+	Type string `json:"type,omitempty"`
+	// DateCreated holds the value of the "date_created" field.
+	DateCreated time.Time `json:"date_created,omitempty"`
+	// DateExpired holds the value of the "date_expired" field.
+	DateExpired time.Time `json:"date_expired,omitempty"`
+	// DateAccepted holds the value of the "date_accepted" field.
+	DateAccepted *time.Time `json:"date_accepted,omitempty"`
+	// DateDeclined holds the value of the "date_declined" field.
+	DateDeclined *time.Time `json:"date_declined,omitempty"`
+	// DateCanceled holds the value of the "date_canceled" field.
+	DateCanceled *time.Time `json:"date_canceled,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the InvitationQuery when eager-loading is set.
 	Edges               InvitationEdges `json:"edges"`
@@ -82,9 +84,9 @@ func (*Invitation) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case invitation.FieldInvitee:
+		case invitation.FieldInvitee, invitation.FieldType:
 			values[i] = new(sql.NullString)
-		case invitation.FieldCreatedDate, invitation.FieldExpiredDate, invitation.FieldAcceptedDate, invitation.FieldDeclinedDate, invitation.FieldCanceledDate:
+		case invitation.FieldDateCreated, invitation.FieldDateExpired, invitation.FieldDateAccepted, invitation.FieldDateDeclined, invitation.FieldDateCanceled:
 			values[i] = new(sql.NullTime)
 		case invitation.FieldID:
 			values[i] = new(uuid.UUID)
@@ -119,39 +121,44 @@ func (i *Invitation) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				i.Invitee = value.String
 			}
-		case invitation.FieldCreatedDate:
-			if value, ok := values[j].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_date", values[j])
+		case invitation.FieldType:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field type", values[j])
 			} else if value.Valid {
-				i.CreatedDate = value.Time
+				i.Type = value.String
 			}
-		case invitation.FieldExpiredDate:
+		case invitation.FieldDateCreated:
 			if value, ok := values[j].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field expired_date", values[j])
+				return fmt.Errorf("unexpected type %T for field date_created", values[j])
 			} else if value.Valid {
-				i.ExpiredDate = new(time.Time)
-				*i.ExpiredDate = value.Time
+				i.DateCreated = value.Time
 			}
-		case invitation.FieldAcceptedDate:
+		case invitation.FieldDateExpired:
 			if value, ok := values[j].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field accepted_date", values[j])
+				return fmt.Errorf("unexpected type %T for field date_expired", values[j])
 			} else if value.Valid {
-				i.AcceptedDate = new(time.Time)
-				*i.AcceptedDate = value.Time
+				i.DateExpired = value.Time
 			}
-		case invitation.FieldDeclinedDate:
+		case invitation.FieldDateAccepted:
 			if value, ok := values[j].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field declined_date", values[j])
+				return fmt.Errorf("unexpected type %T for field date_accepted", values[j])
 			} else if value.Valid {
-				i.DeclinedDate = new(time.Time)
-				*i.DeclinedDate = value.Time
+				i.DateAccepted = new(time.Time)
+				*i.DateAccepted = value.Time
 			}
-		case invitation.FieldCanceledDate:
+		case invitation.FieldDateDeclined:
 			if value, ok := values[j].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field canceled_date", values[j])
+				return fmt.Errorf("unexpected type %T for field date_declined", values[j])
 			} else if value.Valid {
-				i.CanceledDate = new(time.Time)
-				*i.CanceledDate = value.Time
+				i.DateDeclined = new(time.Time)
+				*i.DateDeclined = value.Time
+			}
+		case invitation.FieldDateCanceled:
+			if value, ok := values[j].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field date_canceled", values[j])
+			} else if value.Valid {
+				i.DateCanceled = new(time.Time)
+				*i.DateCanceled = value.Time
 			}
 		case invitation.ForeignKeys[0]:
 			if value, ok := values[j].(*sql.NullScanner); !ok {
@@ -216,26 +223,27 @@ func (i *Invitation) String() string {
 	builder.WriteString("invitee=")
 	builder.WriteString(i.Invitee)
 	builder.WriteString(", ")
-	builder.WriteString("created_date=")
-	builder.WriteString(i.CreatedDate.Format(time.ANSIC))
+	builder.WriteString("type=")
+	builder.WriteString(i.Type)
 	builder.WriteString(", ")
-	if v := i.ExpiredDate; v != nil {
-		builder.WriteString("expired_date=")
+	builder.WriteString("date_created=")
+	builder.WriteString(i.DateCreated.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("date_expired=")
+	builder.WriteString(i.DateExpired.Format(time.ANSIC))
+	builder.WriteString(", ")
+	if v := i.DateAccepted; v != nil {
+		builder.WriteString("date_accepted=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	if v := i.AcceptedDate; v != nil {
-		builder.WriteString("accepted_date=")
+	if v := i.DateDeclined; v != nil {
+		builder.WriteString("date_declined=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	if v := i.DeclinedDate; v != nil {
-		builder.WriteString("declined_date=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
-	builder.WriteString(", ")
-	if v := i.CanceledDate; v != nil {
-		builder.WriteString("canceled_date=")
+	if v := i.DateCanceled; v != nil {
+		builder.WriteString("date_canceled=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteByte(')')

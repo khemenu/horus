@@ -51,6 +51,14 @@ func (ac *AccountCreate) SetName(s string) *AccountCreate {
 	return ac
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (ac *AccountCreate) SetNillableName(s *string) *AccountCreate {
+	if s != nil {
+		ac.SetName(*s)
+	}
+	return ac
+}
+
 // SetDescription sets the "description" field.
 func (ac *AccountCreate) SetDescription(s string) *AccountCreate {
 	ac.mutation.SetDescription(s)
@@ -71,16 +79,16 @@ func (ac *AccountCreate) SetRole(a account.Role) *AccountCreate {
 	return ac
 }
 
-// SetCreatedDate sets the "created_date" field.
-func (ac *AccountCreate) SetCreatedDate(t time.Time) *AccountCreate {
-	ac.mutation.SetCreatedDate(t)
+// SetDateCreated sets the "date_created" field.
+func (ac *AccountCreate) SetDateCreated(t time.Time) *AccountCreate {
+	ac.mutation.SetDateCreated(t)
 	return ac
 }
 
-// SetNillableCreatedDate sets the "created_date" field if the given value is not nil.
-func (ac *AccountCreate) SetNillableCreatedDate(t *time.Time) *AccountCreate {
+// SetNillableDateCreated sets the "date_created" field if the given value is not nil.
+func (ac *AccountCreate) SetNillableDateCreated(t *time.Time) *AccountCreate {
 	if t != nil {
-		ac.SetCreatedDate(*t)
+		ac.SetDateCreated(*t)
 	}
 	return ac
 }
@@ -184,13 +192,17 @@ func (ac *AccountCreate) defaults() {
 		v := account.DefaultAlias()
 		ac.mutation.SetAlias(v)
 	}
+	if _, ok := ac.mutation.Name(); !ok {
+		v := account.DefaultName
+		ac.mutation.SetName(v)
+	}
 	if _, ok := ac.mutation.Description(); !ok {
 		v := account.DefaultDescription
 		ac.mutation.SetDescription(v)
 	}
-	if _, ok := ac.mutation.CreatedDate(); !ok {
-		v := account.DefaultCreatedDate()
-		ac.mutation.SetCreatedDate(v)
+	if _, ok := ac.mutation.DateCreated(); !ok {
+		v := account.DefaultDateCreated()
+		ac.mutation.SetDateCreated(v)
 	}
 	if _, ok := ac.mutation.ID(); !ok {
 		v := account.DefaultID()
@@ -235,8 +247,8 @@ func (ac *AccountCreate) check() error {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "Account.role": %w`, err)}
 		}
 	}
-	if _, ok := ac.mutation.CreatedDate(); !ok {
-		return &ValidationError{Name: "created_date", err: errors.New(`ent: missing required field "Account.created_date"`)}
+	if _, ok := ac.mutation.DateCreated(); !ok {
+		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Account.date_created"`)}
 	}
 	if _, ok := ac.mutation.OwnerID(); !ok {
 		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "Account.owner"`)}
@@ -295,9 +307,9 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		_spec.SetField(account.FieldRole, field.TypeEnum, value)
 		_node.Role = value
 	}
-	if value, ok := ac.mutation.CreatedDate(); ok {
-		_spec.SetField(account.FieldCreatedDate, field.TypeTime, value)
-		_node.CreatedDate = value
+	if value, ok := ac.mutation.DateCreated(); ok {
+		_spec.SetField(account.FieldDateCreated, field.TypeTime, value)
+		_node.DateCreated = value
 	}
 	if nodes := ac.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

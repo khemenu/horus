@@ -8,5 +8,7 @@ var CmdCreate = &cli.Command{
 		CmdCreateUser,
 		CmdCreateRefreshToken,
 		CmdCreateAccessToken,
+		CmdCreateSilo,
+		CmdCreateTeam,
 	},
 }

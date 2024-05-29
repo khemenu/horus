@@ -12,10 +12,10 @@ var (
 	AccountsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "alias", Type: field.TypeString},
-		{Name: "name", Type: field.TypeString, Size: 64},
+		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"OWNER", "MEMBER"}},
-		{Name: "created_date", Type: field.TypeTime},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"MEMBER", "OWNER"}},
+		{Name: "date_created", Type: field.TypeTime},
 		{Name: "silo_id", Type: field.TypeUUID},
 		{Name: "user_accounts", Type: field.TypeUUID},
 	}
@@ -73,11 +73,12 @@ var (
 	InvitationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "invitee", Type: field.TypeString},
-		{Name: "created_date", Type: field.TypeTime},
-		{Name: "expired_date", Type: field.TypeTime},
-		{Name: "accepted_date", Type: field.TypeTime},
-		{Name: "declined_date", Type: field.TypeTime},
-		{Name: "canceled_date", Type: field.TypeTime},
+		{Name: "type", Type: field.TypeString},
+		{Name: "date_created", Type: field.TypeTime},
+		{Name: "date_expired", Type: field.TypeTime},
+		{Name: "date_accepted", Type: field.TypeTime, Nullable: true},
+		{Name: "date_declined", Type: field.TypeTime, Nullable: true},
+		{Name: "date_canceled", Type: field.TypeTime, Nullable: true},
 		{Name: "account_invitations", Type: field.TypeUUID},
 		{Name: "silo_invitations", Type: field.TypeUUID},
 	}
@@ -89,13 +90,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "invitations_accounts_invitations",
-				Columns:    []*schema.Column{InvitationsColumns[7]},
+				Columns:    []*schema.Column{InvitationsColumns[8]},
 				RefColumns: []*schema.Column{AccountsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "invitations_silos_invitations",
-				Columns:    []*schema.Column{InvitationsColumns[8]},
+				Columns:    []*schema.Column{InvitationsColumns[9]},
 				RefColumns: []*schema.Column{SilosColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -133,7 +134,7 @@ var (
 	SilosColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "alias", Type: field.TypeString, Unique: true},
-		{Name: "name", Type: field.TypeString, Size: 64},
+		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
 		{Name: "date_created", Type: field.TypeTime},
 	}
@@ -149,7 +150,7 @@ var (
 		{Name: "alias", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString, Size: 64},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
-		{Name: "inter_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}},
+		{Name: "inter_visibility", Type: field.TypeEnum, Enums: []string{"PUBLIC", "PRIVATE"}},
 		{Name: "intra_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}},
 		{Name: "created_date", Type: field.TypeTime},
 		{Name: "silo_id", Type: field.TypeUUID},

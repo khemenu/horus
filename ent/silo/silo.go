@@ -74,8 +74,12 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultAlias holds the default value on creation for the "alias" field.
+	DefaultAlias func() string
 	// AliasValidator is a validator for the "alias" field. It is called by the builders before save.
 	AliasValidator func(string) error
+	// DefaultName holds the default value on creation for the "name" field.
+	DefaultName string
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
 	// DefaultDescription holds the default value on creation for the "description" field.

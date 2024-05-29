@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/contrib/entproto"
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
@@ -26,15 +28,17 @@ func (Account) Fields() []ent.Field {
 			Annotations(entproto.Skip()),
 		field.String("alias").
 			NotEmpty().
-			DefaultFunc(alias.New).Validate(alias.ValidateE).
+			DefaultFunc(alias.New).
+			Validate(alias.ValidateE).
 			Annotations(entproto.Field(2)),
 
 		field.String("name").
-			NotEmpty().MaxLen(64).
+			Default("").
+			MaxLen(64).
 			Annotations(entproto.Field(6)),
 		field.String("description").
-			MaxLen(256).
 			Default("").
+			MaxLen(256).
 			Annotations(entproto.Field(7)),
 		field.Enum("role").
 			Values(RoleSilo("").Values()...).
@@ -43,9 +47,9 @@ func (Account) Fields() []ent.Field {
 				entproto.Enum(RoleSilo("").Map()),
 			),
 
-		field.Time("created_date").
+		field.Time("date_created").
 			Immutable().
-			Default(utcNow).
+			Default(time.Now).
 			Annotations(entproto.Field(15)),
 	}
 }

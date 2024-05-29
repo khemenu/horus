@@ -10,3 +10,7 @@ const (
 const (
 	TokenKeyName = "horus_token"
 )
+
+const (
+	InvitationTypeInternal = "internal"
+)

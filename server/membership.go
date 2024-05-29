@@ -15,12 +15,12 @@ import (
 	"khepri.dev/horus/server/frame"
 )
 
-type MembershipService struct {
+type MembershipServiceServer struct {
 	horus.UnimplementedMembershipServiceServer
 	*base
 }
 
-func (s *MembershipService) Create(ctx context.Context, req *horus.CreateMembershipRequest) (*horus.Membership, error) {
+func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateMembershipRequest) (*horus.Membership, error) {
 	account_id := req.GetMembership().GetAccount().GetId()
 	if account_id == nil {
 		return nil, newErrMissingRequiredField("membership.account.id")
@@ -85,7 +85,7 @@ func (s *MembershipService) Create(ctx context.Context, req *horus.CreateMembers
 	return s.bare.Membership().Create(ctx, req)
 }
 
-func (s *MembershipService) Get(ctx context.Context, req *horus.GetMembershipRequest) (*horus.Membership, error) {
+func (s *MembershipServiceServer) Get(ctx context.Context, req *horus.GetMembershipRequest) (*horus.Membership, error) {
 	res, err := s.bare.Membership().Get(ctx, &horus.GetMembershipRequest{
 		Id:   req.Id,
 		View: horus.GetMembershipRequest_WITH_EDGE_IDS,
@@ -100,7 +100,7 @@ func (s *MembershipService) Get(ctx context.Context, req *horus.GetMembershipReq
 	return res, nil
 }
 
-func (s *MembershipService) Update(ctx context.Context, req *horus.UpdateMembershipRequest) (*horus.Membership, error) {
+func (s *MembershipServiceServer) Update(ctx context.Context, req *horus.UpdateMembershipRequest) (*horus.Membership, error) {
 	res, err := s.Get(ctx, &horus.GetMembershipRequest{Id: req.Membership.GetId()})
 	if err != nil {
 		return nil, err
@@ -135,7 +135,7 @@ func (s *MembershipService) Update(ctx context.Context, req *horus.UpdateMembers
 	})
 }
 
-func (s *MembershipService) Delete(ctx context.Context, req *horus.DeleteMembershipRequest) (*emptypb.Empty, error) {
+func (s *MembershipServiceServer) Delete(ctx context.Context, req *horus.DeleteMembershipRequest) (*emptypb.Empty, error) {
 	res, err := s.Get(ctx, &horus.GetMembershipRequest{Id: req.GetId()})
 	if err != nil {
 		return nil, err

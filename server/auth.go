@@ -25,7 +25,7 @@ type AuthService struct {
 }
 
 func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInRequest) (*horus.BasicSignInResponse, error) {
-	u, err := s.client.User.Query().
+	u, err := s.db.User.Query().
 		Where(user.AliasEQ(req.Username)).
 		Only(ctx)
 	if err != nil {
@@ -36,7 +36,7 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 		return nil, fmt.Errorf("query user: %w", err)
 	}
 
-	token, err := s.client.Token.Query().
+	token, err := s.db.Token.Query().
 		Where(
 			token.And(
 				token.Type(horus.TokenTypeBasic),
@@ -59,7 +59,7 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 	}
 
 	ctx = frame.WithContext(ctx, &frame.Frame{Actor: u})
-	access_token, err := s.service.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
+	access_token, err := s.covered.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
 		Type: horus.TokenTypeAccess,
 	}})
 	if err != nil {
@@ -72,7 +72,7 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 }
 
 func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInRequest) (*horus.TokenSignInResponse, error) {
-	token, err := s.client.Token.Query().
+	token, err := s.db.Token.Query().
 		Where(
 			token.ValueEQ(req.Token),
 			token.Type(horus.TokenTypeAccess),
@@ -93,7 +93,7 @@ func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInReq
 }
 
 func (s *AuthService) Refresh(ctx context.Context, req *horus.RefreshRequest) (*horus.RefreshResponse, error) {
-	return entutils.WithTxV(ctx, s.client, func(tx *ent.Tx) (*horus.RefreshResponse, error) {
+	return entutils.WithTxV(ctx, s.db, func(tx *ent.Tx) (*horus.RefreshResponse, error) {
 		refresh_token, err := tx.Token.Query().
 			Where(token.And(
 				token.ValueEQ(req.Token),
@@ -142,7 +142,7 @@ func (s *AuthService) Refresh(ctx context.Context, req *horus.RefreshRequest) (*
 
 func (s *AuthService) VerifyOtp(ctx context.Context, req *horus.VerifyOtpRequest) (*horus.VerifyOtpResponse, error) {
 	now := time.Now()
-	n, err := s.client.Token.Update().
+	n, err := s.db.Token.Update().
 		Where(token.And(
 			token.ValueEQ(req.Value),
 			token.Type(horus.TokenTypeOtp),
@@ -161,7 +161,7 @@ func (s *AuthService) VerifyOtp(ctx context.Context, req *horus.VerifyOtpRequest
 }
 
 func (s *AuthService) SignOut(ctx context.Context, req *horus.SingOutRequest) (*horus.SingOutResponse, error) {
-	token, err := s.client.Token.Query().
+	token, err := s.db.Token.Query().
 		Where(
 			token.And(
 				token.ValueEQ(req.Token),
@@ -181,7 +181,7 @@ func (s *AuthService) SignOut(ctx context.Context, req *horus.SingOutRequest) (*
 	ctx = frame.WithContext(ctx, &frame.Frame{
 		Actor: token.Edges.Owner,
 	})
-	if _, err := s.service.Token().Delete(ctx, &horus.DeleteTokenRequest{
+	if _, err := s.covered.Token().Delete(ctx, &horus.DeleteTokenRequest{
 		Id: token.ID[:],
 	}); err != nil {
 		return nil, fmt.Errorf("delete token: %w", err)

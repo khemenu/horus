@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/contrib/entproto"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
@@ -23,7 +25,7 @@ func (Membership) Fields() []ent.Field {
 				entproto.Enum(RoleTeam("").Map()),
 			),
 
-		field.Time("created_date").Immutable().Default(utcNow).
+		field.Time("created_date").Immutable().Default(time.Now).
 			Annotations(entproto.Field(15)),
 	}
 }

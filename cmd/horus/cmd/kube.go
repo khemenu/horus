@@ -60,7 +60,7 @@ Supported API versions are: %s
 			Token: review.Spec.Token,
 		})
 		if err != nil {
-			review.Status.Authenticated = false
+			reviewed.Status.Authenticated = false
 
 			s, _ := status.FromError(err)
 			if s.Code() != codes.Unauthenticated {
