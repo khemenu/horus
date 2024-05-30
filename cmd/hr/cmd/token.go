@@ -10,6 +10,10 @@ import (
 
 func actCreateBearerToken(ctx *cli.Context, token_type string) error {
 	conf := ConfFrom(ctx.Context)
+	if err := conf.Client.notToBeBareServe(); err != nil {
+		return err
+	}
+
 	c, err := conf.Client.connect(ctx.Context)
 	if err != nil {
 		return err
@@ -71,47 +75,3 @@ var CmdGetToken = &cli.Command{
 		return conf.Reporter.Report(v, o)
 	},
 }
-
-// var CmdDeleteAllAccessTokens = &cli.Command{
-// 	Name: "access-tokens",
-// 	Subcommands: []*cli.Command{
-// 		{
-// 			Name:      "of",
-// 			Args:      true,
-// 			ArgsUsage: " USER_ID",
-// 			Action: func(ctx *cli.Context) error {
-// 				conf := ConfFrom(ctx.Context)
-// 				s := conf.Client.mustBareServer(ctx.Context)
-
-// 				if ctx.Args().Len() == 0 {
-// 					return fmt.Errorf("USER_ID not given")
-// 				}
-
-// 				var pred predicate.User
-// 				if user_id, err := uuid.Parse(ctx.Args().Get(0)); err == nil {
-// 					pred = user.IDEQ(user_id)
-// 				} else {
-// 					pred = user.AliasEQ(ctx.Args().Get(0))
-// 				}
-
-// 				owner, err := s.db.User.Query().Where(pred).Only(ctx.Context)
-// 				if err != nil {
-// 					return err
-// 				}
-
-// 				n, err := s.db.Token.Delete().
-// 					Where(token.And(
-// 						token.TypeEQ(horus.TokenTypeAccess),
-// 						token.HasOwnerWith(user.IDEQ(owner.ID)),
-// 					)).
-// 					Exec(ctx.Context)
-// 				if err != nil {
-// 					return err
-// 				}
-
-// 				fmt.Println(n)
-// 				return nil
-// 			},
-// 		},
-// 	},
-// }

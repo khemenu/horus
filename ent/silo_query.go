@@ -501,7 +501,6 @@ func (sq *SiloQuery) loadMembers(ctx context.Context, query *AccountQuery, nodes
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(account.FieldSiloID)
 	}

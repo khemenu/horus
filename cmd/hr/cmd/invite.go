@@ -21,10 +21,6 @@ var CmdInviteUser = &cli.Command{
 	ArgsUsage: " <USER_ID> in <SILO_ID>",
 
 	Action: func(ctx *cli.Context) error {
-		var (
-			user_id string
-			silo_id string
-		)
 		if ctx.Args().Len() != 3 {
 			return fmt.Errorf(`requires exact 3 arguments`)
 		}
@@ -32,8 +28,8 @@ var CmdInviteUser = &cli.Command{
 			return fmt.Errorf(`expected a preposition "in" but found %s`, p)
 		}
 
-		user_id = ctx.Args().Get(0)
-		silo_id = ctx.Args().Get(2)
+		user_id := ctx.Args().Get(0)
+		silo_id := ctx.Args().Get(2)
 
 		conf := ConfFrom(ctx.Context)
 		if err := conf.Client.notToBeBareServe(); err != nil {

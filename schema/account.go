@@ -23,6 +23,9 @@ func (Account) Fields() []ent.Field {
 			Unique().
 			Default(uuid.New).
 			Annotations(entproto.Field(1)),
+		field.UUID("owner_id", uuid.UUID{}).
+			Immutable().
+			Annotations(entproto.Skip()),
 		field.UUID("silo_id", uuid.UUID{}).
 			Immutable().
 			Annotations(entproto.Skip()),
@@ -56,9 +59,19 @@ func (Account) Fields() []ent.Field {
 
 func (Account) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("owner", User.Type).Ref("accounts").Immutable().Unique().Required().
+		edge.From("owner", User.Type).
+			Ref("accounts").
+			Field("owner_id").
+			Immutable().
+			Unique().
+			Required().
 			Annotations(entproto.Field(3)),
-		edge.From("silo", Silo.Type).Ref("members").Field("silo_id").Immutable().Unique().Required().
+		edge.From("silo", Silo.Type).
+			Ref("members").
+			Field("silo_id").
+			Immutable().
+			Unique().
+			Required().
 			Annotations(entproto.Field(4)),
 		edge.To("memberships", Membership.Type).
 			Annotations(entsql.OnDelete(entsql.Cascade), entproto.Field(5)),
@@ -69,6 +82,7 @@ func (Account) Edges() []ent.Edge {
 
 func (Account) Indexes() []ent.Index {
 	return []ent.Index{
+		index.Fields("silo_id", "owner_id").Unique(),
 		index.Fields("silo_id", "alias").Unique(),
 	}
 }

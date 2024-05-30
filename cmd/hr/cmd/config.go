@@ -59,6 +59,14 @@ func (c *ClientConfig) isBareServer() bool {
 	return !(c.has_token || c.has_actor)
 }
 
+func (c *ClientConfig) toBeBareServe() error {
+	if !c.isBareServer() {
+		return fmt.Errorf("this operation requires server to be bare server")
+	}
+
+	return nil
+}
+
 func (c *ClientConfig) notToBeBareServe() error {
 	if c.isBareServer() {
 		return fmt.Errorf("this operation cannot be run on the bare server; please provide a token or an actor")

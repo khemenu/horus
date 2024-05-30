@@ -14,10 +14,10 @@ var (
 		{Name: "alias", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"MEMBER", "OWNER"}},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"OWNER", "MEMBER"}},
 		{Name: "date_created", Type: field.TypeTime},
 		{Name: "silo_id", Type: field.TypeUUID},
-		{Name: "user_accounts", Type: field.TypeUUID},
+		{Name: "owner_id", Type: field.TypeUUID},
 	}
 	// AccountsTable holds the schema information for the "accounts" table.
 	AccountsTable = &schema.Table{
@@ -39,6 +39,11 @@ var (
 			},
 		},
 		Indexes: []*schema.Index{
+			{
+				Name:    "account_silo_id_owner_id",
+				Unique:  true,
+				Columns: []*schema.Column{AccountsColumns[6], AccountsColumns[7]},
+			},
 			{
 				Name:    "account_silo_id_alias",
 				Unique:  true,
@@ -150,8 +155,8 @@ var (
 		{Name: "alias", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString, Size: 64},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
-		{Name: "inter_visibility", Type: field.TypeEnum, Enums: []string{"PUBLIC", "PRIVATE"}},
-		{Name: "intra_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}},
+		{Name: "inter_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}},
+		{Name: "intra_visibility", Type: field.TypeEnum, Enums: []string{"PUBLIC", "PRIVATE"}},
 		{Name: "created_date", Type: field.TypeTime},
 		{Name: "silo_id", Type: field.TypeUUID},
 	}

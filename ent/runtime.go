@@ -24,7 +24,7 @@ func init() {
 	accountFields := schema.Account{}.Fields()
 	_ = accountFields
 	// accountDescAlias is the schema descriptor for alias field.
-	accountDescAlias := accountFields[2].Descriptor()
+	accountDescAlias := accountFields[3].Descriptor()
 	// account.DefaultAlias holds the default value on creation for the alias field.
 	account.DefaultAlias = accountDescAlias.Default.(func() string)
 	// account.AliasValidator is a validator for the "alias" field. It is called by the builders before save.
@@ -44,19 +44,19 @@ func init() {
 		}
 	}()
 	// accountDescName is the schema descriptor for name field.
-	accountDescName := accountFields[3].Descriptor()
+	accountDescName := accountFields[4].Descriptor()
 	// account.DefaultName holds the default value on creation for the name field.
 	account.DefaultName = accountDescName.Default.(string)
 	// account.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	account.NameValidator = accountDescName.Validators[0].(func(string) error)
 	// accountDescDescription is the schema descriptor for description field.
-	accountDescDescription := accountFields[4].Descriptor()
+	accountDescDescription := accountFields[5].Descriptor()
 	// account.DefaultDescription holds the default value on creation for the description field.
 	account.DefaultDescription = accountDescDescription.Default.(string)
 	// account.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	account.DescriptionValidator = accountDescDescription.Validators[0].(func(string) error)
 	// accountDescDateCreated is the schema descriptor for date_created field.
-	accountDescDateCreated := accountFields[6].Descriptor()
+	accountDescDateCreated := accountFields[7].Descriptor()
 	// account.DefaultDateCreated holds the default value on creation for the date_created field.
 	account.DefaultDateCreated = accountDescDateCreated.Default.(func() time.Time)
 	// accountDescID is the schema descriptor for id field.

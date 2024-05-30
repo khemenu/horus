@@ -96,8 +96,8 @@ type InterVisibility string
 
 // InterVisibility values.
 const (
-	InterVisibilityPUBLIC  InterVisibility = "PUBLIC"
 	InterVisibilityPRIVATE InterVisibility = "PRIVATE"
+	InterVisibilityPUBLIC  InterVisibility = "PUBLIC"
 )
 
 func (iv InterVisibility) String() string {
@@ -107,7 +107,7 @@ func (iv InterVisibility) String() string {
 // InterVisibilityValidator is a validator for the "inter_visibility" field enum values. It is called by the builders before save.
 func InterVisibilityValidator(iv InterVisibility) error {
 	switch iv {
-	case InterVisibilityPUBLIC, InterVisibilityPRIVATE:
+	case InterVisibilityPRIVATE, InterVisibilityPUBLIC:
 		return nil
 	default:
 		return fmt.Errorf("team: invalid enum value for inter_visibility field: %q", iv)
@@ -119,8 +119,8 @@ type IntraVisibility string
 
 // IntraVisibility values.
 const (
-	IntraVisibilityPRIVATE IntraVisibility = "PRIVATE"
 	IntraVisibilityPUBLIC  IntraVisibility = "PUBLIC"
+	IntraVisibilityPRIVATE IntraVisibility = "PRIVATE"
 )
 
 func (iv IntraVisibility) String() string {
@@ -130,7 +130,7 @@ func (iv IntraVisibility) String() string {
 // IntraVisibilityValidator is a validator for the "intra_visibility" field enum values. It is called by the builders before save.
 func IntraVisibilityValidator(iv IntraVisibility) error {
 	switch iv {
-	case IntraVisibilityPRIVATE, IntraVisibilityPUBLIC:
+	case IntraVisibilityPUBLIC, IntraVisibilityPRIVATE:
 		return nil
 	default:
 		return fmt.Errorf("team: invalid enum value for intra_visibility field: %q", iv)

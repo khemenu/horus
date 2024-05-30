@@ -688,7 +688,9 @@ func (uq *UserQuery) loadAccounts(ctx context.Context, query *AccountQuery, node
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(account.FieldOwnerID)
+	}
 	query.Where(predicate.Account(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(user.AccountsColumn), fks...))
 	}))
@@ -697,13 +699,10 @@ func (uq *UserQuery) loadAccounts(ctx context.Context, query *AccountQuery, node
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.user_accounts
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "user_accounts" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.OwnerID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_accounts" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "owner_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

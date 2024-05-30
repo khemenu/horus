@@ -31,9 +31,9 @@ message Account {
   enum Role {
     ROLE_UNSPECIFIED = 0;
 
-    ROLE_MEMBER = 20;
-
     ROLE_OWNER = 10;
+
+    ROLE_MEMBER = 20;
   }
 }
 
@@ -281,17 +281,17 @@ message Team {
   enum InterVisibility {
     INTER_VISIBILITY_UNSPECIFIED = 0;
 
-    INTER_VISIBILITY_PUBLIC = 20;
-
     INTER_VISIBILITY_PRIVATE = 10;
+
+    INTER_VISIBILITY_PUBLIC = 20;
   }
 
   enum IntraVisibility {
     INTRA_VISIBILITY_UNSPECIFIED = 0;
 
-    INTRA_VISIBILITY_PRIVATE = 10;
-
     INTRA_VISIBILITY_PUBLIC = 20;
+
+    INTRA_VISIBILITY_PRIVATE = 10;
   }
 }
 

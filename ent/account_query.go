@@ -31,7 +31,6 @@ type AccountQuery struct {
 	withSilo        *SiloQuery
 	withMemberships *MembershipQuery
 	withInvitations *InvitationQuery
-	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -408,12 +407,12 @@ func (aq *AccountQuery) WithInvitations(opts ...func(*InvitationQuery)) *Account
 // Example:
 //
 //	var v []struct {
-//		SiloID uuid.UUID `json:"silo_id,omitempty"`
+//		OwnerID uuid.UUID `json:"owner_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Account.Query().
-//		GroupBy(account.FieldSiloID).
+//		GroupBy(account.FieldOwnerID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (aq *AccountQuery) GroupBy(field string, fields ...string) *AccountGroupBy {
@@ -431,11 +430,11 @@ func (aq *AccountQuery) GroupBy(field string, fields ...string) *AccountGroupBy 
 // Example:
 //
 //	var v []struct {
-//		SiloID uuid.UUID `json:"silo_id,omitempty"`
+//		OwnerID uuid.UUID `json:"owner_id,omitempty"`
 //	}
 //
 //	client.Account.Query().
-//		Select(account.FieldSiloID).
+//		Select(account.FieldOwnerID).
 //		Scan(ctx, &v)
 func (aq *AccountQuery) Select(fields ...string) *AccountSelect {
 	aq.ctx.Fields = append(aq.ctx.Fields, fields...)
@@ -479,7 +478,6 @@ func (aq *AccountQuery) prepareQuery(ctx context.Context) error {
 func (aq *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Account, error) {
 	var (
 		nodes       = []*Account{}
-		withFKs     = aq.withFKs
 		_spec       = aq.querySpec()
 		loadedTypes = [4]bool{
 			aq.withOwner != nil,
@@ -488,12 +486,6 @@ func (aq *AccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acco
 			aq.withInvitations != nil,
 		}
 	)
-	if aq.withOwner != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, account.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Account).scanValues(nil, columns)
 	}
@@ -545,10 +537,7 @@ func (aq *AccountQuery) loadOwner(ctx context.Context, query *UserQuery, nodes [
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*Account)
 	for i := range nodes {
-		if nodes[i].user_accounts == nil {
-			continue
-		}
-		fk := *nodes[i].user_accounts
+		fk := nodes[i].OwnerID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -565,7 +554,7 @@ func (aq *AccountQuery) loadOwner(ctx context.Context, query *UserQuery, nodes [
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_accounts" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "owner_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -689,6 +678,9 @@ func (aq *AccountQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != account.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if aq.withOwner != nil {
+			_spec.Node.AddColumnOnce(account.FieldOwnerID)
 		}
 		if aq.withSilo != nil {
 			_spec.Node.AddColumnOnce(account.FieldSiloID)

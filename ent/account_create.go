@@ -25,6 +25,12 @@ type AccountCreate struct {
 	hooks    []Hook
 }
 
+// SetOwnerID sets the "owner_id" field.
+func (ac *AccountCreate) SetOwnerID(u uuid.UUID) *AccountCreate {
+	ac.mutation.SetOwnerID(u)
+	return ac
+}
+
 // SetSiloID sets the "silo_id" field.
 func (ac *AccountCreate) SetSiloID(u uuid.UUID) *AccountCreate {
 	ac.mutation.SetSiloID(u)
@@ -104,12 +110,6 @@ func (ac *AccountCreate) SetNillableID(u *uuid.UUID) *AccountCreate {
 	if u != nil {
 		ac.SetID(*u)
 	}
-	return ac
-}
-
-// SetOwnerID sets the "owner" edge to the User entity by ID.
-func (ac *AccountCreate) SetOwnerID(id uuid.UUID) *AccountCreate {
-	ac.mutation.SetOwnerID(id)
 	return ac
 }
 
@@ -212,6 +212,9 @@ func (ac *AccountCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (ac *AccountCreate) check() error {
+	if _, ok := ac.mutation.OwnerID(); !ok {
+		return &ValidationError{Name: "owner_id", err: errors.New(`ent: missing required field "Account.owner_id"`)}
+	}
 	if _, ok := ac.mutation.SiloID(); !ok {
 		return &ValidationError{Name: "silo_id", err: errors.New(`ent: missing required field "Account.silo_id"`)}
 	}
@@ -325,7 +328,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.user_accounts = &nodes[0]
+		_node.OwnerID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := ac.mutation.SiloIDs(); len(nodes) > 0 {

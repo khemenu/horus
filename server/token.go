@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -16,6 +17,9 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
+	"khepri.dev/horus/ent/token"
+	"khepri.dev/horus/ent/user"
+	"khepri.dev/horus/internal/entutils"
 	"khepri.dev/horus/server/frame"
 )
 
@@ -44,7 +48,13 @@ func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenR
 func (s *TokenServiceServer) createBasic(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
 	f := frame.Must(ctx)
 
-	key, err := s.keyer.Key([]byte(req.Token.Value))
+	pw := req.GetToken().GetValue()
+	if pw == "" {
+		return nil, status.Error(codes.InvalidArgument, `"Token.value" must be provided`)
+	}
+	pw = strings.TrimSpace(pw)
+
+	key, err := s.keyer.Key([]byte(pw))
 	if err != nil {
 		return nil, fmt.Errorf("generate key: %w", err)
 	}
@@ -56,20 +66,38 @@ func (s *TokenServiceServer) createBasic(ctx context.Context, req *horus.CreateT
 		key_str = base64.RawStdEncoding.EncodeToString(b)
 	}
 
-	// TODO: TypeBasic must be unique per user;
-	// Use upsert or transaction.
-	// OR keep all tokens? then use only latest one?
-	token, err := s.bare.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
-		Value: key_str,
-		Owner: &horus.User{Id: f.Actor.ID[:]},
-		Type:  horus.TokenTypeBasic,
-	}})
+	v, err := entutils.WithTxV(ctx, s.db, func(tx *ent.Tx) (*ent.Token, error) {
+		_, err := tx.Token.Delete().
+			Where(
+				token.TypeEQ(horus.TokenTypeBasic),
+				token.HasOwnerWith(user.IDEQ(f.Actor.ID)),
+			).Exec(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("delete existing basic tokens: %w", err)
+		}
+
+		v, err := tx.Token.Create().
+			SetValue(key_str).
+			SetOwnerID(f.Actor.ID).
+			SetType(horus.TokenTypeBasic).
+			SetDateExpired(time.Now().Add(10 * 365 * 24 * time.Hour)).
+			Save(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("create token: %w", err)
+		}
+
+		return v, nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("create token: %w", err)
+		return nil, err
 	}
 
-	token.Value = ""
-	return token, nil
+	return &horus.Token{
+		Id:          v.ID[:],
+		Type:        horus.TokenTypeBasic,
+		DateCreated: timestamppb.New(v.DateCreated),
+		DateExpired: timestamppb.New(v.DateExpired),
+	}, nil
 }
 
 func (s *TokenServiceServer) createBearer(ctx context.Context, req *horus.CreateTokenRequest, t string) (*horus.Token, error) {

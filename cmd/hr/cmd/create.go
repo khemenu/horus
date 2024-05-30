@@ -6,6 +6,7 @@ var CmdCreate = &cli.Command{
 	Name: "create",
 	Subcommands: []*cli.Command{
 		CmdCreateUser,
+		CmdCreateAccount,
 		CmdCreateRefreshToken,
 		CmdCreateAccessToken,
 		CmdCreateSilo,

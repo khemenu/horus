@@ -173,6 +173,42 @@ func (m *AccountMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	}
 }
 
+// SetOwnerID sets the "owner_id" field.
+func (m *AccountMutation) SetOwnerID(u uuid.UUID) {
+	m.owner = &u
+}
+
+// OwnerID returns the value of the "owner_id" field in the mutation.
+func (m *AccountMutation) OwnerID() (r uuid.UUID, exists bool) {
+	v := m.owner
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerID returns the old "owner_id" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountMutation) OldOwnerID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
+	}
+	return oldValue.OwnerID, nil
+}
+
+// ResetOwnerID resets all changes to the "owner_id" field.
+func (m *AccountMutation) ResetOwnerID() {
+	m.owner = nil
+}
+
 // SetSiloID sets the "silo_id" field.
 func (m *AccountMutation) SetSiloID(u uuid.UUID) {
 	m.silo = &u
@@ -389,27 +425,15 @@ func (m *AccountMutation) ResetDateCreated() {
 	m.date_created = nil
 }
 
-// SetOwnerID sets the "owner" edge to the User entity by id.
-func (m *AccountMutation) SetOwnerID(id uuid.UUID) {
-	m.owner = &id
-}
-
 // ClearOwner clears the "owner" edge to the User entity.
 func (m *AccountMutation) ClearOwner() {
 	m.clearedowner = true
+	m.clearedFields[account.FieldOwnerID] = struct{}{}
 }
 
 // OwnerCleared reports if the "owner" edge to the User entity was cleared.
 func (m *AccountMutation) OwnerCleared() bool {
 	return m.clearedowner
-}
-
-// OwnerID returns the "owner" edge ID in the mutation.
-func (m *AccountMutation) OwnerID() (id uuid.UUID, exists bool) {
-	if m.owner != nil {
-		return *m.owner, true
-	}
-	return
 }
 
 // OwnerIDs returns the "owner" edge IDs in the mutation.
@@ -597,7 +621,10 @@ func (m *AccountMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AccountMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 7)
+	if m.owner != nil {
+		fields = append(fields, account.FieldOwnerID)
+	}
 	if m.silo != nil {
 		fields = append(fields, account.FieldSiloID)
 	}
@@ -624,6 +651,8 @@ func (m *AccountMutation) Fields() []string {
 // schema.
 func (m *AccountMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case account.FieldOwnerID:
+		return m.OwnerID()
 	case account.FieldSiloID:
 		return m.SiloID()
 	case account.FieldAlias:
@@ -645,6 +674,8 @@ func (m *AccountMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *AccountMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case account.FieldOwnerID:
+		return m.OldOwnerID(ctx)
 	case account.FieldSiloID:
 		return m.OldSiloID(ctx)
 	case account.FieldAlias:
@@ -666,6 +697,13 @@ func (m *AccountMutation) OldField(ctx context.Context, name string) (ent.Value,
 // type.
 func (m *AccountMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case account.FieldOwnerID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerID(v)
+		return nil
 	case account.FieldSiloID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
@@ -757,6 +795,9 @@ func (m *AccountMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *AccountMutation) ResetField(name string) error {
 	switch name {
+	case account.FieldOwnerID:
+		m.ResetOwnerID()
+		return nil
 	case account.FieldSiloID:
 		m.ResetSiloID()
 		return nil

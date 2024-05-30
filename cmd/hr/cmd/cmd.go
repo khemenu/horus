@@ -18,8 +18,9 @@ var Commands = []*cli.Command{
 			return nil
 		},
 	},
-	CmdCreate,
 	CmdGet,
+	CmdSet,
+	CmdCreate,
 	// CmdDelete,
 	CmdInvite,
 	CmdAccept,

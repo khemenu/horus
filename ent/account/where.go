@@ -56,6 +56,11 @@ func IDLTE(id uuid.UUID) predicate.Account {
 	return predicate.Account(sql.FieldLTE(FieldID, id))
 }
 
+// OwnerID applies equality check predicate on the "owner_id" field. It's identical to OwnerIDEQ.
+func OwnerID(v uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldOwnerID, v))
+}
+
 // SiloID applies equality check predicate on the "silo_id" field. It's identical to SiloIDEQ.
 func SiloID(v uuid.UUID) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldSiloID, v))
@@ -79,6 +84,26 @@ func Description(v string) predicate.Account {
 // DateCreated applies equality check predicate on the "date_created" field. It's identical to DateCreatedEQ.
 func DateCreated(v time.Time) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldDateCreated, v))
+}
+
+// OwnerIDEQ applies the EQ predicate on the "owner_id" field.
+func OwnerIDEQ(v uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldOwnerID, v))
+}
+
+// OwnerIDNEQ applies the NEQ predicate on the "owner_id" field.
+func OwnerIDNEQ(v uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldNEQ(FieldOwnerID, v))
+}
+
+// OwnerIDIn applies the In predicate on the "owner_id" field.
+func OwnerIDIn(vs ...uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldIn(FieldOwnerID, vs...))
+}
+
+// OwnerIDNotIn applies the NotIn predicate on the "owner_id" field.
+func OwnerIDNotIn(vs ...uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldNotIn(FieldOwnerID, vs...))
 }
 
 // SiloIDEQ applies the EQ predicate on the "silo_id" field.

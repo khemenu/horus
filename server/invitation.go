@@ -33,7 +33,7 @@ func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.CreateI
 	target_silo := req.GetInvitation().GetSilo()
 	silo_uuid, err := uuid.FromBytes(target_silo.GetId())
 	if err != nil && target_silo.GetId() != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid silo ID")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid silo UUID")
 	}
 	if silo_uuid == uuid.Nil {
 		silo_alias := target_silo.GetAlias()

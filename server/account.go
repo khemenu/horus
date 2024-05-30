@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -11,6 +12,9 @@ import (
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/account"
+	"khepri.dev/horus/ent/predicate"
+	"khepri.dev/horus/ent/silo"
+	"khepri.dev/horus/ent/user"
 	"khepri.dev/horus/server/frame"
 )
 
@@ -20,7 +24,89 @@ type AccountServiceServer struct {
 }
 
 func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAccountRequest) (*horus.Account, error) {
-	return nil, status.Errorf(codes.PermissionDenied, "account cannot be created manually")
+	f := frame.Must(ctx)
+
+	owner := req.GetAccount().GetOwner()
+	if owner == nil {
+		return nil, status.Errorf(codes.PermissionDenied, "account cannot be created by the account holder themselves")
+	}
+
+	// Actor must be owner of the silo.
+	// Actor must be direct parent of the account owner.
+
+	target_silo := req.GetAccount().GetSilo()
+	silo_uuid, err := uuid.FromBytes(target_silo.GetId())
+	if err != nil && target_silo.GetId() != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid silo UUID")
+	}
+	if silo_uuid == uuid.Nil {
+		silo_alias := target_silo.GetAlias()
+		if silo_alias == "" {
+			return nil, status.Errorf(codes.InvalidArgument, "silo ID not provided")
+		}
+
+		silo_uuid, err = s.db.Silo.Query().
+			Where(silo.AliasEQ(silo_alias)).
+			OnlyID(ctx)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return nil, status.Error(codes.NotFound, "silo not found")
+			}
+
+			return nil, fmt.Errorf("get silo: %w", err)
+		}
+	}
+
+	if actor_acct, err := s.db.Account.Query().
+		Where(
+			account.OwnerIDEQ(f.Actor.ID),
+			account.SiloIDEQ(silo_uuid),
+		).
+		Only(ctx); err != nil || actor_acct.Role != account.RoleOWNER {
+		return nil, status.Error(codes.PermissionDenied, "not the silo owner")
+	}
+
+	owner_uuid, err := uuid.FromBytes(owner.Id)
+	if err != nil && owner.Id != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid owner UUID")
+	}
+
+	var owner_q predicate.User
+	if owner_uuid != uuid.Nil {
+		owner_q = user.IDEQ(owner_uuid)
+	} else {
+		if owner.Alias == "" {
+			return nil, status.Errorf(codes.InvalidArgument, "owner ID not provided")
+		}
+
+		owner_q = user.AliasEQ(owner.Alias)
+	}
+
+	if owner, err := s.db.User.Query().
+		Where(owner_q).
+		WithParent().
+		Only(ctx); err != nil {
+		if ent.IsNotFound(err) {
+			return nil, status.Error(codes.NotFound, "owner not found")
+		}
+
+		return nil, fmt.Errorf("get silo: %w", err)
+	} else if p := owner.Edges.Parent; p == nil || p.ID != f.Actor.ID {
+		return nil, status.Error(codes.PermissionDenied, "actor is not a direct parent of the account owner")
+	} else {
+		owner_uuid = owner.ID
+	}
+
+	v := req.GetAccount()
+	return s.bare.Account().Create(ctx, &horus.CreateAccountRequest{Account: &horus.Account{
+		Alias:       v.GetAlias(),
+		Name:        v.GetName(),
+		Description: v.GetDescription(),
+		Role:        horus.Account_ROLE_MEMBER,
+
+		Owner: &horus.User{Id: owner_uuid[:]},
+		Silo:  &horus.Silo{Id: silo_uuid[:]},
+	}})
 }
 
 func (s *AccountServiceServer) Get(ctx context.Context, req *horus.GetAccountRequest) (*horus.Account, error) {

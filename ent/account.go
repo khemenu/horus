@@ -20,6 +20,8 @@ type Account struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// OwnerID holds the value of the "owner_id" field.
+	OwnerID uuid.UUID `json:"owner_id,omitempty"`
 	// SiloID holds the value of the "silo_id" field.
 	SiloID uuid.UUID `json:"silo_id,omitempty"`
 	// Alias holds the value of the "alias" field.
@@ -34,9 +36,8 @@ type Account struct {
 	DateCreated time.Time `json:"date_created,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccountQuery when eager-loading is set.
-	Edges         AccountEdges `json:"edges"`
-	user_accounts *uuid.UUID
-	selectValues  sql.SelectValues
+	Edges        AccountEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // AccountEdges holds the relations/edges for other nodes in the graph.
@@ -107,10 +108,8 @@ func (*Account) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case account.FieldDateCreated:
 			values[i] = new(sql.NullTime)
-		case account.FieldID, account.FieldSiloID:
+		case account.FieldID, account.FieldOwnerID, account.FieldSiloID:
 			values[i] = new(uuid.UUID)
-		case account.ForeignKeys[0]: // user_accounts
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -131,6 +130,12 @@ func (a *Account) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				a.ID = *value
+			}
+		case account.FieldOwnerID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
+			} else if value != nil {
+				a.OwnerID = *value
 			}
 		case account.FieldSiloID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -167,13 +172,6 @@ func (a *Account) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field date_created", values[i])
 			} else if value.Valid {
 				a.DateCreated = value.Time
-			}
-		case account.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field user_accounts", values[i])
-			} else if value.Valid {
-				a.user_accounts = new(uuid.UUID)
-				*a.user_accounts = *value.S.(*uuid.UUID)
 			}
 		default:
 			a.selectValues.Set(columns[i], values[i])
@@ -231,6 +229,9 @@ func (a *Account) String() string {
 	var builder strings.Builder
 	builder.WriteString("Account(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", a.ID))
+	builder.WriteString("owner_id=")
+	builder.WriteString(fmt.Sprintf("%v", a.OwnerID))
+	builder.WriteString(", ")
 	builder.WriteString("silo_id=")
 	builder.WriteString(fmt.Sprintf("%v", a.SiloID))
 	builder.WriteString(", ")

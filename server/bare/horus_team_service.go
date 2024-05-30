@@ -72,8 +72,8 @@ func toProtoTeam_IntraVisibility(e team.IntraVisibility) horus.Team_IntraVisibil
 func toEntTeam_IntraVisibility(e horus.Team_IntraVisibility) team.IntraVisibility {
 	if v, ok := horus.Team_IntraVisibility_name[int32(e)]; ok {
 		entVal := map[string]string{
-			"INTRA_VISIBILITY_PUBLIC":  "PUBLIC",
 			"INTRA_VISIBILITY_PRIVATE": "PRIVATE",
+			"INTRA_VISIBILITY_PUBLIC":  "PUBLIC",
 		}[v]
 		return team.IntraVisibility(entVal)
 	}

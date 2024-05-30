@@ -16,6 +16,8 @@ const (
 	Label = "account"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldOwnerID holds the string denoting the owner_id field in the database.
+	FieldOwnerID = "owner_id"
 	// FieldSiloID holds the string denoting the silo_id field in the database.
 	FieldSiloID = "silo_id"
 	// FieldAlias holds the string denoting the alias field in the database.
@@ -44,7 +46,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	OwnerInverseTable = "users"
 	// OwnerColumn is the table column denoting the owner relation/edge.
-	OwnerColumn = "user_accounts"
+	OwnerColumn = "owner_id"
 	// SiloTable is the table that holds the silo relation/edge.
 	SiloTable = "accounts"
 	// SiloInverseTable is the table name for the Silo entity.
@@ -71,6 +73,7 @@ const (
 // Columns holds all SQL columns for account fields.
 var Columns = []string{
 	FieldID,
+	FieldOwnerID,
 	FieldSiloID,
 	FieldAlias,
 	FieldName,
@@ -79,21 +82,10 @@ var Columns = []string{
 	FieldDateCreated,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "accounts"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"user_accounts",
-}
-
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -124,8 +116,8 @@ type Role string
 
 // Role values.
 const (
-	RoleMEMBER Role = "MEMBER"
 	RoleOWNER  Role = "OWNER"
+	RoleMEMBER Role = "MEMBER"
 )
 
 func (r Role) String() string {
@@ -135,7 +127,7 @@ func (r Role) String() string {
 // RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
 func RoleValidator(r Role) error {
 	switch r {
-	case RoleMEMBER, RoleOWNER:
+	case RoleOWNER, RoleMEMBER:
 		return nil
 	default:
 		return fmt.Errorf("account: invalid enum value for role field: %q", r)
@@ -148,6 +140,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByOwnerID orders the results by the owner_id field.
+func ByOwnerID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOwnerID, opts...).ToFunc()
 }
 
 // BySiloID orders the results by the silo_id field.
