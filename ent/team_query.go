@@ -335,12 +335,12 @@ func (tq *TeamQuery) WithMembers(opts ...func(*MembershipQuery)) *TeamQuery {
 // Example:
 //
 //	var v []struct {
-//		SiloID uuid.UUID `json:"silo_id,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Team.Query().
-//		GroupBy(team.FieldSiloID).
+//		GroupBy(team.FieldDateCreated).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (tq *TeamQuery) GroupBy(field string, fields ...string) *TeamGroupBy {
@@ -358,11 +358,11 @@ func (tq *TeamQuery) GroupBy(field string, fields ...string) *TeamGroupBy {
 // Example:
 //
 //	var v []struct {
-//		SiloID uuid.UUID `json:"silo_id,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //	}
 //
 //	client.Team.Query().
-//		Select(team.FieldSiloID).
+//		Select(team.FieldDateCreated).
 //		Scan(ctx, &v)
 func (tq *TeamQuery) Select(fields ...string) *TeamSelect {
 	tq.ctx.Fields = append(tq.ctx.Fields, fields...)

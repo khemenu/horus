@@ -24,6 +24,20 @@ type SiloCreate struct {
 	hooks    []Hook
 }
 
+// SetDateCreated sets the "date_created" field.
+func (sc *SiloCreate) SetDateCreated(t time.Time) *SiloCreate {
+	sc.mutation.SetDateCreated(t)
+	return sc
+}
+
+// SetNillableDateCreated sets the "date_created" field if the given value is not nil.
+func (sc *SiloCreate) SetNillableDateCreated(t *time.Time) *SiloCreate {
+	if t != nil {
+		sc.SetDateCreated(*t)
+	}
+	return sc
+}
+
 // SetAlias sets the "alias" field.
 func (sc *SiloCreate) SetAlias(s string) *SiloCreate {
 	sc.mutation.SetAlias(s)
@@ -62,20 +76,6 @@ func (sc *SiloCreate) SetDescription(s string) *SiloCreate {
 func (sc *SiloCreate) SetNillableDescription(s *string) *SiloCreate {
 	if s != nil {
 		sc.SetDescription(*s)
-	}
-	return sc
-}
-
-// SetDateCreated sets the "date_created" field.
-func (sc *SiloCreate) SetDateCreated(t time.Time) *SiloCreate {
-	sc.mutation.SetDateCreated(t)
-	return sc
-}
-
-// SetNillableDateCreated sets the "date_created" field if the given value is not nil.
-func (sc *SiloCreate) SetNillableDateCreated(t *time.Time) *SiloCreate {
-	if t != nil {
-		sc.SetDateCreated(*t)
 	}
 	return sc
 }
@@ -174,6 +174,10 @@ func (sc *SiloCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (sc *SiloCreate) defaults() {
+	if _, ok := sc.mutation.DateCreated(); !ok {
+		v := silo.DefaultDateCreated()
+		sc.mutation.SetDateCreated(v)
+	}
 	if _, ok := sc.mutation.Alias(); !ok {
 		v := silo.DefaultAlias()
 		sc.mutation.SetAlias(v)
@@ -186,10 +190,6 @@ func (sc *SiloCreate) defaults() {
 		v := silo.DefaultDescription
 		sc.mutation.SetDescription(v)
 	}
-	if _, ok := sc.mutation.DateCreated(); !ok {
-		v := silo.DefaultDateCreated()
-		sc.mutation.SetDateCreated(v)
-	}
 	if _, ok := sc.mutation.ID(); !ok {
 		v := silo.DefaultID()
 		sc.mutation.SetID(v)
@@ -198,6 +198,9 @@ func (sc *SiloCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (sc *SiloCreate) check() error {
+	if _, ok := sc.mutation.DateCreated(); !ok {
+		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Silo.date_created"`)}
+	}
 	if _, ok := sc.mutation.Alias(); !ok {
 		return &ValidationError{Name: "alias", err: errors.New(`ent: missing required field "Silo.alias"`)}
 	}
@@ -221,9 +224,6 @@ func (sc *SiloCreate) check() error {
 		if err := silo.DescriptionValidator(v); err != nil {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Silo.description": %w`, err)}
 		}
-	}
-	if _, ok := sc.mutation.DateCreated(); !ok {
-		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Silo.date_created"`)}
 	}
 	return nil
 }
@@ -260,6 +260,10 @@ func (sc *SiloCreate) createSpec() (*Silo, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := sc.mutation.DateCreated(); ok {
+		_spec.SetField(silo.FieldDateCreated, field.TypeTime, value)
+		_node.DateCreated = value
+	}
 	if value, ok := sc.mutation.Alias(); ok {
 		_spec.SetField(silo.FieldAlias, field.TypeString, value)
 		_node.Alias = value
@@ -271,10 +275,6 @@ func (sc *SiloCreate) createSpec() (*Silo, *sqlgraph.CreateSpec) {
 	if value, ok := sc.mutation.Description(); ok {
 		_spec.SetField(silo.FieldDescription, field.TypeString, value)
 		_node.Description = value
-	}
-	if value, ok := sc.mutation.DateCreated(); ok {
-		_spec.SetField(silo.FieldDateCreated, field.TypeTime, value)
-		_node.DateCreated = value
 	}
 	if nodes := sc.mutation.MembersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

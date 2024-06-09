@@ -15,12 +15,12 @@ const (
 	Label = "invitation"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldDateCreated holds the string denoting the date_created field in the database.
+	FieldDateCreated = "date_created"
 	// FieldInvitee holds the string denoting the invitee field in the database.
 	FieldInvitee = "invitee"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
-	// FieldDateCreated holds the string denoting the date_created field in the database.
-	FieldDateCreated = "date_created"
 	// FieldDateExpired holds the string denoting the date_expired field in the database.
 	FieldDateExpired = "date_expired"
 	// FieldDateAccepted holds the string denoting the date_accepted field in the database.
@@ -54,9 +54,9 @@ const (
 // Columns holds all SQL columns for invitation fields.
 var Columns = []string{
 	FieldID,
+	FieldDateCreated,
 	FieldInvitee,
 	FieldType,
-	FieldDateCreated,
 	FieldDateExpired,
 	FieldDateAccepted,
 	FieldDateDeclined,
@@ -86,12 +86,12 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultDateCreated holds the default value on creation for the "date_created" field.
+	DefaultDateCreated func() time.Time
 	// InviteeValidator is a validator for the "invitee" field. It is called by the builders before save.
 	InviteeValidator func(string) error
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
-	// DefaultDateCreated holds the default value on creation for the "date_created" field.
-	DefaultDateCreated func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -104,6 +104,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
+// ByDateCreated orders the results by the date_created field.
+func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
+}
+
 // ByInvitee orders the results by the invitee field.
 func ByInvitee(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldInvitee, opts...).ToFunc()
@@ -112,11 +117,6 @@ func ByInvitee(opts ...sql.OrderTermOption) OrderOption {
 // ByType orders the results by the type field.
 func ByType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldType, opts...).ToFunc()
-}
-
-// ByDateCreated orders the results by the date_created field.
-func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
 }
 
 // ByDateExpired orders the results by the date_expired field.

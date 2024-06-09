@@ -24,20 +24,6 @@ type UserCreate struct {
 	hooks    []Hook
 }
 
-// SetAlias sets the "alias" field.
-func (uc *UserCreate) SetAlias(s string) *UserCreate {
-	uc.mutation.SetAlias(s)
-	return uc
-}
-
-// SetNillableAlias sets the "alias" field if the given value is not nil.
-func (uc *UserCreate) SetNillableAlias(s *string) *UserCreate {
-	if s != nil {
-		uc.SetAlias(*s)
-	}
-	return uc
-}
-
 // SetDateCreated sets the "date_created" field.
 func (uc *UserCreate) SetDateCreated(t time.Time) *UserCreate {
 	uc.mutation.SetDateCreated(t)
@@ -48,6 +34,20 @@ func (uc *UserCreate) SetDateCreated(t time.Time) *UserCreate {
 func (uc *UserCreate) SetNillableDateCreated(t *time.Time) *UserCreate {
 	if t != nil {
 		uc.SetDateCreated(*t)
+	}
+	return uc
+}
+
+// SetAlias sets the "alias" field.
+func (uc *UserCreate) SetAlias(s string) *UserCreate {
+	uc.mutation.SetAlias(s)
+	return uc
+}
+
+// SetNillableAlias sets the "alias" field if the given value is not nil.
+func (uc *UserCreate) SetNillableAlias(s *string) *UserCreate {
+	if s != nil {
+		uc.SetAlias(*s)
 	}
 	return uc
 }
@@ -101,14 +101,14 @@ func (uc *UserCreate) AddChildren(u ...*User) *UserCreate {
 }
 
 // AddIdentityIDs adds the "identities" edge to the Identity entity by IDs.
-func (uc *UserCreate) AddIdentityIDs(ids ...string) *UserCreate {
+func (uc *UserCreate) AddIdentityIDs(ids ...uuid.UUID) *UserCreate {
 	uc.mutation.AddIdentityIDs(ids...)
 	return uc
 }
 
 // AddIdentities adds the "identities" edges to the Identity entity.
 func (uc *UserCreate) AddIdentities(i ...*Identity) *UserCreate {
-	ids := make([]string, len(i))
+	ids := make([]uuid.UUID, len(i))
 	for j := range i {
 		ids[j] = i[j].ID
 	}
@@ -180,13 +180,13 @@ func (uc *UserCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (uc *UserCreate) defaults() {
-	if _, ok := uc.mutation.Alias(); !ok {
-		v := user.DefaultAlias()
-		uc.mutation.SetAlias(v)
-	}
 	if _, ok := uc.mutation.DateCreated(); !ok {
 		v := user.DefaultDateCreated()
 		uc.mutation.SetDateCreated(v)
+	}
+	if _, ok := uc.mutation.Alias(); !ok {
+		v := user.DefaultAlias()
+		uc.mutation.SetAlias(v)
 	}
 	if _, ok := uc.mutation.ID(); !ok {
 		v := user.DefaultID()
@@ -196,6 +196,9 @@ func (uc *UserCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
+	if _, ok := uc.mutation.DateCreated(); !ok {
+		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "User.date_created"`)}
+	}
 	if _, ok := uc.mutation.Alias(); !ok {
 		return &ValidationError{Name: "alias", err: errors.New(`ent: missing required field "User.alias"`)}
 	}
@@ -203,9 +206,6 @@ func (uc *UserCreate) check() error {
 		if err := user.AliasValidator(v); err != nil {
 			return &ValidationError{Name: "alias", err: fmt.Errorf(`ent: validator failed for field "User.alias": %w`, err)}
 		}
-	}
-	if _, ok := uc.mutation.DateCreated(); !ok {
-		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "User.date_created"`)}
 	}
 	return nil
 }
@@ -242,13 +242,13 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := uc.mutation.Alias(); ok {
-		_spec.SetField(user.FieldAlias, field.TypeString, value)
-		_node.Alias = value
-	}
 	if value, ok := uc.mutation.DateCreated(); ok {
 		_spec.SetField(user.FieldDateCreated, field.TypeTime, value)
 		_node.DateCreated = value
+	}
+	if value, ok := uc.mutation.Alias(); ok {
+		_spec.SetField(user.FieldAlias, field.TypeString, value)
+		_node.Alias = value
 	}
 	if nodes := uc.mutation.ParentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -291,7 +291,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Columns: []string{user.IdentitiesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(identity.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(identity.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

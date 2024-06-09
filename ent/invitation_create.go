@@ -23,18 +23,6 @@ type InvitationCreate struct {
 	hooks    []Hook
 }
 
-// SetInvitee sets the "invitee" field.
-func (ic *InvitationCreate) SetInvitee(s string) *InvitationCreate {
-	ic.mutation.SetInvitee(s)
-	return ic
-}
-
-// SetType sets the "type" field.
-func (ic *InvitationCreate) SetType(s string) *InvitationCreate {
-	ic.mutation.SetType(s)
-	return ic
-}
-
 // SetDateCreated sets the "date_created" field.
 func (ic *InvitationCreate) SetDateCreated(t time.Time) *InvitationCreate {
 	ic.mutation.SetDateCreated(t)
@@ -46,6 +34,18 @@ func (ic *InvitationCreate) SetNillableDateCreated(t *time.Time) *InvitationCrea
 	if t != nil {
 		ic.SetDateCreated(*t)
 	}
+	return ic
+}
+
+// SetInvitee sets the "invitee" field.
+func (ic *InvitationCreate) SetInvitee(s string) *InvitationCreate {
+	ic.mutation.SetInvitee(s)
+	return ic
+}
+
+// SetType sets the "type" field.
+func (ic *InvitationCreate) SetType(s string) *InvitationCreate {
+	ic.mutation.SetType(s)
 	return ic
 }
 
@@ -180,6 +180,9 @@ func (ic *InvitationCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (ic *InvitationCreate) check() error {
+	if _, ok := ic.mutation.DateCreated(); !ok {
+		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Invitation.date_created"`)}
+	}
 	if _, ok := ic.mutation.Invitee(); !ok {
 		return &ValidationError{Name: "invitee", err: errors.New(`ent: missing required field "Invitation.invitee"`)}
 	}
@@ -195,9 +198,6 @@ func (ic *InvitationCreate) check() error {
 		if err := invitation.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Invitation.type": %w`, err)}
 		}
-	}
-	if _, ok := ic.mutation.DateCreated(); !ok {
-		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Invitation.date_created"`)}
 	}
 	if _, ok := ic.mutation.DateExpired(); !ok {
 		return &ValidationError{Name: "date_expired", err: errors.New(`ent: missing required field "Invitation.date_expired"`)}
@@ -243,6 +243,10 @@ func (ic *InvitationCreate) createSpec() (*Invitation, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := ic.mutation.DateCreated(); ok {
+		_spec.SetField(invitation.FieldDateCreated, field.TypeTime, value)
+		_node.DateCreated = value
+	}
 	if value, ok := ic.mutation.Invitee(); ok {
 		_spec.SetField(invitation.FieldInvitee, field.TypeString, value)
 		_node.Invitee = value
@@ -250,10 +254,6 @@ func (ic *InvitationCreate) createSpec() (*Invitation, *sqlgraph.CreateSpec) {
 	if value, ok := ic.mutation.GetType(); ok {
 		_spec.SetField(invitation.FieldType, field.TypeString, value)
 		_node.Type = value
-	}
-	if value, ok := ic.mutation.DateCreated(); ok {
-		_spec.SetField(invitation.FieldDateCreated, field.TypeTime, value)
-		_node.DateCreated = value
 	}
 	if value, ok := ic.mutation.DateExpired(); ok {
 		_spec.SetField(invitation.FieldDateExpired, field.TypeTime, value)

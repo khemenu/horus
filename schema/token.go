@@ -1,66 +1,58 @@
 package schema
 
 import (
-	"time"
-
-	"entgo.io/contrib/entproto"
 	"entgo.io/ent"
-	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
+	"github.com/lesomnus/entpb"
 )
 
 type Token struct {
-	grpcSchema
+	ent.Schema
+}
+
+func (Token) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		baseMixin{},
+	}
 }
 
 func (Token) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).
-			Unique().
-			Default(uuid.New).
-			Annotations(entproto.Field(1)),
 		field.String("value").
+			Annotations(entpb.Field(2)).
 			Immutable().
 			NotEmpty().
 			Unique().
-			Sensitive().
-			Annotations(entproto.Field(2)),
+			Sensitive(),
 
 		field.String("type").
+			Annotations(entpb.Field(3)).
 			Immutable().
-			NotEmpty().
-			Annotations(entproto.Field(3)),
-		field.String("name").
-			Default("").
-			Annotations(entproto.Field(4)),
+			NotEmpty(),
 
-		field.Time("date_created").
-			Immutable().
-			Default(time.Now).
-			Annotations(
-				entsql.Default("CURRENT_TIMESTAMP"),
-				entproto.Field(15),
-			),
+		field.String("name").
+			Annotations(entpb.Field(4)).
+			Default(""),
+
 		field.Time("date_expired").
-			Annotations(entproto.Field(14)),
+			Annotations(entpb.Field(14)),
 	}
 }
 
 func (Token) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("owner", User.Type).
+			Annotations(entpb.Field(5)).
 			Ref("tokens").
 			Immutable().
 			Unique().
-			Required().
-			Annotations(entproto.Field(5)),
+			Required(),
 		edge.To("children", Token.Type).
-			Annotations(entproto.Field(7)).
+			Annotations(entpb.Field(7)).
 			From("parent").
+			Annotations(entpb.Field(6)).
 			Immutable().
-			Unique().
-			Annotations(entproto.Field(6)),
+			Unique(),
 	}
 }

@@ -56,14 +56,19 @@ func IDLTE(id uuid.UUID) predicate.Team {
 	return predicate.Team(sql.FieldLTE(FieldID, id))
 }
 
-// SiloID applies equality check predicate on the "silo_id" field. It's identical to SiloIDEQ.
-func SiloID(v uuid.UUID) predicate.Team {
-	return predicate.Team(sql.FieldEQ(FieldSiloID, v))
+// DateCreated applies equality check predicate on the "date_created" field. It's identical to DateCreatedEQ.
+func DateCreated(v time.Time) predicate.Team {
+	return predicate.Team(sql.FieldEQ(FieldDateCreated, v))
 }
 
 // Alias applies equality check predicate on the "alias" field. It's identical to AliasEQ.
 func Alias(v string) predicate.Team {
 	return predicate.Team(sql.FieldEQ(FieldAlias, v))
+}
+
+// SiloID applies equality check predicate on the "silo_id" field. It's identical to SiloIDEQ.
+func SiloID(v uuid.UUID) predicate.Team {
+	return predicate.Team(sql.FieldEQ(FieldSiloID, v))
 }
 
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
@@ -76,29 +81,44 @@ func Description(v string) predicate.Team {
 	return predicate.Team(sql.FieldEQ(FieldDescription, v))
 }
 
-// CreatedDate applies equality check predicate on the "created_date" field. It's identical to CreatedDateEQ.
-func CreatedDate(v time.Time) predicate.Team {
-	return predicate.Team(sql.FieldEQ(FieldCreatedDate, v))
+// DateCreatedEQ applies the EQ predicate on the "date_created" field.
+func DateCreatedEQ(v time.Time) predicate.Team {
+	return predicate.Team(sql.FieldEQ(FieldDateCreated, v))
 }
 
-// SiloIDEQ applies the EQ predicate on the "silo_id" field.
-func SiloIDEQ(v uuid.UUID) predicate.Team {
-	return predicate.Team(sql.FieldEQ(FieldSiloID, v))
+// DateCreatedNEQ applies the NEQ predicate on the "date_created" field.
+func DateCreatedNEQ(v time.Time) predicate.Team {
+	return predicate.Team(sql.FieldNEQ(FieldDateCreated, v))
 }
 
-// SiloIDNEQ applies the NEQ predicate on the "silo_id" field.
-func SiloIDNEQ(v uuid.UUID) predicate.Team {
-	return predicate.Team(sql.FieldNEQ(FieldSiloID, v))
+// DateCreatedIn applies the In predicate on the "date_created" field.
+func DateCreatedIn(vs ...time.Time) predicate.Team {
+	return predicate.Team(sql.FieldIn(FieldDateCreated, vs...))
 }
 
-// SiloIDIn applies the In predicate on the "silo_id" field.
-func SiloIDIn(vs ...uuid.UUID) predicate.Team {
-	return predicate.Team(sql.FieldIn(FieldSiloID, vs...))
+// DateCreatedNotIn applies the NotIn predicate on the "date_created" field.
+func DateCreatedNotIn(vs ...time.Time) predicate.Team {
+	return predicate.Team(sql.FieldNotIn(FieldDateCreated, vs...))
 }
 
-// SiloIDNotIn applies the NotIn predicate on the "silo_id" field.
-func SiloIDNotIn(vs ...uuid.UUID) predicate.Team {
-	return predicate.Team(sql.FieldNotIn(FieldSiloID, vs...))
+// DateCreatedGT applies the GT predicate on the "date_created" field.
+func DateCreatedGT(v time.Time) predicate.Team {
+	return predicate.Team(sql.FieldGT(FieldDateCreated, v))
+}
+
+// DateCreatedGTE applies the GTE predicate on the "date_created" field.
+func DateCreatedGTE(v time.Time) predicate.Team {
+	return predicate.Team(sql.FieldGTE(FieldDateCreated, v))
+}
+
+// DateCreatedLT applies the LT predicate on the "date_created" field.
+func DateCreatedLT(v time.Time) predicate.Team {
+	return predicate.Team(sql.FieldLT(FieldDateCreated, v))
+}
+
+// DateCreatedLTE applies the LTE predicate on the "date_created" field.
+func DateCreatedLTE(v time.Time) predicate.Team {
+	return predicate.Team(sql.FieldLTE(FieldDateCreated, v))
 }
 
 // AliasEQ applies the EQ predicate on the "alias" field.
@@ -164,6 +184,26 @@ func AliasEqualFold(v string) predicate.Team {
 // AliasContainsFold applies the ContainsFold predicate on the "alias" field.
 func AliasContainsFold(v string) predicate.Team {
 	return predicate.Team(sql.FieldContainsFold(FieldAlias, v))
+}
+
+// SiloIDEQ applies the EQ predicate on the "silo_id" field.
+func SiloIDEQ(v uuid.UUID) predicate.Team {
+	return predicate.Team(sql.FieldEQ(FieldSiloID, v))
+}
+
+// SiloIDNEQ applies the NEQ predicate on the "silo_id" field.
+func SiloIDNEQ(v uuid.UUID) predicate.Team {
+	return predicate.Team(sql.FieldNEQ(FieldSiloID, v))
+}
+
+// SiloIDIn applies the In predicate on the "silo_id" field.
+func SiloIDIn(vs ...uuid.UUID) predicate.Team {
+	return predicate.Team(sql.FieldIn(FieldSiloID, vs...))
+}
+
+// SiloIDNotIn applies the NotIn predicate on the "silo_id" field.
+func SiloIDNotIn(vs ...uuid.UUID) predicate.Team {
+	return predicate.Team(sql.FieldNotIn(FieldSiloID, vs...))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -294,86 +334,6 @@ func DescriptionEqualFold(v string) predicate.Team {
 // DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
 func DescriptionContainsFold(v string) predicate.Team {
 	return predicate.Team(sql.FieldContainsFold(FieldDescription, v))
-}
-
-// InterVisibilityEQ applies the EQ predicate on the "inter_visibility" field.
-func InterVisibilityEQ(v InterVisibility) predicate.Team {
-	return predicate.Team(sql.FieldEQ(FieldInterVisibility, v))
-}
-
-// InterVisibilityNEQ applies the NEQ predicate on the "inter_visibility" field.
-func InterVisibilityNEQ(v InterVisibility) predicate.Team {
-	return predicate.Team(sql.FieldNEQ(FieldInterVisibility, v))
-}
-
-// InterVisibilityIn applies the In predicate on the "inter_visibility" field.
-func InterVisibilityIn(vs ...InterVisibility) predicate.Team {
-	return predicate.Team(sql.FieldIn(FieldInterVisibility, vs...))
-}
-
-// InterVisibilityNotIn applies the NotIn predicate on the "inter_visibility" field.
-func InterVisibilityNotIn(vs ...InterVisibility) predicate.Team {
-	return predicate.Team(sql.FieldNotIn(FieldInterVisibility, vs...))
-}
-
-// IntraVisibilityEQ applies the EQ predicate on the "intra_visibility" field.
-func IntraVisibilityEQ(v IntraVisibility) predicate.Team {
-	return predicate.Team(sql.FieldEQ(FieldIntraVisibility, v))
-}
-
-// IntraVisibilityNEQ applies the NEQ predicate on the "intra_visibility" field.
-func IntraVisibilityNEQ(v IntraVisibility) predicate.Team {
-	return predicate.Team(sql.FieldNEQ(FieldIntraVisibility, v))
-}
-
-// IntraVisibilityIn applies the In predicate on the "intra_visibility" field.
-func IntraVisibilityIn(vs ...IntraVisibility) predicate.Team {
-	return predicate.Team(sql.FieldIn(FieldIntraVisibility, vs...))
-}
-
-// IntraVisibilityNotIn applies the NotIn predicate on the "intra_visibility" field.
-func IntraVisibilityNotIn(vs ...IntraVisibility) predicate.Team {
-	return predicate.Team(sql.FieldNotIn(FieldIntraVisibility, vs...))
-}
-
-// CreatedDateEQ applies the EQ predicate on the "created_date" field.
-func CreatedDateEQ(v time.Time) predicate.Team {
-	return predicate.Team(sql.FieldEQ(FieldCreatedDate, v))
-}
-
-// CreatedDateNEQ applies the NEQ predicate on the "created_date" field.
-func CreatedDateNEQ(v time.Time) predicate.Team {
-	return predicate.Team(sql.FieldNEQ(FieldCreatedDate, v))
-}
-
-// CreatedDateIn applies the In predicate on the "created_date" field.
-func CreatedDateIn(vs ...time.Time) predicate.Team {
-	return predicate.Team(sql.FieldIn(FieldCreatedDate, vs...))
-}
-
-// CreatedDateNotIn applies the NotIn predicate on the "created_date" field.
-func CreatedDateNotIn(vs ...time.Time) predicate.Team {
-	return predicate.Team(sql.FieldNotIn(FieldCreatedDate, vs...))
-}
-
-// CreatedDateGT applies the GT predicate on the "created_date" field.
-func CreatedDateGT(v time.Time) predicate.Team {
-	return predicate.Team(sql.FieldGT(FieldCreatedDate, v))
-}
-
-// CreatedDateGTE applies the GTE predicate on the "created_date" field.
-func CreatedDateGTE(v time.Time) predicate.Team {
-	return predicate.Team(sql.FieldGTE(FieldCreatedDate, v))
-}
-
-// CreatedDateLT applies the LT predicate on the "created_date" field.
-func CreatedDateLT(v time.Time) predicate.Team {
-	return predicate.Team(sql.FieldLT(FieldCreatedDate, v))
-}
-
-// CreatedDateLTE applies the LTE predicate on the "created_date" field.
-func CreatedDateLTE(v time.Time) predicate.Team {
-	return predicate.Team(sql.FieldLTE(FieldCreatedDate, v))
 }
 
 // HasSilo applies the HasEdge predicate on the "silo" edge.

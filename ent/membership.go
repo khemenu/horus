@@ -13,6 +13,7 @@ import (
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/membership"
 	"khepri.dev/horus/ent/team"
+	"khepri.dev/horus/role"
 )
 
 // Membership is the model entity for the Membership schema.
@@ -20,10 +21,10 @@ type Membership struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// DateCreated holds the value of the "date_created" field.
+	DateCreated time.Time `json:"date_created,omitempty"`
 	// Role holds the value of the "role" field.
-	Role membership.Role `json:"role,omitempty"`
-	// CreatedDate holds the value of the "created_date" field.
-	CreatedDate time.Time `json:"created_date,omitempty"`
+	Role role.Role `json:"role,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the MembershipQuery when eager-loading is set.
 	Edges               MembershipEdges `json:"edges"`
@@ -46,12 +47,10 @@ type MembershipEdges struct {
 // AccountOrErr returns the Account value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e MembershipEdges) AccountOrErr() (*Account, error) {
-	if e.loadedTypes[0] {
-		if e.Account == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: account.Label}
-		}
+	if e.Account != nil {
 		return e.Account, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: account.Label}
 	}
 	return nil, &NotLoadedError{edge: "account"}
 }
@@ -59,12 +58,10 @@ func (e MembershipEdges) AccountOrErr() (*Account, error) {
 // TeamOrErr returns the Team value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e MembershipEdges) TeamOrErr() (*Team, error) {
-	if e.loadedTypes[1] {
-		if e.Team == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: team.Label}
-		}
+	if e.Team != nil {
 		return e.Team, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: team.Label}
 	}
 	return nil, &NotLoadedError{edge: "team"}
 }
@@ -76,7 +73,7 @@ func (*Membership) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case membership.FieldRole:
 			values[i] = new(sql.NullString)
-		case membership.FieldCreatedDate:
+		case membership.FieldDateCreated:
 			values[i] = new(sql.NullTime)
 		case membership.FieldID:
 			values[i] = new(uuid.UUID)
@@ -105,17 +102,17 @@ func (m *Membership) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				m.ID = *value
 			}
+		case membership.FieldDateCreated:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field date_created", values[i])
+			} else if value.Valid {
+				m.DateCreated = value.Time
+			}
 		case membership.FieldRole:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field role", values[i])
 			} else if value.Valid {
-				m.Role = membership.Role(value.String)
-			}
-		case membership.FieldCreatedDate:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_date", values[i])
-			} else if value.Valid {
-				m.CreatedDate = value.Time
+				m.Role = role.Role(value.String)
 			}
 		case membership.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
@@ -177,11 +174,11 @@ func (m *Membership) String() string {
 	var builder strings.Builder
 	builder.WriteString("Membership(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", m.ID))
+	builder.WriteString("date_created=")
+	builder.WriteString(m.DateCreated.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("role=")
 	builder.WriteString(fmt.Sprintf("%v", m.Role))
-	builder.WriteString(", ")
-	builder.WriteString("created_date=")
-	builder.WriteString(m.CreatedDate.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

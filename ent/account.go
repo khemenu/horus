@@ -13,6 +13,7 @@ import (
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/silo"
 	"khepri.dev/horus/ent/user"
+	"khepri.dev/horus/role"
 )
 
 // Account is the model entity for the Account schema.
@@ -20,20 +21,20 @@ type Account struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// DateCreated holds the value of the "date_created" field.
+	DateCreated time.Time `json:"date_created,omitempty"`
+	// Alias holds the value of the "alias" field.
+	Alias string `json:"alias,omitempty"`
 	// OwnerID holds the value of the "owner_id" field.
 	OwnerID uuid.UUID `json:"owner_id,omitempty"`
 	// SiloID holds the value of the "silo_id" field.
 	SiloID uuid.UUID `json:"silo_id,omitempty"`
-	// Alias holds the value of the "alias" field.
-	Alias string `json:"alias,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
 	// Role holds the value of the "role" field.
-	Role account.Role `json:"role,omitempty"`
-	// DateCreated holds the value of the "date_created" field.
-	DateCreated time.Time `json:"date_created,omitempty"`
+	Role role.Role `json:"role,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccountQuery when eager-loading is set.
 	Edges        AccountEdges `json:"edges"`
@@ -58,12 +59,10 @@ type AccountEdges struct {
 // OwnerOrErr returns the Owner value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e AccountEdges) OwnerOrErr() (*User, error) {
-	if e.loadedTypes[0] {
-		if e.Owner == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: user.Label}
-		}
+	if e.Owner != nil {
 		return e.Owner, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "owner"}
 }
@@ -71,12 +70,10 @@ func (e AccountEdges) OwnerOrErr() (*User, error) {
 // SiloOrErr returns the Silo value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e AccountEdges) SiloOrErr() (*Silo, error) {
-	if e.loadedTypes[1] {
-		if e.Silo == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: silo.Label}
-		}
+	if e.Silo != nil {
 		return e.Silo, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: silo.Label}
 	}
 	return nil, &NotLoadedError{edge: "silo"}
 }
@@ -131,6 +128,18 @@ func (a *Account) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				a.ID = *value
 			}
+		case account.FieldDateCreated:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field date_created", values[i])
+			} else if value.Valid {
+				a.DateCreated = value.Time
+			}
+		case account.FieldAlias:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field alias", values[i])
+			} else if value.Valid {
+				a.Alias = value.String
+			}
 		case account.FieldOwnerID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
@@ -142,12 +151,6 @@ func (a *Account) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field silo_id", values[i])
 			} else if value != nil {
 				a.SiloID = *value
-			}
-		case account.FieldAlias:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field alias", values[i])
-			} else if value.Valid {
-				a.Alias = value.String
 			}
 		case account.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -165,13 +168,7 @@ func (a *Account) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field role", values[i])
 			} else if value.Valid {
-				a.Role = account.Role(value.String)
-			}
-		case account.FieldDateCreated:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field date_created", values[i])
-			} else if value.Valid {
-				a.DateCreated = value.Time
+				a.Role = role.Role(value.String)
 			}
 		default:
 			a.selectValues.Set(columns[i], values[i])
@@ -229,14 +226,17 @@ func (a *Account) String() string {
 	var builder strings.Builder
 	builder.WriteString("Account(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", a.ID))
+	builder.WriteString("date_created=")
+	builder.WriteString(a.DateCreated.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("alias=")
+	builder.WriteString(a.Alias)
+	builder.WriteString(", ")
 	builder.WriteString("owner_id=")
 	builder.WriteString(fmt.Sprintf("%v", a.OwnerID))
 	builder.WriteString(", ")
 	builder.WriteString("silo_id=")
 	builder.WriteString(fmt.Sprintf("%v", a.SiloID))
-	builder.WriteString(", ")
-	builder.WriteString("alias=")
-	builder.WriteString(a.Alias)
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(a.Name)
@@ -246,9 +246,6 @@ func (a *Account) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("role=")
 	builder.WriteString(fmt.Sprintf("%v", a.Role))
-	builder.WriteString(", ")
-	builder.WriteString("date_created=")
-	builder.WriteString(a.DateCreated.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

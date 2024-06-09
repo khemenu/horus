@@ -18,15 +18,15 @@ import (
 type Identity struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID string `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
+	// DateCreated holds the value of the "date_created" field.
+	DateCreated time.Time `json:"date_created,omitempty"`
 	// Kind holds the value of the "kind" field.
 	Kind string `json:"kind,omitempty"`
 	// Verifier holds the value of the "verifier" field.
 	Verifier string `json:"verifier,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
-	// CreatedDate holds the value of the "created_date" field.
-	CreatedDate time.Time `json:"created_date,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the IdentityQuery when eager-loading is set.
 	Edges           IdentityEdges `json:"edges"`
@@ -46,12 +46,10 @@ type IdentityEdges struct {
 // OwnerOrErr returns the Owner value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e IdentityEdges) OwnerOrErr() (*User, error) {
-	if e.loadedTypes[0] {
-		if e.Owner == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: user.Label}
-		}
+	if e.Owner != nil {
 		return e.Owner, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "owner"}
 }
@@ -61,10 +59,12 @@ func (*Identity) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case identity.FieldID, identity.FieldKind, identity.FieldVerifier, identity.FieldName:
+		case identity.FieldKind, identity.FieldVerifier, identity.FieldName:
 			values[i] = new(sql.NullString)
-		case identity.FieldCreatedDate:
+		case identity.FieldDateCreated:
 			values[i] = new(sql.NullTime)
+		case identity.FieldID:
+			values[i] = new(uuid.UUID)
 		case identity.ForeignKeys[0]: // user_identities
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
@@ -83,10 +83,16 @@ func (i *Identity) assignValues(columns []string, values []any) error {
 	for j := range columns {
 		switch columns[j] {
 		case identity.FieldID:
-			if value, ok := values[j].(*sql.NullString); !ok {
+			if value, ok := values[j].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[j])
+			} else if value != nil {
+				i.ID = *value
+			}
+		case identity.FieldDateCreated:
+			if value, ok := values[j].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field date_created", values[j])
 			} else if value.Valid {
-				i.ID = value.String
+				i.DateCreated = value.Time
 			}
 		case identity.FieldKind:
 			if value, ok := values[j].(*sql.NullString); !ok {
@@ -105,12 +111,6 @@ func (i *Identity) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field name", values[j])
 			} else if value.Valid {
 				i.Name = value.String
-			}
-		case identity.FieldCreatedDate:
-			if value, ok := values[j].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_date", values[j])
-			} else if value.Valid {
-				i.CreatedDate = value.Time
 			}
 		case identity.ForeignKeys[0]:
 			if value, ok := values[j].(*sql.NullScanner); !ok {
@@ -160,6 +160,9 @@ func (i *Identity) String() string {
 	var builder strings.Builder
 	builder.WriteString("Identity(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", i.ID))
+	builder.WriteString("date_created=")
+	builder.WriteString(i.DateCreated.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("kind=")
 	builder.WriteString(i.Kind)
 	builder.WriteString(", ")
@@ -168,9 +171,6 @@ func (i *Identity) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(i.Name)
-	builder.WriteString(", ")
-	builder.WriteString("created_date=")
-	builder.WriteString(i.CreatedDate.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

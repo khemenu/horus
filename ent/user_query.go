@@ -442,12 +442,12 @@ func (uq *UserQuery) WithTokens(opts ...func(*TokenQuery)) *UserQuery {
 // Example:
 //
 //	var v []struct {
-//		Alias string `json:"alias,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.User.Query().
-//		GroupBy(user.FieldAlias).
+//		GroupBy(user.FieldDateCreated).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (uq *UserQuery) GroupBy(field string, fields ...string) *UserGroupBy {
@@ -465,11 +465,11 @@ func (uq *UserQuery) GroupBy(field string, fields ...string) *UserGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Alias string `json:"alias,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //	}
 //
 //	client.User.Query().
-//		Select(user.FieldAlias).
+//		Select(user.FieldDateCreated).
 //		Scan(ctx, &v)
 func (uq *UserQuery) Select(fields ...string) *UserSelect {
 	uq.ctx.Fields = append(uq.ctx.Fields, fields...)

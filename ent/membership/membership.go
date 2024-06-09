@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
+	"khepri.dev/horus/role"
 )
 
 const (
@@ -16,10 +17,10 @@ const (
 	Label = "membership"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldDateCreated holds the string denoting the date_created field in the database.
+	FieldDateCreated = "date_created"
 	// FieldRole holds the string denoting the role field in the database.
 	FieldRole = "role"
-	// FieldCreatedDate holds the string denoting the created_date field in the database.
-	FieldCreatedDate = "created_date"
 	// EdgeAccount holds the string denoting the account edge name in mutations.
 	EdgeAccount = "account"
 	// EdgeTeam holds the string denoting the team edge name in mutations.
@@ -45,8 +46,8 @@ const (
 // Columns holds all SQL columns for membership fields.
 var Columns = []string{
 	FieldID,
+	FieldDateCreated,
 	FieldRole,
-	FieldCreatedDate,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "memberships"
@@ -72,29 +73,16 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// DefaultCreatedDate holds the default value on creation for the "created_date" field.
-	DefaultCreatedDate func() time.Time
+	// DefaultDateCreated holds the default value on creation for the "date_created" field.
+	DefaultDateCreated func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
 
-// Role defines the type for the "role" enum field.
-type Role string
-
-// Role values.
-const (
-	RoleOWNER  Role = "OWNER"
-	RoleMEMBER Role = "MEMBER"
-)
-
-func (r Role) String() string {
-	return string(r)
-}
-
 // RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
-func RoleValidator(r Role) error {
+func RoleValidator(r role.Role) error {
 	switch r {
-	case RoleOWNER, RoleMEMBER:
+	case "OWNER", "MEMBER":
 		return nil
 	default:
 		return fmt.Errorf("membership: invalid enum value for role field: %q", r)
@@ -109,14 +97,14 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
+// ByDateCreated orders the results by the date_created field.
+func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
+}
+
 // ByRole orders the results by the role field.
 func ByRole(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRole, opts...).ToFunc()
-}
-
-// ByCreatedDate orders the results by the created_date field.
-func ByCreatedDate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreatedDate, opts...).ToFunc()
 }
 
 // ByAccountField orders the results by account field.

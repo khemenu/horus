@@ -11,11 +11,11 @@ var (
 	// AccountsColumns holds the columns for the "accounts" table.
 	AccountsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "alias", Type: field.TypeString},
+		{Name: "date_created", Type: field.TypeTime},
+		{Name: "alias", Type: field.TypeString, Unique: true, Size: 32},
 		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"OWNER", "MEMBER"}},
-		{Name: "date_created", Type: field.TypeTime},
 		{Name: "silo_id", Type: field.TypeUUID},
 		{Name: "owner_id", Type: field.TypeUUID},
 	}
@@ -47,17 +47,17 @@ var (
 			{
 				Name:    "account_silo_id_alias",
 				Unique:  true,
-				Columns: []*schema.Column{AccountsColumns[6], AccountsColumns[1]},
+				Columns: []*schema.Column{AccountsColumns[6], AccountsColumns[2]},
 			},
 		},
 	}
 	// IdentitiesColumns holds the columns for the "identities" table.
 	IdentitiesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "date_created", Type: field.TypeTime},
 		{Name: "kind", Type: field.TypeString},
 		{Name: "verifier", Type: field.TypeString},
-		{Name: "name", Type: field.TypeString, Default: ""},
-		{Name: "created_date", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "user_identities", Type: field.TypeUUID},
 	}
 	// IdentitiesTable holds the schema information for the "identities" table.
@@ -77,9 +77,9 @@ var (
 	// InvitationsColumns holds the columns for the "invitations" table.
 	InvitationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "date_created", Type: field.TypeTime},
 		{Name: "invitee", Type: field.TypeString},
 		{Name: "type", Type: field.TypeString},
-		{Name: "date_created", Type: field.TypeTime},
 		{Name: "date_expired", Type: field.TypeTime},
 		{Name: "date_accepted", Type: field.TypeTime, Nullable: true},
 		{Name: "date_declined", Type: field.TypeTime, Nullable: true},
@@ -110,8 +110,8 @@ var (
 	// MembershipsColumns holds the columns for the "memberships" table.
 	MembershipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "date_created", Type: field.TypeTime},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"OWNER", "MEMBER"}},
-		{Name: "created_date", Type: field.TypeTime},
 		{Name: "account_memberships", Type: field.TypeUUID},
 		{Name: "team_members", Type: field.TypeUUID},
 	}
@@ -138,10 +138,10 @@ var (
 	// SilosColumns holds the columns for the "silos" table.
 	SilosColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "alias", Type: field.TypeString, Unique: true},
+		{Name: "date_created", Type: field.TypeTime},
+		{Name: "alias", Type: field.TypeString, Unique: true, Size: 32},
 		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
-		{Name: "date_created", Type: field.TypeTime},
 	}
 	// SilosTable holds the schema information for the "silos" table.
 	SilosTable = &schema.Table{
@@ -152,12 +152,10 @@ var (
 	// TeamsColumns holds the columns for the "teams" table.
 	TeamsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "alias", Type: field.TypeString, Unique: true},
+		{Name: "date_created", Type: field.TypeTime},
+		{Name: "alias", Type: field.TypeString, Unique: true, Size: 32},
 		{Name: "name", Type: field.TypeString, Size: 64},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
-		{Name: "inter_visibility", Type: field.TypeEnum, Enums: []string{"PRIVATE", "PUBLIC"}},
-		{Name: "intra_visibility", Type: field.TypeEnum, Enums: []string{"PUBLIC", "PRIVATE"}},
-		{Name: "created_date", Type: field.TypeTime},
 		{Name: "silo_id", Type: field.TypeUUID},
 	}
 	// TeamsTable holds the schema information for the "teams" table.
@@ -168,7 +166,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "teams_silos_teams",
-				Columns:    []*schema.Column{TeamsColumns[7]},
+				Columns:    []*schema.Column{TeamsColumns[5]},
 				RefColumns: []*schema.Column{SilosColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -177,17 +175,17 @@ var (
 			{
 				Name:    "team_silo_id_alias",
 				Unique:  true,
-				Columns: []*schema.Column{TeamsColumns[7], TeamsColumns[1]},
+				Columns: []*schema.Column{TeamsColumns[5], TeamsColumns[2]},
 			},
 		},
 	}
 	// TokensColumns holds the columns for the "tokens" table.
 	TokensColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "date_created", Type: field.TypeTime},
 		{Name: "value", Type: field.TypeString, Unique: true},
 		{Name: "type", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString, Default: ""},
-		{Name: "date_created", Type: field.TypeTime, Default: "CURRENT_TIMESTAMP"},
 		{Name: "date_expired", Type: field.TypeTime},
 		{Name: "token_children", Type: field.TypeUUID, Nullable: true},
 		{Name: "user_tokens", Type: field.TypeUUID},
@@ -215,8 +213,8 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "alias", Type: field.TypeString, Unique: true, Size: 32},
 		{Name: "date_created", Type: field.TypeTime},
+		{Name: "alias", Type: field.TypeString, Unique: true, Size: 32},
 		{Name: "user_children", Type: field.TypeUUID, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.

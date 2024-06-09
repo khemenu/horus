@@ -19,20 +19,16 @@ type Team struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
-	// SiloID holds the value of the "silo_id" field.
-	SiloID uuid.UUID `json:"silo_id,omitempty"`
+	// DateCreated holds the value of the "date_created" field.
+	DateCreated time.Time `json:"date_created,omitempty"`
 	// Alias holds the value of the "alias" field.
 	Alias string `json:"alias,omitempty"`
+	// SiloID holds the value of the "silo_id" field.
+	SiloID uuid.UUID `json:"silo_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
-	// Team visibility to members who does not have a membership
-	InterVisibility team.InterVisibility `json:"inter_visibility,omitempty"`
-	// Member visibility among members in the same team
-	IntraVisibility team.IntraVisibility `json:"intra_visibility,omitempty"`
-	// CreatedDate holds the value of the "created_date" field.
-	CreatedDate time.Time `json:"created_date,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TeamQuery when eager-loading is set.
 	Edges        TeamEdges `json:"edges"`
@@ -53,12 +49,10 @@ type TeamEdges struct {
 // SiloOrErr returns the Silo value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e TeamEdges) SiloOrErr() (*Silo, error) {
-	if e.loadedTypes[0] {
-		if e.Silo == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: silo.Label}
-		}
+	if e.Silo != nil {
 		return e.Silo, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: silo.Label}
 	}
 	return nil, &NotLoadedError{edge: "silo"}
 }
@@ -77,9 +71,9 @@ func (*Team) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case team.FieldAlias, team.FieldName, team.FieldDescription, team.FieldInterVisibility, team.FieldIntraVisibility:
+		case team.FieldAlias, team.FieldName, team.FieldDescription:
 			values[i] = new(sql.NullString)
-		case team.FieldCreatedDate:
+		case team.FieldDateCreated:
 			values[i] = new(sql.NullTime)
 		case team.FieldID, team.FieldSiloID:
 			values[i] = new(uuid.UUID)
@@ -104,17 +98,23 @@ func (t *Team) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				t.ID = *value
 			}
-		case team.FieldSiloID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field silo_id", values[i])
-			} else if value != nil {
-				t.SiloID = *value
+		case team.FieldDateCreated:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field date_created", values[i])
+			} else if value.Valid {
+				t.DateCreated = value.Time
 			}
 		case team.FieldAlias:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field alias", values[i])
 			} else if value.Valid {
 				t.Alias = value.String
+			}
+		case team.FieldSiloID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field silo_id", values[i])
+			} else if value != nil {
+				t.SiloID = *value
 			}
 		case team.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -127,24 +127,6 @@ func (t *Team) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				t.Description = value.String
-			}
-		case team.FieldInterVisibility:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field inter_visibility", values[i])
-			} else if value.Valid {
-				t.InterVisibility = team.InterVisibility(value.String)
-			}
-		case team.FieldIntraVisibility:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field intra_visibility", values[i])
-			} else if value.Valid {
-				t.IntraVisibility = team.IntraVisibility(value.String)
-			}
-		case team.FieldCreatedDate:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_date", values[i])
-			} else if value.Valid {
-				t.CreatedDate = value.Time
 			}
 		default:
 			t.selectValues.Set(columns[i], values[i])
@@ -192,26 +174,20 @@ func (t *Team) String() string {
 	var builder strings.Builder
 	builder.WriteString("Team(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", t.ID))
-	builder.WriteString("silo_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.SiloID))
+	builder.WriteString("date_created=")
+	builder.WriteString(t.DateCreated.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("alias=")
 	builder.WriteString(t.Alias)
+	builder.WriteString(", ")
+	builder.WriteString("silo_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.SiloID))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(t.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(t.Description)
-	builder.WriteString(", ")
-	builder.WriteString("inter_visibility=")
-	builder.WriteString(fmt.Sprintf("%v", t.InterVisibility))
-	builder.WriteString(", ")
-	builder.WriteString("intra_visibility=")
-	builder.WriteString(fmt.Sprintf("%v", t.IntraVisibility))
-	builder.WriteString(", ")
-	builder.WriteString("created_date=")
-	builder.WriteString(t.CreatedDate.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

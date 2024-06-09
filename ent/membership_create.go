@@ -14,6 +14,7 @@ import (
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/membership"
 	"khepri.dev/horus/ent/team"
+	"khepri.dev/horus/role"
 )
 
 // MembershipCreate is the builder for creating a Membership entity.
@@ -23,23 +24,23 @@ type MembershipCreate struct {
 	hooks    []Hook
 }
 
-// SetRole sets the "role" field.
-func (mc *MembershipCreate) SetRole(m membership.Role) *MembershipCreate {
-	mc.mutation.SetRole(m)
+// SetDateCreated sets the "date_created" field.
+func (mc *MembershipCreate) SetDateCreated(t time.Time) *MembershipCreate {
+	mc.mutation.SetDateCreated(t)
 	return mc
 }
 
-// SetCreatedDate sets the "created_date" field.
-func (mc *MembershipCreate) SetCreatedDate(t time.Time) *MembershipCreate {
-	mc.mutation.SetCreatedDate(t)
-	return mc
-}
-
-// SetNillableCreatedDate sets the "created_date" field if the given value is not nil.
-func (mc *MembershipCreate) SetNillableCreatedDate(t *time.Time) *MembershipCreate {
+// SetNillableDateCreated sets the "date_created" field if the given value is not nil.
+func (mc *MembershipCreate) SetNillableDateCreated(t *time.Time) *MembershipCreate {
 	if t != nil {
-		mc.SetCreatedDate(*t)
+		mc.SetDateCreated(*t)
 	}
+	return mc
+}
+
+// SetRole sets the "role" field.
+func (mc *MembershipCreate) SetRole(r role.Role) *MembershipCreate {
+	mc.mutation.SetRole(r)
 	return mc
 }
 
@@ -114,9 +115,9 @@ func (mc *MembershipCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (mc *MembershipCreate) defaults() {
-	if _, ok := mc.mutation.CreatedDate(); !ok {
-		v := membership.DefaultCreatedDate()
-		mc.mutation.SetCreatedDate(v)
+	if _, ok := mc.mutation.DateCreated(); !ok {
+		v := membership.DefaultDateCreated()
+		mc.mutation.SetDateCreated(v)
 	}
 	if _, ok := mc.mutation.ID(); !ok {
 		v := membership.DefaultID()
@@ -126,6 +127,9 @@ func (mc *MembershipCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (mc *MembershipCreate) check() error {
+	if _, ok := mc.mutation.DateCreated(); !ok {
+		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Membership.date_created"`)}
+	}
 	if _, ok := mc.mutation.Role(); !ok {
 		return &ValidationError{Name: "role", err: errors.New(`ent: missing required field "Membership.role"`)}
 	}
@@ -133,9 +137,6 @@ func (mc *MembershipCreate) check() error {
 		if err := membership.RoleValidator(v); err != nil {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "Membership.role": %w`, err)}
 		}
-	}
-	if _, ok := mc.mutation.CreatedDate(); !ok {
-		return &ValidationError{Name: "created_date", err: errors.New(`ent: missing required field "Membership.created_date"`)}
 	}
 	if _, ok := mc.mutation.AccountID(); !ok {
 		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "Membership.account"`)}
@@ -178,13 +179,13 @@ func (mc *MembershipCreate) createSpec() (*Membership, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := mc.mutation.DateCreated(); ok {
+		_spec.SetField(membership.FieldDateCreated, field.TypeTime, value)
+		_node.DateCreated = value
+	}
 	if value, ok := mc.mutation.Role(); ok {
 		_spec.SetField(membership.FieldRole, field.TypeEnum, value)
 		_node.Role = value
-	}
-	if value, ok := mc.mutation.CreatedDate(); ok {
-		_spec.SetField(membership.FieldCreatedDate, field.TypeTime, value)
-		_node.CreatedDate = value
 	}
 	if nodes := mc.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

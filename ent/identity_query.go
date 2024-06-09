@@ -107,8 +107,8 @@ func (iq *IdentityQuery) FirstX(ctx context.Context) *Identity {
 
 // FirstID returns the first Identity ID from the query.
 // Returns a *NotFoundError when no Identity ID was found.
-func (iq *IdentityQuery) FirstID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (iq *IdentityQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = iq.Limit(1).IDs(setContextOp(ctx, iq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -120,7 +120,7 @@ func (iq *IdentityQuery) FirstID(ctx context.Context) (id string, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (iq *IdentityQuery) FirstIDX(ctx context.Context) string {
+func (iq *IdentityQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := iq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,8 +158,8 @@ func (iq *IdentityQuery) OnlyX(ctx context.Context) *Identity {
 // OnlyID is like Only, but returns the only Identity ID in the query.
 // Returns a *NotSingularError when more than one Identity ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (iq *IdentityQuery) OnlyID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (iq *IdentityQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = iq.Limit(2).IDs(setContextOp(ctx, iq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -175,7 +175,7 @@ func (iq *IdentityQuery) OnlyID(ctx context.Context) (id string, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (iq *IdentityQuery) OnlyIDX(ctx context.Context) string {
+func (iq *IdentityQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := iq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -203,7 +203,7 @@ func (iq *IdentityQuery) AllX(ctx context.Context) []*Identity {
 }
 
 // IDs executes the query and returns a list of Identity IDs.
-func (iq *IdentityQuery) IDs(ctx context.Context) (ids []string, err error) {
+func (iq *IdentityQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if iq.ctx.Unique == nil && iq.path != nil {
 		iq.Unique(true)
 	}
@@ -215,7 +215,7 @@ func (iq *IdentityQuery) IDs(ctx context.Context) (ids []string, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (iq *IdentityQuery) IDsX(ctx context.Context) []string {
+func (iq *IdentityQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := iq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -299,12 +299,12 @@ func (iq *IdentityQuery) WithOwner(opts ...func(*UserQuery)) *IdentityQuery {
 // Example:
 //
 //	var v []struct {
-//		Kind string `json:"kind,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Identity.Query().
-//		GroupBy(identity.FieldKind).
+//		GroupBy(identity.FieldDateCreated).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (iq *IdentityQuery) GroupBy(field string, fields ...string) *IdentityGroupBy {
@@ -322,11 +322,11 @@ func (iq *IdentityQuery) GroupBy(field string, fields ...string) *IdentityGroupB
 // Example:
 //
 //	var v []struct {
-//		Kind string `json:"kind,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //	}
 //
 //	client.Identity.Query().
-//		Select(identity.FieldKind).
+//		Select(identity.FieldDateCreated).
 //		Scan(ctx, &v)
 func (iq *IdentityQuery) Select(fields ...string) *IdentitySelect {
 	iq.ctx.Fields = append(iq.ctx.Fields, fields...)
@@ -452,7 +452,7 @@ func (iq *IdentityQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (iq *IdentityQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(identity.Table, identity.Columns, sqlgraph.NewFieldSpec(identity.FieldID, field.TypeString))
+	_spec := sqlgraph.NewQuerySpec(identity.Table, identity.Columns, sqlgraph.NewFieldSpec(identity.FieldID, field.TypeUUID))
 	_spec.From = iq.sql
 	if unique := iq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

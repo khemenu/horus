@@ -370,12 +370,12 @@ func (tq *TokenQuery) WithChildren(opts ...func(*TokenQuery)) *TokenQuery {
 // Example:
 //
 //	var v []struct {
-//		Value string `json:"value,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Token.Query().
-//		GroupBy(token.FieldValue).
+//		GroupBy(token.FieldDateCreated).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (tq *TokenQuery) GroupBy(field string, fields ...string) *TokenGroupBy {
@@ -393,11 +393,11 @@ func (tq *TokenQuery) GroupBy(field string, fields ...string) *TokenGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Value string `json:"value,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //	}
 //
 //	client.Token.Query().
-//		Select(token.FieldValue).
+//		Select(token.FieldDateCreated).
 //		Scan(ctx, &v)
 func (tq *TokenQuery) Select(fields ...string) *TokenSelect {
 	tq.ctx.Fields = append(tq.ctx.Fields, fields...)

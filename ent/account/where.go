@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 	"khepri.dev/horus/ent/predicate"
+	"khepri.dev/horus/role"
 )
 
 // ID filters vertices based on their ID field.
@@ -56,6 +57,16 @@ func IDLTE(id uuid.UUID) predicate.Account {
 	return predicate.Account(sql.FieldLTE(FieldID, id))
 }
 
+// DateCreated applies equality check predicate on the "date_created" field. It's identical to DateCreatedEQ.
+func DateCreated(v time.Time) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldDateCreated, v))
+}
+
+// Alias applies equality check predicate on the "alias" field. It's identical to AliasEQ.
+func Alias(v string) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldAlias, v))
+}
+
 // OwnerID applies equality check predicate on the "owner_id" field. It's identical to OwnerIDEQ.
 func OwnerID(v uuid.UUID) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldOwnerID, v))
@@ -64,11 +75,6 @@ func OwnerID(v uuid.UUID) predicate.Account {
 // SiloID applies equality check predicate on the "silo_id" field. It's identical to SiloIDEQ.
 func SiloID(v uuid.UUID) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldSiloID, v))
-}
-
-// Alias applies equality check predicate on the "alias" field. It's identical to AliasEQ.
-func Alias(v string) predicate.Account {
-	return predicate.Account(sql.FieldEQ(FieldAlias, v))
 }
 
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
@@ -81,49 +87,44 @@ func Description(v string) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldDescription, v))
 }
 
-// DateCreated applies equality check predicate on the "date_created" field. It's identical to DateCreatedEQ.
-func DateCreated(v time.Time) predicate.Account {
+// DateCreatedEQ applies the EQ predicate on the "date_created" field.
+func DateCreatedEQ(v time.Time) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldDateCreated, v))
 }
 
-// OwnerIDEQ applies the EQ predicate on the "owner_id" field.
-func OwnerIDEQ(v uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldEQ(FieldOwnerID, v))
+// DateCreatedNEQ applies the NEQ predicate on the "date_created" field.
+func DateCreatedNEQ(v time.Time) predicate.Account {
+	return predicate.Account(sql.FieldNEQ(FieldDateCreated, v))
 }
 
-// OwnerIDNEQ applies the NEQ predicate on the "owner_id" field.
-func OwnerIDNEQ(v uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldNEQ(FieldOwnerID, v))
+// DateCreatedIn applies the In predicate on the "date_created" field.
+func DateCreatedIn(vs ...time.Time) predicate.Account {
+	return predicate.Account(sql.FieldIn(FieldDateCreated, vs...))
 }
 
-// OwnerIDIn applies the In predicate on the "owner_id" field.
-func OwnerIDIn(vs ...uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldIn(FieldOwnerID, vs...))
+// DateCreatedNotIn applies the NotIn predicate on the "date_created" field.
+func DateCreatedNotIn(vs ...time.Time) predicate.Account {
+	return predicate.Account(sql.FieldNotIn(FieldDateCreated, vs...))
 }
 
-// OwnerIDNotIn applies the NotIn predicate on the "owner_id" field.
-func OwnerIDNotIn(vs ...uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldNotIn(FieldOwnerID, vs...))
+// DateCreatedGT applies the GT predicate on the "date_created" field.
+func DateCreatedGT(v time.Time) predicate.Account {
+	return predicate.Account(sql.FieldGT(FieldDateCreated, v))
 }
 
-// SiloIDEQ applies the EQ predicate on the "silo_id" field.
-func SiloIDEQ(v uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldEQ(FieldSiloID, v))
+// DateCreatedGTE applies the GTE predicate on the "date_created" field.
+func DateCreatedGTE(v time.Time) predicate.Account {
+	return predicate.Account(sql.FieldGTE(FieldDateCreated, v))
 }
 
-// SiloIDNEQ applies the NEQ predicate on the "silo_id" field.
-func SiloIDNEQ(v uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldNEQ(FieldSiloID, v))
+// DateCreatedLT applies the LT predicate on the "date_created" field.
+func DateCreatedLT(v time.Time) predicate.Account {
+	return predicate.Account(sql.FieldLT(FieldDateCreated, v))
 }
 
-// SiloIDIn applies the In predicate on the "silo_id" field.
-func SiloIDIn(vs ...uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldIn(FieldSiloID, vs...))
-}
-
-// SiloIDNotIn applies the NotIn predicate on the "silo_id" field.
-func SiloIDNotIn(vs ...uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldNotIn(FieldSiloID, vs...))
+// DateCreatedLTE applies the LTE predicate on the "date_created" field.
+func DateCreatedLTE(v time.Time) predicate.Account {
+	return predicate.Account(sql.FieldLTE(FieldDateCreated, v))
 }
 
 // AliasEQ applies the EQ predicate on the "alias" field.
@@ -189,6 +190,46 @@ func AliasEqualFold(v string) predicate.Account {
 // AliasContainsFold applies the ContainsFold predicate on the "alias" field.
 func AliasContainsFold(v string) predicate.Account {
 	return predicate.Account(sql.FieldContainsFold(FieldAlias, v))
+}
+
+// OwnerIDEQ applies the EQ predicate on the "owner_id" field.
+func OwnerIDEQ(v uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldOwnerID, v))
+}
+
+// OwnerIDNEQ applies the NEQ predicate on the "owner_id" field.
+func OwnerIDNEQ(v uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldNEQ(FieldOwnerID, v))
+}
+
+// OwnerIDIn applies the In predicate on the "owner_id" field.
+func OwnerIDIn(vs ...uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldIn(FieldOwnerID, vs...))
+}
+
+// OwnerIDNotIn applies the NotIn predicate on the "owner_id" field.
+func OwnerIDNotIn(vs ...uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldNotIn(FieldOwnerID, vs...))
+}
+
+// SiloIDEQ applies the EQ predicate on the "silo_id" field.
+func SiloIDEQ(v uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldSiloID, v))
+}
+
+// SiloIDNEQ applies the NEQ predicate on the "silo_id" field.
+func SiloIDNEQ(v uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldNEQ(FieldSiloID, v))
+}
+
+// SiloIDIn applies the In predicate on the "silo_id" field.
+func SiloIDIn(vs ...uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldIn(FieldSiloID, vs...))
+}
+
+// SiloIDNotIn applies the NotIn predicate on the "silo_id" field.
+func SiloIDNotIn(vs ...uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldNotIn(FieldSiloID, vs...))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -322,63 +363,33 @@ func DescriptionContainsFold(v string) predicate.Account {
 }
 
 // RoleEQ applies the EQ predicate on the "role" field.
-func RoleEQ(v Role) predicate.Account {
-	return predicate.Account(sql.FieldEQ(FieldRole, v))
+func RoleEQ(v role.Role) predicate.Account {
+	vc := v
+	return predicate.Account(sql.FieldEQ(FieldRole, vc))
 }
 
 // RoleNEQ applies the NEQ predicate on the "role" field.
-func RoleNEQ(v Role) predicate.Account {
-	return predicate.Account(sql.FieldNEQ(FieldRole, v))
+func RoleNEQ(v role.Role) predicate.Account {
+	vc := v
+	return predicate.Account(sql.FieldNEQ(FieldRole, vc))
 }
 
 // RoleIn applies the In predicate on the "role" field.
-func RoleIn(vs ...Role) predicate.Account {
-	return predicate.Account(sql.FieldIn(FieldRole, vs...))
+func RoleIn(vs ...role.Role) predicate.Account {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Account(sql.FieldIn(FieldRole, v...))
 }
 
 // RoleNotIn applies the NotIn predicate on the "role" field.
-func RoleNotIn(vs ...Role) predicate.Account {
-	return predicate.Account(sql.FieldNotIn(FieldRole, vs...))
-}
-
-// DateCreatedEQ applies the EQ predicate on the "date_created" field.
-func DateCreatedEQ(v time.Time) predicate.Account {
-	return predicate.Account(sql.FieldEQ(FieldDateCreated, v))
-}
-
-// DateCreatedNEQ applies the NEQ predicate on the "date_created" field.
-func DateCreatedNEQ(v time.Time) predicate.Account {
-	return predicate.Account(sql.FieldNEQ(FieldDateCreated, v))
-}
-
-// DateCreatedIn applies the In predicate on the "date_created" field.
-func DateCreatedIn(vs ...time.Time) predicate.Account {
-	return predicate.Account(sql.FieldIn(FieldDateCreated, vs...))
-}
-
-// DateCreatedNotIn applies the NotIn predicate on the "date_created" field.
-func DateCreatedNotIn(vs ...time.Time) predicate.Account {
-	return predicate.Account(sql.FieldNotIn(FieldDateCreated, vs...))
-}
-
-// DateCreatedGT applies the GT predicate on the "date_created" field.
-func DateCreatedGT(v time.Time) predicate.Account {
-	return predicate.Account(sql.FieldGT(FieldDateCreated, v))
-}
-
-// DateCreatedGTE applies the GTE predicate on the "date_created" field.
-func DateCreatedGTE(v time.Time) predicate.Account {
-	return predicate.Account(sql.FieldGTE(FieldDateCreated, v))
-}
-
-// DateCreatedLT applies the LT predicate on the "date_created" field.
-func DateCreatedLT(v time.Time) predicate.Account {
-	return predicate.Account(sql.FieldLT(FieldDateCreated, v))
-}
-
-// DateCreatedLTE applies the LTE predicate on the "date_created" field.
-func DateCreatedLTE(v time.Time) predicate.Account {
-	return predicate.Account(sql.FieldLTE(FieldDateCreated, v))
+func RoleNotIn(vs ...role.Role) predicate.Account {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Account(sql.FieldNotIn(FieldRole, v...))
 }
 
 // HasOwner applies the HasEdge predicate on the "owner" edge.

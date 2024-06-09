@@ -18,14 +18,14 @@ type Silo struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// DateCreated holds the value of the "date_created" field.
+	DateCreated time.Time `json:"date_created,omitempty"`
 	// Alias holds the value of the "alias" field.
 	Alias string `json:"alias,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
-	// DateCreated holds the value of the "date_created" field.
-	DateCreated time.Time `json:"date_created,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SiloQuery when eager-loading is set.
 	Edges        SiloEdges `json:"edges"`
@@ -104,6 +104,12 @@ func (s *Silo) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				s.ID = *value
 			}
+		case silo.FieldDateCreated:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field date_created", values[i])
+			} else if value.Valid {
+				s.DateCreated = value.Time
+			}
 		case silo.FieldAlias:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field alias", values[i])
@@ -121,12 +127,6 @@ func (s *Silo) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				s.Description = value.String
-			}
-		case silo.FieldDateCreated:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field date_created", values[i])
-			} else if value.Valid {
-				s.DateCreated = value.Time
 			}
 		default:
 			s.selectValues.Set(columns[i], values[i])
@@ -179,6 +179,9 @@ func (s *Silo) String() string {
 	var builder strings.Builder
 	builder.WriteString("Silo(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", s.ID))
+	builder.WriteString("date_created=")
+	builder.WriteString(s.DateCreated.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("alias=")
 	builder.WriteString(s.Alias)
 	builder.WriteString(", ")
@@ -187,9 +190,6 @@ func (s *Silo) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(s.Description)
-	builder.WriteString(", ")
-	builder.WriteString("date_created=")
-	builder.WriteString(s.DateCreated.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

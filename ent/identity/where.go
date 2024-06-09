@@ -7,62 +7,58 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 	"khepri.dev/horus/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id string) predicate.Identity {
+func ID(id uuid.UUID) predicate.Identity {
 	return predicate.Identity(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id string) predicate.Identity {
+func IDEQ(id uuid.UUID) predicate.Identity {
 	return predicate.Identity(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id string) predicate.Identity {
+func IDNEQ(id uuid.UUID) predicate.Identity {
 	return predicate.Identity(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...string) predicate.Identity {
+func IDIn(ids ...uuid.UUID) predicate.Identity {
 	return predicate.Identity(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...string) predicate.Identity {
+func IDNotIn(ids ...uuid.UUID) predicate.Identity {
 	return predicate.Identity(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id string) predicate.Identity {
+func IDGT(id uuid.UUID) predicate.Identity {
 	return predicate.Identity(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id string) predicate.Identity {
+func IDGTE(id uuid.UUID) predicate.Identity {
 	return predicate.Identity(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id string) predicate.Identity {
+func IDLT(id uuid.UUID) predicate.Identity {
 	return predicate.Identity(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id string) predicate.Identity {
+func IDLTE(id uuid.UUID) predicate.Identity {
 	return predicate.Identity(sql.FieldLTE(FieldID, id))
 }
 
-// IDEqualFold applies the EqualFold predicate on the ID field.
-func IDEqualFold(id string) predicate.Identity {
-	return predicate.Identity(sql.FieldEqualFold(FieldID, id))
-}
-
-// IDContainsFold applies the ContainsFold predicate on the ID field.
-func IDContainsFold(id string) predicate.Identity {
-	return predicate.Identity(sql.FieldContainsFold(FieldID, id))
+// DateCreated applies equality check predicate on the "date_created" field. It's identical to DateCreatedEQ.
+func DateCreated(v time.Time) predicate.Identity {
+	return predicate.Identity(sql.FieldEQ(FieldDateCreated, v))
 }
 
 // Kind applies equality check predicate on the "kind" field. It's identical to KindEQ.
@@ -80,9 +76,44 @@ func Name(v string) predicate.Identity {
 	return predicate.Identity(sql.FieldEQ(FieldName, v))
 }
 
-// CreatedDate applies equality check predicate on the "created_date" field. It's identical to CreatedDateEQ.
-func CreatedDate(v time.Time) predicate.Identity {
-	return predicate.Identity(sql.FieldEQ(FieldCreatedDate, v))
+// DateCreatedEQ applies the EQ predicate on the "date_created" field.
+func DateCreatedEQ(v time.Time) predicate.Identity {
+	return predicate.Identity(sql.FieldEQ(FieldDateCreated, v))
+}
+
+// DateCreatedNEQ applies the NEQ predicate on the "date_created" field.
+func DateCreatedNEQ(v time.Time) predicate.Identity {
+	return predicate.Identity(sql.FieldNEQ(FieldDateCreated, v))
+}
+
+// DateCreatedIn applies the In predicate on the "date_created" field.
+func DateCreatedIn(vs ...time.Time) predicate.Identity {
+	return predicate.Identity(sql.FieldIn(FieldDateCreated, vs...))
+}
+
+// DateCreatedNotIn applies the NotIn predicate on the "date_created" field.
+func DateCreatedNotIn(vs ...time.Time) predicate.Identity {
+	return predicate.Identity(sql.FieldNotIn(FieldDateCreated, vs...))
+}
+
+// DateCreatedGT applies the GT predicate on the "date_created" field.
+func DateCreatedGT(v time.Time) predicate.Identity {
+	return predicate.Identity(sql.FieldGT(FieldDateCreated, v))
+}
+
+// DateCreatedGTE applies the GTE predicate on the "date_created" field.
+func DateCreatedGTE(v time.Time) predicate.Identity {
+	return predicate.Identity(sql.FieldGTE(FieldDateCreated, v))
+}
+
+// DateCreatedLT applies the LT predicate on the "date_created" field.
+func DateCreatedLT(v time.Time) predicate.Identity {
+	return predicate.Identity(sql.FieldLT(FieldDateCreated, v))
+}
+
+// DateCreatedLTE applies the LTE predicate on the "date_created" field.
+func DateCreatedLTE(v time.Time) predicate.Identity {
+	return predicate.Identity(sql.FieldLTE(FieldDateCreated, v))
 }
 
 // KindEQ applies the EQ predicate on the "kind" field.
@@ -278,46 +309,6 @@ func NameEqualFold(v string) predicate.Identity {
 // NameContainsFold applies the ContainsFold predicate on the "name" field.
 func NameContainsFold(v string) predicate.Identity {
 	return predicate.Identity(sql.FieldContainsFold(FieldName, v))
-}
-
-// CreatedDateEQ applies the EQ predicate on the "created_date" field.
-func CreatedDateEQ(v time.Time) predicate.Identity {
-	return predicate.Identity(sql.FieldEQ(FieldCreatedDate, v))
-}
-
-// CreatedDateNEQ applies the NEQ predicate on the "created_date" field.
-func CreatedDateNEQ(v time.Time) predicate.Identity {
-	return predicate.Identity(sql.FieldNEQ(FieldCreatedDate, v))
-}
-
-// CreatedDateIn applies the In predicate on the "created_date" field.
-func CreatedDateIn(vs ...time.Time) predicate.Identity {
-	return predicate.Identity(sql.FieldIn(FieldCreatedDate, vs...))
-}
-
-// CreatedDateNotIn applies the NotIn predicate on the "created_date" field.
-func CreatedDateNotIn(vs ...time.Time) predicate.Identity {
-	return predicate.Identity(sql.FieldNotIn(FieldCreatedDate, vs...))
-}
-
-// CreatedDateGT applies the GT predicate on the "created_date" field.
-func CreatedDateGT(v time.Time) predicate.Identity {
-	return predicate.Identity(sql.FieldGT(FieldCreatedDate, v))
-}
-
-// CreatedDateGTE applies the GTE predicate on the "created_date" field.
-func CreatedDateGTE(v time.Time) predicate.Identity {
-	return predicate.Identity(sql.FieldGTE(FieldCreatedDate, v))
-}
-
-// CreatedDateLT applies the LT predicate on the "created_date" field.
-func CreatedDateLT(v time.Time) predicate.Identity {
-	return predicate.Identity(sql.FieldLT(FieldCreatedDate, v))
-}
-
-// CreatedDateLTE applies the LTE predicate on the "created_date" field.
-func CreatedDateLTE(v time.Time) predicate.Identity {
-	return predicate.Identity(sql.FieldLTE(FieldCreatedDate, v))
 }
 
 // HasOwner applies the HasEdge predicate on the "owner" edge.

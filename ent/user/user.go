@@ -15,10 +15,10 @@ const (
 	Label = "user"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldAlias holds the string denoting the alias field in the database.
-	FieldAlias = "alias"
 	// FieldDateCreated holds the string denoting the date_created field in the database.
 	FieldDateCreated = "date_created"
+	// FieldAlias holds the string denoting the alias field in the database.
+	FieldAlias = "alias"
 	// EdgeParent holds the string denoting the parent edge name in mutations.
 	EdgeParent = "parent"
 	// EdgeChildren holds the string denoting the children edge name in mutations.
@@ -65,8 +65,8 @@ const (
 // Columns holds all SQL columns for user fields.
 var Columns = []string{
 	FieldID,
-	FieldAlias,
 	FieldDateCreated,
+	FieldAlias,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "users"
@@ -91,12 +91,12 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultDateCreated holds the default value on creation for the "date_created" field.
+	DefaultDateCreated func() time.Time
 	// DefaultAlias holds the default value on creation for the "alias" field.
 	DefaultAlias func() string
 	// AliasValidator is a validator for the "alias" field. It is called by the builders before save.
 	AliasValidator func(string) error
-	// DefaultDateCreated holds the default value on creation for the "date_created" field.
-	DefaultDateCreated func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -109,14 +109,14 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByAlias orders the results by the alias field.
-func ByAlias(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAlias, opts...).ToFunc()
-}
-
 // ByDateCreated orders the results by the date_created field.
 func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
+}
+
+// ByAlias orders the results by the alias field.
+func ByAlias(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAlias, opts...).ToFunc()
 }
 
 // ByParentField orders the results by parent field.

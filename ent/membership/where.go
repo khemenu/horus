@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 	"khepri.dev/horus/ent/predicate"
+	"khepri.dev/horus/role"
 )
 
 // ID filters vertices based on their ID field.
@@ -56,69 +57,79 @@ func IDLTE(id uuid.UUID) predicate.Membership {
 	return predicate.Membership(sql.FieldLTE(FieldID, id))
 }
 
-// CreatedDate applies equality check predicate on the "created_date" field. It's identical to CreatedDateEQ.
-func CreatedDate(v time.Time) predicate.Membership {
-	return predicate.Membership(sql.FieldEQ(FieldCreatedDate, v))
+// DateCreated applies equality check predicate on the "date_created" field. It's identical to DateCreatedEQ.
+func DateCreated(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldEQ(FieldDateCreated, v))
+}
+
+// DateCreatedEQ applies the EQ predicate on the "date_created" field.
+func DateCreatedEQ(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldEQ(FieldDateCreated, v))
+}
+
+// DateCreatedNEQ applies the NEQ predicate on the "date_created" field.
+func DateCreatedNEQ(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldNEQ(FieldDateCreated, v))
+}
+
+// DateCreatedIn applies the In predicate on the "date_created" field.
+func DateCreatedIn(vs ...time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldIn(FieldDateCreated, vs...))
+}
+
+// DateCreatedNotIn applies the NotIn predicate on the "date_created" field.
+func DateCreatedNotIn(vs ...time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldNotIn(FieldDateCreated, vs...))
+}
+
+// DateCreatedGT applies the GT predicate on the "date_created" field.
+func DateCreatedGT(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldGT(FieldDateCreated, v))
+}
+
+// DateCreatedGTE applies the GTE predicate on the "date_created" field.
+func DateCreatedGTE(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldGTE(FieldDateCreated, v))
+}
+
+// DateCreatedLT applies the LT predicate on the "date_created" field.
+func DateCreatedLT(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldLT(FieldDateCreated, v))
+}
+
+// DateCreatedLTE applies the LTE predicate on the "date_created" field.
+func DateCreatedLTE(v time.Time) predicate.Membership {
+	return predicate.Membership(sql.FieldLTE(FieldDateCreated, v))
 }
 
 // RoleEQ applies the EQ predicate on the "role" field.
-func RoleEQ(v Role) predicate.Membership {
-	return predicate.Membership(sql.FieldEQ(FieldRole, v))
+func RoleEQ(v role.Role) predicate.Membership {
+	vc := v
+	return predicate.Membership(sql.FieldEQ(FieldRole, vc))
 }
 
 // RoleNEQ applies the NEQ predicate on the "role" field.
-func RoleNEQ(v Role) predicate.Membership {
-	return predicate.Membership(sql.FieldNEQ(FieldRole, v))
+func RoleNEQ(v role.Role) predicate.Membership {
+	vc := v
+	return predicate.Membership(sql.FieldNEQ(FieldRole, vc))
 }
 
 // RoleIn applies the In predicate on the "role" field.
-func RoleIn(vs ...Role) predicate.Membership {
-	return predicate.Membership(sql.FieldIn(FieldRole, vs...))
+func RoleIn(vs ...role.Role) predicate.Membership {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Membership(sql.FieldIn(FieldRole, v...))
 }
 
 // RoleNotIn applies the NotIn predicate on the "role" field.
-func RoleNotIn(vs ...Role) predicate.Membership {
-	return predicate.Membership(sql.FieldNotIn(FieldRole, vs...))
-}
-
-// CreatedDateEQ applies the EQ predicate on the "created_date" field.
-func CreatedDateEQ(v time.Time) predicate.Membership {
-	return predicate.Membership(sql.FieldEQ(FieldCreatedDate, v))
-}
-
-// CreatedDateNEQ applies the NEQ predicate on the "created_date" field.
-func CreatedDateNEQ(v time.Time) predicate.Membership {
-	return predicate.Membership(sql.FieldNEQ(FieldCreatedDate, v))
-}
-
-// CreatedDateIn applies the In predicate on the "created_date" field.
-func CreatedDateIn(vs ...time.Time) predicate.Membership {
-	return predicate.Membership(sql.FieldIn(FieldCreatedDate, vs...))
-}
-
-// CreatedDateNotIn applies the NotIn predicate on the "created_date" field.
-func CreatedDateNotIn(vs ...time.Time) predicate.Membership {
-	return predicate.Membership(sql.FieldNotIn(FieldCreatedDate, vs...))
-}
-
-// CreatedDateGT applies the GT predicate on the "created_date" field.
-func CreatedDateGT(v time.Time) predicate.Membership {
-	return predicate.Membership(sql.FieldGT(FieldCreatedDate, v))
-}
-
-// CreatedDateGTE applies the GTE predicate on the "created_date" field.
-func CreatedDateGTE(v time.Time) predicate.Membership {
-	return predicate.Membership(sql.FieldGTE(FieldCreatedDate, v))
-}
-
-// CreatedDateLT applies the LT predicate on the "created_date" field.
-func CreatedDateLT(v time.Time) predicate.Membership {
-	return predicate.Membership(sql.FieldLT(FieldCreatedDate, v))
-}
-
-// CreatedDateLTE applies the LTE predicate on the "created_date" field.
-func CreatedDateLTE(v time.Time) predicate.Membership {
-	return predicate.Membership(sql.FieldLTE(FieldCreatedDate, v))
+func RoleNotIn(vs ...role.Role) predicate.Membership {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Membership(sql.FieldNotIn(FieldRole, v...))
 }
 
 // HasAccount applies the HasEdge predicate on the "account" edge.

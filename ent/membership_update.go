@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"khepri.dev/horus/ent/membership"
 	"khepri.dev/horus/ent/predicate"
+	"khepri.dev/horus/role"
 )
 
 // MembershipUpdate is the builder for updating Membership entities.
@@ -28,15 +29,15 @@ func (mu *MembershipUpdate) Where(ps ...predicate.Membership) *MembershipUpdate 
 }
 
 // SetRole sets the "role" field.
-func (mu *MembershipUpdate) SetRole(m membership.Role) *MembershipUpdate {
-	mu.mutation.SetRole(m)
+func (mu *MembershipUpdate) SetRole(r role.Role) *MembershipUpdate {
+	mu.mutation.SetRole(r)
 	return mu
 }
 
 // SetNillableRole sets the "role" field if the given value is not nil.
-func (mu *MembershipUpdate) SetNillableRole(m *membership.Role) *MembershipUpdate {
-	if m != nil {
-		mu.SetRole(*m)
+func (mu *MembershipUpdate) SetNillableRole(r *role.Role) *MembershipUpdate {
+	if r != nil {
+		mu.SetRole(*r)
 	}
 	return mu
 }
@@ -125,15 +126,15 @@ type MembershipUpdateOne struct {
 }
 
 // SetRole sets the "role" field.
-func (muo *MembershipUpdateOne) SetRole(m membership.Role) *MembershipUpdateOne {
-	muo.mutation.SetRole(m)
+func (muo *MembershipUpdateOne) SetRole(r role.Role) *MembershipUpdateOne {
+	muo.mutation.SetRole(r)
 	return muo
 }
 
 // SetNillableRole sets the "role" field if the given value is not nil.
-func (muo *MembershipUpdateOne) SetNillableRole(m *membership.Role) *MembershipUpdateOne {
-	if m != nil {
-		muo.SetRole(*m)
+func (muo *MembershipUpdateOne) SetNillableRole(r *role.Role) *MembershipUpdateOne {
+	if r != nil {
+		muo.SetRole(*r)
 	}
 	return muo
 }

@@ -335,12 +335,12 @@ func (iq *InvitationQuery) WithInviter(opts ...func(*AccountQuery)) *InvitationQ
 // Example:
 //
 //	var v []struct {
-//		Invitee string `json:"invitee,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Invitation.Query().
-//		GroupBy(invitation.FieldInvitee).
+//		GroupBy(invitation.FieldDateCreated).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (iq *InvitationQuery) GroupBy(field string, fields ...string) *InvitationGroupBy {
@@ -358,11 +358,11 @@ func (iq *InvitationQuery) GroupBy(field string, fields ...string) *InvitationGr
 // Example:
 //
 //	var v []struct {
-//		Invitee string `json:"invitee,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //	}
 //
 //	client.Invitation.Query().
-//		Select(invitation.FieldInvitee).
+//		Select(invitation.FieldDateCreated).
 //		Scan(ctx, &v)
 func (iq *InvitationQuery) Select(fields ...string) *InvitationSelect {
 	iq.ctx.Fields = append(iq.ctx.Fields, fields...)

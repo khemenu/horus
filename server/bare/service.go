@@ -5,38 +5,38 @@ import (
 	ent "khepri.dev/horus/ent"
 )
 
-func NewStore(client *ent.Client) horus.Store {
-	return &store{client}
+func NewStore(db *ent.Client) horus.Store {
+	return &store{db}
 }
 
 type store struct {
-	client *ent.Client
+	db *ent.Client
 }
 
 func (s *store) User() horus.UserServiceServer {
-	return NewUserService(s.client)
+	return NewUserServiceServer(s.db)
 }
 
 func (s *store) Account() horus.AccountServiceServer {
-	return NewAccountService(s.client)
+	return NewAccountServiceServer(s.db)
 }
 
 func (s *store) Invitation() horus.InvitationServiceServer {
-	return NewInvitationService(s.client)
+	return NewInvitationServiceServer(s.db)
 }
 
 func (s *store) Membership() horus.MembershipServiceServer {
-	return NewMembershipService(s.client)
+	return NewMembershipServiceServer(s.db)
 }
 
 func (s *store) Silo() horus.SiloServiceServer {
-	return NewSiloService(s.client)
+	return NewSiloServiceServer(s.db)
 }
 
 func (s *store) Team() horus.TeamServiceServer {
-	return NewTeamService(s.client)
+	return NewTeamServiceServer(s.db)
 }
 
 func (s *store) Token() horus.TokenServiceServer {
-	return NewTokenService(s.client)
+	return NewTokenServiceServer(s.db)
 }

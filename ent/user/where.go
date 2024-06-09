@@ -56,14 +56,54 @@ func IDLTE(id uuid.UUID) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldID, id))
 }
 
+// DateCreated applies equality check predicate on the "date_created" field. It's identical to DateCreatedEQ.
+func DateCreated(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldDateCreated, v))
+}
+
 // Alias applies equality check predicate on the "alias" field. It's identical to AliasEQ.
 func Alias(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldAlias, v))
 }
 
-// DateCreated applies equality check predicate on the "date_created" field. It's identical to DateCreatedEQ.
-func DateCreated(v time.Time) predicate.User {
+// DateCreatedEQ applies the EQ predicate on the "date_created" field.
+func DateCreatedEQ(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldDateCreated, v))
+}
+
+// DateCreatedNEQ applies the NEQ predicate on the "date_created" field.
+func DateCreatedNEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldDateCreated, v))
+}
+
+// DateCreatedIn applies the In predicate on the "date_created" field.
+func DateCreatedIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldIn(FieldDateCreated, vs...))
+}
+
+// DateCreatedNotIn applies the NotIn predicate on the "date_created" field.
+func DateCreatedNotIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldDateCreated, vs...))
+}
+
+// DateCreatedGT applies the GT predicate on the "date_created" field.
+func DateCreatedGT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGT(FieldDateCreated, v))
+}
+
+// DateCreatedGTE applies the GTE predicate on the "date_created" field.
+func DateCreatedGTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldDateCreated, v))
+}
+
+// DateCreatedLT applies the LT predicate on the "date_created" field.
+func DateCreatedLT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLT(FieldDateCreated, v))
+}
+
+// DateCreatedLTE applies the LTE predicate on the "date_created" field.
+func DateCreatedLTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldDateCreated, v))
 }
 
 // AliasEQ applies the EQ predicate on the "alias" field.
@@ -129,46 +169,6 @@ func AliasEqualFold(v string) predicate.User {
 // AliasContainsFold applies the ContainsFold predicate on the "alias" field.
 func AliasContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldAlias, v))
-}
-
-// DateCreatedEQ applies the EQ predicate on the "date_created" field.
-func DateCreatedEQ(v time.Time) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldDateCreated, v))
-}
-
-// DateCreatedNEQ applies the NEQ predicate on the "date_created" field.
-func DateCreatedNEQ(v time.Time) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldDateCreated, v))
-}
-
-// DateCreatedIn applies the In predicate on the "date_created" field.
-func DateCreatedIn(vs ...time.Time) predicate.User {
-	return predicate.User(sql.FieldIn(FieldDateCreated, vs...))
-}
-
-// DateCreatedNotIn applies the NotIn predicate on the "date_created" field.
-func DateCreatedNotIn(vs ...time.Time) predicate.User {
-	return predicate.User(sql.FieldNotIn(FieldDateCreated, vs...))
-}
-
-// DateCreatedGT applies the GT predicate on the "date_created" field.
-func DateCreatedGT(v time.Time) predicate.User {
-	return predicate.User(sql.FieldGT(FieldDateCreated, v))
-}
-
-// DateCreatedGTE applies the GTE predicate on the "date_created" field.
-func DateCreatedGTE(v time.Time) predicate.User {
-	return predicate.User(sql.FieldGTE(FieldDateCreated, v))
-}
-
-// DateCreatedLT applies the LT predicate on the "date_created" field.
-func DateCreatedLT(v time.Time) predicate.User {
-	return predicate.User(sql.FieldLT(FieldDateCreated, v))
-}
-
-// DateCreatedLTE applies the LTE predicate on the "date_created" field.
-func DateCreatedLTE(v time.Time) predicate.User {
-	return predicate.User(sql.FieldLTE(FieldDateCreated, v))
 }
 
 // HasParent applies the HasEdge predicate on the "parent" edge.

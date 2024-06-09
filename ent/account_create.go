@@ -16,6 +16,7 @@ import (
 	"khepri.dev/horus/ent/membership"
 	"khepri.dev/horus/ent/silo"
 	"khepri.dev/horus/ent/user"
+	"khepri.dev/horus/role"
 )
 
 // AccountCreate is the builder for creating a Account entity.
@@ -25,15 +26,17 @@ type AccountCreate struct {
 	hooks    []Hook
 }
 
-// SetOwnerID sets the "owner_id" field.
-func (ac *AccountCreate) SetOwnerID(u uuid.UUID) *AccountCreate {
-	ac.mutation.SetOwnerID(u)
+// SetDateCreated sets the "date_created" field.
+func (ac *AccountCreate) SetDateCreated(t time.Time) *AccountCreate {
+	ac.mutation.SetDateCreated(t)
 	return ac
 }
 
-// SetSiloID sets the "silo_id" field.
-func (ac *AccountCreate) SetSiloID(u uuid.UUID) *AccountCreate {
-	ac.mutation.SetSiloID(u)
+// SetNillableDateCreated sets the "date_created" field if the given value is not nil.
+func (ac *AccountCreate) SetNillableDateCreated(t *time.Time) *AccountCreate {
+	if t != nil {
+		ac.SetDateCreated(*t)
+	}
 	return ac
 }
 
@@ -48,6 +51,18 @@ func (ac *AccountCreate) SetNillableAlias(s *string) *AccountCreate {
 	if s != nil {
 		ac.SetAlias(*s)
 	}
+	return ac
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (ac *AccountCreate) SetOwnerID(u uuid.UUID) *AccountCreate {
+	ac.mutation.SetOwnerID(u)
+	return ac
+}
+
+// SetSiloID sets the "silo_id" field.
+func (ac *AccountCreate) SetSiloID(u uuid.UUID) *AccountCreate {
+	ac.mutation.SetSiloID(u)
 	return ac
 }
 
@@ -80,22 +95,8 @@ func (ac *AccountCreate) SetNillableDescription(s *string) *AccountCreate {
 }
 
 // SetRole sets the "role" field.
-func (ac *AccountCreate) SetRole(a account.Role) *AccountCreate {
-	ac.mutation.SetRole(a)
-	return ac
-}
-
-// SetDateCreated sets the "date_created" field.
-func (ac *AccountCreate) SetDateCreated(t time.Time) *AccountCreate {
-	ac.mutation.SetDateCreated(t)
-	return ac
-}
-
-// SetNillableDateCreated sets the "date_created" field if the given value is not nil.
-func (ac *AccountCreate) SetNillableDateCreated(t *time.Time) *AccountCreate {
-	if t != nil {
-		ac.SetDateCreated(*t)
-	}
+func (ac *AccountCreate) SetRole(r role.Role) *AccountCreate {
+	ac.mutation.SetRole(r)
 	return ac
 }
 
@@ -188,6 +189,10 @@ func (ac *AccountCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (ac *AccountCreate) defaults() {
+	if _, ok := ac.mutation.DateCreated(); !ok {
+		v := account.DefaultDateCreated()
+		ac.mutation.SetDateCreated(v)
+	}
 	if _, ok := ac.mutation.Alias(); !ok {
 		v := account.DefaultAlias()
 		ac.mutation.SetAlias(v)
@@ -200,10 +205,6 @@ func (ac *AccountCreate) defaults() {
 		v := account.DefaultDescription
 		ac.mutation.SetDescription(v)
 	}
-	if _, ok := ac.mutation.DateCreated(); !ok {
-		v := account.DefaultDateCreated()
-		ac.mutation.SetDateCreated(v)
-	}
 	if _, ok := ac.mutation.ID(); !ok {
 		v := account.DefaultID()
 		ac.mutation.SetID(v)
@@ -212,11 +213,8 @@ func (ac *AccountCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (ac *AccountCreate) check() error {
-	if _, ok := ac.mutation.OwnerID(); !ok {
-		return &ValidationError{Name: "owner_id", err: errors.New(`ent: missing required field "Account.owner_id"`)}
-	}
-	if _, ok := ac.mutation.SiloID(); !ok {
-		return &ValidationError{Name: "silo_id", err: errors.New(`ent: missing required field "Account.silo_id"`)}
+	if _, ok := ac.mutation.DateCreated(); !ok {
+		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Account.date_created"`)}
 	}
 	if _, ok := ac.mutation.Alias(); !ok {
 		return &ValidationError{Name: "alias", err: errors.New(`ent: missing required field "Account.alias"`)}
@@ -225,6 +223,12 @@ func (ac *AccountCreate) check() error {
 		if err := account.AliasValidator(v); err != nil {
 			return &ValidationError{Name: "alias", err: fmt.Errorf(`ent: validator failed for field "Account.alias": %w`, err)}
 		}
+	}
+	if _, ok := ac.mutation.OwnerID(); !ok {
+		return &ValidationError{Name: "owner_id", err: errors.New(`ent: missing required field "Account.owner_id"`)}
+	}
+	if _, ok := ac.mutation.SiloID(); !ok {
+		return &ValidationError{Name: "silo_id", err: errors.New(`ent: missing required field "Account.silo_id"`)}
 	}
 	if _, ok := ac.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Account.name"`)}
@@ -249,9 +253,6 @@ func (ac *AccountCreate) check() error {
 		if err := account.RoleValidator(v); err != nil {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "Account.role": %w`, err)}
 		}
-	}
-	if _, ok := ac.mutation.DateCreated(); !ok {
-		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Account.date_created"`)}
 	}
 	if _, ok := ac.mutation.OwnerID(); !ok {
 		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "Account.owner"`)}
@@ -294,6 +295,10 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := ac.mutation.DateCreated(); ok {
+		_spec.SetField(account.FieldDateCreated, field.TypeTime, value)
+		_node.DateCreated = value
+	}
 	if value, ok := ac.mutation.Alias(); ok {
 		_spec.SetField(account.FieldAlias, field.TypeString, value)
 		_node.Alias = value
@@ -309,10 +314,6 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 	if value, ok := ac.mutation.Role(); ok {
 		_spec.SetField(account.FieldRole, field.TypeEnum, value)
 		_node.Role = value
-	}
-	if value, ok := ac.mutation.DateCreated(); ok {
-		_spec.SetField(account.FieldDateCreated, field.TypeTime, value)
-		_node.DateCreated = value
 	}
 	if nodes := ac.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

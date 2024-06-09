@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
+	"khepri.dev/horus/role"
 )
 
 const (
@@ -16,20 +17,20 @@ const (
 	Label = "account"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldDateCreated holds the string denoting the date_created field in the database.
+	FieldDateCreated = "date_created"
+	// FieldAlias holds the string denoting the alias field in the database.
+	FieldAlias = "alias"
 	// FieldOwnerID holds the string denoting the owner_id field in the database.
 	FieldOwnerID = "owner_id"
 	// FieldSiloID holds the string denoting the silo_id field in the database.
 	FieldSiloID = "silo_id"
-	// FieldAlias holds the string denoting the alias field in the database.
-	FieldAlias = "alias"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
 	// FieldRole holds the string denoting the role field in the database.
 	FieldRole = "role"
-	// FieldDateCreated holds the string denoting the date_created field in the database.
-	FieldDateCreated = "date_created"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
 	// EdgeSilo holds the string denoting the silo edge name in mutations.
@@ -73,13 +74,13 @@ const (
 // Columns holds all SQL columns for account fields.
 var Columns = []string{
 	FieldID,
+	FieldDateCreated,
+	FieldAlias,
 	FieldOwnerID,
 	FieldSiloID,
-	FieldAlias,
 	FieldName,
 	FieldDescription,
 	FieldRole,
-	FieldDateCreated,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -93,6 +94,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultDateCreated holds the default value on creation for the "date_created" field.
+	DefaultDateCreated func() time.Time
 	// DefaultAlias holds the default value on creation for the "alias" field.
 	DefaultAlias func() string
 	// AliasValidator is a validator for the "alias" field. It is called by the builders before save.
@@ -105,29 +108,14 @@ var (
 	DefaultDescription string
 	// DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	DescriptionValidator func(string) error
-	// DefaultDateCreated holds the default value on creation for the "date_created" field.
-	DefaultDateCreated func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
 
-// Role defines the type for the "role" enum field.
-type Role string
-
-// Role values.
-const (
-	RoleOWNER  Role = "OWNER"
-	RoleMEMBER Role = "MEMBER"
-)
-
-func (r Role) String() string {
-	return string(r)
-}
-
 // RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
-func RoleValidator(r Role) error {
+func RoleValidator(r role.Role) error {
 	switch r {
-	case RoleOWNER, RoleMEMBER:
+	case "OWNER", "MEMBER":
 		return nil
 	default:
 		return fmt.Errorf("account: invalid enum value for role field: %q", r)
@@ -142,6 +130,16 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
+// ByDateCreated orders the results by the date_created field.
+func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
+}
+
+// ByAlias orders the results by the alias field.
+func ByAlias(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAlias, opts...).ToFunc()
+}
+
 // ByOwnerID orders the results by the owner_id field.
 func ByOwnerID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldOwnerID, opts...).ToFunc()
@@ -150,11 +148,6 @@ func ByOwnerID(opts ...sql.OrderTermOption) OrderOption {
 // BySiloID orders the results by the silo_id field.
 func BySiloID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSiloID, opts...).ToFunc()
-}
-
-// ByAlias orders the results by the alias field.
-func ByAlias(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAlias, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.
@@ -170,11 +163,6 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 // ByRole orders the results by the role field.
 func ByRole(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRole, opts...).ToFunc()
-}
-
-// ByDateCreated orders the results by the date_created field.
-func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
 }
 
 // ByOwnerField orders the results by owner field.

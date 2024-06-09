@@ -335,12 +335,12 @@ func (mq *MembershipQuery) WithTeam(opts ...func(*TeamQuery)) *MembershipQuery {
 // Example:
 //
 //	var v []struct {
-//		Role membership.Role `json:"role,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Membership.Query().
-//		GroupBy(membership.FieldRole).
+//		GroupBy(membership.FieldDateCreated).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (mq *MembershipQuery) GroupBy(field string, fields ...string) *MembershipGroupBy {
@@ -358,11 +358,11 @@ func (mq *MembershipQuery) GroupBy(field string, fields ...string) *MembershipGr
 // Example:
 //
 //	var v []struct {
-//		Role membership.Role `json:"role,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //	}
 //
 //	client.Membership.Query().
-//		Select(membership.FieldRole).
+//		Select(membership.FieldDateCreated).
 //		Scan(ctx, &v)
 func (mq *MembershipQuery) Select(fields ...string) *MembershipSelect {
 	mq.ctx.Fields = append(mq.ctx.Fields, fields...)

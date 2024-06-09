@@ -56,6 +56,11 @@ func IDLTE(id uuid.UUID) predicate.Token {
 	return predicate.Token(sql.FieldLTE(FieldID, id))
 }
 
+// DateCreated applies equality check predicate on the "date_created" field. It's identical to DateCreatedEQ.
+func DateCreated(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldDateCreated, v))
+}
+
 // Value applies equality check predicate on the "value" field. It's identical to ValueEQ.
 func Value(v string) predicate.Token {
 	return predicate.Token(sql.FieldEQ(FieldValue, v))
@@ -71,14 +76,49 @@ func Name(v string) predicate.Token {
 	return predicate.Token(sql.FieldEQ(FieldName, v))
 }
 
-// DateCreated applies equality check predicate on the "date_created" field. It's identical to DateCreatedEQ.
-func DateCreated(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldEQ(FieldDateCreated, v))
-}
-
 // DateExpired applies equality check predicate on the "date_expired" field. It's identical to DateExpiredEQ.
 func DateExpired(v time.Time) predicate.Token {
 	return predicate.Token(sql.FieldEQ(FieldDateExpired, v))
+}
+
+// DateCreatedEQ applies the EQ predicate on the "date_created" field.
+func DateCreatedEQ(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldDateCreated, v))
+}
+
+// DateCreatedNEQ applies the NEQ predicate on the "date_created" field.
+func DateCreatedNEQ(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldNEQ(FieldDateCreated, v))
+}
+
+// DateCreatedIn applies the In predicate on the "date_created" field.
+func DateCreatedIn(vs ...time.Time) predicate.Token {
+	return predicate.Token(sql.FieldIn(FieldDateCreated, vs...))
+}
+
+// DateCreatedNotIn applies the NotIn predicate on the "date_created" field.
+func DateCreatedNotIn(vs ...time.Time) predicate.Token {
+	return predicate.Token(sql.FieldNotIn(FieldDateCreated, vs...))
+}
+
+// DateCreatedGT applies the GT predicate on the "date_created" field.
+func DateCreatedGT(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldGT(FieldDateCreated, v))
+}
+
+// DateCreatedGTE applies the GTE predicate on the "date_created" field.
+func DateCreatedGTE(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldGTE(FieldDateCreated, v))
+}
+
+// DateCreatedLT applies the LT predicate on the "date_created" field.
+func DateCreatedLT(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldLT(FieldDateCreated, v))
+}
+
+// DateCreatedLTE applies the LTE predicate on the "date_created" field.
+func DateCreatedLTE(v time.Time) predicate.Token {
+	return predicate.Token(sql.FieldLTE(FieldDateCreated, v))
 }
 
 // ValueEQ applies the EQ predicate on the "value" field.
@@ -274,46 +314,6 @@ func NameEqualFold(v string) predicate.Token {
 // NameContainsFold applies the ContainsFold predicate on the "name" field.
 func NameContainsFold(v string) predicate.Token {
 	return predicate.Token(sql.FieldContainsFold(FieldName, v))
-}
-
-// DateCreatedEQ applies the EQ predicate on the "date_created" field.
-func DateCreatedEQ(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldEQ(FieldDateCreated, v))
-}
-
-// DateCreatedNEQ applies the NEQ predicate on the "date_created" field.
-func DateCreatedNEQ(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldNEQ(FieldDateCreated, v))
-}
-
-// DateCreatedIn applies the In predicate on the "date_created" field.
-func DateCreatedIn(vs ...time.Time) predicate.Token {
-	return predicate.Token(sql.FieldIn(FieldDateCreated, vs...))
-}
-
-// DateCreatedNotIn applies the NotIn predicate on the "date_created" field.
-func DateCreatedNotIn(vs ...time.Time) predicate.Token {
-	return predicate.Token(sql.FieldNotIn(FieldDateCreated, vs...))
-}
-
-// DateCreatedGT applies the GT predicate on the "date_created" field.
-func DateCreatedGT(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldGT(FieldDateCreated, v))
-}
-
-// DateCreatedGTE applies the GTE predicate on the "date_created" field.
-func DateCreatedGTE(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldGTE(FieldDateCreated, v))
-}
-
-// DateCreatedLT applies the LT predicate on the "date_created" field.
-func DateCreatedLT(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldLT(FieldDateCreated, v))
-}
-
-// DateCreatedLTE applies the LTE predicate on the "date_created" field.
-func DateCreatedLTE(v time.Time) predicate.Token {
-	return predicate.Token(sql.FieldLTE(FieldDateCreated, v))
 }
 
 // DateExpiredEQ applies the EQ predicate on the "date_expired" field.

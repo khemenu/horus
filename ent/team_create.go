@@ -23,9 +23,17 @@ type TeamCreate struct {
 	hooks    []Hook
 }
 
-// SetSiloID sets the "silo_id" field.
-func (tc *TeamCreate) SetSiloID(u uuid.UUID) *TeamCreate {
-	tc.mutation.SetSiloID(u)
+// SetDateCreated sets the "date_created" field.
+func (tc *TeamCreate) SetDateCreated(t time.Time) *TeamCreate {
+	tc.mutation.SetDateCreated(t)
+	return tc
+}
+
+// SetNillableDateCreated sets the "date_created" field if the given value is not nil.
+func (tc *TeamCreate) SetNillableDateCreated(t *time.Time) *TeamCreate {
+	if t != nil {
+		tc.SetDateCreated(*t)
+	}
 	return tc
 }
 
@@ -40,6 +48,12 @@ func (tc *TeamCreate) SetNillableAlias(s *string) *TeamCreate {
 	if s != nil {
 		tc.SetAlias(*s)
 	}
+	return tc
+}
+
+// SetSiloID sets the "silo_id" field.
+func (tc *TeamCreate) SetSiloID(u uuid.UUID) *TeamCreate {
+	tc.mutation.SetSiloID(u)
 	return tc
 }
 
@@ -59,32 +73,6 @@ func (tc *TeamCreate) SetDescription(s string) *TeamCreate {
 func (tc *TeamCreate) SetNillableDescription(s *string) *TeamCreate {
 	if s != nil {
 		tc.SetDescription(*s)
-	}
-	return tc
-}
-
-// SetInterVisibility sets the "inter_visibility" field.
-func (tc *TeamCreate) SetInterVisibility(tv team.InterVisibility) *TeamCreate {
-	tc.mutation.SetInterVisibility(tv)
-	return tc
-}
-
-// SetIntraVisibility sets the "intra_visibility" field.
-func (tc *TeamCreate) SetIntraVisibility(tv team.IntraVisibility) *TeamCreate {
-	tc.mutation.SetIntraVisibility(tv)
-	return tc
-}
-
-// SetCreatedDate sets the "created_date" field.
-func (tc *TeamCreate) SetCreatedDate(t time.Time) *TeamCreate {
-	tc.mutation.SetCreatedDate(t)
-	return tc
-}
-
-// SetNillableCreatedDate sets the "created_date" field if the given value is not nil.
-func (tc *TeamCreate) SetNillableCreatedDate(t *time.Time) *TeamCreate {
-	if t != nil {
-		tc.SetCreatedDate(*t)
 	}
 	return tc
 }
@@ -158,6 +146,10 @@ func (tc *TeamCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (tc *TeamCreate) defaults() {
+	if _, ok := tc.mutation.DateCreated(); !ok {
+		v := team.DefaultDateCreated()
+		tc.mutation.SetDateCreated(v)
+	}
 	if _, ok := tc.mutation.Alias(); !ok {
 		v := team.DefaultAlias()
 		tc.mutation.SetAlias(v)
@@ -165,10 +157,6 @@ func (tc *TeamCreate) defaults() {
 	if _, ok := tc.mutation.Description(); !ok {
 		v := team.DefaultDescription
 		tc.mutation.SetDescription(v)
-	}
-	if _, ok := tc.mutation.CreatedDate(); !ok {
-		v := team.DefaultCreatedDate()
-		tc.mutation.SetCreatedDate(v)
 	}
 	if _, ok := tc.mutation.ID(); !ok {
 		v := team.DefaultID()
@@ -178,8 +166,8 @@ func (tc *TeamCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (tc *TeamCreate) check() error {
-	if _, ok := tc.mutation.SiloID(); !ok {
-		return &ValidationError{Name: "silo_id", err: errors.New(`ent: missing required field "Team.silo_id"`)}
+	if _, ok := tc.mutation.DateCreated(); !ok {
+		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Team.date_created"`)}
 	}
 	if _, ok := tc.mutation.Alias(); !ok {
 		return &ValidationError{Name: "alias", err: errors.New(`ent: missing required field "Team.alias"`)}
@@ -188,6 +176,9 @@ func (tc *TeamCreate) check() error {
 		if err := team.AliasValidator(v); err != nil {
 			return &ValidationError{Name: "alias", err: fmt.Errorf(`ent: validator failed for field "Team.alias": %w`, err)}
 		}
+	}
+	if _, ok := tc.mutation.SiloID(); !ok {
+		return &ValidationError{Name: "silo_id", err: errors.New(`ent: missing required field "Team.silo_id"`)}
 	}
 	if _, ok := tc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Team.name"`)}
@@ -204,25 +195,6 @@ func (tc *TeamCreate) check() error {
 		if err := team.DescriptionValidator(v); err != nil {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Team.description": %w`, err)}
 		}
-	}
-	if _, ok := tc.mutation.InterVisibility(); !ok {
-		return &ValidationError{Name: "inter_visibility", err: errors.New(`ent: missing required field "Team.inter_visibility"`)}
-	}
-	if v, ok := tc.mutation.InterVisibility(); ok {
-		if err := team.InterVisibilityValidator(v); err != nil {
-			return &ValidationError{Name: "inter_visibility", err: fmt.Errorf(`ent: validator failed for field "Team.inter_visibility": %w`, err)}
-		}
-	}
-	if _, ok := tc.mutation.IntraVisibility(); !ok {
-		return &ValidationError{Name: "intra_visibility", err: errors.New(`ent: missing required field "Team.intra_visibility"`)}
-	}
-	if v, ok := tc.mutation.IntraVisibility(); ok {
-		if err := team.IntraVisibilityValidator(v); err != nil {
-			return &ValidationError{Name: "intra_visibility", err: fmt.Errorf(`ent: validator failed for field "Team.intra_visibility": %w`, err)}
-		}
-	}
-	if _, ok := tc.mutation.CreatedDate(); !ok {
-		return &ValidationError{Name: "created_date", err: errors.New(`ent: missing required field "Team.created_date"`)}
 	}
 	if _, ok := tc.mutation.SiloID(); !ok {
 		return &ValidationError{Name: "silo", err: errors.New(`ent: missing required edge "Team.silo"`)}
@@ -262,6 +234,10 @@ func (tc *TeamCreate) createSpec() (*Team, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := tc.mutation.DateCreated(); ok {
+		_spec.SetField(team.FieldDateCreated, field.TypeTime, value)
+		_node.DateCreated = value
+	}
 	if value, ok := tc.mutation.Alias(); ok {
 		_spec.SetField(team.FieldAlias, field.TypeString, value)
 		_node.Alias = value
@@ -273,18 +249,6 @@ func (tc *TeamCreate) createSpec() (*Team, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.Description(); ok {
 		_spec.SetField(team.FieldDescription, field.TypeString, value)
 		_node.Description = value
-	}
-	if value, ok := tc.mutation.InterVisibility(); ok {
-		_spec.SetField(team.FieldInterVisibility, field.TypeEnum, value)
-		_node.InterVisibility = value
-	}
-	if value, ok := tc.mutation.IntraVisibility(); ok {
-		_spec.SetField(team.FieldIntraVisibility, field.TypeEnum, value)
-		_node.IntraVisibility = value
-	}
-	if value, ok := tc.mutation.CreatedDate(); ok {
-		_spec.SetField(team.FieldCreatedDate, field.TypeTime, value)
-		_node.CreatedDate = value
 	}
 	if nodes := tc.mutation.SiloIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

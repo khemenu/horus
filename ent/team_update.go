@@ -71,34 +71,6 @@ func (tu *TeamUpdate) SetNillableDescription(s *string) *TeamUpdate {
 	return tu
 }
 
-// SetInterVisibility sets the "inter_visibility" field.
-func (tu *TeamUpdate) SetInterVisibility(tv team.InterVisibility) *TeamUpdate {
-	tu.mutation.SetInterVisibility(tv)
-	return tu
-}
-
-// SetNillableInterVisibility sets the "inter_visibility" field if the given value is not nil.
-func (tu *TeamUpdate) SetNillableInterVisibility(tv *team.InterVisibility) *TeamUpdate {
-	if tv != nil {
-		tu.SetInterVisibility(*tv)
-	}
-	return tu
-}
-
-// SetIntraVisibility sets the "intra_visibility" field.
-func (tu *TeamUpdate) SetIntraVisibility(tv team.IntraVisibility) *TeamUpdate {
-	tu.mutation.SetIntraVisibility(tv)
-	return tu
-}
-
-// SetNillableIntraVisibility sets the "intra_visibility" field if the given value is not nil.
-func (tu *TeamUpdate) SetNillableIntraVisibility(tv *team.IntraVisibility) *TeamUpdate {
-	if tv != nil {
-		tu.SetIntraVisibility(*tv)
-	}
-	return tu
-}
-
 // AddMemberIDs adds the "members" edge to the Membership entity by IDs.
 func (tu *TeamUpdate) AddMemberIDs(ids ...uuid.UUID) *TeamUpdate {
 	tu.mutation.AddMemberIDs(ids...)
@@ -184,16 +156,6 @@ func (tu *TeamUpdate) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Team.description": %w`, err)}
 		}
 	}
-	if v, ok := tu.mutation.InterVisibility(); ok {
-		if err := team.InterVisibilityValidator(v); err != nil {
-			return &ValidationError{Name: "inter_visibility", err: fmt.Errorf(`ent: validator failed for field "Team.inter_visibility": %w`, err)}
-		}
-	}
-	if v, ok := tu.mutation.IntraVisibility(); ok {
-		if err := team.IntraVisibilityValidator(v); err != nil {
-			return &ValidationError{Name: "intra_visibility", err: fmt.Errorf(`ent: validator failed for field "Team.intra_visibility": %w`, err)}
-		}
-	}
 	if _, ok := tu.mutation.SiloID(); tu.mutation.SiloCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Team.silo"`)
 	}
@@ -220,12 +182,6 @@ func (tu *TeamUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := tu.mutation.Description(); ok {
 		_spec.SetField(team.FieldDescription, field.TypeString, value)
-	}
-	if value, ok := tu.mutation.InterVisibility(); ok {
-		_spec.SetField(team.FieldInterVisibility, field.TypeEnum, value)
-	}
-	if value, ok := tu.mutation.IntraVisibility(); ok {
-		_spec.SetField(team.FieldIntraVisibility, field.TypeEnum, value)
 	}
 	if tu.mutation.MembersCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -334,34 +290,6 @@ func (tuo *TeamUpdateOne) SetNillableDescription(s *string) *TeamUpdateOne {
 	return tuo
 }
 
-// SetInterVisibility sets the "inter_visibility" field.
-func (tuo *TeamUpdateOne) SetInterVisibility(tv team.InterVisibility) *TeamUpdateOne {
-	tuo.mutation.SetInterVisibility(tv)
-	return tuo
-}
-
-// SetNillableInterVisibility sets the "inter_visibility" field if the given value is not nil.
-func (tuo *TeamUpdateOne) SetNillableInterVisibility(tv *team.InterVisibility) *TeamUpdateOne {
-	if tv != nil {
-		tuo.SetInterVisibility(*tv)
-	}
-	return tuo
-}
-
-// SetIntraVisibility sets the "intra_visibility" field.
-func (tuo *TeamUpdateOne) SetIntraVisibility(tv team.IntraVisibility) *TeamUpdateOne {
-	tuo.mutation.SetIntraVisibility(tv)
-	return tuo
-}
-
-// SetNillableIntraVisibility sets the "intra_visibility" field if the given value is not nil.
-func (tuo *TeamUpdateOne) SetNillableIntraVisibility(tv *team.IntraVisibility) *TeamUpdateOne {
-	if tv != nil {
-		tuo.SetIntraVisibility(*tv)
-	}
-	return tuo
-}
-
 // AddMemberIDs adds the "members" edge to the Membership entity by IDs.
 func (tuo *TeamUpdateOne) AddMemberIDs(ids ...uuid.UUID) *TeamUpdateOne {
 	tuo.mutation.AddMemberIDs(ids...)
@@ -460,16 +388,6 @@ func (tuo *TeamUpdateOne) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Team.description": %w`, err)}
 		}
 	}
-	if v, ok := tuo.mutation.InterVisibility(); ok {
-		if err := team.InterVisibilityValidator(v); err != nil {
-			return &ValidationError{Name: "inter_visibility", err: fmt.Errorf(`ent: validator failed for field "Team.inter_visibility": %w`, err)}
-		}
-	}
-	if v, ok := tuo.mutation.IntraVisibility(); ok {
-		if err := team.IntraVisibilityValidator(v); err != nil {
-			return &ValidationError{Name: "intra_visibility", err: fmt.Errorf(`ent: validator failed for field "Team.intra_visibility": %w`, err)}
-		}
-	}
 	if _, ok := tuo.mutation.SiloID(); tuo.mutation.SiloCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Team.silo"`)
 	}
@@ -513,12 +431,6 @@ func (tuo *TeamUpdateOne) sqlSave(ctx context.Context) (_node *Team, err error) 
 	}
 	if value, ok := tuo.mutation.Description(); ok {
 		_spec.SetField(team.FieldDescription, field.TypeString, value)
-	}
-	if value, ok := tuo.mutation.InterVisibility(); ok {
-		_spec.SetField(team.FieldInterVisibility, field.TypeEnum, value)
-	}
-	if value, ok := tuo.mutation.IntraVisibility(); ok {
-		_spec.SetField(team.FieldIntraVisibility, field.TypeEnum, value)
 	}
 	if tuo.mutation.MembersCleared() {
 		edge := &sqlgraph.EdgeSpec{

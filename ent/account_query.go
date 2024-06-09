@@ -407,12 +407,12 @@ func (aq *AccountQuery) WithInvitations(opts ...func(*InvitationQuery)) *Account
 // Example:
 //
 //	var v []struct {
-//		OwnerID uuid.UUID `json:"owner_id,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Account.Query().
-//		GroupBy(account.FieldOwnerID).
+//		GroupBy(account.FieldDateCreated).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (aq *AccountQuery) GroupBy(field string, fields ...string) *AccountGroupBy {
@@ -430,11 +430,11 @@ func (aq *AccountQuery) GroupBy(field string, fields ...string) *AccountGroupBy 
 // Example:
 //
 //	var v []struct {
-//		OwnerID uuid.UUID `json:"owner_id,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //	}
 //
 //	client.Account.Query().
-//		Select(account.FieldOwnerID).
+//		Select(account.FieldDateCreated).
 //		Scan(ctx, &v)
 func (aq *AccountQuery) Select(fields ...string) *AccountSelect {
 	aq.ctx.Fields = append(aq.ctx.Fields, fields...)

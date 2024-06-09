@@ -22,6 +22,20 @@ type TokenCreate struct {
 	hooks    []Hook
 }
 
+// SetDateCreated sets the "date_created" field.
+func (tc *TokenCreate) SetDateCreated(t time.Time) *TokenCreate {
+	tc.mutation.SetDateCreated(t)
+	return tc
+}
+
+// SetNillableDateCreated sets the "date_created" field if the given value is not nil.
+func (tc *TokenCreate) SetNillableDateCreated(t *time.Time) *TokenCreate {
+	if t != nil {
+		tc.SetDateCreated(*t)
+	}
+	return tc
+}
+
 // SetValue sets the "value" field.
 func (tc *TokenCreate) SetValue(s string) *TokenCreate {
 	tc.mutation.SetValue(s)
@@ -44,20 +58,6 @@ func (tc *TokenCreate) SetName(s string) *TokenCreate {
 func (tc *TokenCreate) SetNillableName(s *string) *TokenCreate {
 	if s != nil {
 		tc.SetName(*s)
-	}
-	return tc
-}
-
-// SetDateCreated sets the "date_created" field.
-func (tc *TokenCreate) SetDateCreated(t time.Time) *TokenCreate {
-	tc.mutation.SetDateCreated(t)
-	return tc
-}
-
-// SetNillableDateCreated sets the "date_created" field if the given value is not nil.
-func (tc *TokenCreate) SetNillableDateCreated(t *time.Time) *TokenCreate {
-	if t != nil {
-		tc.SetDateCreated(*t)
 	}
 	return tc
 }
@@ -162,13 +162,13 @@ func (tc *TokenCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (tc *TokenCreate) defaults() {
-	if _, ok := tc.mutation.Name(); !ok {
-		v := token.DefaultName
-		tc.mutation.SetName(v)
-	}
 	if _, ok := tc.mutation.DateCreated(); !ok {
 		v := token.DefaultDateCreated()
 		tc.mutation.SetDateCreated(v)
+	}
+	if _, ok := tc.mutation.Name(); !ok {
+		v := token.DefaultName
+		tc.mutation.SetName(v)
 	}
 	if _, ok := tc.mutation.ID(); !ok {
 		v := token.DefaultID()
@@ -178,6 +178,9 @@ func (tc *TokenCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (tc *TokenCreate) check() error {
+	if _, ok := tc.mutation.DateCreated(); !ok {
+		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Token.date_created"`)}
+	}
 	if _, ok := tc.mutation.Value(); !ok {
 		return &ValidationError{Name: "value", err: errors.New(`ent: missing required field "Token.value"`)}
 	}
@@ -196,9 +199,6 @@ func (tc *TokenCreate) check() error {
 	}
 	if _, ok := tc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Token.name"`)}
-	}
-	if _, ok := tc.mutation.DateCreated(); !ok {
-		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Token.date_created"`)}
 	}
 	if _, ok := tc.mutation.DateExpired(); !ok {
 		return &ValidationError{Name: "date_expired", err: errors.New(`ent: missing required field "Token.date_expired"`)}
@@ -241,6 +241,10 @@ func (tc *TokenCreate) createSpec() (*Token, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := tc.mutation.DateCreated(); ok {
+		_spec.SetField(token.FieldDateCreated, field.TypeTime, value)
+		_node.DateCreated = value
+	}
 	if value, ok := tc.mutation.Value(); ok {
 		_spec.SetField(token.FieldValue, field.TypeString, value)
 		_node.Value = value
@@ -252,10 +256,6 @@ func (tc *TokenCreate) createSpec() (*Token, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.Name(); ok {
 		_spec.SetField(token.FieldName, field.TypeString, value)
 		_node.Name = value
-	}
-	if value, ok := tc.mutation.DateCreated(); ok {
-		_spec.SetField(token.FieldDateCreated, field.TypeTime, value)
-		_node.DateCreated = value
 	}
 	if value, ok := tc.mutation.DateExpired(); ok {
 		_spec.SetField(token.FieldDateExpired, field.TypeTime, value)

@@ -371,12 +371,12 @@ func (sq *SiloQuery) WithInvitations(opts ...func(*InvitationQuery)) *SiloQuery 
 // Example:
 //
 //	var v []struct {
-//		Alias string `json:"alias,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Silo.Query().
-//		GroupBy(silo.FieldAlias).
+//		GroupBy(silo.FieldDateCreated).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (sq *SiloQuery) GroupBy(field string, fields ...string) *SiloGroupBy {
@@ -394,11 +394,11 @@ func (sq *SiloQuery) GroupBy(field string, fields ...string) *SiloGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Alias string `json:"alias,omitempty"`
+//		DateCreated time.Time `json:"date_created,omitempty"`
 //	}
 //
 //	client.Silo.Query().
-//		Select(silo.FieldAlias).
+//		Select(silo.FieldDateCreated).
 //		Scan(ctx, &v)
 func (sq *SiloQuery) Select(fields ...string) *SiloSelect {
 	sq.ctx.Fields = append(sq.ctx.Fields, fields...)

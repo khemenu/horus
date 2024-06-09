@@ -19,14 +19,14 @@ type Token struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// DateCreated holds the value of the "date_created" field.
+	DateCreated time.Time `json:"date_created,omitempty"`
 	// Value holds the value of the "value" field.
 	Value string `json:"-"`
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
-	// DateCreated holds the value of the "date_created" field.
-	DateCreated time.Time `json:"date_created,omitempty"`
 	// DateExpired holds the value of the "date_expired" field.
 	DateExpired time.Time `json:"date_expired,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -53,12 +53,10 @@ type TokenEdges struct {
 // OwnerOrErr returns the Owner value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e TokenEdges) OwnerOrErr() (*User, error) {
-	if e.loadedTypes[0] {
-		if e.Owner == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: user.Label}
-		}
+	if e.Owner != nil {
 		return e.Owner, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "owner"}
 }
@@ -66,12 +64,10 @@ func (e TokenEdges) OwnerOrErr() (*User, error) {
 // ParentOrErr returns the Parent value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e TokenEdges) ParentOrErr() (*Token, error) {
-	if e.loadedTypes[1] {
-		if e.Parent == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: token.Label}
-		}
+	if e.Parent != nil {
 		return e.Parent, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: token.Label}
 	}
 	return nil, &NotLoadedError{edge: "parent"}
 }
@@ -121,6 +117,12 @@ func (t *Token) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				t.ID = *value
 			}
+		case token.FieldDateCreated:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field date_created", values[i])
+			} else if value.Valid {
+				t.DateCreated = value.Time
+			}
 		case token.FieldValue:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field value", values[i])
@@ -138,12 +140,6 @@ func (t *Token) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				t.Name = value.String
-			}
-		case token.FieldDateCreated:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field date_created", values[i])
-			} else if value.Valid {
-				t.DateCreated = value.Time
 			}
 		case token.FieldDateExpired:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -216,6 +212,9 @@ func (t *Token) String() string {
 	var builder strings.Builder
 	builder.WriteString("Token(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", t.ID))
+	builder.WriteString("date_created=")
+	builder.WriteString(t.DateCreated.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("value=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("type=")
@@ -223,9 +222,6 @@ func (t *Token) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(t.Name)
-	builder.WriteString(", ")
-	builder.WriteString("date_created=")
-	builder.WriteString(t.DateCreated.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("date_expired=")
 	builder.WriteString(t.DateExpired.Format(time.ANSIC))

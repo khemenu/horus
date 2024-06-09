@@ -21,10 +21,19 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	accountMixin := schema.Account{}.Mixin()
+	accountMixinFields0 := accountMixin[0].Fields()
+	_ = accountMixinFields0
+	accountMixinFields1 := accountMixin[1].Fields()
+	_ = accountMixinFields1
 	accountFields := schema.Account{}.Fields()
 	_ = accountFields
+	// accountDescDateCreated is the schema descriptor for date_created field.
+	accountDescDateCreated := accountMixinFields0[1].Descriptor()
+	// account.DefaultDateCreated holds the default value on creation for the date_created field.
+	account.DefaultDateCreated = accountDescDateCreated.Default.(func() time.Time)
 	// accountDescAlias is the schema descriptor for alias field.
-	accountDescAlias := accountFields[3].Descriptor()
+	accountDescAlias := accountMixinFields1[0].Descriptor()
 	// account.DefaultAlias holds the default value on creation for the alias field.
 	account.DefaultAlias = accountDescAlias.Default.(func() string)
 	// account.AliasValidator is a validator for the "alias" field. It is called by the builders before save.
@@ -33,6 +42,7 @@ func init() {
 		fns := [...]func(string) error{
 			validators[0].(func(string) error),
 			validators[1].(func(string) error),
+			validators[2].(func(string) error),
 		}
 		return func(alias string) error {
 			for _, fn := range fns {
@@ -44,79 +54,95 @@ func init() {
 		}
 	}()
 	// accountDescName is the schema descriptor for name field.
-	accountDescName := accountFields[4].Descriptor()
+	accountDescName := accountFields[2].Descriptor()
 	// account.DefaultName holds the default value on creation for the name field.
 	account.DefaultName = accountDescName.Default.(string)
 	// account.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	account.NameValidator = accountDescName.Validators[0].(func(string) error)
 	// accountDescDescription is the schema descriptor for description field.
-	accountDescDescription := accountFields[5].Descriptor()
+	accountDescDescription := accountFields[3].Descriptor()
 	// account.DefaultDescription holds the default value on creation for the description field.
 	account.DefaultDescription = accountDescDescription.Default.(string)
 	// account.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	account.DescriptionValidator = accountDescDescription.Validators[0].(func(string) error)
-	// accountDescDateCreated is the schema descriptor for date_created field.
-	accountDescDateCreated := accountFields[7].Descriptor()
-	// account.DefaultDateCreated holds the default value on creation for the date_created field.
-	account.DefaultDateCreated = accountDescDateCreated.Default.(func() time.Time)
 	// accountDescID is the schema descriptor for id field.
-	accountDescID := accountFields[0].Descriptor()
+	accountDescID := accountMixinFields0[0].Descriptor()
 	// account.DefaultID holds the default value on creation for the id field.
 	account.DefaultID = accountDescID.Default.(func() uuid.UUID)
+	identityMixin := schema.Identity{}.Mixin()
+	identityMixinFields0 := identityMixin[0].Fields()
+	_ = identityMixinFields0
 	identityFields := schema.Identity{}.Fields()
 	_ = identityFields
+	// identityDescDateCreated is the schema descriptor for date_created field.
+	identityDescDateCreated := identityMixinFields0[1].Descriptor()
+	// identity.DefaultDateCreated holds the default value on creation for the date_created field.
+	identity.DefaultDateCreated = identityDescDateCreated.Default.(func() time.Time)
 	// identityDescKind is the schema descriptor for kind field.
-	identityDescKind := identityFields[1].Descriptor()
+	identityDescKind := identityFields[0].Descriptor()
 	// identity.KindValidator is a validator for the "kind" field. It is called by the builders before save.
 	identity.KindValidator = identityDescKind.Validators[0].(func(string) error)
 	// identityDescVerifier is the schema descriptor for verifier field.
-	identityDescVerifier := identityFields[2].Descriptor()
+	identityDescVerifier := identityFields[1].Descriptor()
 	// identity.VerifierValidator is a validator for the "verifier" field. It is called by the builders before save.
 	identity.VerifierValidator = identityDescVerifier.Validators[0].(func(string) error)
 	// identityDescName is the schema descriptor for name field.
-	identityDescName := identityFields[3].Descriptor()
+	identityDescName := identityFields[2].Descriptor()
 	// identity.DefaultName holds the default value on creation for the name field.
 	identity.DefaultName = identityDescName.Default.(string)
-	// identityDescCreatedDate is the schema descriptor for created_date field.
-	identityDescCreatedDate := identityFields[4].Descriptor()
-	// identity.DefaultCreatedDate holds the default value on creation for the created_date field.
-	identity.DefaultCreatedDate = identityDescCreatedDate.Default.(func() time.Time)
+	// identity.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	identity.NameValidator = identityDescName.Validators[0].(func(string) error)
 	// identityDescID is the schema descriptor for id field.
-	identityDescID := identityFields[0].Descriptor()
-	// identity.IDValidator is a validator for the "id" field. It is called by the builders before save.
-	identity.IDValidator = identityDescID.Validators[0].(func(string) error)
+	identityDescID := identityMixinFields0[0].Descriptor()
+	// identity.DefaultID holds the default value on creation for the id field.
+	identity.DefaultID = identityDescID.Default.(func() uuid.UUID)
+	invitationMixin := schema.Invitation{}.Mixin()
+	invitationMixinFields0 := invitationMixin[0].Fields()
+	_ = invitationMixinFields0
 	invitationFields := schema.Invitation{}.Fields()
 	_ = invitationFields
+	// invitationDescDateCreated is the schema descriptor for date_created field.
+	invitationDescDateCreated := invitationMixinFields0[1].Descriptor()
+	// invitation.DefaultDateCreated holds the default value on creation for the date_created field.
+	invitation.DefaultDateCreated = invitationDescDateCreated.Default.(func() time.Time)
 	// invitationDescInvitee is the schema descriptor for invitee field.
-	invitationDescInvitee := invitationFields[1].Descriptor()
+	invitationDescInvitee := invitationFields[0].Descriptor()
 	// invitation.InviteeValidator is a validator for the "invitee" field. It is called by the builders before save.
 	invitation.InviteeValidator = invitationDescInvitee.Validators[0].(func(string) error)
 	// invitationDescType is the schema descriptor for type field.
-	invitationDescType := invitationFields[2].Descriptor()
+	invitationDescType := invitationFields[1].Descriptor()
 	// invitation.TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	invitation.TypeValidator = invitationDescType.Validators[0].(func(string) error)
-	// invitationDescDateCreated is the schema descriptor for date_created field.
-	invitationDescDateCreated := invitationFields[3].Descriptor()
-	// invitation.DefaultDateCreated holds the default value on creation for the date_created field.
-	invitation.DefaultDateCreated = invitationDescDateCreated.Default.(func() time.Time)
 	// invitationDescID is the schema descriptor for id field.
-	invitationDescID := invitationFields[0].Descriptor()
+	invitationDescID := invitationMixinFields0[0].Descriptor()
 	// invitation.DefaultID holds the default value on creation for the id field.
 	invitation.DefaultID = invitationDescID.Default.(func() uuid.UUID)
+	membershipMixin := schema.Membership{}.Mixin()
+	membershipMixinFields0 := membershipMixin[0].Fields()
+	_ = membershipMixinFields0
 	membershipFields := schema.Membership{}.Fields()
 	_ = membershipFields
-	// membershipDescCreatedDate is the schema descriptor for created_date field.
-	membershipDescCreatedDate := membershipFields[2].Descriptor()
-	// membership.DefaultCreatedDate holds the default value on creation for the created_date field.
-	membership.DefaultCreatedDate = membershipDescCreatedDate.Default.(func() time.Time)
+	// membershipDescDateCreated is the schema descriptor for date_created field.
+	membershipDescDateCreated := membershipMixinFields0[1].Descriptor()
+	// membership.DefaultDateCreated holds the default value on creation for the date_created field.
+	membership.DefaultDateCreated = membershipDescDateCreated.Default.(func() time.Time)
 	// membershipDescID is the schema descriptor for id field.
-	membershipDescID := membershipFields[0].Descriptor()
+	membershipDescID := membershipMixinFields0[0].Descriptor()
 	// membership.DefaultID holds the default value on creation for the id field.
 	membership.DefaultID = membershipDescID.Default.(func() uuid.UUID)
+	siloMixin := schema.Silo{}.Mixin()
+	siloMixinFields0 := siloMixin[0].Fields()
+	_ = siloMixinFields0
+	siloMixinFields1 := siloMixin[1].Fields()
+	_ = siloMixinFields1
 	siloFields := schema.Silo{}.Fields()
 	_ = siloFields
+	// siloDescDateCreated is the schema descriptor for date_created field.
+	siloDescDateCreated := siloMixinFields0[1].Descriptor()
+	// silo.DefaultDateCreated holds the default value on creation for the date_created field.
+	silo.DefaultDateCreated = siloDescDateCreated.Default.(func() time.Time)
 	// siloDescAlias is the schema descriptor for alias field.
-	siloDescAlias := siloFields[1].Descriptor()
+	siloDescAlias := siloMixinFields1[0].Descriptor()
 	// silo.DefaultAlias holds the default value on creation for the alias field.
 	silo.DefaultAlias = siloDescAlias.Default.(func() string)
 	// silo.AliasValidator is a validator for the "alias" field. It is called by the builders before save.
@@ -125,6 +151,7 @@ func init() {
 		fns := [...]func(string) error{
 			validators[0].(func(string) error),
 			validators[1].(func(string) error),
+			validators[2].(func(string) error),
 		}
 		return func(alias string) error {
 			for _, fn := range fns {
@@ -136,29 +163,34 @@ func init() {
 		}
 	}()
 	// siloDescName is the schema descriptor for name field.
-	siloDescName := siloFields[2].Descriptor()
+	siloDescName := siloFields[0].Descriptor()
 	// silo.DefaultName holds the default value on creation for the name field.
 	silo.DefaultName = siloDescName.Default.(string)
 	// silo.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	silo.NameValidator = siloDescName.Validators[0].(func(string) error)
 	// siloDescDescription is the schema descriptor for description field.
-	siloDescDescription := siloFields[3].Descriptor()
+	siloDescDescription := siloFields[1].Descriptor()
 	// silo.DefaultDescription holds the default value on creation for the description field.
 	silo.DefaultDescription = siloDescDescription.Default.(string)
 	// silo.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	silo.DescriptionValidator = siloDescDescription.Validators[0].(func(string) error)
-	// siloDescDateCreated is the schema descriptor for date_created field.
-	siloDescDateCreated := siloFields[4].Descriptor()
-	// silo.DefaultDateCreated holds the default value on creation for the date_created field.
-	silo.DefaultDateCreated = siloDescDateCreated.Default.(func() time.Time)
 	// siloDescID is the schema descriptor for id field.
-	siloDescID := siloFields[0].Descriptor()
+	siloDescID := siloMixinFields0[0].Descriptor()
 	// silo.DefaultID holds the default value on creation for the id field.
 	silo.DefaultID = siloDescID.Default.(func() uuid.UUID)
+	teamMixin := schema.Team{}.Mixin()
+	teamMixinFields0 := teamMixin[0].Fields()
+	_ = teamMixinFields0
+	teamMixinFields1 := teamMixin[1].Fields()
+	_ = teamMixinFields1
 	teamFields := schema.Team{}.Fields()
 	_ = teamFields
+	// teamDescDateCreated is the schema descriptor for date_created field.
+	teamDescDateCreated := teamMixinFields0[1].Descriptor()
+	// team.DefaultDateCreated holds the default value on creation for the date_created field.
+	team.DefaultDateCreated = teamDescDateCreated.Default.(func() time.Time)
 	// teamDescAlias is the schema descriptor for alias field.
-	teamDescAlias := teamFields[2].Descriptor()
+	teamDescAlias := teamMixinFields1[0].Descriptor()
 	// team.DefaultAlias holds the default value on creation for the alias field.
 	team.DefaultAlias = teamDescAlias.Default.(func() string)
 	// team.AliasValidator is a validator for the "alias" field. It is called by the builders before save.
@@ -167,6 +199,7 @@ func init() {
 		fns := [...]func(string) error{
 			validators[0].(func(string) error),
 			validators[1].(func(string) error),
+			validators[2].(func(string) error),
 		}
 		return func(alias string) error {
 			for _, fn := range fns {
@@ -178,7 +211,7 @@ func init() {
 		}
 	}()
 	// teamDescName is the schema descriptor for name field.
-	teamDescName := teamFields[3].Descriptor()
+	teamDescName := teamFields[1].Descriptor()
 	// team.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	team.NameValidator = func() func(string) error {
 		validators := teamDescName.Validators
@@ -196,45 +229,53 @@ func init() {
 		}
 	}()
 	// teamDescDescription is the schema descriptor for description field.
-	teamDescDescription := teamFields[4].Descriptor()
+	teamDescDescription := teamFields[2].Descriptor()
 	// team.DefaultDescription holds the default value on creation for the description field.
 	team.DefaultDescription = teamDescDescription.Default.(string)
 	// team.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	team.DescriptionValidator = teamDescDescription.Validators[0].(func(string) error)
-	// teamDescCreatedDate is the schema descriptor for created_date field.
-	teamDescCreatedDate := teamFields[7].Descriptor()
-	// team.DefaultCreatedDate holds the default value on creation for the created_date field.
-	team.DefaultCreatedDate = teamDescCreatedDate.Default.(func() time.Time)
 	// teamDescID is the schema descriptor for id field.
-	teamDescID := teamFields[0].Descriptor()
+	teamDescID := teamMixinFields0[0].Descriptor()
 	// team.DefaultID holds the default value on creation for the id field.
 	team.DefaultID = teamDescID.Default.(func() uuid.UUID)
+	tokenMixin := schema.Token{}.Mixin()
+	tokenMixinFields0 := tokenMixin[0].Fields()
+	_ = tokenMixinFields0
 	tokenFields := schema.Token{}.Fields()
 	_ = tokenFields
+	// tokenDescDateCreated is the schema descriptor for date_created field.
+	tokenDescDateCreated := tokenMixinFields0[1].Descriptor()
+	// token.DefaultDateCreated holds the default value on creation for the date_created field.
+	token.DefaultDateCreated = tokenDescDateCreated.Default.(func() time.Time)
 	// tokenDescValue is the schema descriptor for value field.
-	tokenDescValue := tokenFields[1].Descriptor()
+	tokenDescValue := tokenFields[0].Descriptor()
 	// token.ValueValidator is a validator for the "value" field. It is called by the builders before save.
 	token.ValueValidator = tokenDescValue.Validators[0].(func(string) error)
 	// tokenDescType is the schema descriptor for type field.
-	tokenDescType := tokenFields[2].Descriptor()
+	tokenDescType := tokenFields[1].Descriptor()
 	// token.TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	token.TypeValidator = tokenDescType.Validators[0].(func(string) error)
 	// tokenDescName is the schema descriptor for name field.
-	tokenDescName := tokenFields[3].Descriptor()
+	tokenDescName := tokenFields[2].Descriptor()
 	// token.DefaultName holds the default value on creation for the name field.
 	token.DefaultName = tokenDescName.Default.(string)
-	// tokenDescDateCreated is the schema descriptor for date_created field.
-	tokenDescDateCreated := tokenFields[4].Descriptor()
-	// token.DefaultDateCreated holds the default value on creation for the date_created field.
-	token.DefaultDateCreated = tokenDescDateCreated.Default.(func() time.Time)
 	// tokenDescID is the schema descriptor for id field.
-	tokenDescID := tokenFields[0].Descriptor()
+	tokenDescID := tokenMixinFields0[0].Descriptor()
 	// token.DefaultID holds the default value on creation for the id field.
 	token.DefaultID = tokenDescID.Default.(func() uuid.UUID)
+	userMixin := schema.User{}.Mixin()
+	userMixinFields0 := userMixin[0].Fields()
+	_ = userMixinFields0
+	userMixinFields1 := userMixin[1].Fields()
+	_ = userMixinFields1
 	userFields := schema.User{}.Fields()
 	_ = userFields
+	// userDescDateCreated is the schema descriptor for date_created field.
+	userDescDateCreated := userMixinFields0[1].Descriptor()
+	// user.DefaultDateCreated holds the default value on creation for the date_created field.
+	user.DefaultDateCreated = userDescDateCreated.Default.(func() time.Time)
 	// userDescAlias is the schema descriptor for alias field.
-	userDescAlias := userFields[1].Descriptor()
+	userDescAlias := userMixinFields1[0].Descriptor()
 	// user.DefaultAlias holds the default value on creation for the alias field.
 	user.DefaultAlias = userDescAlias.Default.(func() string)
 	// user.AliasValidator is a validator for the "alias" field. It is called by the builders before save.
@@ -254,12 +295,8 @@ func init() {
 			return nil
 		}
 	}()
-	// userDescDateCreated is the schema descriptor for date_created field.
-	userDescDateCreated := userFields[2].Descriptor()
-	// user.DefaultDateCreated holds the default value on creation for the date_created field.
-	user.DefaultDateCreated = userDescDateCreated.Default.(func() time.Time)
 	// userDescID is the schema descriptor for id field.
-	userDescID := userFields[0].Descriptor()
+	userDescID := userMixinFields0[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.
 	user.DefaultID = userDescID.Default.(func() uuid.UUID)
 }

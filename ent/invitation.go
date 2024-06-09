@@ -20,12 +20,12 @@ type Invitation struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// DateCreated holds the value of the "date_created" field.
+	DateCreated time.Time `json:"date_created,omitempty"`
 	// Invitee holds the value of the "invitee" field.
 	Invitee string `json:"invitee,omitempty"`
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
-	// DateCreated holds the value of the "date_created" field.
-	DateCreated time.Time `json:"date_created,omitempty"`
 	// DateExpired holds the value of the "date_expired" field.
 	DateExpired time.Time `json:"date_expired,omitempty"`
 	// DateAccepted holds the value of the "date_accepted" field.
@@ -56,12 +56,10 @@ type InvitationEdges struct {
 // SiloOrErr returns the Silo value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e InvitationEdges) SiloOrErr() (*Silo, error) {
-	if e.loadedTypes[0] {
-		if e.Silo == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: silo.Label}
-		}
+	if e.Silo != nil {
 		return e.Silo, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: silo.Label}
 	}
 	return nil, &NotLoadedError{edge: "silo"}
 }
@@ -69,12 +67,10 @@ func (e InvitationEdges) SiloOrErr() (*Silo, error) {
 // InviterOrErr returns the Inviter value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e InvitationEdges) InviterOrErr() (*Account, error) {
-	if e.loadedTypes[1] {
-		if e.Inviter == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: account.Label}
-		}
+	if e.Inviter != nil {
 		return e.Inviter, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: account.Label}
 	}
 	return nil, &NotLoadedError{edge: "inviter"}
 }
@@ -115,6 +111,12 @@ func (i *Invitation) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				i.ID = *value
 			}
+		case invitation.FieldDateCreated:
+			if value, ok := values[j].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field date_created", values[j])
+			} else if value.Valid {
+				i.DateCreated = value.Time
+			}
 		case invitation.FieldInvitee:
 			if value, ok := values[j].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field invitee", values[j])
@@ -126,12 +128,6 @@ func (i *Invitation) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field type", values[j])
 			} else if value.Valid {
 				i.Type = value.String
-			}
-		case invitation.FieldDateCreated:
-			if value, ok := values[j].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field date_created", values[j])
-			} else if value.Valid {
-				i.DateCreated = value.Time
 			}
 		case invitation.FieldDateExpired:
 			if value, ok := values[j].(*sql.NullTime); !ok {
@@ -220,14 +216,14 @@ func (i *Invitation) String() string {
 	var builder strings.Builder
 	builder.WriteString("Invitation(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", i.ID))
+	builder.WriteString("date_created=")
+	builder.WriteString(i.DateCreated.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("invitee=")
 	builder.WriteString(i.Invitee)
 	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(i.Type)
-	builder.WriteString(", ")
-	builder.WriteString("date_created=")
-	builder.WriteString(i.DateCreated.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("date_expired=")
 	builder.WriteString(i.DateExpired.Format(time.ANSIC))

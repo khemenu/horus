@@ -15,14 +15,14 @@ const (
 	Label = "token"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldDateCreated holds the string denoting the date_created field in the database.
+	FieldDateCreated = "date_created"
 	// FieldValue holds the string denoting the value field in the database.
 	FieldValue = "value"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// FieldDateCreated holds the string denoting the date_created field in the database.
-	FieldDateCreated = "date_created"
 	// FieldDateExpired holds the string denoting the date_expired field in the database.
 	FieldDateExpired = "date_expired"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
@@ -53,10 +53,10 @@ const (
 // Columns holds all SQL columns for token fields.
 var Columns = []string{
 	FieldID,
+	FieldDateCreated,
 	FieldValue,
 	FieldType,
 	FieldName,
-	FieldDateCreated,
 	FieldDateExpired,
 }
 
@@ -83,14 +83,14 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultDateCreated holds the default value on creation for the "date_created" field.
+	DefaultDateCreated func() time.Time
 	// ValueValidator is a validator for the "value" field. It is called by the builders before save.
 	ValueValidator func(string) error
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
 	// DefaultName holds the default value on creation for the "name" field.
 	DefaultName string
-	// DefaultDateCreated holds the default value on creation for the "date_created" field.
-	DefaultDateCreated func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -101,6 +101,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByDateCreated orders the results by the date_created field.
+func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
 }
 
 // ByValue orders the results by the value field.
@@ -116,11 +121,6 @@ func ByType(opts ...sql.OrderTermOption) OrderOption {
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
-}
-
-// ByDateCreated orders the results by the date_created field.
-func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
 }
 
 // ByDateExpired orders the results by the date_expired field.

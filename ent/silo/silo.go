@@ -15,14 +15,14 @@ const (
 	Label = "silo"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldDateCreated holds the string denoting the date_created field in the database.
+	FieldDateCreated = "date_created"
 	// FieldAlias holds the string denoting the alias field in the database.
 	FieldAlias = "alias"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
-	// FieldDateCreated holds the string denoting the date_created field in the database.
-	FieldDateCreated = "date_created"
 	// EdgeMembers holds the string denoting the members edge name in mutations.
 	EdgeMembers = "members"
 	// EdgeTeams holds the string denoting the teams edge name in mutations.
@@ -57,10 +57,10 @@ const (
 // Columns holds all SQL columns for silo fields.
 var Columns = []string{
 	FieldID,
+	FieldDateCreated,
 	FieldAlias,
 	FieldName,
 	FieldDescription,
-	FieldDateCreated,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -74,6 +74,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultDateCreated holds the default value on creation for the "date_created" field.
+	DefaultDateCreated func() time.Time
 	// DefaultAlias holds the default value on creation for the "alias" field.
 	DefaultAlias func() string
 	// AliasValidator is a validator for the "alias" field. It is called by the builders before save.
@@ -86,8 +88,6 @@ var (
 	DefaultDescription string
 	// DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	DescriptionValidator func(string) error
-	// DefaultDateCreated holds the default value on creation for the "date_created" field.
-	DefaultDateCreated func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -98,6 +98,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByDateCreated orders the results by the date_created field.
+func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
 }
 
 // ByAlias orders the results by the alias field.
@@ -113,11 +118,6 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByDescription orders the results by the description field.
 func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
-}
-
-// ByDateCreated orders the results by the date_created field.
-func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
 }
 
 // ByMembersCount orders the results by members count.

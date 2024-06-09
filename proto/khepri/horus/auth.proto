@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package khepri.horus;
 
-import "khepri/horus/horus.proto";
+import "khepri/horus/common.proto";
 
 option go_package = "khepri.dev/horus";
 

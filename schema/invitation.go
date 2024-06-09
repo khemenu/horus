@@ -1,69 +1,77 @@
 package schema
 
 import (
-	"time"
-
-	"entgo.io/contrib/entproto"
 	"entgo.io/ent"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
+	"github.com/lesomnus/entpb"
 )
 
 type Invitation struct {
-	grpcSchema
+	ent.Schema
+}
+
+func (Invitation) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		baseMixin{},
+	}
 }
 
 func (Invitation) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).
-			Unique().
-			Default(uuid.New).
-			Annotations(entproto.Field(1)),
 		field.String("invitee").
+			Annotations(entpb.Field(4)).
 			Immutable().
-			NotEmpty().
-			Annotations(entproto.Field(4)),
+			NotEmpty(),
 
 		field.String("type").
+			Annotations(entpb.Field(5)).
 			Immutable().
-			NotEmpty().
-			Annotations(entproto.Field(5)),
+			NotEmpty(),
 
-		field.Time("date_created").
-			Immutable().
-			Default(time.Now).
-			Annotations(entproto.Field(15)),
 		field.Time("date_expired").
-			Annotations(entproto.Field(14)),
+			Annotations(entpb.Field(14)),
 		field.Time("date_accepted").
+			Annotations(entpb.Field(13)).
 			Optional().
-			Nillable().
-			Annotations(entproto.Field(13)),
+			Nillable(),
 		field.Time("date_declined").
+			Annotations(entpb.Field(12)).
 			Optional().
-			Nillable().
-			Annotations(entproto.Field(12)),
+			Nillable(),
 		field.Time("date_canceled").
+			Annotations(entpb.Field(11)).
 			Optional().
-			Nillable().
-			Annotations(entproto.Field(11)),
+			Nillable(),
 	}
 }
 
 func (Invitation) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("silo", Silo.Type).
+			Annotations(entpb.Field(2)).
 			Ref("invitations").
 			Immutable().
 			Unique().
-			Required().
-			Annotations(entproto.Field(2)),
+			Required(),
 		edge.From("inviter", Account.Type).
+			Annotations(entpb.Field(3)).
 			Ref("invitations").
 			Immutable().
 			Unique().
-			Required().
-			Annotations(entproto.Field(3)),
+			Required(),
+	}
+}
+
+func (Invitation) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		entpb.Message(entpb.PathInherit, entpb.WithService(entpb.PathInherit,
+			&entpb.Rpc{
+				Ident: "Accept",
+				Req:   entpb.PbType{Ident: "AcceptInvitationRequest", Import: "khepri/horus/extend.proto"},
+				Res:   entpb.PbEmpty,
+			},
+		)),
 	}
 }

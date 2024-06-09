@@ -15,6 +15,7 @@ import (
 	"khepri.dev/horus/ent/invitation"
 	"khepri.dev/horus/ent/membership"
 	"khepri.dev/horus/ent/predicate"
+	"khepri.dev/horus/role"
 )
 
 // AccountUpdate is the builder for updating Account entities.
@@ -73,15 +74,15 @@ func (au *AccountUpdate) SetNillableDescription(s *string) *AccountUpdate {
 }
 
 // SetRole sets the "role" field.
-func (au *AccountUpdate) SetRole(a account.Role) *AccountUpdate {
-	au.mutation.SetRole(a)
+func (au *AccountUpdate) SetRole(r role.Role) *AccountUpdate {
+	au.mutation.SetRole(r)
 	return au
 }
 
 // SetNillableRole sets the "role" field if the given value is not nil.
-func (au *AccountUpdate) SetNillableRole(a *account.Role) *AccountUpdate {
-	if a != nil {
-		au.SetRole(*a)
+func (au *AccountUpdate) SetNillableRole(r *role.Role) *AccountUpdate {
+	if r != nil {
+		au.SetRole(*r)
 	}
 	return au
 }
@@ -398,15 +399,15 @@ func (auo *AccountUpdateOne) SetNillableDescription(s *string) *AccountUpdateOne
 }
 
 // SetRole sets the "role" field.
-func (auo *AccountUpdateOne) SetRole(a account.Role) *AccountUpdateOne {
-	auo.mutation.SetRole(a)
+func (auo *AccountUpdateOne) SetRole(r role.Role) *AccountUpdateOne {
+	auo.mutation.SetRole(r)
 	return auo
 }
 
 // SetNillableRole sets the "role" field if the given value is not nil.
-func (auo *AccountUpdateOne) SetNillableRole(a *account.Role) *AccountUpdateOne {
-	if a != nil {
-		auo.SetRole(*a)
+func (auo *AccountUpdateOne) SetNillableRole(r *role.Role) *AccountUpdateOne {
+	if r != nil {
+		auo.SetRole(*r)
 	}
 	return auo
 }
