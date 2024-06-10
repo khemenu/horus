@@ -46,16 +46,35 @@ func (baseMixin) Annotations() []schema.Annotation {
 
 type aliasMixin struct {
 	mixin.Schema
+	IsCommon bool
 }
 
-func (aliasMixin) Fields() []ent.Field {
+func (m aliasMixin) Fields() []ent.Field {
+	f := field.String("alias").
+		Annotations(entpb.Field(2)).
+		NotEmpty().
+		MaxLen(32).
+		DefaultFunc(alias.New).
+		Validate(alias.ValidateE)
+	if !m.IsCommon {
+		f.Unique()
+	}
+	return []ent.Field{f}
+}
+
+type labelMixin struct {
+	mixin.Schema
+}
+
+func (labelMixin) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("alias").
-			Annotations(entpb.Field(2)).
-			Unique().
-			NotEmpty().
-			MaxLen(32).
-			DefaultFunc(alias.New).
-			Validate(alias.ValidateE),
+		field.String("name").
+			Annotations(entpb.Field(7)).
+			MaxLen(64).
+			Default(""),
+		field.String("description").
+			Annotations(entpb.Field(8)).
+			MaxLen(256).
+			Default(""),
 	}
 }

@@ -42,7 +42,7 @@ var CmdInviteUser = &cli.Command{
 		}
 
 		silo_uuid, _ := uuid.Parse(silo_id)
-		v, err := c.Invitation().Create(ctx.Context, &horus.CreateInvitationRequest{Invitation: &horus.Invitation{
+		v, err := c.Invitation().Create(ctx.Context, &horus.CreateInvitationRequest{
 			Invitee: user_id,
 			Type:    horus.InvitationTypeInternal,
 
@@ -50,7 +50,7 @@ var CmdInviteUser = &cli.Command{
 				Id:    silo_uuid[:],
 				Alias: silo_id,
 			},
-		}})
+		})
 		if err != nil {
 			return err
 		}

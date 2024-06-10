@@ -13,6 +13,8 @@ import (
 	"khepri.dev/horus/ent/enttest"
 	"khepri.dev/horus/ent/membership"
 	"khepri.dev/horus/ent/team"
+	"khepri.dev/horus/internal/fx"
+	"khepri.dev/horus/role"
 	service "khepri.dev/horus/server"
 	"khepri.dev/horus/server/frame"
 )
@@ -109,10 +111,8 @@ func (s *SuiteWithSilo) SetupSubTest() {
 	// Actor's silo.
 	{
 		v, err := s.svc.Silo().Create(s.ctx, &horus.CreateSiloRequest{
-			Silo: &horus.Silo{
-				Alias: "x",
-				Name:  "Horus",
-			},
+			Alias: fx.Addr("x"),
+			Name:  fx.Addr("Horus"),
 		})
 		if err != nil {
 			panic(err)
@@ -135,10 +135,8 @@ func (s *SuiteWithSilo) SetupSubTest() {
 	// Other's silo.
 	{
 		v, err := s.svc.Silo().Create(s.CtxOther(), &horus.CreateSiloRequest{
-			Silo: &horus.Silo{
-				Alias: "y",
-				Name:  "Isis",
-			},
+			Alias: fx.Addr("y"),
+			Name:  fx.Addr("Isis"),
 		})
 		if err != nil {
 			panic(err)
@@ -171,7 +169,7 @@ func (s *SuiteWithSilo) SetupSubTest() {
 		SetName("O-Ren Ishii").
 		SetOwner(s.amigo.Actor).
 		SetSiloID(s.silo.ID).
-		SetRole(account.RoleMEMBER).
+		SetRole(role.Member).
 		Save(s.ctx)
 	if err != nil {
 		panic(err)
@@ -188,7 +186,7 @@ func (s *SuiteWithSilo) SetupSubTest() {
 		SetName("Budd").
 		SetOwner(s.buddy.Actor).
 		SetSiloID(s.silo.ID).
-		SetRole(account.RoleMEMBER).
+		SetRole(role.Member).
 		Save(s.ctx)
 	if err != nil {
 		panic(err)
@@ -211,11 +209,9 @@ type SuiteWithTeam struct {
 func (s *SuiteWithTeam) SetupSubTest() {
 	s.SuiteWithSilo.SetupSubTest()
 	v, err := s.svc.Team().Create(s.ctx, &horus.CreateTeamRequest{
-		Team: &horus.Team{
-			Alias: "x",
-			Name:  "A-Team",
-			Silo:  &horus.Silo{Id: s.silo.ID[:]},
-		},
+		Alias: fx.Addr("x"),
+		Name:  fx.Addr("A-Team"),
+		Silo:  &horus.Silo{Id: s.silo.ID[:]},
 	})
 	if err != nil {
 		panic(err)

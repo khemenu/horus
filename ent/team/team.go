@@ -19,12 +19,12 @@ const (
 	FieldDateCreated = "date_created"
 	// FieldAlias holds the string denoting the alias field in the database.
 	FieldAlias = "alias"
-	// FieldSiloID holds the string denoting the silo_id field in the database.
-	FieldSiloID = "silo_id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldSiloID holds the string denoting the silo_id field in the database.
+	FieldSiloID = "silo_id"
 	// EdgeSilo holds the string denoting the silo edge name in mutations.
 	EdgeSilo = "silo"
 	// EdgeMembers holds the string denoting the members edge name in mutations.
@@ -52,9 +52,9 @@ var Columns = []string{
 	FieldID,
 	FieldDateCreated,
 	FieldAlias,
-	FieldSiloID,
 	FieldName,
 	FieldDescription,
+	FieldSiloID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -74,6 +74,8 @@ var (
 	DefaultAlias func() string
 	// AliasValidator is a validator for the "alias" field. It is called by the builders before save.
 	AliasValidator func(string) error
+	// DefaultName holds the default value on creation for the "name" field.
+	DefaultName string
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
 	// DefaultDescription holds the default value on creation for the "description" field.
@@ -102,11 +104,6 @@ func ByAlias(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAlias, opts...).ToFunc()
 }
 
-// BySiloID orders the results by the silo_id field.
-func BySiloID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSiloID, opts...).ToFunc()
-}
-
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
@@ -115,6 +112,11 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByDescription orders the results by the description field.
 func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+}
+
+// BySiloID orders the results by the silo_id field.
+func BySiloID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSiloID, opts...).ToFunc()
 }
 
 // BySiloField orders the results by silo field.

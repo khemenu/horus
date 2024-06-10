@@ -17,12 +17,14 @@ const (
 	FieldID = "id"
 	// FieldDateCreated holds the string denoting the date_created field in the database.
 	FieldDateCreated = "date_created"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
 	// FieldKind holds the string denoting the kind field in the database.
 	FieldKind = "kind"
 	// FieldVerifier holds the string denoting the verifier field in the database.
 	FieldVerifier = "verifier"
-	// FieldName holds the string denoting the name field in the database.
-	FieldName = "name"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
 	// Table holds the table name of the identity in the database.
@@ -40,9 +42,10 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldDateCreated,
+	FieldName,
+	FieldDescription,
 	FieldKind,
 	FieldVerifier,
-	FieldName,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "identities"
@@ -69,14 +72,18 @@ func ValidColumn(column string) bool {
 var (
 	// DefaultDateCreated holds the default value on creation for the "date_created" field.
 	DefaultDateCreated func() time.Time
-	// KindValidator is a validator for the "kind" field. It is called by the builders before save.
-	KindValidator func(string) error
-	// VerifierValidator is a validator for the "verifier" field. It is called by the builders before save.
-	VerifierValidator func(string) error
 	// DefaultName holds the default value on creation for the "name" field.
 	DefaultName string
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// DefaultDescription holds the default value on creation for the "description" field.
+	DefaultDescription string
+	// DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	DescriptionValidator func(string) error
+	// KindValidator is a validator for the "kind" field. It is called by the builders before save.
+	KindValidator func(string) error
+	// VerifierValidator is a validator for the "verifier" field. It is called by the builders before save.
+	VerifierValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -94,6 +101,16 @@ func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
 }
 
+// ByName orders the results by the name field.
+func ByName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByDescription orders the results by the description field.
+func ByDescription(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+}
+
 // ByKind orders the results by the kind field.
 func ByKind(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldKind, opts...).ToFunc()
@@ -102,11 +119,6 @@ func ByKind(opts ...sql.OrderTermOption) OrderOption {
 // ByVerifier orders the results by the verifier field.
 func ByVerifier(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVerifier, opts...).ToFunc()
-}
-
-// ByName orders the results by the name field.
-func ByName(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
 // ByOwnerField orders the results by owner field.

@@ -20,9 +20,9 @@ message Account {
 	User owner = 3;
 	Silo silo = 4;
 	repeated Membership memberships = 5;
-	string name = 6;
-	string description = 7;
-	Role role = 8;
+	Role role = 6;
+	string name = 7;
+	string description = 8;
 	google.protobuf.Timestamp date_created = 15;
 }
 
@@ -31,7 +31,8 @@ message Identity {
 	User owner = 2;
 	string kind = 3;
 	string verifier = 4;
-	string name = 5;
+	string name = 7;
+	string description = 8;
 	google.protobuf.Timestamp date_created = 15;
 }
 
@@ -52,15 +53,15 @@ message Membership {
 	bytes id = 1;
 	Account account = 2;
 	Team team = 3;
-	Role role = 8;
+	Role role = 6;
 	google.protobuf.Timestamp date_created = 15;
 }
 
 message Silo {
 	bytes id = 1;
 	string alias = 2;
-	string name = 3;
-	string description = 4;
+	string name = 7;
+	string description = 8;
 	google.protobuf.Timestamp date_created = 15;
 }
 
@@ -68,8 +69,8 @@ message Team {
 	bytes id = 1;
 	string alias = 2;
 	Silo silo = 3;
-	string name = 5;
-	string description = 6;
+	string name = 7;
+	string description = 8;
 	google.protobuf.Timestamp date_created = 15;
 }
 

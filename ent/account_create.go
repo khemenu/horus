@@ -54,18 +54,6 @@ func (ac *AccountCreate) SetNillableAlias(s *string) *AccountCreate {
 	return ac
 }
 
-// SetOwnerID sets the "owner_id" field.
-func (ac *AccountCreate) SetOwnerID(u uuid.UUID) *AccountCreate {
-	ac.mutation.SetOwnerID(u)
-	return ac
-}
-
-// SetSiloID sets the "silo_id" field.
-func (ac *AccountCreate) SetSiloID(u uuid.UUID) *AccountCreate {
-	ac.mutation.SetSiloID(u)
-	return ac
-}
-
 // SetName sets the "name" field.
 func (ac *AccountCreate) SetName(s string) *AccountCreate {
 	ac.mutation.SetName(s)
@@ -91,6 +79,18 @@ func (ac *AccountCreate) SetNillableDescription(s *string) *AccountCreate {
 	if s != nil {
 		ac.SetDescription(*s)
 	}
+	return ac
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (ac *AccountCreate) SetOwnerID(u uuid.UUID) *AccountCreate {
+	ac.mutation.SetOwnerID(u)
+	return ac
+}
+
+// SetSiloID sets the "silo_id" field.
+func (ac *AccountCreate) SetSiloID(u uuid.UUID) *AccountCreate {
+	ac.mutation.SetSiloID(u)
 	return ac
 }
 
@@ -224,12 +224,6 @@ func (ac *AccountCreate) check() error {
 			return &ValidationError{Name: "alias", err: fmt.Errorf(`ent: validator failed for field "Account.alias": %w`, err)}
 		}
 	}
-	if _, ok := ac.mutation.OwnerID(); !ok {
-		return &ValidationError{Name: "owner_id", err: errors.New(`ent: missing required field "Account.owner_id"`)}
-	}
-	if _, ok := ac.mutation.SiloID(); !ok {
-		return &ValidationError{Name: "silo_id", err: errors.New(`ent: missing required field "Account.silo_id"`)}
-	}
 	if _, ok := ac.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Account.name"`)}
 	}
@@ -245,6 +239,12 @@ func (ac *AccountCreate) check() error {
 		if err := account.DescriptionValidator(v); err != nil {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Account.description": %w`, err)}
 		}
+	}
+	if _, ok := ac.mutation.OwnerID(); !ok {
+		return &ValidationError{Name: "owner_id", err: errors.New(`ent: missing required field "Account.owner_id"`)}
+	}
+	if _, ok := ac.mutation.SiloID(); !ok {
+		return &ValidationError{Name: "silo_id", err: errors.New(`ent: missing required field "Account.silo_id"`)}
 	}
 	if _, ok := ac.mutation.Role(); !ok {
 		return &ValidationError{Name: "role", err: errors.New(`ent: missing required field "Account.role"`)}

@@ -16,6 +16,7 @@ import (
 	"khepri.dev/horus/ent/silo"
 	"khepri.dev/horus/ent/user"
 	"khepri.dev/horus/internal/entutils"
+	"khepri.dev/horus/role"
 	"khepri.dev/horus/server/frame"
 )
 
@@ -26,11 +27,11 @@ type InvitationServiceServer struct {
 
 func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.CreateInvitationRequest) (*horus.Invitation, error) {
 	f := frame.Must(ctx)
-	if req.GetInvitation().GetType() != "internal" {
+	if req.GetType() != "internal" {
 		return nil, status.Errorf(codes.Unimplemented, "type other than internal not implemented")
 	}
 
-	target_silo := req.GetInvitation().GetSilo()
+	target_silo := req.GetSilo()
 	silo_uuid, err := uuid.FromBytes(target_silo.GetId())
 	if err != nil && target_silo.GetId() != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid silo UUID")
@@ -66,11 +67,11 @@ func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.CreateI
 
 		return nil, fmt.Errorf("get account: %w", err)
 	}
-	if actor_acct.Role != account.RoleOWNER {
+	if actor_acct.Role != role.Owner {
 		return nil, status.Error(codes.PermissionDenied, "the actor is not the owner of the silo")
 	}
 
-	invitee_id := req.GetInvitation().GetInvitee()
+	invitee_id := req.GetInvitee()
 	invitee_uuid, err := uuid.Parse(invitee_id)
 	if err != nil {
 		if invitee_id == "" {
@@ -89,25 +90,24 @@ func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.CreateI
 		}
 	}
 
-	ts_expired := req.GetInvitation().GetDateExpired()
+	ts_expired := req.GetDateExpired()
 	if ts_expired == nil {
 		ts_expired = timestamppb.New(time.Now().Add(7 * 24 * time.Hour))
 	}
 
-	return s.bare.Invitation().Create(ctx, &horus.CreateInvitationRequest{Invitation: &horus.Invitation{
+	return s.bare.Invitation().Create(ctx, &horus.CreateInvitationRequest{
 		Invitee: invitee_uuid.String(),
 		Type:    horus.InvitationTypeInternal,
 		Silo:    &horus.Silo{Id: silo_uuid[:]},
 		Inviter: &horus.Account{Id: actor_acct.ID[:]},
 
 		DateExpired: ts_expired,
-	}})
+	})
 }
 
 func (s *InvitationServiceServer) Get(ctx context.Context, req *horus.GetInvitationRequest) (*horus.Invitation, error) {
 	f := frame.Must(ctx)
 
-	req.View = horus.GetInvitationRequest_WITH_EDGE_IDS
 	v, err := s.bare.Invitation().Get(ctx, req)
 	if err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func (s *InvitationServiceServer) Get(ctx context.Context, req *horus.GetInvitat
 
 		return nil, fmt.Errorf("get account: %w", err)
 	}
-	if actor_acct.Role != account.RoleOWNER {
+	if actor_acct.Role != role.Owner {
 		return nil, status.Error(codes.PermissionDenied, "only the silo owner can see the invitation")
 	}
 
@@ -165,7 +165,7 @@ func (s *InvitationServiceServer) Accept(ctx context.Context, req *horus.AcceptI
 
 	return nil, entutils.WithTx(ctx, s.db, func(tx *ent.Tx) error {
 		_, err := tx.Account.Create().
-			SetRole(account.RoleMEMBER).
+			SetRole(role.Owner).
 			SetOwnerID(f.Actor.ID).
 			SetSiloID(uuid.UUID(v.Silo.Id)).
 			Save(ctx)

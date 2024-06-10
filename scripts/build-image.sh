@@ -22,6 +22,7 @@ tar -cf "${TEMP}" \
 	./internal/ \
 	./log/ \
 	./proto/ \
+	./role/ \
 	./schema/ \
 	./server/ \
 	./tokens/ \

@@ -12,7 +12,7 @@ var (
 	AccountsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "date_created", Type: field.TypeTime},
-		{Name: "alias", Type: field.TypeString, Unique: true, Size: 32},
+		{Name: "alias", Type: field.TypeString, Size: 32},
 		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"OWNER", "MEMBER"}},
@@ -55,9 +55,10 @@ var (
 	IdentitiesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "date_created", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
 		{Name: "kind", Type: field.TypeString},
 		{Name: "verifier", Type: field.TypeString},
-		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "user_identities", Type: field.TypeUUID},
 	}
 	// IdentitiesTable holds the schema information for the "identities" table.
@@ -68,7 +69,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "identities_users_identities",
-				Columns:    []*schema.Column{IdentitiesColumns[5]},
+				Columns:    []*schema.Column{IdentitiesColumns[6]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -153,8 +154,8 @@ var (
 	TeamsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "date_created", Type: field.TypeTime},
-		{Name: "alias", Type: field.TypeString, Unique: true, Size: 32},
-		{Name: "name", Type: field.TypeString, Size: 64},
+		{Name: "alias", Type: field.TypeString, Size: 32},
+		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
 		{Name: "silo_id", Type: field.TypeUUID},
 	}

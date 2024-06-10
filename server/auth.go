@@ -13,7 +13,6 @@ import (
 	"khepri.dev/horus/ent/token"
 	"khepri.dev/horus/ent/user"
 	"khepri.dev/horus/internal/entutils"
-	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/server/bare"
 	"khepri.dev/horus/server/frame"
 	"khepri.dev/horus/tokens"
@@ -59,9 +58,9 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 	}
 
 	ctx = frame.WithContext(ctx, &frame.Frame{Actor: u})
-	access_token, err := s.covered.Token().Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
+	access_token, err := s.covered.Token().Create(ctx, &horus.CreateTokenRequest{
 		Type: horus.TokenTypeAccess,
-	}})
+	})
 	if err != nil {
 		return nil, fmt.Errorf("create access token: %w", err)
 	}
@@ -88,7 +87,7 @@ func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInReq
 	}
 
 	return &horus.TokenSignInResponse{
-		Token: fx.Must(bare.ToProtoToken(token)),
+		Token: bare.ToProtoToken(token),
 	}, nil
 }
 
@@ -126,10 +125,10 @@ func (s *AuthService) Refresh(ctx context.Context, req *horus.RefreshRequest) (*
 		}
 
 		ctx = frame.WithContext(ctx, &frame.Frame{Actor: refresh_token.Edges.Owner})
-		access_token, err := (&TokenServiceServer{base: s.withClient(tx.Client())}).Create(ctx, &horus.CreateTokenRequest{Token: &horus.Token{
+		access_token, err := (&TokenServiceServer{base: s.withClient(tx.Client())}).Create(ctx, &horus.CreateTokenRequest{
 			Type:   horus.TokenTypeAccess,
 			Parent: &horus.Token{Id: refresh_token.ID[:]},
-		}})
+		})
 		if err != nil {
 			return nil, fmt.Errorf("create access token: %w", err)
 		}
@@ -181,9 +180,9 @@ func (s *AuthService) SignOut(ctx context.Context, req *horus.SingOutRequest) (*
 	ctx = frame.WithContext(ctx, &frame.Frame{
 		Actor: token.Edges.Owner,
 	})
-	if _, err := s.covered.Token().Delete(ctx, &horus.DeleteTokenRequest{
+	if _, err := s.covered.Token().Delete(ctx, &horus.DeleteTokenRequest{Key: &horus.DeleteTokenRequest_Id{
 		Id: token.ID[:],
-	}); err != nil {
+	}}); err != nil {
 		return nil, fmt.Errorf("delete token: %w", err)
 	}
 

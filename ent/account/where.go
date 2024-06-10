@@ -67,16 +67,6 @@ func Alias(v string) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldAlias, v))
 }
 
-// OwnerID applies equality check predicate on the "owner_id" field. It's identical to OwnerIDEQ.
-func OwnerID(v uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldEQ(FieldOwnerID, v))
-}
-
-// SiloID applies equality check predicate on the "silo_id" field. It's identical to SiloIDEQ.
-func SiloID(v uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldEQ(FieldSiloID, v))
-}
-
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldName, v))
@@ -85,6 +75,16 @@ func Name(v string) predicate.Account {
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
 func Description(v string) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldDescription, v))
+}
+
+// OwnerID applies equality check predicate on the "owner_id" field. It's identical to OwnerIDEQ.
+func OwnerID(v uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldOwnerID, v))
+}
+
+// SiloID applies equality check predicate on the "silo_id" field. It's identical to SiloIDEQ.
+func SiloID(v uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldSiloID, v))
 }
 
 // DateCreatedEQ applies the EQ predicate on the "date_created" field.
@@ -190,46 +190,6 @@ func AliasEqualFold(v string) predicate.Account {
 // AliasContainsFold applies the ContainsFold predicate on the "alias" field.
 func AliasContainsFold(v string) predicate.Account {
 	return predicate.Account(sql.FieldContainsFold(FieldAlias, v))
-}
-
-// OwnerIDEQ applies the EQ predicate on the "owner_id" field.
-func OwnerIDEQ(v uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldEQ(FieldOwnerID, v))
-}
-
-// OwnerIDNEQ applies the NEQ predicate on the "owner_id" field.
-func OwnerIDNEQ(v uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldNEQ(FieldOwnerID, v))
-}
-
-// OwnerIDIn applies the In predicate on the "owner_id" field.
-func OwnerIDIn(vs ...uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldIn(FieldOwnerID, vs...))
-}
-
-// OwnerIDNotIn applies the NotIn predicate on the "owner_id" field.
-func OwnerIDNotIn(vs ...uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldNotIn(FieldOwnerID, vs...))
-}
-
-// SiloIDEQ applies the EQ predicate on the "silo_id" field.
-func SiloIDEQ(v uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldEQ(FieldSiloID, v))
-}
-
-// SiloIDNEQ applies the NEQ predicate on the "silo_id" field.
-func SiloIDNEQ(v uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldNEQ(FieldSiloID, v))
-}
-
-// SiloIDIn applies the In predicate on the "silo_id" field.
-func SiloIDIn(vs ...uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldIn(FieldSiloID, vs...))
-}
-
-// SiloIDNotIn applies the NotIn predicate on the "silo_id" field.
-func SiloIDNotIn(vs ...uuid.UUID) predicate.Account {
-	return predicate.Account(sql.FieldNotIn(FieldSiloID, vs...))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -360,6 +320,46 @@ func DescriptionEqualFold(v string) predicate.Account {
 // DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
 func DescriptionContainsFold(v string) predicate.Account {
 	return predicate.Account(sql.FieldContainsFold(FieldDescription, v))
+}
+
+// OwnerIDEQ applies the EQ predicate on the "owner_id" field.
+func OwnerIDEQ(v uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldOwnerID, v))
+}
+
+// OwnerIDNEQ applies the NEQ predicate on the "owner_id" field.
+func OwnerIDNEQ(v uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldNEQ(FieldOwnerID, v))
+}
+
+// OwnerIDIn applies the In predicate on the "owner_id" field.
+func OwnerIDIn(vs ...uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldIn(FieldOwnerID, vs...))
+}
+
+// OwnerIDNotIn applies the NotIn predicate on the "owner_id" field.
+func OwnerIDNotIn(vs ...uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldNotIn(FieldOwnerID, vs...))
+}
+
+// SiloIDEQ applies the EQ predicate on the "silo_id" field.
+func SiloIDEQ(v uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldSiloID, v))
+}
+
+// SiloIDNEQ applies the NEQ predicate on the "silo_id" field.
+func SiloIDNEQ(v uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldNEQ(FieldSiloID, v))
+}
+
+// SiloIDIn applies the In predicate on the "silo_id" field.
+func SiloIDIn(vs ...uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldIn(FieldSiloID, vs...))
+}
+
+// SiloIDNotIn applies the NotIn predicate on the "silo_id" field.
+func SiloIDNotIn(vs ...uuid.UUID) predicate.Account {
+	return predicate.Account(sql.FieldNotIn(FieldSiloID, vs...))
 }
 
 // RoleEQ applies the EQ predicate on the "role" field.

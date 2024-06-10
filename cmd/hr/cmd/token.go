@@ -19,9 +19,9 @@ func actCreateBearerToken(ctx *cli.Context, token_type string) error {
 		return err
 	}
 
-	v, err := c.Token().Create(ctx.Context, &horus.CreateTokenRequest{Token: &horus.Token{
+	v, err := c.Token().Create(ctx.Context, &horus.CreateTokenRequest{
 		Type: token_type,
-	}})
+	})
 	if err != nil {
 		return err
 	}
@@ -64,9 +64,9 @@ var CmdGetToken = &cli.Command{
 			return fmt.Errorf("invalid UUID")
 		}
 
-		v, err := c.Token().Get(ctx.Context, &horus.GetTokenRequest{
+		v, err := c.Token().Get(ctx.Context, &horus.GetTokenRequest{Key: &horus.GetTokenRequest_Id{
 			Id: token_uuid[:],
-		})
+		}})
 		if err != nil {
 			return err
 		}

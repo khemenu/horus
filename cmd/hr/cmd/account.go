@@ -59,12 +59,12 @@ var CmdCreateAccount = &cli.Command{
 			return fmt.Errorf("resolve silo UUID: %w", err)
 		}
 
-		v, err := c.Account().Create(ctx.Context, &horus.CreateAccountRequest{Account: &horus.Account{
-			Alias: acct_alias,
-			Role:  horus.Account_ROLE_MEMBER,
+		v, err := c.Account().Create(ctx.Context, &horus.CreateAccountRequest{
+			Alias: &acct_alias,
+			Role:  horus.Role_ROLE_MEMBER,
 			Owner: &horus.User{Id: user_uuid[:]},
 			Silo:  &horus.Silo{Id: silo_uuid[:]},
-		}})
+		})
 		if err != nil {
 			return err
 		}

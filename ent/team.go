@@ -23,12 +23,12 @@ type Team struct {
 	DateCreated time.Time `json:"date_created,omitempty"`
 	// Alias holds the value of the "alias" field.
 	Alias string `json:"alias,omitempty"`
-	// SiloID holds the value of the "silo_id" field.
-	SiloID uuid.UUID `json:"silo_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// SiloID holds the value of the "silo_id" field.
+	SiloID uuid.UUID `json:"silo_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TeamQuery when eager-loading is set.
 	Edges        TeamEdges `json:"edges"`
@@ -110,12 +110,6 @@ func (t *Team) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.Alias = value.String
 			}
-		case team.FieldSiloID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field silo_id", values[i])
-			} else if value != nil {
-				t.SiloID = *value
-			}
 		case team.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -127,6 +121,12 @@ func (t *Team) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				t.Description = value.String
+			}
+		case team.FieldSiloID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field silo_id", values[i])
+			} else if value != nil {
+				t.SiloID = *value
 			}
 		default:
 			t.selectValues.Set(columns[i], values[i])
@@ -180,14 +180,14 @@ func (t *Team) String() string {
 	builder.WriteString("alias=")
 	builder.WriteString(t.Alias)
 	builder.WriteString(", ")
-	builder.WriteString("silo_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.SiloID))
-	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(t.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(t.Description)
+	builder.WriteString(", ")
+	builder.WriteString("silo_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.SiloID))
 	builder.WriteByte(')')
 	return builder.String()
 }

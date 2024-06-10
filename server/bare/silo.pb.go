@@ -23,11 +23,17 @@ type SiloServiceServer struct {
 func NewSiloServiceServer(db *ent.Client) *SiloServiceServer {
 	return &SiloServiceServer{db: db}
 }
-func (s *SiloServiceServer) Create(ctx context.Context, req *horus.Silo) (*horus.Silo, error) {
+func (s *SiloServiceServer) Create(ctx context.Context, req *horus.CreateSiloRequest) (*horus.Silo, error) {
 	q := s.db.Silo.Create()
-	q.SetAlias(req.Alias)
-	q.SetName(req.Name)
-	q.SetDescription(req.Description)
+	if v := req.Alias; v != nil {
+		q.SetAlias(*v)
+	}
+	if v := req.Name; v != nil {
+		q.SetName(*v)
+	}
+	if v := req.Description; v != nil {
+		q.SetDescription(*v)
+	}
 
 	res, err := q.Save(ctx)
 	if err != nil {
@@ -47,6 +53,8 @@ func (s *SiloServiceServer) Delete(ctx context.Context, req *horus.DeleteSiloReq
 		}
 	case *horus.DeleteSiloRequest_Alias:
 		q.Where(silo.AliasEQ(t.Alias))
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
 	}
 
 	_, err := q.Exec(ctx)
@@ -67,6 +75,8 @@ func (s *SiloServiceServer) Get(ctx context.Context, req *horus.GetSiloRequest) 
 		}
 	case *horus.GetSiloRequest_Alias:
 		q.Where(silo.AliasEQ(t.Alias))
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
 	}
 
 	res, err := q.Only(ctx)
@@ -79,7 +89,7 @@ func (s *SiloServiceServer) Get(ctx context.Context, req *horus.GetSiloRequest) 
 func (s *SiloServiceServer) Update(ctx context.Context, req *horus.UpdateSiloRequest) (*horus.Silo, error) {
 	id, err := uuid.FromBytes(req.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
 	}
 
 	q := s.db.Silo.UpdateOneID(id)

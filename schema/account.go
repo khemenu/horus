@@ -3,6 +3,7 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
@@ -18,7 +19,8 @@ type Account struct {
 func (Account) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		baseMixin{},
-		aliasMixin{},
+		aliasMixin{IsCommon: true},
+		labelMixin{},
 	}
 }
 
@@ -29,16 +31,8 @@ func (Account) Fields() []ent.Field {
 		field.UUID("silo_id", uuid.UUID{}).
 			Immutable(),
 
-		field.String("name").
-			Annotations(entpb.Field(6)).
-			Default("").
-			MaxLen(64),
-		field.String("description").
-			Annotations(entpb.Field(7)).
-			Default("").
-			MaxLen(256),
 		field.Enum("role").
-			Annotations(entpb.Field(8)).
+			Annotations(entpb.Field(6)).
 			GoType(role.Role("")),
 	}
 }
@@ -70,5 +64,23 @@ func (Account) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("silo_id", "owner_id").Unique(),
 		index.Fields("silo_id", "alias").Unique(),
+	}
+}
+
+func (Account) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		entpb.Message(entpb.PathInherit,
+			entpb.WithService(entpb.PathInherit,
+				entpb.RpcEntCreate(),
+				entpb.RpcEntGet(),
+				entpb.RpcEntUpdate(),
+				entpb.RpcEntDelete(),
+				&entpb.Rpc{
+					Ident: "List",
+					Req:   entpb.PbType{Ident: "ListAccountRequest", Import: "khepri/horus/extend.proto"},
+					Res:   entpb.PbType{Ident: "ListAccountResponse", Import: "khepri/horus/extend.proto"},
+				},
+			),
+		),
 	}
 }

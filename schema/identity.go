@@ -14,6 +14,7 @@ type Identity struct {
 func (Identity) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		baseMixin{},
+		labelMixin{},
 	}
 }
 
@@ -26,10 +27,6 @@ func (Identity) Fields() []ent.Field {
 		field.String("verifier").
 			Annotations(entpb.Field(4)).
 			NotEmpty(),
-		field.String("name").
-			Annotations(entpb.Field(5)).
-			Default("").
-			MaxLen(64),
 	}
 }
 

@@ -20,7 +20,7 @@ func (Membership) Mixin() []ent.Mixin {
 func (Membership) Fields() []ent.Field {
 	return []ent.Field{
 		field.Enum("role").
-			Annotations(entpb.Field(8)).
+			Annotations(entpb.Field(6)).
 			GoType(role.Role("")),
 	}
 }

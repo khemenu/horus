@@ -26,6 +26,8 @@ func init() {
 	_ = accountMixinFields0
 	accountMixinFields1 := accountMixin[1].Fields()
 	_ = accountMixinFields1
+	accountMixinFields2 := accountMixin[2].Fields()
+	_ = accountMixinFields2
 	accountFields := schema.Account{}.Fields()
 	_ = accountFields
 	// accountDescDateCreated is the schema descriptor for date_created field.
@@ -54,13 +56,13 @@ func init() {
 		}
 	}()
 	// accountDescName is the schema descriptor for name field.
-	accountDescName := accountFields[2].Descriptor()
+	accountDescName := accountMixinFields2[0].Descriptor()
 	// account.DefaultName holds the default value on creation for the name field.
 	account.DefaultName = accountDescName.Default.(string)
 	// account.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	account.NameValidator = accountDescName.Validators[0].(func(string) error)
 	// accountDescDescription is the schema descriptor for description field.
-	accountDescDescription := accountFields[3].Descriptor()
+	accountDescDescription := accountMixinFields2[1].Descriptor()
 	// account.DefaultDescription holds the default value on creation for the description field.
 	account.DefaultDescription = accountDescDescription.Default.(string)
 	// account.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
@@ -72,12 +74,26 @@ func init() {
 	identityMixin := schema.Identity{}.Mixin()
 	identityMixinFields0 := identityMixin[0].Fields()
 	_ = identityMixinFields0
+	identityMixinFields1 := identityMixin[1].Fields()
+	_ = identityMixinFields1
 	identityFields := schema.Identity{}.Fields()
 	_ = identityFields
 	// identityDescDateCreated is the schema descriptor for date_created field.
 	identityDescDateCreated := identityMixinFields0[1].Descriptor()
 	// identity.DefaultDateCreated holds the default value on creation for the date_created field.
 	identity.DefaultDateCreated = identityDescDateCreated.Default.(func() time.Time)
+	// identityDescName is the schema descriptor for name field.
+	identityDescName := identityMixinFields1[0].Descriptor()
+	// identity.DefaultName holds the default value on creation for the name field.
+	identity.DefaultName = identityDescName.Default.(string)
+	// identity.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	identity.NameValidator = identityDescName.Validators[0].(func(string) error)
+	// identityDescDescription is the schema descriptor for description field.
+	identityDescDescription := identityMixinFields1[1].Descriptor()
+	// identity.DefaultDescription holds the default value on creation for the description field.
+	identity.DefaultDescription = identityDescDescription.Default.(string)
+	// identity.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	identity.DescriptionValidator = identityDescDescription.Validators[0].(func(string) error)
 	// identityDescKind is the schema descriptor for kind field.
 	identityDescKind := identityFields[0].Descriptor()
 	// identity.KindValidator is a validator for the "kind" field. It is called by the builders before save.
@@ -86,12 +102,6 @@ func init() {
 	identityDescVerifier := identityFields[1].Descriptor()
 	// identity.VerifierValidator is a validator for the "verifier" field. It is called by the builders before save.
 	identity.VerifierValidator = identityDescVerifier.Validators[0].(func(string) error)
-	// identityDescName is the schema descriptor for name field.
-	identityDescName := identityFields[2].Descriptor()
-	// identity.DefaultName holds the default value on creation for the name field.
-	identity.DefaultName = identityDescName.Default.(string)
-	// identity.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	identity.NameValidator = identityDescName.Validators[0].(func(string) error)
 	// identityDescID is the schema descriptor for id field.
 	identityDescID := identityMixinFields0[0].Descriptor()
 	// identity.DefaultID holds the default value on creation for the id field.
@@ -135,6 +145,8 @@ func init() {
 	_ = siloMixinFields0
 	siloMixinFields1 := siloMixin[1].Fields()
 	_ = siloMixinFields1
+	siloMixinFields2 := siloMixin[2].Fields()
+	_ = siloMixinFields2
 	siloFields := schema.Silo{}.Fields()
 	_ = siloFields
 	// siloDescDateCreated is the schema descriptor for date_created field.
@@ -163,13 +175,13 @@ func init() {
 		}
 	}()
 	// siloDescName is the schema descriptor for name field.
-	siloDescName := siloFields[0].Descriptor()
+	siloDescName := siloMixinFields2[0].Descriptor()
 	// silo.DefaultName holds the default value on creation for the name field.
 	silo.DefaultName = siloDescName.Default.(string)
 	// silo.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	silo.NameValidator = siloDescName.Validators[0].(func(string) error)
 	// siloDescDescription is the schema descriptor for description field.
-	siloDescDescription := siloFields[1].Descriptor()
+	siloDescDescription := siloMixinFields2[1].Descriptor()
 	// silo.DefaultDescription holds the default value on creation for the description field.
 	silo.DefaultDescription = siloDescDescription.Default.(string)
 	// silo.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
@@ -183,6 +195,8 @@ func init() {
 	_ = teamMixinFields0
 	teamMixinFields1 := teamMixin[1].Fields()
 	_ = teamMixinFields1
+	teamMixinFields2 := teamMixin[2].Fields()
+	_ = teamMixinFields2
 	teamFields := schema.Team{}.Fields()
 	_ = teamFields
 	// teamDescDateCreated is the schema descriptor for date_created field.
@@ -211,25 +225,13 @@ func init() {
 		}
 	}()
 	// teamDescName is the schema descriptor for name field.
-	teamDescName := teamFields[1].Descriptor()
+	teamDescName := teamMixinFields2[0].Descriptor()
+	// team.DefaultName holds the default value on creation for the name field.
+	team.DefaultName = teamDescName.Default.(string)
 	// team.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	team.NameValidator = func() func(string) error {
-		validators := teamDescName.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-		}
-		return func(name string) error {
-			for _, fn := range fns {
-				if err := fn(name); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
+	team.NameValidator = teamDescName.Validators[0].(func(string) error)
 	// teamDescDescription is the schema descriptor for description field.
-	teamDescDescription := teamFields[2].Descriptor()
+	teamDescDescription := teamMixinFields2[1].Descriptor()
 	// team.DefaultDescription holds the default value on creation for the description field.
 	team.DefaultDescription = teamDescDescription.Default.(string)
 	// team.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.

@@ -9,9 +9,9 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
-	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/membership"
 	"khepri.dev/horus/ent/team"
+	"khepri.dev/horus/role"
 	"khepri.dev/horus/server/frame"
 )
 
@@ -21,28 +21,26 @@ type MembershipServiceServer struct {
 }
 
 func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateMembershipRequest) (*horus.Membership, error) {
-	account_id := req.GetMembership().GetAccount().GetId()
-	if account_id == nil {
-		return nil, newErrMissingRequiredField("membership.account.id")
+	p_acct := req.GetAccount()
+	if p_acct == nil {
+		return nil, newErrMissingRequiredField(".account.id")
 	}
 
-	team_id := req.GetMembership().GetTeam().GetId()
-	if team_id == nil {
-		return nil, newErrMissingRequiredField("membership.team.id")
+	p_team := req.GetTeam()
+	if p_team == nil {
+		return nil, newErrMissingRequiredField(".team.id")
 	}
 
 	target_account, err := s.bare.Account().Get(ctx, &horus.GetAccountRequest{
-		Id:   account_id,
-		View: horus.GetAccountRequest_WITH_EDGE_IDS,
+		Id: p_acct.Id,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	// Ensure that team exists.
-	_, err = s.bare.Team().Get(ctx, &horus.GetTeamRequest{
-		Id:   team_id,
-		View: horus.GetTeamRequest_WITH_EDGE_IDS,
+	target_team, err := s.bare.Team().Get(ctx, &horus.GetTeamRequest{
+		Id: p_team.Id,
 	})
 	if err != nil {
 		return nil, err
@@ -51,15 +49,15 @@ func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateM
 	f := frame.Must(ctx)
 	if f.ActingAccount == nil {
 		// Trying to make myself as a team member.
-		if target_account.Role != horus.Account_ROLE_OWNER {
+		if target_account.Role != horus.Role_ROLE_OWNER {
 			// Maybe I'm already a member but returns PermissionDenied.
 			return nil, ErrPermissionDenied
 		}
 
 		return s.bare.Membership().Create(ctx, req)
 	}
-	if f.ActingAccount.Role == account.RoleOWNER {
-		if target_account.Role == horus.Account_ROLE_OWNER {
+	if f.ActingAccount.Role == role.Owner {
+		if target_account.Role == horus.Role_ROLE_OWNER {
 			// Cannot put other owner to the team even if the actor is an owner.
 			return nil, ErrPermissionDenied
 		}
@@ -68,7 +66,7 @@ func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateM
 	}
 
 	v, err := f.ActingAccount.QueryMemberships().
-		Where(membership.HasTeamWith(team.ID(uuid.UUID(team_id)))).
+		Where(membership.HasTeamWith(team.IDEQ(uuid.UUID(target_team.Id)))).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -78,7 +76,7 @@ func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateM
 
 		return nil, status.Errorf(codes.Internal, "query membership: %s", err.Error())
 	}
-	if v.Role != membership.RoleOWNER {
+	if v.Role != role.Owner {
 		return nil, ErrPermissionDenied
 	}
 
@@ -86,14 +84,15 @@ func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateM
 }
 
 func (s *MembershipServiceServer) Get(ctx context.Context, req *horus.GetMembershipRequest) (*horus.Membership, error) {
-	res, err := s.bare.Membership().Get(ctx, &horus.GetMembershipRequest{
-		Id:   req.Id,
-		View: horus.GetMembershipRequest_WITH_EDGE_IDS,
-	})
+	res, err := s.bare.Membership().Get(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	if _, err := s.bare.Account().Get(ctx, &horus.GetAccountRequest{Id: res.Account.Id}); err != nil {
+
+	_, err = s.covered.Account().Get(ctx, &horus.GetAccountRequest{
+		Id: res.Account.Id,
+	})
+	if err != nil {
 		return nil, err
 	}
 
@@ -101,7 +100,7 @@ func (s *MembershipServiceServer) Get(ctx context.Context, req *horus.GetMembers
 }
 
 func (s *MembershipServiceServer) Update(ctx context.Context, req *horus.UpdateMembershipRequest) (*horus.Membership, error) {
-	res, err := s.Get(ctx, &horus.GetMembershipRequest{Id: req.Membership.GetId()})
+	res, err := s.Get(ctx, &horus.GetMembershipRequest{Id: req.GetId()})
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +112,7 @@ func (s *MembershipServiceServer) Update(ctx context.Context, req *horus.UpdateM
 		return nil, ErrPermissionDenied
 	}
 
-	if f.ActingAccount.Role != account.RoleOWNER {
+	if f.ActingAccount.Role != role.Owner {
 		v, err := f.ActingAccount.QueryMemberships().
 			Where(membership.HasTeamWith(team.ID(uuid.UUID(res.Team.Id)))).
 			Only(ctx)
@@ -124,15 +123,12 @@ func (s *MembershipServiceServer) Update(ctx context.Context, req *horus.UpdateM
 
 			return nil, status.Errorf(codes.Internal, err.Error())
 		}
-		if v.Role != membership.RoleOWNER {
+		if v.Role != role.Owner {
 			return nil, ErrPermissionDenied
 		}
 	}
 
-	res.Role = req.Membership.Role
-	return s.bare.Membership().Update(ctx, &horus.UpdateMembershipRequest{
-		Membership: res,
-	})
+	return s.bare.Membership().Update(ctx, req)
 }
 
 func (s *MembershipServiceServer) Delete(ctx context.Context, req *horus.DeleteMembershipRequest) (*emptypb.Empty, error) {
@@ -146,7 +142,7 @@ func (s *MembershipServiceServer) Delete(ctx context.Context, req *horus.DeleteM
 		return s.bare.Membership().Delete(ctx, req)
 	}
 
-	if f.ActingAccount.Role != account.RoleOWNER {
+	if f.ActingAccount.Role != role.Owner {
 		v, err := f.ActingAccount.QueryMemberships().
 			Where(membership.HasTeamWith(team.ID(uuid.UUID(res.Team.Id)))).
 			Only(ctx)
@@ -157,7 +153,7 @@ func (s *MembershipServiceServer) Delete(ctx context.Context, req *horus.DeleteM
 
 			return nil, status.Errorf(codes.Internal, err.Error())
 		}
-		if v.Role != membership.RoleOWNER {
+		if v.Role != role.Owner {
 			return nil, ErrPermissionDenied
 		}
 	}

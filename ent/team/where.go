@@ -66,11 +66,6 @@ func Alias(v string) predicate.Team {
 	return predicate.Team(sql.FieldEQ(FieldAlias, v))
 }
 
-// SiloID applies equality check predicate on the "silo_id" field. It's identical to SiloIDEQ.
-func SiloID(v uuid.UUID) predicate.Team {
-	return predicate.Team(sql.FieldEQ(FieldSiloID, v))
-}
-
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.Team {
 	return predicate.Team(sql.FieldEQ(FieldName, v))
@@ -79,6 +74,11 @@ func Name(v string) predicate.Team {
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
 func Description(v string) predicate.Team {
 	return predicate.Team(sql.FieldEQ(FieldDescription, v))
+}
+
+// SiloID applies equality check predicate on the "silo_id" field. It's identical to SiloIDEQ.
+func SiloID(v uuid.UUID) predicate.Team {
+	return predicate.Team(sql.FieldEQ(FieldSiloID, v))
 }
 
 // DateCreatedEQ applies the EQ predicate on the "date_created" field.
@@ -184,26 +184,6 @@ func AliasEqualFold(v string) predicate.Team {
 // AliasContainsFold applies the ContainsFold predicate on the "alias" field.
 func AliasContainsFold(v string) predicate.Team {
 	return predicate.Team(sql.FieldContainsFold(FieldAlias, v))
-}
-
-// SiloIDEQ applies the EQ predicate on the "silo_id" field.
-func SiloIDEQ(v uuid.UUID) predicate.Team {
-	return predicate.Team(sql.FieldEQ(FieldSiloID, v))
-}
-
-// SiloIDNEQ applies the NEQ predicate on the "silo_id" field.
-func SiloIDNEQ(v uuid.UUID) predicate.Team {
-	return predicate.Team(sql.FieldNEQ(FieldSiloID, v))
-}
-
-// SiloIDIn applies the In predicate on the "silo_id" field.
-func SiloIDIn(vs ...uuid.UUID) predicate.Team {
-	return predicate.Team(sql.FieldIn(FieldSiloID, vs...))
-}
-
-// SiloIDNotIn applies the NotIn predicate on the "silo_id" field.
-func SiloIDNotIn(vs ...uuid.UUID) predicate.Team {
-	return predicate.Team(sql.FieldNotIn(FieldSiloID, vs...))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -334,6 +314,26 @@ func DescriptionEqualFold(v string) predicate.Team {
 // DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
 func DescriptionContainsFold(v string) predicate.Team {
 	return predicate.Team(sql.FieldContainsFold(FieldDescription, v))
+}
+
+// SiloIDEQ applies the EQ predicate on the "silo_id" field.
+func SiloIDEQ(v uuid.UUID) predicate.Team {
+	return predicate.Team(sql.FieldEQ(FieldSiloID, v))
+}
+
+// SiloIDNEQ applies the NEQ predicate on the "silo_id" field.
+func SiloIDNEQ(v uuid.UUID) predicate.Team {
+	return predicate.Team(sql.FieldNEQ(FieldSiloID, v))
+}
+
+// SiloIDIn applies the In predicate on the "silo_id" field.
+func SiloIDIn(vs ...uuid.UUID) predicate.Team {
+	return predicate.Team(sql.FieldIn(FieldSiloID, vs...))
+}
+
+// SiloIDNotIn applies the NotIn predicate on the "silo_id" field.
+func SiloIDNotIn(vs ...uuid.UUID) predicate.Team {
+	return predicate.Team(sql.FieldNotIn(FieldSiloID, vs...))
 }
 
 // HasSilo applies the HasEdge predicate on the "silo" edge.

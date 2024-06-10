@@ -23,9 +23,18 @@ type UserServiceServer struct {
 func NewUserServiceServer(db *ent.Client) *UserServiceServer {
 	return &UserServiceServer{db: db}
 }
-func (s *UserServiceServer) Create(ctx context.Context, req *horus.User) (*horus.User, error) {
+func (s *UserServiceServer) Create(ctx context.Context, req *horus.CreateUserRequest) (*horus.User, error) {
 	q := s.db.User.Create()
-	q.SetAlias(req.Alias)
+	if v := req.Alias; v != nil {
+		q.SetAlias(*v)
+	}
+	if v := req.GetParent(); v != nil {
+		if w, err := uuid.FromBytes(v.GetId()); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "parent: %s", err)
+		} else {
+			q.SetParentID(w)
+		}
+	}
 
 	res, err := q.Save(ctx)
 	if err != nil {
@@ -45,6 +54,8 @@ func (s *UserServiceServer) Delete(ctx context.Context, req *horus.DeleteUserReq
 		}
 	case *horus.DeleteUserRequest_Alias:
 		q.Where(user.AliasEQ(t.Alias))
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
 	}
 
 	_, err := q.Exec(ctx)
@@ -65,6 +76,8 @@ func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) 
 		}
 	case *horus.GetUserRequest_Alias:
 		q.Where(user.AliasEQ(t.Alias))
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
 	}
 
 	q.WithParent(func(q *ent.UserQuery) { q.Select(user.FieldID) })
@@ -82,12 +95,19 @@ func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) 
 func (s *UserServiceServer) Update(ctx context.Context, req *horus.UpdateUserRequest) (*horus.User, error) {
 	id, err := uuid.FromBytes(req.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
 	}
 
 	q := s.db.User.UpdateOneID(id)
 	if v := req.Alias; v != nil {
 		q.SetAlias(*v)
+	}
+	if v := req.Parent; v != nil {
+		if w, err := uuid.FromBytes(v.GetId()); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "parent: %s", err)
+		} else {
+			q.SetParentID(w)
+		}
 	}
 
 	res, err := q.Save(ctx)

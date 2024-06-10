@@ -12,14 +12,15 @@ import "khepri/horus/extend.proto";
 option go_package = "khepri.dev/horus";
 
 service AccountService {
-	rpc Create (Account) returns (Account);
+	rpc Create (CreateAccountRequest) returns (Account);
 	rpc Delete (DeleteAccountRequest) returns (google.protobuf.Empty);
 	rpc Get (GetAccountRequest) returns (Account);
+	rpc List (ListAccountRequest) returns (ListAccountResponse);
 	rpc Update (UpdateAccountRequest) returns (Account);
 }
 
 service IdentityService {
-	rpc Create (Identity) returns (Identity);
+	rpc Create (CreateIdentityRequest) returns (Identity);
 	rpc Delete (DeleteIdentityRequest) returns (google.protobuf.Empty);
 	rpc Get (GetIdentityRequest) returns (Identity);
 	rpc Update (UpdateIdentityRequest) returns (Identity);
@@ -27,52 +28,115 @@ service IdentityService {
 
 service InvitationService {
 	rpc Accept (AcceptInvitationRequest) returns (google.protobuf.Empty);
-	rpc Create (Invitation) returns (Invitation);
+	rpc Create (CreateInvitationRequest) returns (Invitation);
 	rpc Delete (DeleteInvitationRequest) returns (google.protobuf.Empty);
 	rpc Get (GetInvitationRequest) returns (Invitation);
 	rpc Update (UpdateInvitationRequest) returns (Invitation);
 }
 
 service MembershipService {
-	rpc Create (Membership) returns (Membership);
+	rpc Create (CreateMembershipRequest) returns (Membership);
 	rpc Delete (DeleteMembershipRequest) returns (google.protobuf.Empty);
 	rpc Get (GetMembershipRequest) returns (Membership);
 	rpc Update (UpdateMembershipRequest) returns (Membership);
 }
 
 service SiloService {
-	rpc Create (Silo) returns (Silo);
+	rpc Create (CreateSiloRequest) returns (Silo);
 	rpc Delete (DeleteSiloRequest) returns (google.protobuf.Empty);
 	rpc Get (GetSiloRequest) returns (Silo);
 	rpc Update (UpdateSiloRequest) returns (Silo);
 }
 
 service TeamService {
-	rpc Create (Team) returns (Team);
+	rpc Create (CreateTeamRequest) returns (Team);
 	rpc Delete (DeleteTeamRequest) returns (google.protobuf.Empty);
 	rpc Get (GetTeamRequest) returns (Team);
 	rpc Update (UpdateTeamRequest) returns (Team);
 }
 
 service TokenService {
-	rpc Create (Token) returns (Token);
+	rpc Create (CreateTokenRequest) returns (Token);
 	rpc Delete (DeleteTokenRequest) returns (google.protobuf.Empty);
 	rpc Get (GetTokenRequest) returns (Token);
 	rpc Update (UpdateTokenRequest) returns (Token);
 }
 
 service UserService {
-	rpc Create (User) returns (User);
+	rpc Create (CreateUserRequest) returns (User);
 	rpc Delete (DeleteUserRequest) returns (google.protobuf.Empty);
 	rpc Get (GetUserRequest) returns (User);
 	rpc Update (UpdateUserRequest) returns (User);
 }
 
+message CreateAccountRequest {
+	optional string alias = 2;
+	User owner = 3;
+	Silo silo = 4;
+	repeated Membership memberships = 5;
+	Role role = 6;
+	optional string name = 7;
+	optional string description = 8;
+}
+
+message CreateIdentityRequest {
+	User owner = 2;
+	string kind = 3;
+	string verifier = 4;
+	optional string name = 7;
+	optional string description = 8;
+}
+
+message CreateInvitationRequest {
+	Silo silo = 2;
+	Account inviter = 3;
+	string invitee = 4;
+	string type = 5;
+	optional google.protobuf.Timestamp date_canceled = 11;
+	optional google.protobuf.Timestamp date_declined = 12;
+	optional google.protobuf.Timestamp date_accepted = 13;
+	google.protobuf.Timestamp date_expired = 14;
+}
+
+message CreateMembershipRequest {
+	Account account = 2;
+	Team team = 3;
+	Role role = 6;
+}
+
+message CreateSiloRequest {
+	optional string alias = 2;
+	optional string name = 7;
+	optional string description = 8;
+}
+
+message CreateTeamRequest {
+	optional string alias = 2;
+	Silo silo = 3;
+	optional string name = 7;
+	optional string description = 8;
+}
+
+message CreateTokenRequest {
+	string value = 2;
+	string type = 3;
+	optional string name = 4;
+	User owner = 5;
+	optional Token parent = 6;
+	repeated Token children = 7;
+	google.protobuf.Timestamp date_expired = 14;
+}
+
+message CreateUserRequest {
+	optional string alias = 2;
+	optional User parent = 3;
+	repeated User children = 4;
+	repeated Identity identities = 5;
+	repeated Account accounts = 6;
+}
+
 message DeleteAccountRequest {
-	oneof key {
-		bytes id = 1;
-		string alias = 2;
-	}
+	bytes id = 1;
 }
 
 message DeleteIdentityRequest {
@@ -95,10 +159,7 @@ message DeleteSiloRequest {
 }
 
 message DeleteTeamRequest {
-	oneof key {
-		bytes id = 1;
-		string alias = 2;
-	}
+	bytes id = 1;
 }
 
 message DeleteTokenRequest {
@@ -116,10 +177,7 @@ message DeleteUserRequest {
 }
 
 message GetAccountRequest {
-	oneof key {
-		bytes id = 1;
-		string alias = 2;
-	}
+	bytes id = 1;
 }
 
 message GetIdentityRequest {
@@ -142,10 +200,7 @@ message GetSiloRequest {
 }
 
 message GetTeamRequest {
-	oneof key {
-		bytes id = 1;
-		string alias = 2;
-	}
+	bytes id = 1;
 }
 
 message GetTokenRequest {
@@ -165,16 +220,17 @@ message GetUserRequest {
 message UpdateAccountRequest {
 	bytes id = 1;
 	optional string alias = 2;
-	optional string name = 6;
-	optional string description = 7;
-	optional Role role = 8;
+	optional Role role = 6;
+	optional string name = 7;
+	optional string description = 8;
 }
 
 message UpdateIdentityRequest {
 	bytes id = 1;
 	optional string kind = 3;
 	optional string verifier = 4;
-	optional string name = 5;
+	optional string name = 7;
+	optional string description = 8;
 }
 
 message UpdateInvitationRequest {
@@ -189,21 +245,21 @@ message UpdateInvitationRequest {
 
 message UpdateMembershipRequest {
 	bytes id = 1;
-	optional Role role = 8;
+	optional Role role = 6;
 }
 
 message UpdateSiloRequest {
 	bytes id = 1;
 	optional string alias = 2;
-	optional string name = 3;
-	optional string description = 4;
+	optional string name = 7;
+	optional string description = 8;
 }
 
 message UpdateTeamRequest {
 	bytes id = 1;
 	optional string alias = 2;
-	optional string name = 5;
-	optional string description = 6;
+	optional string name = 7;
+	optional string description = 8;
 }
 
 message UpdateTokenRequest {
@@ -217,4 +273,5 @@ message UpdateTokenRequest {
 message UpdateUserRequest {
 	bytes id = 1;
 	optional string alias = 2;
+	optional User parent = 3;
 }

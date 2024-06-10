@@ -46,10 +46,10 @@ var CmdSetPassword = &cli.Command{
 			return fmt.Errorf("read password from stdin: %w", err)
 		}
 
-		_, err = c.Token().Create(ctx.Context, &horus.CreateTokenRequest{Token: &horus.Token{
+		_, err = c.Token().Create(ctx.Context, &horus.CreateTokenRequest{
 			Value: string(pw),
 			Type:  horus.TokenTypeBasic,
-		}})
+		})
 		if err != nil {
 			return err
 		}

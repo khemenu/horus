@@ -23,9 +23,9 @@ func (s *UserTestSuite) TestCreate() {
 		v, err := s.svc.User().Create(s.ctx, nil)
 		s.NoError(err)
 
-		v, err = s.svc.User().Get(s.ctx, &horus.GetUserRequest{
+		v, err = s.svc.User().Get(s.ctx, &horus.GetUserRequest{Key: &horus.GetUserRequest_Id{
 			Id: v.Id,
-		})
+		}})
 		s.NoError(err)
 		s.Equal(s.me.Actor.ID[:], v.Parent.Id)
 	})

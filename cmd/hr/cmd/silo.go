@@ -22,9 +22,9 @@ var CmdCreateSilo = &cli.Command{
 			return err
 		}
 
-		v, err := c.Silo().Create(ctx.Context, &horus.CreateSiloRequest{Silo: &horus.Silo{
-			Alias: alias,
-		}})
+		v, err := c.Silo().Create(ctx.Context, &horus.CreateSiloRequest{
+			Alias: &alias,
+		})
 		if err != nil {
 			return err
 		}

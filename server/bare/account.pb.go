@@ -23,12 +23,36 @@ type AccountServiceServer struct {
 func NewAccountServiceServer(db *ent.Client) *AccountServiceServer {
 	return &AccountServiceServer{db: db}
 }
-func (s *AccountServiceServer) Create(ctx context.Context, req *horus.Account) (*horus.Account, error) {
+func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAccountRequest) (*horus.Account, error) {
 	q := s.db.Account.Create()
-	q.SetAlias(req.Alias)
-	q.SetName(req.Name)
-	q.SetDescription(req.Description)
-	q.SetRole(toEntRole(req.Role))
+	if v := req.Alias; v != nil {
+		q.SetAlias(*v)
+	}
+	if v := req.Name; v != nil {
+		q.SetName(*v)
+	}
+	if v := req.Description; v != nil {
+		q.SetDescription(*v)
+	}
+	q.SetRole(toEntRole(req.GetRole()))
+	if v := req.GetOwner().GetId(); v == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "field \"owner\" not provided")
+	} else {
+		if w, err := uuid.FromBytes(v); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "owner: %s", err)
+		} else {
+			q.SetOwnerID(w)
+		}
+	}
+	if v := req.GetSilo().GetId(); v == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "field \"silo\" not provided")
+	} else {
+		if w, err := uuid.FromBytes(v); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "silo: %s", err)
+		} else {
+			q.SetSiloID(w)
+		}
+	}
 
 	res, err := q.Save(ctx)
 	if err != nil {
@@ -39,15 +63,10 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.Account) (
 }
 func (s *AccountServiceServer) Delete(ctx context.Context, req *horus.DeleteAccountRequest) (*emptypb.Empty, error) {
 	q := s.db.Account.Delete()
-	switch t := req.GetKey().(type) {
-	case *horus.DeleteAccountRequest_Id:
-		if v, err := uuid.FromBytes(t.Id); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-		} else {
-			q.Where(account.IDEQ(v))
-		}
-	case *horus.DeleteAccountRequest_Alias:
-		q.Where(account.AliasEQ(t.Alias))
+	if v, err := uuid.FromBytes(req.GetId()); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	} else {
+		q.Where(account.IDEQ(v))
 	}
 
 	_, err := q.Exec(ctx)
@@ -59,17 +78,11 @@ func (s *AccountServiceServer) Delete(ctx context.Context, req *horus.DeleteAcco
 }
 func (s *AccountServiceServer) Get(ctx context.Context, req *horus.GetAccountRequest) (*horus.Account, error) {
 	q := s.db.Account.Query()
-	switch t := req.GetKey().(type) {
-	case *horus.GetAccountRequest_Id:
-		if v, err := uuid.FromBytes(t.Id); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-		} else {
-			q.Where(account.IDEQ(v))
-		}
-	case *horus.GetAccountRequest_Alias:
-		q.Where(account.AliasEQ(t.Alias))
+	if v, err := uuid.FromBytes(req.GetId()); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	} else {
+		q.Where(account.IDEQ(v))
 	}
-
 	q.WithOwner(func(q *ent.UserQuery) { q.Select(account.FieldID) })
 	q.WithSilo(func(q *ent.SiloQuery) { q.Select(account.FieldID) })
 	q.WithMemberships(func(q *ent.MembershipQuery) { q.Select(account.FieldID) })
@@ -84,7 +97,7 @@ func (s *AccountServiceServer) Get(ctx context.Context, req *horus.GetAccountReq
 func (s *AccountServiceServer) Update(ctx context.Context, req *horus.UpdateAccountRequest) (*horus.Account, error) {
 	id, err := uuid.FromBytes(req.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
 	}
 
 	q := s.db.Account.UpdateOneID(id)

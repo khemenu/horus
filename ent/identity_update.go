@@ -27,20 +27,6 @@ func (iu *IdentityUpdate) Where(ps ...predicate.Identity) *IdentityUpdate {
 	return iu
 }
 
-// SetVerifier sets the "verifier" field.
-func (iu *IdentityUpdate) SetVerifier(s string) *IdentityUpdate {
-	iu.mutation.SetVerifier(s)
-	return iu
-}
-
-// SetNillableVerifier sets the "verifier" field if the given value is not nil.
-func (iu *IdentityUpdate) SetNillableVerifier(s *string) *IdentityUpdate {
-	if s != nil {
-		iu.SetVerifier(*s)
-	}
-	return iu
-}
-
 // SetName sets the "name" field.
 func (iu *IdentityUpdate) SetName(s string) *IdentityUpdate {
 	iu.mutation.SetName(s)
@@ -51,6 +37,34 @@ func (iu *IdentityUpdate) SetName(s string) *IdentityUpdate {
 func (iu *IdentityUpdate) SetNillableName(s *string) *IdentityUpdate {
 	if s != nil {
 		iu.SetName(*s)
+	}
+	return iu
+}
+
+// SetDescription sets the "description" field.
+func (iu *IdentityUpdate) SetDescription(s string) *IdentityUpdate {
+	iu.mutation.SetDescription(s)
+	return iu
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (iu *IdentityUpdate) SetNillableDescription(s *string) *IdentityUpdate {
+	if s != nil {
+		iu.SetDescription(*s)
+	}
+	return iu
+}
+
+// SetVerifier sets the "verifier" field.
+func (iu *IdentityUpdate) SetVerifier(s string) *IdentityUpdate {
+	iu.mutation.SetVerifier(s)
+	return iu
+}
+
+// SetNillableVerifier sets the "verifier" field if the given value is not nil.
+func (iu *IdentityUpdate) SetNillableVerifier(s *string) *IdentityUpdate {
+	if s != nil {
+		iu.SetVerifier(*s)
 	}
 	return iu
 }
@@ -89,14 +103,19 @@ func (iu *IdentityUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (iu *IdentityUpdate) check() error {
-	if v, ok := iu.mutation.Verifier(); ok {
-		if err := identity.VerifierValidator(v); err != nil {
-			return &ValidationError{Name: "verifier", err: fmt.Errorf(`ent: validator failed for field "Identity.verifier": %w`, err)}
-		}
-	}
 	if v, ok := iu.mutation.Name(); ok {
 		if err := identity.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Identity.name": %w`, err)}
+		}
+	}
+	if v, ok := iu.mutation.Description(); ok {
+		if err := identity.DescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Identity.description": %w`, err)}
+		}
+	}
+	if v, ok := iu.mutation.Verifier(); ok {
+		if err := identity.VerifierValidator(v); err != nil {
+			return &ValidationError{Name: "verifier", err: fmt.Errorf(`ent: validator failed for field "Identity.verifier": %w`, err)}
 		}
 	}
 	if _, ok := iu.mutation.OwnerID(); iu.mutation.OwnerCleared() && !ok {
@@ -117,11 +136,14 @@ func (iu *IdentityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := iu.mutation.Verifier(); ok {
-		_spec.SetField(identity.FieldVerifier, field.TypeString, value)
-	}
 	if value, ok := iu.mutation.Name(); ok {
 		_spec.SetField(identity.FieldName, field.TypeString, value)
+	}
+	if value, ok := iu.mutation.Description(); ok {
+		_spec.SetField(identity.FieldDescription, field.TypeString, value)
+	}
+	if value, ok := iu.mutation.Verifier(); ok {
+		_spec.SetField(identity.FieldVerifier, field.TypeString, value)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -143,20 +165,6 @@ type IdentityUpdateOne struct {
 	mutation *IdentityMutation
 }
 
-// SetVerifier sets the "verifier" field.
-func (iuo *IdentityUpdateOne) SetVerifier(s string) *IdentityUpdateOne {
-	iuo.mutation.SetVerifier(s)
-	return iuo
-}
-
-// SetNillableVerifier sets the "verifier" field if the given value is not nil.
-func (iuo *IdentityUpdateOne) SetNillableVerifier(s *string) *IdentityUpdateOne {
-	if s != nil {
-		iuo.SetVerifier(*s)
-	}
-	return iuo
-}
-
 // SetName sets the "name" field.
 func (iuo *IdentityUpdateOne) SetName(s string) *IdentityUpdateOne {
 	iuo.mutation.SetName(s)
@@ -167,6 +175,34 @@ func (iuo *IdentityUpdateOne) SetName(s string) *IdentityUpdateOne {
 func (iuo *IdentityUpdateOne) SetNillableName(s *string) *IdentityUpdateOne {
 	if s != nil {
 		iuo.SetName(*s)
+	}
+	return iuo
+}
+
+// SetDescription sets the "description" field.
+func (iuo *IdentityUpdateOne) SetDescription(s string) *IdentityUpdateOne {
+	iuo.mutation.SetDescription(s)
+	return iuo
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (iuo *IdentityUpdateOne) SetNillableDescription(s *string) *IdentityUpdateOne {
+	if s != nil {
+		iuo.SetDescription(*s)
+	}
+	return iuo
+}
+
+// SetVerifier sets the "verifier" field.
+func (iuo *IdentityUpdateOne) SetVerifier(s string) *IdentityUpdateOne {
+	iuo.mutation.SetVerifier(s)
+	return iuo
+}
+
+// SetNillableVerifier sets the "verifier" field if the given value is not nil.
+func (iuo *IdentityUpdateOne) SetNillableVerifier(s *string) *IdentityUpdateOne {
+	if s != nil {
+		iuo.SetVerifier(*s)
 	}
 	return iuo
 }
@@ -218,14 +254,19 @@ func (iuo *IdentityUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (iuo *IdentityUpdateOne) check() error {
-	if v, ok := iuo.mutation.Verifier(); ok {
-		if err := identity.VerifierValidator(v); err != nil {
-			return &ValidationError{Name: "verifier", err: fmt.Errorf(`ent: validator failed for field "Identity.verifier": %w`, err)}
-		}
-	}
 	if v, ok := iuo.mutation.Name(); ok {
 		if err := identity.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Identity.name": %w`, err)}
+		}
+	}
+	if v, ok := iuo.mutation.Description(); ok {
+		if err := identity.DescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Identity.description": %w`, err)}
+		}
+	}
+	if v, ok := iuo.mutation.Verifier(); ok {
+		if err := identity.VerifierValidator(v); err != nil {
+			return &ValidationError{Name: "verifier", err: fmt.Errorf(`ent: validator failed for field "Identity.verifier": %w`, err)}
 		}
 	}
 	if _, ok := iuo.mutation.OwnerID(); iuo.mutation.OwnerCleared() && !ok {
@@ -263,11 +304,14 @@ func (iuo *IdentityUpdateOne) sqlSave(ctx context.Context) (_node *Identity, err
 			}
 		}
 	}
-	if value, ok := iuo.mutation.Verifier(); ok {
-		_spec.SetField(identity.FieldVerifier, field.TypeString, value)
-	}
 	if value, ok := iuo.mutation.Name(); ok {
 		_spec.SetField(identity.FieldName, field.TypeString, value)
+	}
+	if value, ok := iuo.mutation.Description(); ok {
+		_spec.SetField(identity.FieldDescription, field.TypeString, value)
+	}
+	if value, ok := iuo.mutation.Verifier(); ok {
+		_spec.SetField(identity.FieldVerifier, field.TypeString, value)
 	}
 	_node = &Identity{config: iuo.config}
 	_spec.Assign = _node.assignValues

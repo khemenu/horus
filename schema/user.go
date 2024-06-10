@@ -27,7 +27,7 @@ func (User) Edges() []ent.Edge {
 		edge.To("children", User.Type).
 			Annotations(entpb.Field(4)).
 			From("parent").
-			Annotations(entpb.Field(3)).
+			Annotations(entpb.Field(3, entpb.WithWritable())).
 			Unique(),
 		edge.To("identities", Identity.Type).
 			Annotations(entpb.Field(5)),

@@ -23,11 +23,26 @@ type TeamServiceServer struct {
 func NewTeamServiceServer(db *ent.Client) *TeamServiceServer {
 	return &TeamServiceServer{db: db}
 }
-func (s *TeamServiceServer) Create(ctx context.Context, req *horus.Team) (*horus.Team, error) {
+func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamRequest) (*horus.Team, error) {
 	q := s.db.Team.Create()
-	q.SetAlias(req.Alias)
-	q.SetName(req.Name)
-	q.SetDescription(req.Description)
+	if v := req.Alias; v != nil {
+		q.SetAlias(*v)
+	}
+	if v := req.Name; v != nil {
+		q.SetName(*v)
+	}
+	if v := req.Description; v != nil {
+		q.SetDescription(*v)
+	}
+	if v := req.GetSilo().GetId(); v == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "field \"silo\" not provided")
+	} else {
+		if w, err := uuid.FromBytes(v); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "silo: %s", err)
+		} else {
+			q.SetSiloID(w)
+		}
+	}
 
 	res, err := q.Save(ctx)
 	if err != nil {
@@ -38,15 +53,10 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.Team) (*horus
 }
 func (s *TeamServiceServer) Delete(ctx context.Context, req *horus.DeleteTeamRequest) (*emptypb.Empty, error) {
 	q := s.db.Team.Delete()
-	switch t := req.GetKey().(type) {
-	case *horus.DeleteTeamRequest_Id:
-		if v, err := uuid.FromBytes(t.Id); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-		} else {
-			q.Where(team.IDEQ(v))
-		}
-	case *horus.DeleteTeamRequest_Alias:
-		q.Where(team.AliasEQ(t.Alias))
+	if v, err := uuid.FromBytes(req.GetId()); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	} else {
+		q.Where(team.IDEQ(v))
 	}
 
 	_, err := q.Exec(ctx)
@@ -58,17 +68,11 @@ func (s *TeamServiceServer) Delete(ctx context.Context, req *horus.DeleteTeamReq
 }
 func (s *TeamServiceServer) Get(ctx context.Context, req *horus.GetTeamRequest) (*horus.Team, error) {
 	q := s.db.Team.Query()
-	switch t := req.GetKey().(type) {
-	case *horus.GetTeamRequest_Id:
-		if v, err := uuid.FromBytes(t.Id); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-		} else {
-			q.Where(team.IDEQ(v))
-		}
-	case *horus.GetTeamRequest_Alias:
-		q.Where(team.AliasEQ(t.Alias))
+	if v, err := uuid.FromBytes(req.GetId()); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	} else {
+		q.Where(team.IDEQ(v))
 	}
-
 	q.WithSilo(func(q *ent.SiloQuery) { q.Select(team.FieldID) })
 
 	res, err := q.Only(ctx)
@@ -81,7 +85,7 @@ func (s *TeamServiceServer) Get(ctx context.Context, req *horus.GetTeamRequest) 
 func (s *TeamServiceServer) Update(ctx context.Context, req *horus.UpdateTeamRequest) (*horus.Team, error) {
 	id, err := uuid.FromBytes(req.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
 	}
 
 	q := s.db.Team.UpdateOneID(id)

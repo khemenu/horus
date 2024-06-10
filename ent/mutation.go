@@ -246,78 +246,6 @@ func (m *AccountMutation) ResetAlias() {
 	m.alias = nil
 }
 
-// SetOwnerID sets the "owner_id" field.
-func (m *AccountMutation) SetOwnerID(u uuid.UUID) {
-	m.owner = &u
-}
-
-// OwnerID returns the value of the "owner_id" field in the mutation.
-func (m *AccountMutation) OwnerID() (r uuid.UUID, exists bool) {
-	v := m.owner
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldOwnerID returns the old "owner_id" field's value of the Account entity.
-// If the Account object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AccountMutation) OldOwnerID(ctx context.Context) (v uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldOwnerID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
-	}
-	return oldValue.OwnerID, nil
-}
-
-// ResetOwnerID resets all changes to the "owner_id" field.
-func (m *AccountMutation) ResetOwnerID() {
-	m.owner = nil
-}
-
-// SetSiloID sets the "silo_id" field.
-func (m *AccountMutation) SetSiloID(u uuid.UUID) {
-	m.silo = &u
-}
-
-// SiloID returns the value of the "silo_id" field in the mutation.
-func (m *AccountMutation) SiloID() (r uuid.UUID, exists bool) {
-	v := m.silo
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldSiloID returns the old "silo_id" field's value of the Account entity.
-// If the Account object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AccountMutation) OldSiloID(ctx context.Context) (v uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSiloID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSiloID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSiloID: %w", err)
-	}
-	return oldValue.SiloID, nil
-}
-
-// ResetSiloID resets all changes to the "silo_id" field.
-func (m *AccountMutation) ResetSiloID() {
-	m.silo = nil
-}
-
 // SetName sets the "name" field.
 func (m *AccountMutation) SetName(s string) {
 	m.name = &s
@@ -388,6 +316,78 @@ func (m *AccountMutation) OldDescription(ctx context.Context) (v string, err err
 // ResetDescription resets all changes to the "description" field.
 func (m *AccountMutation) ResetDescription() {
 	m.description = nil
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (m *AccountMutation) SetOwnerID(u uuid.UUID) {
+	m.owner = &u
+}
+
+// OwnerID returns the value of the "owner_id" field in the mutation.
+func (m *AccountMutation) OwnerID() (r uuid.UUID, exists bool) {
+	v := m.owner
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerID returns the old "owner_id" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountMutation) OldOwnerID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
+	}
+	return oldValue.OwnerID, nil
+}
+
+// ResetOwnerID resets all changes to the "owner_id" field.
+func (m *AccountMutation) ResetOwnerID() {
+	m.owner = nil
+}
+
+// SetSiloID sets the "silo_id" field.
+func (m *AccountMutation) SetSiloID(u uuid.UUID) {
+	m.silo = &u
+}
+
+// SiloID returns the value of the "silo_id" field in the mutation.
+func (m *AccountMutation) SiloID() (r uuid.UUID, exists bool) {
+	v := m.silo
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSiloID returns the old "silo_id" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountMutation) OldSiloID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSiloID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSiloID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSiloID: %w", err)
+	}
+	return oldValue.SiloID, nil
+}
+
+// ResetSiloID resets all changes to the "silo_id" field.
+func (m *AccountMutation) ResetSiloID() {
+	m.silo = nil
 }
 
 // SetRole sets the "role" field.
@@ -629,17 +629,17 @@ func (m *AccountMutation) Fields() []string {
 	if m.alias != nil {
 		fields = append(fields, account.FieldAlias)
 	}
-	if m.owner != nil {
-		fields = append(fields, account.FieldOwnerID)
-	}
-	if m.silo != nil {
-		fields = append(fields, account.FieldSiloID)
-	}
 	if m.name != nil {
 		fields = append(fields, account.FieldName)
 	}
 	if m.description != nil {
 		fields = append(fields, account.FieldDescription)
+	}
+	if m.owner != nil {
+		fields = append(fields, account.FieldOwnerID)
+	}
+	if m.silo != nil {
+		fields = append(fields, account.FieldSiloID)
 	}
 	if m.role != nil {
 		fields = append(fields, account.FieldRole)
@@ -656,14 +656,14 @@ func (m *AccountMutation) Field(name string) (ent.Value, bool) {
 		return m.DateCreated()
 	case account.FieldAlias:
 		return m.Alias()
-	case account.FieldOwnerID:
-		return m.OwnerID()
-	case account.FieldSiloID:
-		return m.SiloID()
 	case account.FieldName:
 		return m.Name()
 	case account.FieldDescription:
 		return m.Description()
+	case account.FieldOwnerID:
+		return m.OwnerID()
+	case account.FieldSiloID:
+		return m.SiloID()
 	case account.FieldRole:
 		return m.Role()
 	}
@@ -679,14 +679,14 @@ func (m *AccountMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldDateCreated(ctx)
 	case account.FieldAlias:
 		return m.OldAlias(ctx)
-	case account.FieldOwnerID:
-		return m.OldOwnerID(ctx)
-	case account.FieldSiloID:
-		return m.OldSiloID(ctx)
 	case account.FieldName:
 		return m.OldName(ctx)
 	case account.FieldDescription:
 		return m.OldDescription(ctx)
+	case account.FieldOwnerID:
+		return m.OldOwnerID(ctx)
+	case account.FieldSiloID:
+		return m.OldSiloID(ctx)
 	case account.FieldRole:
 		return m.OldRole(ctx)
 	}
@@ -712,20 +712,6 @@ func (m *AccountMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetAlias(v)
 		return nil
-	case account.FieldOwnerID:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetOwnerID(v)
-		return nil
-	case account.FieldSiloID:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetSiloID(v)
-		return nil
 	case account.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -739,6 +725,20 @@ func (m *AccountMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDescription(v)
+		return nil
+	case account.FieldOwnerID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerID(v)
+		return nil
+	case account.FieldSiloID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSiloID(v)
 		return nil
 	case account.FieldRole:
 		v, ok := value.(role.Role)
@@ -802,17 +802,17 @@ func (m *AccountMutation) ResetField(name string) error {
 	case account.FieldAlias:
 		m.ResetAlias()
 		return nil
-	case account.FieldOwnerID:
-		m.ResetOwnerID()
-		return nil
-	case account.FieldSiloID:
-		m.ResetSiloID()
-		return nil
 	case account.FieldName:
 		m.ResetName()
 		return nil
 	case account.FieldDescription:
 		m.ResetDescription()
+		return nil
+	case account.FieldOwnerID:
+		m.ResetOwnerID()
+		return nil
+	case account.FieldSiloID:
+		m.ResetSiloID()
 		return nil
 	case account.FieldRole:
 		m.ResetRole()
@@ -974,9 +974,10 @@ type IdentityMutation struct {
 	typ           string
 	id            *uuid.UUID
 	date_created  *time.Time
+	name          *string
+	description   *string
 	kind          *string
 	verifier      *string
-	name          *string
 	clearedFields map[string]struct{}
 	owner         *uuid.UUID
 	clearedowner  bool
@@ -1125,6 +1126,78 @@ func (m *IdentityMutation) ResetDateCreated() {
 	m.date_created = nil
 }
 
+// SetName sets the "name" field.
+func (m *IdentityMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *IdentityMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Identity entity.
+// If the Identity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IdentityMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *IdentityMutation) ResetName() {
+	m.name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *IdentityMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *IdentityMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the Identity entity.
+// If the Identity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IdentityMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *IdentityMutation) ResetDescription() {
+	m.description = nil
+}
+
 // SetKind sets the "kind" field.
 func (m *IdentityMutation) SetKind(s string) {
 	m.kind = &s
@@ -1195,42 +1268,6 @@ func (m *IdentityMutation) OldVerifier(ctx context.Context) (v string, err error
 // ResetVerifier resets all changes to the "verifier" field.
 func (m *IdentityMutation) ResetVerifier() {
 	m.verifier = nil
-}
-
-// SetName sets the "name" field.
-func (m *IdentityMutation) SetName(s string) {
-	m.name = &s
-}
-
-// Name returns the value of the "name" field in the mutation.
-func (m *IdentityMutation) Name() (r string, exists bool) {
-	v := m.name
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldName returns the old "name" field's value of the Identity entity.
-// If the Identity object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *IdentityMutation) OldName(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldName is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldName requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldName: %w", err)
-	}
-	return oldValue.Name, nil
-}
-
-// ResetName resets all changes to the "name" field.
-func (m *IdentityMutation) ResetName() {
-	m.name = nil
 }
 
 // SetOwnerID sets the "owner" edge to the User entity by id.
@@ -1306,18 +1343,21 @@ func (m *IdentityMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *IdentityMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 5)
 	if m.date_created != nil {
 		fields = append(fields, identity.FieldDateCreated)
+	}
+	if m.name != nil {
+		fields = append(fields, identity.FieldName)
+	}
+	if m.description != nil {
+		fields = append(fields, identity.FieldDescription)
 	}
 	if m.kind != nil {
 		fields = append(fields, identity.FieldKind)
 	}
 	if m.verifier != nil {
 		fields = append(fields, identity.FieldVerifier)
-	}
-	if m.name != nil {
-		fields = append(fields, identity.FieldName)
 	}
 	return fields
 }
@@ -1329,12 +1369,14 @@ func (m *IdentityMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case identity.FieldDateCreated:
 		return m.DateCreated()
+	case identity.FieldName:
+		return m.Name()
+	case identity.FieldDescription:
+		return m.Description()
 	case identity.FieldKind:
 		return m.Kind()
 	case identity.FieldVerifier:
 		return m.Verifier()
-	case identity.FieldName:
-		return m.Name()
 	}
 	return nil, false
 }
@@ -1346,12 +1388,14 @@ func (m *IdentityMutation) OldField(ctx context.Context, name string) (ent.Value
 	switch name {
 	case identity.FieldDateCreated:
 		return m.OldDateCreated(ctx)
+	case identity.FieldName:
+		return m.OldName(ctx)
+	case identity.FieldDescription:
+		return m.OldDescription(ctx)
 	case identity.FieldKind:
 		return m.OldKind(ctx)
 	case identity.FieldVerifier:
 		return m.OldVerifier(ctx)
-	case identity.FieldName:
-		return m.OldName(ctx)
 	}
 	return nil, fmt.Errorf("unknown Identity field %s", name)
 }
@@ -1368,6 +1412,20 @@ func (m *IdentityMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDateCreated(v)
 		return nil
+	case identity.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case identity.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
 	case identity.FieldKind:
 		v, ok := value.(string)
 		if !ok {
@@ -1381,13 +1439,6 @@ func (m *IdentityMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetVerifier(v)
-		return nil
-	case identity.FieldName:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetName(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Identity field %s", name)
@@ -1441,14 +1492,17 @@ func (m *IdentityMutation) ResetField(name string) error {
 	case identity.FieldDateCreated:
 		m.ResetDateCreated()
 		return nil
+	case identity.FieldName:
+		m.ResetName()
+		return nil
+	case identity.FieldDescription:
+		m.ResetDescription()
+		return nil
 	case identity.FieldKind:
 		m.ResetKind()
 		return nil
 	case identity.FieldVerifier:
 		m.ResetVerifier()
-		return nil
-	case identity.FieldName:
-		m.ResetName()
 		return nil
 	}
 	return fmt.Errorf("unknown Identity field %s", name)
@@ -3832,42 +3886,6 @@ func (m *TeamMutation) ResetAlias() {
 	m.alias = nil
 }
 
-// SetSiloID sets the "silo_id" field.
-func (m *TeamMutation) SetSiloID(u uuid.UUID) {
-	m.silo = &u
-}
-
-// SiloID returns the value of the "silo_id" field in the mutation.
-func (m *TeamMutation) SiloID() (r uuid.UUID, exists bool) {
-	v := m.silo
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldSiloID returns the old "silo_id" field's value of the Team entity.
-// If the Team object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TeamMutation) OldSiloID(ctx context.Context) (v uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSiloID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSiloID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSiloID: %w", err)
-	}
-	return oldValue.SiloID, nil
-}
-
-// ResetSiloID resets all changes to the "silo_id" field.
-func (m *TeamMutation) ResetSiloID() {
-	m.silo = nil
-}
-
 // SetName sets the "name" field.
 func (m *TeamMutation) SetName(s string) {
 	m.name = &s
@@ -3938,6 +3956,42 @@ func (m *TeamMutation) OldDescription(ctx context.Context) (v string, err error)
 // ResetDescription resets all changes to the "description" field.
 func (m *TeamMutation) ResetDescription() {
 	m.description = nil
+}
+
+// SetSiloID sets the "silo_id" field.
+func (m *TeamMutation) SetSiloID(u uuid.UUID) {
+	m.silo = &u
+}
+
+// SiloID returns the value of the "silo_id" field in the mutation.
+func (m *TeamMutation) SiloID() (r uuid.UUID, exists bool) {
+	v := m.silo
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSiloID returns the old "silo_id" field's value of the Team entity.
+// If the Team object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TeamMutation) OldSiloID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSiloID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSiloID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSiloID: %w", err)
+	}
+	return oldValue.SiloID, nil
+}
+
+// ResetSiloID resets all changes to the "silo_id" field.
+func (m *TeamMutation) ResetSiloID() {
+	m.silo = nil
 }
 
 // ClearSilo clears the "silo" edge to the Silo entity.
@@ -4062,14 +4116,14 @@ func (m *TeamMutation) Fields() []string {
 	if m.alias != nil {
 		fields = append(fields, team.FieldAlias)
 	}
-	if m.silo != nil {
-		fields = append(fields, team.FieldSiloID)
-	}
 	if m.name != nil {
 		fields = append(fields, team.FieldName)
 	}
 	if m.description != nil {
 		fields = append(fields, team.FieldDescription)
+	}
+	if m.silo != nil {
+		fields = append(fields, team.FieldSiloID)
 	}
 	return fields
 }
@@ -4083,12 +4137,12 @@ func (m *TeamMutation) Field(name string) (ent.Value, bool) {
 		return m.DateCreated()
 	case team.FieldAlias:
 		return m.Alias()
-	case team.FieldSiloID:
-		return m.SiloID()
 	case team.FieldName:
 		return m.Name()
 	case team.FieldDescription:
 		return m.Description()
+	case team.FieldSiloID:
+		return m.SiloID()
 	}
 	return nil, false
 }
@@ -4102,12 +4156,12 @@ func (m *TeamMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldDateCreated(ctx)
 	case team.FieldAlias:
 		return m.OldAlias(ctx)
-	case team.FieldSiloID:
-		return m.OldSiloID(ctx)
 	case team.FieldName:
 		return m.OldName(ctx)
 	case team.FieldDescription:
 		return m.OldDescription(ctx)
+	case team.FieldSiloID:
+		return m.OldSiloID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Team field %s", name)
 }
@@ -4131,13 +4185,6 @@ func (m *TeamMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetAlias(v)
 		return nil
-	case team.FieldSiloID:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetSiloID(v)
-		return nil
 	case team.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -4151,6 +4198,13 @@ func (m *TeamMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDescription(v)
+		return nil
+	case team.FieldSiloID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSiloID(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Team field %s", name)
@@ -4207,14 +4261,14 @@ func (m *TeamMutation) ResetField(name string) error {
 	case team.FieldAlias:
 		m.ResetAlias()
 		return nil
-	case team.FieldSiloID:
-		m.ResetSiloID()
-		return nil
 	case team.FieldName:
 		m.ResetName()
 		return nil
 	case team.FieldDescription:
 		m.ResetDescription()
+		return nil
+	case team.FieldSiloID:
+		m.ResetSiloID()
 		return nil
 	}
 	return fmt.Errorf("unknown Team field %s", name)

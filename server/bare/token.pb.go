@@ -23,14 +23,25 @@ type TokenServiceServer struct {
 func NewTokenServiceServer(db *ent.Client) *TokenServiceServer {
 	return &TokenServiceServer{db: db}
 }
-func (s *TokenServiceServer) Create(ctx context.Context, req *horus.Token) (*horus.Token, error) {
+func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
 	q := s.db.Token.Create()
-	q.SetValue(req.Value)
-	q.SetType(req.Type)
-	q.SetName(req.Name)
-	if v := req.DateExpired; v != nil {
+	q.SetValue(req.GetValue())
+	q.SetType(req.GetType())
+	if v := req.Name; v != nil {
+		q.SetName(*v)
+	}
+	if v := req.GetDateExpired(); v != nil {
 		w := v.AsTime()
 		q.SetDateExpired(w)
+	}
+	if v := req.GetOwner().GetId(); v == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "field \"owner\" not provided")
+	} else {
+		if w, err := uuid.FromBytes(v); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "owner: %s", err)
+		} else {
+			q.SetOwnerID(w)
+		}
 	}
 
 	res, err := q.Save(ctx)
@@ -51,6 +62,8 @@ func (s *TokenServiceServer) Delete(ctx context.Context, req *horus.DeleteTokenR
 		}
 	case *horus.DeleteTokenRequest_Value:
 		q.Where(token.ValueEQ(t.Value))
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
 	}
 
 	_, err := q.Exec(ctx)
@@ -71,6 +84,8 @@ func (s *TokenServiceServer) Get(ctx context.Context, req *horus.GetTokenRequest
 		}
 	case *horus.GetTokenRequest_Value:
 		q.Where(token.ValueEQ(t.Value))
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
 	}
 
 	q.WithOwner(func(q *ent.UserQuery) { q.Select(token.FieldID) })
@@ -87,7 +102,7 @@ func (s *TokenServiceServer) Get(ctx context.Context, req *horus.GetTokenRequest
 func (s *TokenServiceServer) Update(ctx context.Context, req *horus.UpdateTokenRequest) (*horus.Token, error) {
 	id, err := uuid.FromBytes(req.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
 	}
 
 	q := s.db.Token.UpdateOneID(id)

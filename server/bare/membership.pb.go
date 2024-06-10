@@ -23,9 +23,27 @@ type MembershipServiceServer struct {
 func NewMembershipServiceServer(db *ent.Client) *MembershipServiceServer {
 	return &MembershipServiceServer{db: db}
 }
-func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.Membership) (*horus.Membership, error) {
+func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateMembershipRequest) (*horus.Membership, error) {
 	q := s.db.Membership.Create()
-	q.SetRole(toEntRole(req.Role))
+	q.SetRole(toEntRole(req.GetRole()))
+	if v := req.GetAccount().GetId(); v == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "field \"account\" not provided")
+	} else {
+		if w, err := uuid.FromBytes(v); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "account: %s", err)
+		} else {
+			q.SetAccountID(w)
+		}
+	}
+	if v := req.GetTeam().GetId(); v == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "field \"team\" not provided")
+	} else {
+		if w, err := uuid.FromBytes(v); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "team: %s", err)
+		} else {
+			q.SetTeamID(w)
+		}
+	}
 
 	res, err := q.Save(ctx)
 	if err != nil {
@@ -69,7 +87,7 @@ func (s *MembershipServiceServer) Get(ctx context.Context, req *horus.GetMembers
 func (s *MembershipServiceServer) Update(ctx context.Context, req *horus.UpdateMembershipRequest) (*horus.Membership, error) {
 	id, err := uuid.FromBytes(req.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
 	}
 
 	q := s.db.Membership.UpdateOneID(id)

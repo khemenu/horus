@@ -21,14 +21,14 @@ const (
 	FieldDateCreated = "date_created"
 	// FieldAlias holds the string denoting the alias field in the database.
 	FieldAlias = "alias"
-	// FieldOwnerID holds the string denoting the owner_id field in the database.
-	FieldOwnerID = "owner_id"
-	// FieldSiloID holds the string denoting the silo_id field in the database.
-	FieldSiloID = "silo_id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldOwnerID holds the string denoting the owner_id field in the database.
+	FieldOwnerID = "owner_id"
+	// FieldSiloID holds the string denoting the silo_id field in the database.
+	FieldSiloID = "silo_id"
 	// FieldRole holds the string denoting the role field in the database.
 	FieldRole = "role"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
@@ -76,10 +76,10 @@ var Columns = []string{
 	FieldID,
 	FieldDateCreated,
 	FieldAlias,
-	FieldOwnerID,
-	FieldSiloID,
 	FieldName,
 	FieldDescription,
+	FieldOwnerID,
+	FieldSiloID,
 	FieldRole,
 }
 
@@ -140,16 +140,6 @@ func ByAlias(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAlias, opts...).ToFunc()
 }
 
-// ByOwnerID orders the results by the owner_id field.
-func ByOwnerID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldOwnerID, opts...).ToFunc()
-}
-
-// BySiloID orders the results by the silo_id field.
-func BySiloID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSiloID, opts...).ToFunc()
-}
-
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
@@ -158,6 +148,16 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByDescription orders the results by the description field.
 func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+}
+
+// ByOwnerID orders the results by the owner_id field.
+func ByOwnerID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOwnerID, opts...).ToFunc()
+}
+
+// BySiloID orders the results by the silo_id field.
+func BySiloID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSiloID, opts...).ToFunc()
 }
 
 // ByRole orders the results by the role field.

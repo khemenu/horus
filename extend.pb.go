@@ -67,16 +67,119 @@ func (x *AcceptInvitationRequest) GetId() []byte {
 	return nil
 }
 
+type ListAccountRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id []byte `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (x *ListAccountRequest) Reset() {
+	*x = ListAccountRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_khepri_horus_extend_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListAccountRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAccountRequest) ProtoMessage() {}
+
+func (x *ListAccountRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_khepri_horus_extend_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAccountRequest.ProtoReflect.Descriptor instead.
+func (*ListAccountRequest) Descriptor() ([]byte, []int) {
+	return file_khepri_horus_extend_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ListAccountRequest) GetId() []byte {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
+type ListAccountResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Items []*Account `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+}
+
+func (x *ListAccountResponse) Reset() {
+	*x = ListAccountResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_khepri_horus_extend_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListAccountResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAccountResponse) ProtoMessage() {}
+
+func (x *ListAccountResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_khepri_horus_extend_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAccountResponse.ProtoReflect.Descriptor instead.
+func (*ListAccountResponse) Descriptor() ([]byte, []int) {
+	return file_khepri_horus_extend_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ListAccountResponse) GetItems() []*Account {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
 var File_khepri_horus_extend_proto protoreflect.FileDescriptor
 
 var file_khepri_horus_extend_proto_rawDesc = []byte{
 	0x0a, 0x19, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2f, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2f, 0x65,
 	0x78, 0x74, 0x65, 0x6e, 0x64, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x0c, 0x6b, 0x68, 0x65,
-	0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x22, 0x29, 0x0a, 0x17, 0x41, 0x63, 0x63,
-	0x65, 0x70, 0x74, 0x49, 0x6e, 0x76, 0x69, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c,
-	0x52, 0x02, 0x69, 0x64, 0x42, 0x12, 0x5a, 0x10, 0x6b, 0x68, 0x65, 0x70, 0x72, 0x69, 0x2e, 0x64,
-	0x65, 0x76, 0x2f, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x1a, 0x19, 0x6b, 0x68, 0x65, 0x70, 0x72,
+	0x69, 0x2f, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0x29, 0x0a, 0x17, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x49, 0x6e,
+	0x76, 0x69, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x02, 0x69, 0x64, 0x22,
+	0x24, 0x0a, 0x12, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0c, 0x52, 0x02, 0x69, 0x64, 0x22, 0x42, 0x0a, 0x13, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x63, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2b, 0x0a, 0x05,
+	0x69, 0x74, 0x65, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x6b, 0x68,
+	0x65, 0x70, 0x72, 0x69, 0x2e, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75,
+	0x6e, 0x74, 0x52, 0x05, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x42, 0x12, 0x5a, 0x10, 0x6b, 0x68, 0x65,
+	0x70, 0x72, 0x69, 0x2e, 0x64, 0x65, 0x76, 0x2f, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -91,16 +194,20 @@ func file_khepri_horus_extend_proto_rawDescGZIP() []byte {
 	return file_khepri_horus_extend_proto_rawDescData
 }
 
-var file_khepri_horus_extend_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_khepri_horus_extend_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_khepri_horus_extend_proto_goTypes = []interface{}{
 	(*AcceptInvitationRequest)(nil), // 0: khepri.horus.AcceptInvitationRequest
+	(*ListAccountRequest)(nil),      // 1: khepri.horus.ListAccountRequest
+	(*ListAccountResponse)(nil),     // 2: khepri.horus.ListAccountResponse
+	(*Account)(nil),                 // 3: khepri.horus.Account
 }
 var file_khepri_horus_extend_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	3, // 0: khepri.horus.ListAccountResponse.items:type_name -> khepri.horus.Account
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_khepri_horus_extend_proto_init() }
@@ -108,9 +215,34 @@ func file_khepri_horus_extend_proto_init() {
 	if File_khepri_horus_extend_proto != nil {
 		return
 	}
+	file_khepri_horus_common_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_khepri_horus_extend_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*AcceptInvitationRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_khepri_horus_extend_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListAccountRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_khepri_horus_extend_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListAccountResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -128,7 +260,7 @@ func file_khepri_horus_extend_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_khepri_horus_extend_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

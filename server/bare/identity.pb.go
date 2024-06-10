@@ -23,11 +23,25 @@ type IdentityServiceServer struct {
 func NewIdentityServiceServer(db *ent.Client) *IdentityServiceServer {
 	return &IdentityServiceServer{db: db}
 }
-func (s *IdentityServiceServer) Create(ctx context.Context, req *horus.Identity) (*horus.Identity, error) {
+func (s *IdentityServiceServer) Create(ctx context.Context, req *horus.CreateIdentityRequest) (*horus.Identity, error) {
 	q := s.db.Identity.Create()
-	q.SetKind(req.Kind)
-	q.SetVerifier(req.Verifier)
-	q.SetName(req.Name)
+	if v := req.Name; v != nil {
+		q.SetName(*v)
+	}
+	if v := req.Description; v != nil {
+		q.SetDescription(*v)
+	}
+	q.SetKind(req.GetKind())
+	q.SetVerifier(req.GetVerifier())
+	if v := req.GetOwner().GetId(); v == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "field \"owner\" not provided")
+	} else {
+		if w, err := uuid.FromBytes(v); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "owner: %s", err)
+		} else {
+			q.SetOwnerID(w)
+		}
+	}
 
 	res, err := q.Save(ctx)
 	if err != nil {
@@ -70,15 +84,18 @@ func (s *IdentityServiceServer) Get(ctx context.Context, req *horus.GetIdentityR
 func (s *IdentityServiceServer) Update(ctx context.Context, req *horus.UpdateIdentityRequest) (*horus.Identity, error) {
 	id, err := uuid.FromBytes(req.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
 	}
 
 	q := s.db.Identity.UpdateOneID(id)
-	if v := req.Verifier; v != nil {
-		q.SetVerifier(*v)
-	}
 	if v := req.Name; v != nil {
 		q.SetName(*v)
+	}
+	if v := req.Description; v != nil {
+		q.SetDescription(*v)
+	}
+	if v := req.Verifier; v != nil {
+		q.SetVerifier(*v)
 	}
 
 	res, err := q.Save(ctx)
@@ -92,9 +109,10 @@ func ToProtoIdentity(v *ent.Identity) *horus.Identity {
 	m := &horus.Identity{}
 	m.Id = v.ID[:]
 	m.DateCreated = timestamppb.New(v.DateCreated)
+	m.Name = v.Name
+	m.Description = v.Description
 	m.Kind = v.Kind
 	m.Verifier = v.Verifier
-	m.Name = v.Name
 	if v := v.Edges.Owner; v != nil {
 		m.Owner = &horus.User{Id: v.ID[:]}
 	}

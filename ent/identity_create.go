@@ -36,18 +36,6 @@ func (ic *IdentityCreate) SetNillableDateCreated(t *time.Time) *IdentityCreate {
 	return ic
 }
 
-// SetKind sets the "kind" field.
-func (ic *IdentityCreate) SetKind(s string) *IdentityCreate {
-	ic.mutation.SetKind(s)
-	return ic
-}
-
-// SetVerifier sets the "verifier" field.
-func (ic *IdentityCreate) SetVerifier(s string) *IdentityCreate {
-	ic.mutation.SetVerifier(s)
-	return ic
-}
-
 // SetName sets the "name" field.
 func (ic *IdentityCreate) SetName(s string) *IdentityCreate {
 	ic.mutation.SetName(s)
@@ -59,6 +47,32 @@ func (ic *IdentityCreate) SetNillableName(s *string) *IdentityCreate {
 	if s != nil {
 		ic.SetName(*s)
 	}
+	return ic
+}
+
+// SetDescription sets the "description" field.
+func (ic *IdentityCreate) SetDescription(s string) *IdentityCreate {
+	ic.mutation.SetDescription(s)
+	return ic
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (ic *IdentityCreate) SetNillableDescription(s *string) *IdentityCreate {
+	if s != nil {
+		ic.SetDescription(*s)
+	}
+	return ic
+}
+
+// SetKind sets the "kind" field.
+func (ic *IdentityCreate) SetKind(s string) *IdentityCreate {
+	ic.mutation.SetKind(s)
+	return ic
+}
+
+// SetVerifier sets the "verifier" field.
+func (ic *IdentityCreate) SetVerifier(s string) *IdentityCreate {
+	ic.mutation.SetVerifier(s)
 	return ic
 }
 
@@ -130,6 +144,10 @@ func (ic *IdentityCreate) defaults() {
 		v := identity.DefaultName
 		ic.mutation.SetName(v)
 	}
+	if _, ok := ic.mutation.Description(); !ok {
+		v := identity.DefaultDescription
+		ic.mutation.SetDescription(v)
+	}
 	if _, ok := ic.mutation.ID(); !ok {
 		v := identity.DefaultID()
 		ic.mutation.SetID(v)
@@ -140,6 +158,22 @@ func (ic *IdentityCreate) defaults() {
 func (ic *IdentityCreate) check() error {
 	if _, ok := ic.mutation.DateCreated(); !ok {
 		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Identity.date_created"`)}
+	}
+	if _, ok := ic.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Identity.name"`)}
+	}
+	if v, ok := ic.mutation.Name(); ok {
+		if err := identity.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Identity.name": %w`, err)}
+		}
+	}
+	if _, ok := ic.mutation.Description(); !ok {
+		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Identity.description"`)}
+	}
+	if v, ok := ic.mutation.Description(); ok {
+		if err := identity.DescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Identity.description": %w`, err)}
+		}
 	}
 	if _, ok := ic.mutation.Kind(); !ok {
 		return &ValidationError{Name: "kind", err: errors.New(`ent: missing required field "Identity.kind"`)}
@@ -155,14 +189,6 @@ func (ic *IdentityCreate) check() error {
 	if v, ok := ic.mutation.Verifier(); ok {
 		if err := identity.VerifierValidator(v); err != nil {
 			return &ValidationError{Name: "verifier", err: fmt.Errorf(`ent: validator failed for field "Identity.verifier": %w`, err)}
-		}
-	}
-	if _, ok := ic.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Identity.name"`)}
-	}
-	if v, ok := ic.mutation.Name(); ok {
-		if err := identity.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Identity.name": %w`, err)}
 		}
 	}
 	if _, ok := ic.mutation.OwnerID(); !ok {
@@ -207,6 +233,14 @@ func (ic *IdentityCreate) createSpec() (*Identity, *sqlgraph.CreateSpec) {
 		_spec.SetField(identity.FieldDateCreated, field.TypeTime, value)
 		_node.DateCreated = value
 	}
+	if value, ok := ic.mutation.Name(); ok {
+		_spec.SetField(identity.FieldName, field.TypeString, value)
+		_node.Name = value
+	}
+	if value, ok := ic.mutation.Description(); ok {
+		_spec.SetField(identity.FieldDescription, field.TypeString, value)
+		_node.Description = value
+	}
 	if value, ok := ic.mutation.Kind(); ok {
 		_spec.SetField(identity.FieldKind, field.TypeString, value)
 		_node.Kind = value
@@ -214,10 +248,6 @@ func (ic *IdentityCreate) createSpec() (*Identity, *sqlgraph.CreateSpec) {
 	if value, ok := ic.mutation.Verifier(); ok {
 		_spec.SetField(identity.FieldVerifier, field.TypeString, value)
 		_node.Verifier = value
-	}
-	if value, ok := ic.mutation.Name(); ok {
-		_spec.SetField(identity.FieldName, field.TypeString, value)
-		_node.Name = value
 	}
 	if nodes := ic.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

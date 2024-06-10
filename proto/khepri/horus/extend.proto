@@ -2,8 +2,17 @@ syntax = "proto3";
 
 package khepri.horus;
 
+import "khepri/horus/common.proto";
+
 option go_package = "khepri.dev/horus";
 
 message AcceptInvitationRequest {
 	bytes id = 1;
+}
+
+message ListAccountRequest {
+	bytes id = 1;
+}
+message ListAccountResponse {
+	repeated Account items = 1;
 }

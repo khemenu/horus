@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/lesomnus/entpb/cmd/protoc-gen-entpb/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -15,6 +16,9 @@ import (
 	"khepri.dev/horus/ent/predicate"
 	"khepri.dev/horus/ent/silo"
 	"khepri.dev/horus/ent/user"
+	"khepri.dev/horus/internal/fx"
+	"khepri.dev/horus/role"
+	"khepri.dev/horus/server/bare"
 	"khepri.dev/horus/server/frame"
 )
 
@@ -26,7 +30,7 @@ type AccountServiceServer struct {
 func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAccountRequest) (*horus.Account, error) {
 	f := frame.Must(ctx)
 
-	owner := req.GetAccount().GetOwner()
+	owner := req.GetOwner()
 	if owner == nil {
 		return nil, status.Errorf(codes.PermissionDenied, "account cannot be created by the account holder themselves")
 	}
@@ -34,7 +38,7 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 	// Actor must be owner of the silo.
 	// Actor must be direct parent of the account owner.
 
-	target_silo := req.GetAccount().GetSilo()
+	target_silo := req.GetSilo()
 	silo_uuid, err := uuid.FromBytes(target_silo.GetId())
 	if err != nil && target_silo.GetId() != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid silo UUID")
@@ -62,7 +66,7 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 			account.OwnerIDEQ(f.Actor.ID),
 			account.SiloIDEQ(silo_uuid),
 		).
-		Only(ctx); err != nil || actor_acct.Role != account.RoleOWNER {
+		Only(ctx); err != nil || actor_acct.Role != role.Owner {
 		return nil, status.Error(codes.PermissionDenied, "not the silo owner")
 	}
 
@@ -97,23 +101,14 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 		owner_uuid = owner.ID
 	}
 
-	v := req.GetAccount()
-	return s.bare.Account().Create(ctx, &horus.CreateAccountRequest{Account: &horus.Account{
-		Alias:       v.GetAlias(),
-		Name:        v.GetName(),
-		Description: v.GetDescription(),
-		Role:        horus.Account_ROLE_MEMBER,
-
-		Owner: &horus.User{Id: owner_uuid[:]},
-		Silo:  &horus.Silo{Id: silo_uuid[:]},
-	}})
+	req.Role = horus.Role_ROLE_MEMBER
+	req.Owner = &horus.User{Id: owner_uuid[:]}
+	req.Silo = &horus.Silo{Id: silo_uuid[:]}
+	return s.bare.Account().Create(ctx, req)
 }
 
 func (s *AccountServiceServer) Get(ctx context.Context, req *horus.GetAccountRequest) (*horus.Account, error) {
-	res, err := s.bare.Account().Get(ctx, &horus.GetAccountRequest{
-		Id:   req.Id,
-		View: horus.GetAccountRequest_WITH_EDGE_IDS,
-	})
+	res, err := s.bare.Account().Get(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -137,36 +132,15 @@ func (s *AccountServiceServer) Get(ctx context.Context, req *horus.GetAccountReq
 	return nil, status.Errorf(codes.Internal, err.Error())
 }
 
-func (s *AccountServiceServer) List(ctx context.Context, req *horus.ListAccountRequest) (*horus.ListAccountResponse, error) {
-	// f := frame.Must(ctx)
-	// vs, err := f.Actor.QueryAccounts().
-	// 	WithSilo().
-	// 	All(ctx)
-	// if err != nil {
-	// 	return nil, status.Errorf(codes.Internal, err.Error())
-	// }
-
-	// res, err := horus.ToProtoAccountList(vs)
-	// if err != nil {
-	// 	return nil, status.Errorf(codes.Internal, err.Error())
-	// }
-
-	// for i, v := range vs {
-	// 	res[i].Silo, err = horus.ToProtoSilo(v.Edges.Silo)
-	// 	if err != nil {
-	// 		return nil, status.Errorf(codes.Internal, err.Error())
-	// 	}
-	// }
-
-	// return &horus.ListAccountResponse{AccountList: res}, nil
-
-	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
-}
-
 func (s *AccountServiceServer) Update(ctx context.Context, req *horus.UpdateAccountRequest) (*horus.Account, error) {
-	v, err := s.Get(ctx, &horus.GetAccountRequest{Id: req.Account.Id})
+	v, err := s.Get(ctx, &horus.GetAccountRequest{
+		Id: req.GetId(),
+	})
 	if err != nil {
 		return nil, err
+	}
+	if v.Role != horus.Role_ROLE_OWNER {
+		req.Role = nil
 	}
 
 	f := frame.Must(ctx)
@@ -174,29 +148,45 @@ func (s *AccountServiceServer) Update(ctx context.Context, req *horus.UpdateAcco
 		return nil, ErrPermissionDenied
 	}
 
-	v.Alias = req.Account.Alias
-	v.Name = req.Account.Name
-	v.Description = req.Account.Description
-	return s.bare.Account().Update(ctx, &horus.UpdateAccountRequest{
-		Account: v,
-	})
+	return s.bare.Account().Update(ctx, req)
 }
 
 func (s *AccountServiceServer) Delete(ctx context.Context, req *horus.DeleteAccountRequest) (*emptypb.Empty, error) {
 	f := frame.Must(ctx)
-	v, err := s.Get(ctx, &horus.GetAccountRequest{Id: req.Id})
+	v, err := s.Get(ctx, &horus.GetAccountRequest{
+		Id: req.GetId(),
+	})
 	if err != nil {
 		return nil, err
 	}
-	if v.Role == horus.Account_ROLE_OWNER {
+	if v.Role == horus.Role_ROLE_OWNER {
 		return nil, status.Error(codes.PermissionDenied, "owner account cannot be deleted manually")
 	}
 	switch {
 	case bytes.Equal(f.Actor.ID[:], v.Owner.Id):
+		// Delete myself.
 		fallthrough
-	case f.ActingAccount.Role == account.RoleOWNER:
+	case f.ActingAccount.Role == role.Owner:
+		// Delete account in my own silo.
 		return s.bare.Account().Delete(ctx, req)
 	}
 
 	return nil, ErrPermissionDenied
+}
+
+func (s *AccountServiceServer) List(ctx context.Context, req *horus.ListAccountRequest) (*horus.ListAccountResponse, error) {
+	f := frame.Must(ctx)
+	vs, err := s.db.Account.Query().
+		Where(account.OwnerIDEQ(f.Actor.ID)).
+		WithSilo().
+		All(ctx)
+	if err != nil {
+		return nil, runtime.EntErrorToStatus(err)
+	}
+
+	return &horus.ListAccountResponse{
+		Items: fx.MapV(vs, func(v *ent.Account) *horus.Account {
+			return bare.ToProtoAccount(v)
+		}),
+	}, nil
 }

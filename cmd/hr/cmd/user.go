@@ -25,9 +25,9 @@ var CmdCreateUser = &cli.Command{
 			alias = ctx.Args().Get(0)
 		}
 
-		v, err := c.User().Create(ctx.Context, &horus.CreateUserRequest{User: &horus.User{
-			Alias: alias,
-		}})
+		v, err := c.User().Create(ctx.Context, &horus.CreateUserRequest{
+			Alias: &alias,
+		})
 		if err != nil {
 			return err
 		}
@@ -67,10 +67,9 @@ var CmdGetUser = &cli.Command{
 		}
 
 	Q:
-		v, err := c.User().Get(ctx.Context, &horus.GetUserRequest{
-			Id:   user_uuid[:],
-			View: horus.GetUserRequest_WITH_EDGE_IDS,
-		})
+		v, err := c.User().Get(ctx.Context, &horus.GetUserRequest{Key: &horus.GetUserRequest_Id{
+			Id: user_uuid[:],
+		}})
 		if err != nil {
 			return err
 		}

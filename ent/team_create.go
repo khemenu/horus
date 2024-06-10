@@ -51,15 +51,17 @@ func (tc *TeamCreate) SetNillableAlias(s *string) *TeamCreate {
 	return tc
 }
 
-// SetSiloID sets the "silo_id" field.
-func (tc *TeamCreate) SetSiloID(u uuid.UUID) *TeamCreate {
-	tc.mutation.SetSiloID(u)
-	return tc
-}
-
 // SetName sets the "name" field.
 func (tc *TeamCreate) SetName(s string) *TeamCreate {
 	tc.mutation.SetName(s)
+	return tc
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (tc *TeamCreate) SetNillableName(s *string) *TeamCreate {
+	if s != nil {
+		tc.SetName(*s)
+	}
 	return tc
 }
 
@@ -74,6 +76,12 @@ func (tc *TeamCreate) SetNillableDescription(s *string) *TeamCreate {
 	if s != nil {
 		tc.SetDescription(*s)
 	}
+	return tc
+}
+
+// SetSiloID sets the "silo_id" field.
+func (tc *TeamCreate) SetSiloID(u uuid.UUID) *TeamCreate {
+	tc.mutation.SetSiloID(u)
 	return tc
 }
 
@@ -154,6 +162,10 @@ func (tc *TeamCreate) defaults() {
 		v := team.DefaultAlias()
 		tc.mutation.SetAlias(v)
 	}
+	if _, ok := tc.mutation.Name(); !ok {
+		v := team.DefaultName
+		tc.mutation.SetName(v)
+	}
 	if _, ok := tc.mutation.Description(); !ok {
 		v := team.DefaultDescription
 		tc.mutation.SetDescription(v)
@@ -177,9 +189,6 @@ func (tc *TeamCreate) check() error {
 			return &ValidationError{Name: "alias", err: fmt.Errorf(`ent: validator failed for field "Team.alias": %w`, err)}
 		}
 	}
-	if _, ok := tc.mutation.SiloID(); !ok {
-		return &ValidationError{Name: "silo_id", err: errors.New(`ent: missing required field "Team.silo_id"`)}
-	}
 	if _, ok := tc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Team.name"`)}
 	}
@@ -195,6 +204,9 @@ func (tc *TeamCreate) check() error {
 		if err := team.DescriptionValidator(v); err != nil {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Team.description": %w`, err)}
 		}
+	}
+	if _, ok := tc.mutation.SiloID(); !ok {
+		return &ValidationError{Name: "silo_id", err: errors.New(`ent: missing required field "Team.silo_id"`)}
 	}
 	if _, ok := tc.mutation.SiloID(); !ok {
 		return &ValidationError{Name: "silo", err: errors.New(`ent: missing required edge "Team.silo"`)}

@@ -25,14 +25,14 @@ type Account struct {
 	DateCreated time.Time `json:"date_created,omitempty"`
 	// Alias holds the value of the "alias" field.
 	Alias string `json:"alias,omitempty"`
-	// OwnerID holds the value of the "owner_id" field.
-	OwnerID uuid.UUID `json:"owner_id,omitempty"`
-	// SiloID holds the value of the "silo_id" field.
-	SiloID uuid.UUID `json:"silo_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// OwnerID holds the value of the "owner_id" field.
+	OwnerID uuid.UUID `json:"owner_id,omitempty"`
+	// SiloID holds the value of the "silo_id" field.
+	SiloID uuid.UUID `json:"silo_id,omitempty"`
 	// Role holds the value of the "role" field.
 	Role role.Role `json:"role,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -140,18 +140,6 @@ func (a *Account) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				a.Alias = value.String
 			}
-		case account.FieldOwnerID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
-			} else if value != nil {
-				a.OwnerID = *value
-			}
-		case account.FieldSiloID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field silo_id", values[i])
-			} else if value != nil {
-				a.SiloID = *value
-			}
 		case account.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -163,6 +151,18 @@ func (a *Account) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				a.Description = value.String
+			}
+		case account.FieldOwnerID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
+			} else if value != nil {
+				a.OwnerID = *value
+			}
+		case account.FieldSiloID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field silo_id", values[i])
+			} else if value != nil {
+				a.SiloID = *value
 			}
 		case account.FieldRole:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -232,17 +232,17 @@ func (a *Account) String() string {
 	builder.WriteString("alias=")
 	builder.WriteString(a.Alias)
 	builder.WriteString(", ")
-	builder.WriteString("owner_id=")
-	builder.WriteString(fmt.Sprintf("%v", a.OwnerID))
-	builder.WriteString(", ")
-	builder.WriteString("silo_id=")
-	builder.WriteString(fmt.Sprintf("%v", a.SiloID))
-	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(a.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(a.Description)
+	builder.WriteString(", ")
+	builder.WriteString("owner_id=")
+	builder.WriteString(fmt.Sprintf("%v", a.OwnerID))
+	builder.WriteString(", ")
+	builder.WriteString("silo_id=")
+	builder.WriteString(fmt.Sprintf("%v", a.SiloID))
 	builder.WriteString(", ")
 	builder.WriteString("role=")
 	builder.WriteString(fmt.Sprintf("%v", a.Role))

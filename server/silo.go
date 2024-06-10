@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/lesomnus/entpb/cmd/protoc-gen-entpb/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -13,6 +14,8 @@ import (
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/silo"
 	"khepri.dev/horus/internal/entutils"
+	"khepri.dev/horus/internal/fx"
+	"khepri.dev/horus/role"
 	"khepri.dev/horus/server/bare"
 	"khepri.dev/horus/server/frame"
 )
@@ -24,26 +27,25 @@ type SiloServiceServer struct {
 
 func (s *SiloServiceServer) Create(ctx context.Context, req *horus.CreateSiloRequest) (*horus.Silo, error) {
 	f := frame.Must(ctx)
+	if req == nil {
+		req = &horus.CreateSiloRequest{}
+	}
 	return entutils.WithTxV(ctx, s.db, func(tx *ent.Tx) (*horus.Silo, error) {
 		c := tx.Client()
-		v, err := bare.NewSiloService(c).Create(ctx, &horus.CreateSiloRequest{Silo: &horus.Silo{
-			Alias: req.GetSilo().GetAlias(),
-		}})
+		v, err := bare.NewSiloServiceServer(c).Create(ctx, req)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = bare.NewAccountService(c).Create(ctx, &horus.CreateAccountRequest{
-			Account: &horus.Account{
-				Alias:       "founder",
-				Name:        "Founder",
-				Description: fmt.Sprintf("Founder of %s", v.Name),
+		_, err = bare.NewAccountServiceServer(c).Create(ctx, &horus.CreateAccountRequest{
+			Alias:       fx.Addr("founder"),
+			Name:        fx.Addr("Founder"),
+			Description: fx.Addr(fmt.Sprintf("Founder of %s", v.Name)),
 
-				Role: horus.Account_ROLE_OWNER,
+			Role: horus.Role_ROLE_OWNER,
 
-				Owner: &horus.User{Id: f.Actor.ID[:]},
-				Silo:  &horus.Silo{Id: v.Id},
-			},
+			Owner: &horus.User{Id: f.Actor.ID[:]},
+			Silo:  &horus.Silo{Id: v.Id},
 		})
 		if err != nil {
 			return nil, err
@@ -61,36 +63,30 @@ func (s *SiloServiceServer) Get(ctx context.Context, req *horus.GetSiloRequest) 
 	}
 
 	v, err := f.Actor.QueryAccounts().
-		Where(account.HasSiloWith(silo.ID(uuid.UUID(req.Id)))).
+		Where(account.HasSiloWith(silo.ID(uuid.UUID(res.GetId())))).
 		Only(ctx)
-	if err == nil {
-		f.ActingAccount = v
-		return res, nil
-	}
-	if ent.IsNotFound(err) {
-		return nil, status.Errorf(codes.NotFound, "not found: %s", err)
+	if err != nil {
+		return nil, runtime.EntErrorToStatus(err)
 	}
 
-	return nil, status.Errorf(codes.Internal, "internal error: %s", err)
+	f.ActingAccount = v
+	return res, nil
 }
 
 func (s *SiloServiceServer) Update(ctx context.Context, req *horus.UpdateSiloRequest) (*horus.Silo, error) {
-	v, err := s.Get(ctx, &horus.GetSiloRequest{Id: req.Silo.Id})
+	_, err := s.Get(ctx, &horus.GetSiloRequest{Key: &horus.GetSiloRequest_Id{
+		Id: req.GetId(),
+	}})
 	if err != nil {
 		return nil, err
 	}
 
 	f := frame.Must(ctx)
-	if f.ActingAccount.Role != account.RoleOWNER {
+	if f.ActingAccount.Role != role.Owner {
 		return nil, ErrPermissionDenied
 	}
 
-	v.Alias = req.Silo.Alias
-	v.Name = req.Silo.Name
-	v.Description = req.Silo.Description
-	return s.bare.Silo().Update(ctx, &horus.UpdateSiloRequest{
-		Silo: v,
-	})
+	return s.bare.Silo().Update(ctx, req)
 }
 
 func (s *SiloServiceServer) Delete(ctx context.Context, req *horus.DeleteSiloRequest) (*emptypb.Empty, error) {

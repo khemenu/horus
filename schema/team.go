@@ -17,7 +17,8 @@ type Team struct {
 func (Team) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		baseMixin{},
-		aliasMixin{},
+		aliasMixin{IsCommon: true},
+		labelMixin{},
 	}
 }
 
@@ -25,14 +26,6 @@ func (Team) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("silo_id", uuid.UUID{}).
 			Immutable(),
-
-		field.String("name").
-			Annotations(entpb.Field(5)).
-			NotEmpty().MaxLen(64),
-		field.String("description").
-			Annotations(entpb.Field(6)).
-			MaxLen(256).
-			Default(""),
 	}
 }
 

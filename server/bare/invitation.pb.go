@@ -23,25 +23,43 @@ type InvitationServiceServer struct {
 func NewInvitationServiceServer(db *ent.Client) *InvitationServiceServer {
 	return &InvitationServiceServer{db: db}
 }
-func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.Invitation) (*horus.Invitation, error) {
+func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.CreateInvitationRequest) (*horus.Invitation, error) {
 	q := s.db.Invitation.Create()
-	q.SetInvitee(req.Invitee)
-	q.SetType(req.Type)
-	if v := req.DateExpired; v != nil {
+	q.SetInvitee(req.GetInvitee())
+	q.SetType(req.GetType())
+	if v := req.GetDateExpired(); v != nil {
 		w := v.AsTime()
 		q.SetDateExpired(w)
 	}
-	if v := req.DateAccepted; v != nil {
+	if v := req.GetDateAccepted(); v != nil {
 		w := v.AsTime()
 		q.SetDateAccepted(w)
 	}
-	if v := req.DateDeclined; v != nil {
+	if v := req.GetDateDeclined(); v != nil {
 		w := v.AsTime()
 		q.SetDateDeclined(w)
 	}
-	if v := req.DateCanceled; v != nil {
+	if v := req.GetDateCanceled(); v != nil {
 		w := v.AsTime()
 		q.SetDateCanceled(w)
+	}
+	if v := req.GetSilo().GetId(); v == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "field \"silo\" not provided")
+	} else {
+		if w, err := uuid.FromBytes(v); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "silo: %s", err)
+		} else {
+			q.SetSiloID(w)
+		}
+	}
+	if v := req.GetInviter().GetId(); v == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "field \"inviter\" not provided")
+	} else {
+		if w, err := uuid.FromBytes(v); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "inviter: %s", err)
+		} else {
+			q.SetInviterID(w)
+		}
 	}
 
 	res, err := q.Save(ctx)
@@ -86,7 +104,7 @@ func (s *InvitationServiceServer) Get(ctx context.Context, req *horus.GetInvitat
 func (s *InvitationServiceServer) Update(ctx context.Context, req *horus.UpdateInvitationRequest) (*horus.Invitation, error) {
 	id, err := uuid.FromBytes(req.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
 	}
 
 	q := s.db.Invitation.UpdateOneID(id)

@@ -18,24 +18,23 @@ type UserServiceServer struct {
 
 func (s *UserServiceServer) Create(ctx context.Context, req *horus.CreateUserRequest) (*horus.User, error) {
 	f := frame.Must(ctx)
-	return s.bare.User().Create(ctx, &horus.CreateUserRequest{User: &horus.User{
-		Alias: req.GetUser().GetAlias(),
-		Parent: &horus.User{
-			Id: f.Actor.ID[:],
-		},
-	}})
+	if req == nil {
+		req = &horus.CreateUserRequest{}
+	}
+	req.Parent = &horus.User{
+		Id: f.Actor.ID[:],
+	}
+	return s.bare.User().Create(ctx, req)
 }
 
 func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) (*horus.User, error) {
 	f := frame.Must(ctx)
-	id := req.GetId()
-	if id == nil {
-		id = f.Actor.ID[:]
+	if req.Key == nil {
+		req.Key = &horus.GetUserRequest_Id{
+			Id: req.GetId(),
+		}
 	}
-	v, err := s.bare.User().Get(ctx, &horus.GetUserRequest{
-		Id:   id,
-		View: horus.GetUserRequest_WITH_EDGE_IDS,
-	})
+	v, err := s.bare.User().Get(ctx, req)
 	if err != nil {
 		return nil, err
 	}
