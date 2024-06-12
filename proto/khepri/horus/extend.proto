@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package khepri.horus;
 
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 import "khepri/horus/common.proto";
 
 option go_package = "khepri.dev/horus";
@@ -11,7 +13,15 @@ message AcceptInvitationRequest {
 }
 
 message ListAccountRequest {
-	bytes id = 1;
+	uint32                    limit = 1;
+	google.protobuf.Timestamp token = 2;
+
+	oneof key {
+		google.protobuf.Empty mine = 3;
+
+		bytes  silo_id    = 4;
+		string silo_alias = 5;
+	}
 }
 message ListAccountResponse {
 	repeated Account items = 1;

@@ -114,7 +114,7 @@ func ToProtoIdentity(v *ent.Identity) *horus.Identity {
 	m.Kind = v.Kind
 	m.Verifier = v.Verifier
 	if v := v.Edges.Owner; v != nil {
-		m.Owner = &horus.User{Id: v.ID[:]}
+		m.Owner = ToProtoUser(v)
 	}
 	return m
 }

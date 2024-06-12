@@ -130,13 +130,13 @@ func ToProtoToken(v *ent.Token) *horus.Token {
 	m.Name = v.Name
 	m.DateExpired = timestamppb.New(v.DateExpired)
 	if v := v.Edges.Owner; v != nil {
-		m.Owner = &horus.User{Id: v.ID[:]}
+		m.Owner = ToProtoUser(v)
 	}
 	if v := v.Edges.Parent; v != nil {
-		m.Parent = &horus.Token{Id: v.ID[:]}
+		m.Parent = ToProtoToken(v)
 	}
 	for _, v := range v.Edges.Children {
-		m.Children = append(m.Children, &horus.Token{Id: v.ID[:]})
+		m.Children = append(m.Children, ToProtoToken(v))
 	}
 	return m
 }

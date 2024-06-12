@@ -37,10 +37,8 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 
 	token, err := s.db.Token.Query().
 		Where(
-			token.And(
-				token.Type(horus.TokenTypeBasic),
-				token.HasOwnerWith(user.ID(u.ID)),
-			),
+			token.Type(horus.TokenTypeBasic),
+			token.HasOwnerWith(user.ID(u.ID)),
 		).
 		Only(ctx)
 	if err != nil {

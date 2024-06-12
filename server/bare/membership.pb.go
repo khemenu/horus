@@ -108,10 +108,10 @@ func ToProtoMembership(v *ent.Membership) *horus.Membership {
 	m.DateCreated = timestamppb.New(v.DateCreated)
 	m.Role = toPbRole(v.Role)
 	if v := v.Edges.Account; v != nil {
-		m.Account = &horus.Account{Id: v.ID[:]}
+		m.Account = ToProtoAccount(v)
 	}
 	if v := v.Edges.Team; v != nil {
-		m.Team = &horus.Team{Id: v.ID[:]}
+		m.Team = ToProtoTeam(v)
 	}
 	return m
 }

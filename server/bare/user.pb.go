@@ -123,16 +123,16 @@ func ToProtoUser(v *ent.User) *horus.User {
 	m.DateCreated = timestamppb.New(v.DateCreated)
 	m.Alias = v.Alias
 	if v := v.Edges.Parent; v != nil {
-		m.Parent = &horus.User{Id: v.ID[:]}
+		m.Parent = ToProtoUser(v)
 	}
 	for _, v := range v.Edges.Identities {
-		m.Identities = append(m.Identities, &horus.Identity{Id: v.ID[:]})
+		m.Identities = append(m.Identities, ToProtoIdentity(v))
 	}
 	for _, v := range v.Edges.Accounts {
-		m.Accounts = append(m.Accounts, &horus.Account{Id: v.ID[:]})
+		m.Accounts = append(m.Accounts, ToProtoAccount(v))
 	}
 	for _, v := range v.Edges.Children {
-		m.Children = append(m.Children, &horus.User{Id: v.ID[:]})
+		m.Children = append(m.Children, ToProtoUser(v))
 	}
 	return m
 }

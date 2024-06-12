@@ -27,6 +27,6 @@ func (s *UserTestSuite) TestCreate() {
 			Id: v.Id,
 		}})
 		s.NoError(err)
-		s.Equal(s.me.Actor.ID[:], v.Parent.Id)
+		s.Equal(s.me.Actor.ID[:], v.GetParent().GetId())
 	})
 }

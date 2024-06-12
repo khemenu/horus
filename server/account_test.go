@@ -1,7 +1,6 @@
 package server_test
 
 import (
-	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -43,14 +42,34 @@ func (s *AccountTestSuite) TestList() {
 		v2, err := s.svc.Silo().Create(s.ctx, nil)
 		s.NoError(err)
 
-		res, err := s.svc.Account().List(s.ctx, nil)
+		res, err := s.svc.Account().List(s.ctx, &horus.ListAccountRequest{Key: &horus.ListAccountRequest_Mine{}})
 		s.NoError(err)
 		s.Len(res.Items, 2)
 
-		slices.SortFunc(res.Items, func(a, b *horus.Account) int {
-			return a.DateCreated.AsTime().Compare(b.DateCreated.AsTime())
+		s.Equal(v2.Id, res.Items[0].Silo.Id)
+		s.Equal(v1.Id, res.Items[1].Silo.Id)
+	})
+
+	s.Run("list accounts of silo", func() {
+		g, err := s.svc.Silo().Create(s.ctx, nil)
+		s.NoError(err)
+
+		u, err := s.svc.User().Create(s.ctx, nil)
+		s.NoError(err)
+
+		_, err = s.svc.Account().Create(s.ctx, &horus.CreateAccountRequest{
+			Silo:  g,
+			Owner: u,
 		})
-		s.Equal(v1.Id, res.Items[0].Silo.Id)
-		s.Equal(v2.Id, res.Items[1].Silo.Id)
+		s.NoError(err)
+
+		res, err := s.svc.Account().List(s.ctx, &horus.ListAccountRequest{Key: &horus.ListAccountRequest_SiloId{
+			SiloId: g.Id,
+		}})
+		s.NoError(err)
+		s.Len(res.Items, 2)
+
+		s.Equal(u.Id, res.Items[0].Owner.Id)
+		s.Equal(s.me.Actor.ID[:], res.Items[1].Owner.Id)
 	})
 }

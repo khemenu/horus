@@ -130,13 +130,13 @@ func ToProtoAccount(v *ent.Account) *horus.Account {
 	m.Description = v.Description
 	m.Role = toPbRole(v.Role)
 	if v := v.Edges.Owner; v != nil {
-		m.Owner = &horus.User{Id: v.ID[:]}
+		m.Owner = ToProtoUser(v)
 	}
 	if v := v.Edges.Silo; v != nil {
-		m.Silo = &horus.Silo{Id: v.ID[:]}
+		m.Silo = ToProtoSilo(v)
 	}
 	for _, v := range v.Edges.Memberships {
-		m.Memberships = append(m.Memberships, &horus.Membership{Id: v.ID[:]})
+		m.Memberships = append(m.Memberships, ToProtoMembership(v))
 	}
 	return m
 }

@@ -114,7 +114,7 @@ func ToProtoTeam(v *ent.Team) *horus.Team {
 	m.Name = v.Name
 	m.Description = v.Description
 	if v := v.Edges.Silo; v != nil {
-		m.Silo = &horus.Silo{Id: v.ID[:]}
+		m.Silo = ToProtoSilo(v)
 	}
 	return m
 }

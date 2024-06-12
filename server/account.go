@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"github.com/lesomnus/entpb/cmd/protoc-gen-entpb/runtime"
 	"google.golang.org/grpc/codes"
@@ -175,15 +176,56 @@ func (s *AccountServiceServer) Delete(ctx context.Context, req *horus.DeleteAcco
 }
 
 func (s *AccountServiceServer) List(ctx context.Context, req *horus.ListAccountRequest) (*horus.ListAccountResponse, error) {
-	f := frame.Must(ctx)
-	vs, err := s.db.Account.Query().
-		Where(account.OwnerIDEQ(f.Actor.ID)).
-		WithSilo().
+	l := int(req.GetLimit())
+	l = fx.Clamp(l, 5, 100)
+	q := s.db.Account.Query().
+		Order(account.ByDateCreated(sql.OrderDesc())).
+		Limit(l)
+
+	ps := make([]predicate.Account, 0, 2)
+	if t := req.GetToken(); t != nil {
+		ps = append(ps, account.DateCreatedLT(t.AsTime()))
+	}
+
+	var (
+		vs  []*ent.Account
+		err error
+	)
+	r := &horus.GetSiloRequest{}
+	switch k := req.GetKey().(type) {
+	case *horus.ListAccountRequest_Mine:
+		f := frame.Must(ctx)
+		ps = append(ps, account.HasOwnerWith(user.IDEQ(f.Actor.ID)))
+		vs, err = q.Where(ps...).
+			WithSilo().
+			All(ctx)
+		if err != nil {
+			return nil, runtime.EntErrorToStatus(err)
+		}
+		goto R
+
+	case *horus.ListAccountRequest_SiloId:
+		r.Key = &horus.GetSiloRequest_Id{Id: k.SiloId}
+	case *horus.ListAccountRequest_SiloAlias:
+		r.Key = &horus.GetSiloRequest_Alias{Alias: k.SiloAlias}
+	default:
+		return nil, status.Error(codes.InvalidArgument, "unknown key")
+	}
+
+	if v, err := s.covered.Silo().Get(ctx, r); err != nil {
+		return nil, err
+	} else {
+		ps = append(ps, account.HasSiloWith(silo.IDEQ(uuid.UUID(v.Id))))
+	}
+
+	vs, err = q.Where(ps...).
+		WithOwner().
 		All(ctx)
 	if err != nil {
 		return nil, runtime.EntErrorToStatus(err)
 	}
 
+R:
 	return &horus.ListAccountResponse{
 		Items: fx.MapV(vs, func(v *ent.Account) *horus.Account {
 			return bare.ToProtoAccount(v)
