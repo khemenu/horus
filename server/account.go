@@ -7,7 +7,6 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
-	"github.com/lesomnus/entpb/cmd/protoc-gen-entpb/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -38,28 +37,9 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 
 	// Actor must be owner of the silo.
 	// Actor must be direct parent of the account owner.
-
-	target_silo := req.GetSilo()
-	silo_uuid, err := uuid.FromBytes(target_silo.GetId())
-	if err != nil && target_silo.GetId() != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid silo UUID")
-	}
-	if silo_uuid == uuid.Nil {
-		silo_alias := target_silo.GetAlias()
-		if silo_alias == "" {
-			return nil, status.Errorf(codes.InvalidArgument, "silo ID not provided")
-		}
-
-		silo_uuid, err = s.db.Silo.Query().
-			Where(silo.AliasEQ(silo_alias)).
-			OnlyID(ctx)
-		if err != nil {
-			if ent.IsNotFound(err) {
-				return nil, status.Error(codes.NotFound, "silo not found")
-			}
-
-			return nil, fmt.Errorf("get silo: %w", err)
-		}
+	silo_uuid, err := bare.GetSiloId(ctx, s.db, req.GetSilo())
+	if err != nil {
+		return nil, err
 	}
 
 	if actor_acct, err := s.db.Account.Query().
@@ -71,26 +51,14 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 		return nil, status.Error(codes.PermissionDenied, "not the silo owner")
 	}
 
-	owner_uuid, err := uuid.FromBytes(owner.Id)
-	if err != nil && owner.Id != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid owner UUID")
-	}
-
-	var owner_q predicate.User
-	if owner_uuid != uuid.Nil {
-		owner_q = user.IDEQ(owner_uuid)
+	var owner_uuid uuid.UUID
+	q := s.db.User.Query().WithParent()
+	if p, err := bare.GetUserSpecifier(req.GetOwner()); err != nil {
+		return nil, err
 	} else {
-		if owner.Alias == "" {
-			return nil, status.Errorf(codes.InvalidArgument, "owner ID not provided")
-		}
-
-		owner_q = user.AliasEQ(owner.Alias)
+		q.Where(p)
 	}
-
-	if owner, err := s.db.User.Query().
-		Where(owner_q).
-		WithParent().
-		Only(ctx); err != nil {
+	if owner, err := q.Only(ctx); err != nil {
 		if ent.IsNotFound(err) {
 			return nil, status.Error(codes.NotFound, "owner not found")
 		}
@@ -103,8 +71,8 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 	}
 
 	req.Role = horus.Role_ROLE_MEMBER
-	req.Owner = &horus.User{Id: owner_uuid[:]}
-	req.Silo = &horus.Silo{Id: silo_uuid[:]}
+	req.Owner = horus.UserById(owner_uuid)
+	req.Silo = horus.SiloById(silo_uuid)
 	return s.bare.Account().Create(ctx, req)
 }
 
@@ -176,11 +144,11 @@ func (s *AccountServiceServer) Delete(ctx context.Context, req *horus.DeleteAcco
 }
 
 func (s *AccountServiceServer) List(ctx context.Context, req *horus.ListAccountRequest) (*horus.ListAccountResponse, error) {
-	l := int(req.GetLimit())
-	l = fx.Clamp(l, 5, 100)
 	q := s.db.Account.Query().
-		Order(account.ByDateCreated(sql.OrderDesc())).
-		Limit(l)
+		Order(account.ByDateCreated(sql.OrderDesc()))
+	if l := req.GetLimit(); l > 0 {
+		q.Limit(int(l))
+	}
 
 	ps := make([]predicate.Account, 0, 2)
 	if t := req.GetToken(); t != nil {
@@ -200,7 +168,7 @@ func (s *AccountServiceServer) List(ctx context.Context, req *horus.ListAccountR
 			WithSilo().
 			All(ctx)
 		if err != nil {
-			return nil, runtime.EntErrorToStatus(err)
+			return nil, bare.ToStatus(err)
 		}
 		goto R
 
@@ -219,10 +187,13 @@ func (s *AccountServiceServer) List(ctx context.Context, req *horus.ListAccountR
 	}
 
 	vs, err = q.Where(ps...).
+		WithMemberships(func(q *ent.MembershipQuery) {
+			q.WithTeam()
+		}).
 		WithOwner().
 		All(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, bare.ToStatus(err)
 	}
 
 R:

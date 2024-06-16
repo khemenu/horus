@@ -71,10 +71,6 @@ func (Account) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entpb.Message(entpb.PathInherit,
 			entpb.WithService(entpb.PathInherit,
-				entpb.RpcEntCreate(),
-				entpb.RpcEntGet(),
-				entpb.RpcEntUpdate(),
-				entpb.RpcEntDelete(),
 				&entpb.Rpc{
 					Ident: "List",
 					Req:   entpb.PbType{Ident: "ListAccountRequest", Import: "khepri/horus/extend.proto"},

@@ -17,6 +17,7 @@ import (
 	"khepri.dev/horus/ent/user"
 	"khepri.dev/horus/internal/entutils"
 	"khepri.dev/horus/role"
+	"khepri.dev/horus/server/bare"
 	"khepri.dev/horus/server/frame"
 )
 
@@ -31,33 +32,15 @@ func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.CreateI
 		return nil, status.Errorf(codes.Unimplemented, "type other than internal not implemented")
 	}
 
-	target_silo := req.GetSilo()
-	silo_uuid, err := uuid.FromBytes(target_silo.GetId())
-	if err != nil && target_silo.GetId() != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid silo UUID")
-	}
-	if silo_uuid == uuid.Nil {
-		silo_alias := target_silo.GetAlias()
-		if silo_alias == "" {
-			return nil, status.Errorf(codes.InvalidArgument, "silo ID not provided")
-		}
-
-		silo_uuid, err = s.db.Silo.Query().
-			Where(silo.AliasEQ(silo_alias)).
-			OnlyID(ctx)
-		if err != nil {
-			if ent.IsNotFound(err) {
-				return nil, status.Error(codes.NotFound, "silo not found")
-			}
-
-			return nil, fmt.Errorf("get silo: %w", err)
-		}
+	silo_specifier, err := bare.GetSiloSpecifier(req.GetSilo())
+	if err != nil {
+		return nil, err
 	}
 
 	actor_acct, err := s.db.Account.Query().
 		Where(
 			account.HasOwnerWith(user.IDEQ(f.Actor.ID)),
-			account.HasSiloWith(silo.IDEQ(silo_uuid)),
+			account.HasSiloWith(silo_specifier),
 		).
 		Only(ctx)
 	if err != nil {
@@ -98,8 +81,8 @@ func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.CreateI
 	return s.bare.Invitation().Create(ctx, &horus.CreateInvitationRequest{
 		Invitee: invitee_uuid.String(),
 		Type:    horus.InvitationTypeInternal,
-		Silo:    &horus.Silo{Id: silo_uuid[:]},
-		Inviter: &horus.Account{Id: actor_acct.ID[:]},
+		Silo:    req.GetSilo(),
+		Inviter: horus.AccountById(actor_acct.ID),
 
 		DateExpired: ts_expired,
 	})

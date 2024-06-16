@@ -5,7 +5,6 @@ package bare
 import (
 	context "context"
 	uuid "github.com/google/uuid"
-	runtime "github.com/lesomnus/entpb/cmd/protoc-gen-entpb/runtime"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -13,6 +12,7 @@ import (
 	horus "khepri.dev/horus"
 	ent "khepri.dev/horus/ent"
 	membership "khepri.dev/horus/ent/membership"
+	predicate "khepri.dev/horus/ent/predicate"
 )
 
 type MembershipServiceServer struct {
@@ -26,28 +26,20 @@ func NewMembershipServiceServer(db *ent.Client) *MembershipServiceServer {
 func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateMembershipRequest) (*horus.Membership, error) {
 	q := s.db.Membership.Create()
 	q.SetRole(toEntRole(req.GetRole()))
-	if v := req.GetAccount().GetId(); v == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "field \"account\" not provided")
+	if v, err := GetAccountId(ctx, s.db, req.GetAccount()); err != nil {
+		return nil, err
 	} else {
-		if w, err := uuid.FromBytes(v); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "account: %s", err)
-		} else {
-			q.SetAccountID(w)
-		}
+		q.SetAccountID(v)
 	}
-	if v := req.GetTeam().GetId(); v == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "field \"team\" not provided")
+	if v, err := GetTeamId(ctx, s.db, req.GetTeam()); err != nil {
+		return nil, err
 	} else {
-		if w, err := uuid.FromBytes(v); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "team: %s", err)
-		} else {
-			q.SetTeamID(w)
-		}
+		q.SetTeamID(v)
 	}
 
 	res, err := q.Save(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoMembership(res), nil
@@ -62,24 +54,25 @@ func (s *MembershipServiceServer) Delete(ctx context.Context, req *horus.DeleteM
 
 	_, err := q.Exec(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return &emptypb.Empty{}, nil
 }
 func (s *MembershipServiceServer) Get(ctx context.Context, req *horus.GetMembershipRequest) (*horus.Membership, error) {
 	q := s.db.Membership.Query()
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	if p, err := GetMembershipSpecifier(req); err != nil {
+		return nil, err
 	} else {
-		q.Where(membership.IDEQ(v))
+		q.Where(p)
 	}
+
 	q.WithAccount(func(q *ent.AccountQuery) { q.Select(membership.FieldID) })
 	q.WithTeam(func(q *ent.TeamQuery) { q.Select(membership.FieldID) })
 
 	res, err := q.Only(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoMembership(res), nil
@@ -97,7 +90,7 @@ func (s *MembershipServiceServer) Update(ctx context.Context, req *horus.UpdateM
 
 	res, err := q.Save(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoMembership(res), nil
@@ -114,4 +107,19 @@ func ToProtoMembership(v *ent.Membership) *horus.Membership {
 		m.Team = ToProtoTeam(v)
 	}
 	return m
+}
+func GetMembershipId(ctx context.Context, db *ent.Client, req *horus.GetMembershipRequest) (uuid.UUID, error) {
+	var r uuid.UUID
+	if v, err := uuid.FromBytes(req.GetId()); err != nil {
+		return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	} else {
+		return v, nil
+	}
+}
+func GetMembershipSpecifier(req *horus.GetMembershipRequest) (predicate.Membership, error) {
+	if v, err := uuid.FromBytes(req.GetId()); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	} else {
+		return membership.IDEQ(v), nil
+	}
 }

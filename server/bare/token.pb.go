@@ -5,13 +5,13 @@ package bare
 import (
 	context "context"
 	uuid "github.com/google/uuid"
-	runtime "github.com/lesomnus/entpb/cmd/protoc-gen-entpb/runtime"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	horus "khepri.dev/horus"
 	ent "khepri.dev/horus/ent"
+	predicate "khepri.dev/horus/ent/predicate"
 	token "khepri.dev/horus/ent/token"
 )
 
@@ -34,19 +34,15 @@ func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenR
 		w := v.AsTime()
 		q.SetDateExpired(w)
 	}
-	if v := req.GetOwner().GetId(); v == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "field \"owner\" not provided")
+	if v, err := GetUserId(ctx, s.db, req.GetOwner()); err != nil {
+		return nil, err
 	} else {
-		if w, err := uuid.FromBytes(v); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "owner: %s", err)
-		} else {
-			q.SetOwnerID(w)
-		}
+		q.SetOwnerID(v)
 	}
 
 	res, err := q.Save(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoToken(res), nil
@@ -68,24 +64,17 @@ func (s *TokenServiceServer) Delete(ctx context.Context, req *horus.DeleteTokenR
 
 	_, err := q.Exec(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return &emptypb.Empty{}, nil
 }
 func (s *TokenServiceServer) Get(ctx context.Context, req *horus.GetTokenRequest) (*horus.Token, error) {
 	q := s.db.Token.Query()
-	switch t := req.GetKey().(type) {
-	case *horus.GetTokenRequest_Id:
-		if v, err := uuid.FromBytes(t.Id); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-		} else {
-			q.Where(token.IDEQ(v))
-		}
-	case *horus.GetTokenRequest_Value:
-		q.Where(token.ValueEQ(t.Value))
-	default:
-		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
+	if p, err := GetTokenSpecifier(req); err != nil {
+		return nil, err
+	} else {
+		q.Where(p)
 	}
 
 	q.WithOwner(func(q *ent.UserQuery) { q.Select(token.FieldID) })
@@ -94,7 +83,7 @@ func (s *TokenServiceServer) Get(ctx context.Context, req *horus.GetTokenRequest
 
 	res, err := q.Only(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoToken(res), nil
@@ -116,7 +105,7 @@ func (s *TokenServiceServer) Update(ctx context.Context, req *horus.UpdateTokenR
 
 	res, err := q.Save(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoToken(res), nil
@@ -139,4 +128,46 @@ func ToProtoToken(v *ent.Token) *horus.Token {
 		m.Children = append(m.Children, ToProtoToken(v))
 	}
 	return m
+}
+func GetTokenId(ctx context.Context, db *ent.Client, req *horus.GetTokenRequest) (uuid.UUID, error) {
+	var r uuid.UUID
+	k := req.GetKey()
+	if t, ok := k.(*horus.GetTokenRequest_Id); ok {
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return v, nil
+		}
+	}
+
+	q := db.Token.Query()
+	switch t := k.(type) {
+	case *horus.GetTokenRequest_Value:
+		q.Where(token.ValueEQ(t.Value))
+	case nil:
+		return r, status.Errorf(codes.InvalidArgument, "key not provided")
+	default:
+		return r, status.Errorf(codes.Unimplemented, "unknown type of key")
+	}
+	if v, err := q.OnlyID(ctx); err != nil {
+		return r, ToStatus(err)
+	} else {
+		return v, nil
+	}
+}
+func GetTokenSpecifier(req *horus.GetTokenRequest) (predicate.Token, error) {
+	switch t := req.GetKey().(type) {
+	case *horus.GetTokenRequest_Id:
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return token.IDEQ(v), nil
+		}
+	case *horus.GetTokenRequest_Value:
+		return token.ValueEQ(t.Value), nil
+	case nil:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
+	default:
+		return nil, status.Errorf(codes.Unimplemented, "unknown type of key")
+	}
 }

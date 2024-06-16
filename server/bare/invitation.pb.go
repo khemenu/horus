@@ -5,7 +5,6 @@ package bare
 import (
 	context "context"
 	uuid "github.com/google/uuid"
-	runtime "github.com/lesomnus/entpb/cmd/protoc-gen-entpb/runtime"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -13,6 +12,7 @@ import (
 	horus "khepri.dev/horus"
 	ent "khepri.dev/horus/ent"
 	invitation "khepri.dev/horus/ent/invitation"
+	predicate "khepri.dev/horus/ent/predicate"
 )
 
 type InvitationServiceServer struct {
@@ -43,28 +43,20 @@ func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.CreateI
 		w := v.AsTime()
 		q.SetDateCanceled(w)
 	}
-	if v := req.GetSilo().GetId(); v == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "field \"silo\" not provided")
+	if v, err := GetSiloId(ctx, s.db, req.GetSilo()); err != nil {
+		return nil, err
 	} else {
-		if w, err := uuid.FromBytes(v); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "silo: %s", err)
-		} else {
-			q.SetSiloID(w)
-		}
+		q.SetSiloID(v)
 	}
-	if v := req.GetInviter().GetId(); v == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "field \"inviter\" not provided")
+	if v, err := GetAccountId(ctx, s.db, req.GetInviter()); err != nil {
+		return nil, err
 	} else {
-		if w, err := uuid.FromBytes(v); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "inviter: %s", err)
-		} else {
-			q.SetInviterID(w)
-		}
+		q.SetInviterID(v)
 	}
 
 	res, err := q.Save(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoInvitation(res), nil
@@ -79,24 +71,25 @@ func (s *InvitationServiceServer) Delete(ctx context.Context, req *horus.DeleteI
 
 	_, err := q.Exec(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return &emptypb.Empty{}, nil
 }
 func (s *InvitationServiceServer) Get(ctx context.Context, req *horus.GetInvitationRequest) (*horus.Invitation, error) {
 	q := s.db.Invitation.Query()
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	if p, err := GetInvitationSpecifier(req); err != nil {
+		return nil, err
 	} else {
-		q.Where(invitation.IDEQ(v))
+		q.Where(p)
 	}
+
 	q.WithSilo(func(q *ent.SiloQuery) { q.Select(invitation.FieldID) })
 	q.WithInviter(func(q *ent.AccountQuery) { q.Select(invitation.FieldID) })
 
 	res, err := q.Only(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoInvitation(res), nil
@@ -127,7 +120,7 @@ func (s *InvitationServiceServer) Update(ctx context.Context, req *horus.UpdateI
 
 	res, err := q.Save(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoInvitation(res), nil
@@ -155,4 +148,19 @@ func ToProtoInvitation(v *ent.Invitation) *horus.Invitation {
 		m.Inviter = ToProtoAccount(v)
 	}
 	return m
+}
+func GetInvitationId(ctx context.Context, db *ent.Client, req *horus.GetInvitationRequest) (uuid.UUID, error) {
+	var r uuid.UUID
+	if v, err := uuid.FromBytes(req.GetId()); err != nil {
+		return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	} else {
+		return v, nil
+	}
+}
+func GetInvitationSpecifier(req *horus.GetInvitationRequest) (predicate.Invitation, error) {
+	if v, err := uuid.FromBytes(req.GetId()); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	} else {
+		return invitation.IDEQ(v), nil
+	}
 }

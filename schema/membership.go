@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/lesomnus/entpb"
@@ -39,5 +40,19 @@ func (Membership) Edges() []ent.Edge {
 			Immutable().
 			Unique().
 			Required(),
+	}
+}
+
+func (Membership) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		entpb.Message(entpb.PathInherit,
+			entpb.WithService(entpb.PathInherit,
+				&entpb.Rpc{
+					Ident: "List",
+					Req:   entpb.PbType{Ident: "ListMembershipRequest", Import: "khepri/horus/extend.proto"},
+					Res:   entpb.PbType{Ident: "ListMembershipResponse", Import: "khepri/horus/extend.proto"},
+				},
+			),
+		),
 	}
 }

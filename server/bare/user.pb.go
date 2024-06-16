@@ -5,13 +5,13 @@ package bare
 import (
 	context "context"
 	uuid "github.com/google/uuid"
-	runtime "github.com/lesomnus/entpb/cmd/protoc-gen-entpb/runtime"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	horus "khepri.dev/horus"
 	ent "khepri.dev/horus/ent"
+	predicate "khepri.dev/horus/ent/predicate"
 	user "khepri.dev/horus/ent/user"
 )
 
@@ -38,7 +38,7 @@ func (s *UserServiceServer) Create(ctx context.Context, req *horus.CreateUserReq
 
 	res, err := q.Save(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoUser(res), nil
@@ -60,24 +60,17 @@ func (s *UserServiceServer) Delete(ctx context.Context, req *horus.DeleteUserReq
 
 	_, err := q.Exec(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return &emptypb.Empty{}, nil
 }
 func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) (*horus.User, error) {
 	q := s.db.User.Query()
-	switch t := req.GetKey().(type) {
-	case *horus.GetUserRequest_Id:
-		if v, err := uuid.FromBytes(t.Id); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-		} else {
-			q.Where(user.IDEQ(v))
-		}
-	case *horus.GetUserRequest_Alias:
-		q.Where(user.AliasEQ(t.Alias))
-	default:
-		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
+	if p, err := GetUserSpecifier(req); err != nil {
+		return nil, err
+	} else {
+		q.Where(p)
 	}
 
 	q.WithParent(func(q *ent.UserQuery) { q.Select(user.FieldID) })
@@ -87,7 +80,7 @@ func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) 
 
 	res, err := q.Only(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoUser(res), nil
@@ -112,7 +105,7 @@ func (s *UserServiceServer) Update(ctx context.Context, req *horus.UpdateUserReq
 
 	res, err := q.Save(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoUser(res), nil
@@ -135,4 +128,46 @@ func ToProtoUser(v *ent.User) *horus.User {
 		m.Children = append(m.Children, ToProtoUser(v))
 	}
 	return m
+}
+func GetUserId(ctx context.Context, db *ent.Client, req *horus.GetUserRequest) (uuid.UUID, error) {
+	var r uuid.UUID
+	k := req.GetKey()
+	if t, ok := k.(*horus.GetUserRequest_Id); ok {
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return v, nil
+		}
+	}
+
+	q := db.User.Query()
+	switch t := k.(type) {
+	case *horus.GetUserRequest_Alias:
+		q.Where(user.AliasEQ(t.Alias))
+	case nil:
+		return r, status.Errorf(codes.InvalidArgument, "key not provided")
+	default:
+		return r, status.Errorf(codes.Unimplemented, "unknown type of key")
+	}
+	if v, err := q.OnlyID(ctx); err != nil {
+		return r, ToStatus(err)
+	} else {
+		return v, nil
+	}
+}
+func GetUserSpecifier(req *horus.GetUserRequest) (predicate.User, error) {
+	switch t := req.GetKey().(type) {
+	case *horus.GetUserRequest_Id:
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return user.IDEQ(v), nil
+		}
+	case *horus.GetUserRequest_Alias:
+		return user.AliasEQ(t.Alias), nil
+	case nil:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
+	default:
+		return nil, status.Errorf(codes.Unimplemented, "unknown type of key")
+	}
 }

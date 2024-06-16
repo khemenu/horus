@@ -24,10 +24,8 @@ func TestToken(t *testing.T) {
 func (s *TokenTestSuite) TestCreate() {
 	s.Run("user cannot create tokens for other user", func() {
 		_, err := s.svc.Token().Create(s.ctx, &horus.CreateTokenRequest{
-			Type: horus.TokenTypeRefresh,
-			Owner: &horus.User{
-				Id: s.other.Actor.ID[:],
-			},
+			Type:  horus.TokenTypeRefresh,
+			Owner: horus.UserById(s.other.Actor.ID),
 		})
 		s.ErrorContains(err, "Permission")
 	})
@@ -38,7 +36,7 @@ func (s *TokenTestSuite) TestCreate() {
 
 		v, err := s.svc.Token().Create(s.ctx, &horus.CreateTokenRequest{
 			Type:  horus.TokenTypeRefresh,
-			Owner: child,
+			Owner: horus.UserByIdV(child.Id),
 		})
 		s.NoError(err)
 

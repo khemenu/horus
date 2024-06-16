@@ -5,7 +5,7 @@ go 1.22.3
 require (
 	entgo.io/ent v0.13.1
 	github.com/google/uuid v1.6.0
-	github.com/lesomnus/entpb v0.0.0-20240610070422-b73cd6c675d4
+	github.com/lesomnus/entpb v0.0.0-20240616091637-ecca6d74152b
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/rs/xid v1.5.0
 	github.com/spf13/afero v1.11.0
@@ -14,14 +14,14 @@ require (
 	golang.org/x/crypto v0.24.0
 	golang.org/x/term v0.21.0
 	google.golang.org/grpc v1.64.0
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.30.1
 )
 
 require (
-	ariga.io/atlas v0.23.0 // indirect
+	ariga.io/atlas v0.24.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
@@ -42,7 +42,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20240312152122-5f08fbb34913 // indirect
 	github.com/zclconf/go-cty v1.14.4 // indirect
-	golang.org/x/exp v0.0.0-20240604190554-fc45aab8b7f8
+	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect

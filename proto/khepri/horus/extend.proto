@@ -26,3 +26,20 @@ message ListAccountRequest {
 message ListAccountResponse {
 	repeated Account items = 1;
 }
+
+message ListMembershipRequest {
+	uint32                    limit = 1;
+	google.protobuf.Timestamp token = 2;
+
+	oneof key {
+		google.protobuf.Empty mine = 3;
+
+		bytes  silo_id    = 4;
+		string silo_alias = 5;
+		bytes  team_id    = 6;
+		string team_alias = 7;
+	}
+}
+message ListMembershipResponse {
+	repeated Membership items = 1;
+}

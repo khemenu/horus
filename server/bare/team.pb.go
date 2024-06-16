@@ -5,13 +5,13 @@ package bare
 import (
 	context "context"
 	uuid "github.com/google/uuid"
-	runtime "github.com/lesomnus/entpb/cmd/protoc-gen-entpb/runtime"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	horus "khepri.dev/horus"
 	ent "khepri.dev/horus/ent"
+	predicate "khepri.dev/horus/ent/predicate"
 	team "khepri.dev/horus/ent/team"
 )
 
@@ -34,19 +34,15 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamReq
 	if v := req.Description; v != nil {
 		q.SetDescription(*v)
 	}
-	if v := req.GetSilo().GetId(); v == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "field \"silo\" not provided")
+	if v, err := GetSiloId(ctx, s.db, req.GetSilo()); err != nil {
+		return nil, err
 	} else {
-		if w, err := uuid.FromBytes(v); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "silo: %s", err)
-		} else {
-			q.SetSiloID(w)
-		}
+		q.SetSiloID(v)
 	}
 
 	res, err := q.Save(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoTeam(res), nil
@@ -61,23 +57,24 @@ func (s *TeamServiceServer) Delete(ctx context.Context, req *horus.DeleteTeamReq
 
 	_, err := q.Exec(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return &emptypb.Empty{}, nil
 }
 func (s *TeamServiceServer) Get(ctx context.Context, req *horus.GetTeamRequest) (*horus.Team, error) {
 	q := s.db.Team.Query()
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	if p, err := GetTeamSpecifier(req); err != nil {
+		return nil, err
 	} else {
-		q.Where(team.IDEQ(v))
+		q.Where(p)
 	}
+
 	q.WithSilo(func(q *ent.SiloQuery) { q.Select(team.FieldID) })
 
 	res, err := q.Only(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoTeam(res), nil
@@ -101,7 +98,7 @@ func (s *TeamServiceServer) Update(ctx context.Context, req *horus.UpdateTeamReq
 
 	res, err := q.Save(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoTeam(res), nil
@@ -117,4 +114,19 @@ func ToProtoTeam(v *ent.Team) *horus.Team {
 		m.Silo = ToProtoSilo(v)
 	}
 	return m
+}
+func GetTeamId(ctx context.Context, db *ent.Client, req *horus.GetTeamRequest) (uuid.UUID, error) {
+	var r uuid.UUID
+	if v, err := uuid.FromBytes(req.GetId()); err != nil {
+		return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	} else {
+		return v, nil
+	}
+}
+func GetTeamSpecifier(req *horus.GetTeamRequest) (predicate.Team, error) {
+	if v, err := uuid.FromBytes(req.GetId()); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	} else {
+		return team.IDEQ(v), nil
+	}
 }

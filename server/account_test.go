@@ -27,8 +27,8 @@ func (s *AccountTestSuite) TestCreate() {
 		s.NoError(err)
 
 		_, err = s.svc.Account().Create(s.ctx, &horus.CreateAccountRequest{
-			Owner: &horus.User{Id: child.Id},
-			Silo:  &horus.Silo{Id: v.Id},
+			Owner: &horus.GetUserRequest{Key: &horus.GetUserRequest_Id{Id: child.Id}},
+			Silo:  &horus.GetSiloRequest{Key: &horus.GetSiloRequest_Id{Id: v.Id}},
 		})
 		s.NoError(err)
 	})
@@ -58,8 +58,8 @@ func (s *AccountTestSuite) TestList() {
 		s.NoError(err)
 
 		_, err = s.svc.Account().Create(s.ctx, &horus.CreateAccountRequest{
-			Silo:  g,
-			Owner: u,
+			Silo:  &horus.GetSiloRequest{Key: &horus.GetSiloRequest_Id{Id: g.Id}},
+			Owner: &horus.GetUserRequest{Key: &horus.GetUserRequest_Id{Id: u.Id}},
 		})
 		s.NoError(err)
 

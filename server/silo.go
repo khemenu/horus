@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/lesomnus/entpb/cmd/protoc-gen-entpb/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -44,8 +43,12 @@ func (s *SiloServiceServer) Create(ctx context.Context, req *horus.CreateSiloReq
 
 			Role: horus.Role_ROLE_OWNER,
 
-			Owner: &horus.User{Id: f.Actor.ID[:]},
-			Silo:  &horus.Silo{Id: v.Id},
+			Owner: &horus.GetUserRequest{Key: &horus.GetUserRequest_Id{
+				Id: f.Actor.ID[:],
+			}},
+			Silo: &horus.GetSiloRequest{Key: &horus.GetSiloRequest_Id{
+				Id: v.Id,
+			}},
 		})
 		if err != nil {
 			return nil, err
@@ -66,7 +69,7 @@ func (s *SiloServiceServer) Get(ctx context.Context, req *horus.GetSiloRequest) 
 		Where(account.HasSiloWith(silo.ID(uuid.UUID(res.GetId())))).
 		Only(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, bare.ToStatus(err)
 	}
 
 	f.ActingAccount = v

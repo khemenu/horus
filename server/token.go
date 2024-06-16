@@ -41,7 +41,9 @@ func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenR
 	}
 
 	f := frame.Must(ctx)
-	req.Owner = &horus.User{Id: f.Actor.ID[:]}
+	req.Owner = &horus.GetUserRequest{Key: &horus.GetUserRequest_Id{
+		Id: f.Actor.ID[:],
+	}}
 	return s.bare.Token().Create(ctx, req)
 }
 
@@ -148,7 +150,9 @@ func (s *TokenServiceServer) createBearer(ctx context.Context, req *horus.Create
 	return s.bare.Token().Create(ctx, &horus.CreateTokenRequest{
 		Value: v,
 		Type:  t,
-		Owner: &horus.User{Id: owner_id},
+		Owner: &horus.GetUserRequest{Key: &horus.GetUserRequest_Id{
+			Id: owner_id,
+		}},
 
 		DateExpired: ts_expired,
 	})

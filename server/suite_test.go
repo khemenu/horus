@@ -211,7 +211,9 @@ func (s *SuiteWithTeam) SetupSubTest() {
 	v, err := s.svc.Team().Create(s.ctx, &horus.CreateTeamRequest{
 		Alias: fx.Addr("x"),
 		Name:  fx.Addr("A-Team"),
-		Silo:  &horus.Silo{Id: s.silo.ID[:]},
+		Silo: &horus.GetSiloRequest{Key: &horus.GetSiloRequest_Id{
+			Id: s.silo.ID[:],
+		}},
 	})
 	if err != nil {
 		panic(err)

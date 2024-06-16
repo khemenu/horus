@@ -2,7 +2,8 @@
 lint:
   files:
     exclude:
-      - khepri/horus/horus.proto
+      - khepri/horus/common.proto
+      - khepri/horus/store.proto
 
   rules:
     all_default: true

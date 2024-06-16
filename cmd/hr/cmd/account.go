@@ -6,9 +6,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/urfave/cli/v2"
 	"khepri.dev/horus"
-	"khepri.dev/horus/ent/silo"
-	"khepri.dev/horus/ent/user"
-	"khepri.dev/horus/internal/resolve"
 )
 
 var CmdCreateAccount = &cli.Command{
@@ -49,21 +46,21 @@ var CmdCreateAccount = &cli.Command{
 			return err
 		}
 
-		user_uuid, err := resolve.Uuid(ctx.Context, user_id, conf.Client.db.User, user.AliasEQ)
-		if err != nil {
-			return fmt.Errorf("resolve user UUID: %w", err)
+		user_by := horus.UserByAlias(user_id)
+		if id, err := uuid.Parse(user_id); err == nil {
+			user_by = horus.UserById(id)
 		}
 
-		silo_uuid, err := resolve.Uuid(ctx.Context, silo_id, conf.Client.db.Silo, silo.AliasEQ)
-		if err != nil {
-			return fmt.Errorf("resolve silo UUID: %w", err)
+		silo_by := horus.SiloByAlias(silo_id)
+		if id, err := uuid.Parse(silo_id); err == nil {
+			silo_by = horus.SiloById(id)
 		}
 
 		v, err := c.Account().Create(ctx.Context, &horus.CreateAccountRequest{
 			Alias: &acct_alias,
 			Role:  horus.Role_ROLE_MEMBER,
-			Owner: &horus.User{Id: user_uuid[:]},
-			Silo:  &horus.Silo{Id: silo_uuid[:]},
+			Owner: user_by,
+			Silo:  silo_by,
 		})
 		if err != nil {
 			return err

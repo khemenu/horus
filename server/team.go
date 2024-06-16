@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/lesomnus/entpb/cmd/protoc-gen-entpb/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -26,20 +25,7 @@ type TeamServiceServer struct {
 }
 
 func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamRequest) (*horus.Team, error) {
-	p := req.GetSilo()
-	if p == nil {
-		return nil, newErrMissingRequiredField(".silo.id")
-	}
-
-	silo_get := &horus.GetSiloRequest{}
-	switch {
-	case p.Id != nil:
-		silo_get.Key = &horus.GetSiloRequest_Id{Id: p.Id}
-	case p.Alias != "":
-		silo_get.Key = &horus.GetSiloRequest_Alias{Alias: p.Alias}
-	}
-
-	p, err := s.bare.Silo().Get(ctx, silo_get)
+	p, err := s.bare.Silo().Get(ctx, req.GetSilo())
 	if err != nil {
 		return nil, fmt.Errorf("get silo: %w", err)
 	}
@@ -49,13 +35,13 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamReq
 		Where(account.SiloID(uuid.UUID(p.Id))).
 		Only(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, bare.ToStatus(err)
 	}
 	if v.Role != role.Owner {
 		return nil, status.Error(codes.PermissionDenied, "only owner can create a team")
 	}
 
-	req.Silo = p
+	req.Silo = &horus.GetSiloRequest{Key: &horus.GetSiloRequest_Id{Id: p.Id}}
 	return entutils.WithTxV(ctx, s.db, func(tx *ent.Tx) (*horus.Team, error) {
 		c := tx.Client()
 		res, err := bare.NewTeamServiceServer(c).Create(ctx, req)
@@ -65,8 +51,8 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamReq
 
 		_, err = bare.NewMembershipServiceServer(c).Create(ctx, &horus.CreateMembershipRequest{
 			Role:    horus.Role_ROLE_OWNER,
-			Account: &horus.Account{Id: v.ID[:]},
-			Team:    &horus.Team{Id: res.Id},
+			Account: &horus.GetAccountRequest{Id: v.ID[:]},
+			Team:    &horus.GetTeamRequest{Id: res.Id},
 		})
 		if err != nil {
 			return nil, err

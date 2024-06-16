@@ -30,9 +30,7 @@ func (s *UserServiceServer) Create(ctx context.Context, req *horus.CreateUserReq
 func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) (*horus.User, error) {
 	f := frame.Must(ctx)
 	if req.GetKey() == nil || req.GetAlias() == "_me" {
-		req = &horus.GetUserRequest{Key: &horus.GetUserRequest_Id{
-			Id: f.Actor.ID[:],
-		}}
+		req = horus.UserById(f.Actor.ID)
 	}
 
 	v, err := s.bare.User().Get(ctx, req)

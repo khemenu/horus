@@ -5,7 +5,6 @@ package bare
 import (
 	context "context"
 	uuid "github.com/google/uuid"
-	runtime "github.com/lesomnus/entpb/cmd/protoc-gen-entpb/runtime"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -13,6 +12,7 @@ import (
 	horus "khepri.dev/horus"
 	ent "khepri.dev/horus/ent"
 	identity "khepri.dev/horus/ent/identity"
+	predicate "khepri.dev/horus/ent/predicate"
 )
 
 type IdentityServiceServer struct {
@@ -33,19 +33,15 @@ func (s *IdentityServiceServer) Create(ctx context.Context, req *horus.CreateIde
 	}
 	q.SetKind(req.GetKind())
 	q.SetVerifier(req.GetVerifier())
-	if v := req.GetOwner().GetId(); v == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "field \"owner\" not provided")
+	if v, err := GetUserId(ctx, s.db, req.GetOwner()); err != nil {
+		return nil, err
 	} else {
-		if w, err := uuid.FromBytes(v); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "owner: %s", err)
-		} else {
-			q.SetOwnerID(w)
-		}
+		q.SetOwnerID(v)
 	}
 
 	res, err := q.Save(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoIdentity(res), nil
@@ -60,23 +56,24 @@ func (s *IdentityServiceServer) Delete(ctx context.Context, req *horus.DeleteIde
 
 	_, err := q.Exec(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return &emptypb.Empty{}, nil
 }
 func (s *IdentityServiceServer) Get(ctx context.Context, req *horus.GetIdentityRequest) (*horus.Identity, error) {
 	q := s.db.Identity.Query()
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	if p, err := GetIdentitySpecifier(req); err != nil {
+		return nil, err
 	} else {
-		q.Where(identity.IDEQ(v))
+		q.Where(p)
 	}
+
 	q.WithOwner(func(q *ent.UserQuery) { q.Select(identity.FieldID) })
 
 	res, err := q.Only(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoIdentity(res), nil
@@ -100,7 +97,7 @@ func (s *IdentityServiceServer) Update(ctx context.Context, req *horus.UpdateIde
 
 	res, err := q.Save(ctx)
 	if err != nil {
-		return nil, runtime.EntErrorToStatus(err)
+		return nil, ToStatus(err)
 	}
 
 	return ToProtoIdentity(res), nil
@@ -117,4 +114,19 @@ func ToProtoIdentity(v *ent.Identity) *horus.Identity {
 		m.Owner = ToProtoUser(v)
 	}
 	return m
+}
+func GetIdentityId(ctx context.Context, db *ent.Client, req *horus.GetIdentityRequest) (uuid.UUID, error) {
+	var r uuid.UUID
+	if v, err := uuid.FromBytes(req.GetId()); err != nil {
+		return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	} else {
+		return v, nil
+	}
+}
+func GetIdentitySpecifier(req *horus.GetIdentityRequest) (predicate.Identity, error) {
+	if v, err := uuid.FromBytes(req.GetId()); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+	} else {
+		return identity.IDEQ(v), nil
+	}
 }

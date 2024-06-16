@@ -45,13 +45,14 @@ var CmdCreateTeam = &cli.Command{
 			return err
 		}
 
-		silo_uuid, _ := uuid.Parse(silo_id)
+		silo_by := horus.SiloByAlias(silo_id)
+		if silo_uuid, err := uuid.Parse(silo_id); err == nil {
+			silo_by = horus.SiloById(silo_uuid)
+		}
+
 		v, err := c.Team().Create(ctx.Context, &horus.CreateTeamRequest{
 			Alias: &team_alias,
-			Silo: &horus.Silo{
-				Id:    silo_uuid[:],
-				Alias: silo_id,
-			},
+			Silo:  silo_by,
 		})
 		if err != nil {
 			return err

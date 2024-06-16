@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"khepri.dev/horus"
 )
 
@@ -23,10 +25,24 @@ func (s *UserTestSuite) TestCreate() {
 		v, err := s.svc.User().Create(s.ctx, nil)
 		s.NoError(err)
 
-		v, err = s.svc.User().Get(s.ctx, &horus.GetUserRequest{Key: &horus.GetUserRequest_Id{
-			Id: v.Id,
-		}})
+		v, err = s.svc.User().Get(s.ctx, horus.UserByIdV(v.Id))
 		s.NoError(err)
 		s.Equal(s.me.Actor.ID[:], v.GetParent().GetId())
+	})
+}
+
+func (t *UserTestSuite) TestGet() {
+	t.Run("alias _me returns me", func() {
+		v, err := t.svc.User().Get(t.ctx, horus.UserByAlias("_me"))
+		t.NoError(err)
+		t.Equal(t.me.Actor.ID[:], v.Id)
+	})
+	t.Run("not found error if user does not exist", func() {
+		_, err := t.svc.User().Get(t.ctx, horus.UserByAlias("not exist"))
+		t.Error(err)
+
+		s, ok := status.FromError(err)
+		t.True(ok)
+		t.Equal(codes.NotFound, s.Code())
 	})
 }
