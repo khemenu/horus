@@ -11,8 +11,10 @@ import (
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	horus "khepri.dev/horus"
 	ent "khepri.dev/horus/ent"
+	account "khepri.dev/horus/ent/account"
 	invitation "khepri.dev/horus/ent/invitation"
 	predicate "khepri.dev/horus/ent/predicate"
+	silo "khepri.dev/horus/ent/silo"
 )
 
 type InvitationServiceServer struct {
@@ -43,15 +45,15 @@ func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.CreateI
 		w := v.AsTime()
 		q.SetDateCanceled(w)
 	}
-	if v, err := GetSiloId(ctx, s.db, req.GetSilo()); err != nil {
+	if id, err := GetSiloId(ctx, s.db, req.GetSilo()); err != nil {
 		return nil, err
 	} else {
-		q.SetSiloID(v)
+		q.SetSiloID(id)
 	}
-	if v, err := GetAccountId(ctx, s.db, req.GetInviter()); err != nil {
+	if id, err := GetAccountId(ctx, s.db, req.GetInviter()); err != nil {
 		return nil, err
 	} else {
-		q.SetInviterID(v)
+		q.SetInviterID(id)
 	}
 
 	res, err := q.Save(ctx)
@@ -61,7 +63,7 @@ func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.CreateI
 
 	return ToProtoInvitation(res), nil
 }
-func (s *InvitationServiceServer) Delete(ctx context.Context, req *horus.DeleteInvitationRequest) (*emptypb.Empty, error) {
+func (s *InvitationServiceServer) Delete(ctx context.Context, req *horus.GetInvitationRequest) (*emptypb.Empty, error) {
 	q := s.db.Invitation.Delete()
 	if v, err := uuid.FromBytes(req.GetId()); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
@@ -84,8 +86,8 @@ func (s *InvitationServiceServer) Get(ctx context.Context, req *horus.GetInvitat
 		q.Where(p)
 	}
 
-	q.WithSilo(func(q *ent.SiloQuery) { q.Select(invitation.FieldID) })
-	q.WithInviter(func(q *ent.AccountQuery) { q.Select(invitation.FieldID) })
+	q.WithSilo(func(q *ent.SiloQuery) { q.Select(silo.FieldID) })
+	q.WithInviter(func(q *ent.AccountQuery) { q.Select(account.FieldID) })
 
 	res, err := q.Only(ctx)
 	if err != nil {
@@ -95,9 +97,9 @@ func (s *InvitationServiceServer) Get(ctx context.Context, req *horus.GetInvitat
 	return ToProtoInvitation(res), nil
 }
 func (s *InvitationServiceServer) Update(ctx context.Context, req *horus.UpdateInvitationRequest) (*horus.Invitation, error) {
-	id, err := uuid.FromBytes(req.GetId())
+	id, err := GetInvitationId(ctx, s.db, req.GetKey())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		return nil, err
 	}
 
 	q := s.db.Invitation.UpdateOneID(id)

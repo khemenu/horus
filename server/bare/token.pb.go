@@ -13,6 +13,7 @@ import (
 	ent "khepri.dev/horus/ent"
 	predicate "khepri.dev/horus/ent/predicate"
 	token "khepri.dev/horus/ent/token"
+	user "khepri.dev/horus/ent/user"
 )
 
 type TokenServiceServer struct {
@@ -34,10 +35,17 @@ func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenR
 		w := v.AsTime()
 		q.SetDateExpired(w)
 	}
-	if v, err := GetUserId(ctx, s.db, req.GetOwner()); err != nil {
+	if id, err := GetUserId(ctx, s.db, req.GetOwner()); err != nil {
 		return nil, err
 	} else {
-		q.SetOwnerID(v)
+		q.SetOwnerID(id)
+	}
+	if v := req.GetParent(); v != nil {
+		if id, err := GetTokenId(ctx, s.db, v); err != nil {
+			return nil, err
+		} else {
+			q.SetParentID(id)
+		}
 	}
 
 	res, err := q.Save(ctx)
@@ -47,16 +55,16 @@ func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenR
 
 	return ToProtoToken(res), nil
 }
-func (s *TokenServiceServer) Delete(ctx context.Context, req *horus.DeleteTokenRequest) (*emptypb.Empty, error) {
+func (s *TokenServiceServer) Delete(ctx context.Context, req *horus.GetTokenRequest) (*emptypb.Empty, error) {
 	q := s.db.Token.Delete()
 	switch t := req.GetKey().(type) {
-	case *horus.DeleteTokenRequest_Id:
+	case *horus.GetTokenRequest_Id:
 		if v, err := uuid.FromBytes(t.Id); err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
 		} else {
 			q.Where(token.IDEQ(v))
 		}
-	case *horus.DeleteTokenRequest_Value:
+	case *horus.GetTokenRequest_Value:
 		q.Where(token.ValueEQ(t.Value))
 	default:
 		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
@@ -77,7 +85,7 @@ func (s *TokenServiceServer) Get(ctx context.Context, req *horus.GetTokenRequest
 		q.Where(p)
 	}
 
-	q.WithOwner(func(q *ent.UserQuery) { q.Select(token.FieldID) })
+	q.WithOwner(func(q *ent.UserQuery) { q.Select(user.FieldID) })
 	q.WithParent(func(q *ent.TokenQuery) { q.Select(token.FieldID) })
 	q.WithChildren(func(q *ent.TokenQuery) { q.Select(token.FieldID) })
 
@@ -89,9 +97,9 @@ func (s *TokenServiceServer) Get(ctx context.Context, req *horus.GetTokenRequest
 	return ToProtoToken(res), nil
 }
 func (s *TokenServiceServer) Update(ctx context.Context, req *horus.UpdateTokenRequest) (*horus.Token, error) {
-	id, err := uuid.FromBytes(req.GetId())
+	id, err := GetTokenId(ctx, s.db, req.GetKey())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		return nil, err
 	}
 
 	q := s.db.Token.UpdateOneID(id)

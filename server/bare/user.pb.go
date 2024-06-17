@@ -11,6 +11,8 @@ import (
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	horus "khepri.dev/horus"
 	ent "khepri.dev/horus/ent"
+	account "khepri.dev/horus/ent/account"
+	identity "khepri.dev/horus/ent/identity"
 	predicate "khepri.dev/horus/ent/predicate"
 	user "khepri.dev/horus/ent/user"
 )
@@ -29,10 +31,10 @@ func (s *UserServiceServer) Create(ctx context.Context, req *horus.CreateUserReq
 		q.SetAlias(*v)
 	}
 	if v := req.GetParent(); v != nil {
-		if w, err := uuid.FromBytes(v.GetId()); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "parent: %s", err)
+		if id, err := GetUserId(ctx, s.db, v); err != nil {
+			return nil, err
 		} else {
-			q.SetParentID(w)
+			q.SetParentID(id)
 		}
 	}
 
@@ -43,16 +45,16 @@ func (s *UserServiceServer) Create(ctx context.Context, req *horus.CreateUserReq
 
 	return ToProtoUser(res), nil
 }
-func (s *UserServiceServer) Delete(ctx context.Context, req *horus.DeleteUserRequest) (*emptypb.Empty, error) {
+func (s *UserServiceServer) Delete(ctx context.Context, req *horus.GetUserRequest) (*emptypb.Empty, error) {
 	q := s.db.User.Delete()
 	switch t := req.GetKey().(type) {
-	case *horus.DeleteUserRequest_Id:
+	case *horus.GetUserRequest_Id:
 		if v, err := uuid.FromBytes(t.Id); err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
 		} else {
 			q.Where(user.IDEQ(v))
 		}
-	case *horus.DeleteUserRequest_Alias:
+	case *horus.GetUserRequest_Alias:
 		q.Where(user.AliasEQ(t.Alias))
 	default:
 		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
@@ -74,8 +76,8 @@ func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) 
 	}
 
 	q.WithParent(func(q *ent.UserQuery) { q.Select(user.FieldID) })
-	q.WithIdentities(func(q *ent.IdentityQuery) { q.Select(user.FieldID) })
-	q.WithAccounts(func(q *ent.AccountQuery) { q.Select(user.FieldID) })
+	q.WithIdentities(func(q *ent.IdentityQuery) { q.Select(identity.FieldID) })
+	q.WithAccounts(func(q *ent.AccountQuery) { q.Select(account.FieldID) })
 	q.WithChildren(func(q *ent.UserQuery) { q.Select(user.FieldID) })
 
 	res, err := q.Only(ctx)
@@ -86,9 +88,9 @@ func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) 
 	return ToProtoUser(res), nil
 }
 func (s *UserServiceServer) Update(ctx context.Context, req *horus.UpdateUserRequest) (*horus.User, error) {
-	id, err := uuid.FromBytes(req.GetId())
+	id, err := GetUserId(ctx, s.db, req.GetKey())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		return nil, err
 	}
 
 	q := s.db.User.UpdateOneID(id)
@@ -96,10 +98,10 @@ func (s *UserServiceServer) Update(ctx context.Context, req *horus.UpdateUserReq
 		q.SetAlias(*v)
 	}
 	if v := req.Parent; v != nil {
-		if w, err := uuid.FromBytes(v.GetId()); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "parent: %s", err)
+		if id, err := GetUserId(ctx, s.db, req.Parent); err != nil {
+			return nil, err
 		} else {
-			q.SetParentID(w)
+			q.SetParentID(id)
 		}
 	}
 

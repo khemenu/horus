@@ -34,7 +34,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AccountServiceClient interface {
 	Create(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*Account, error)
-	Delete(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *GetAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Get(ctx context.Context, in *GetAccountRequest, opts ...grpc.CallOption) (*Account, error)
 	List(ctx context.Context, in *ListAccountRequest, opts ...grpc.CallOption) (*ListAccountResponse, error)
 	Update(ctx context.Context, in *UpdateAccountRequest, opts ...grpc.CallOption) (*Account, error)
@@ -58,7 +58,7 @@ func (c *accountServiceClient) Create(ctx context.Context, in *CreateAccountRequ
 	return out, nil
 }
 
-func (c *accountServiceClient) Delete(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *accountServiceClient) Delete(ctx context.Context, in *GetAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, AccountService_Delete_FullMethodName, in, out, cOpts...)
@@ -103,7 +103,7 @@ func (c *accountServiceClient) Update(ctx context.Context, in *UpdateAccountRequ
 // for forward compatibility
 type AccountServiceServer interface {
 	Create(context.Context, *CreateAccountRequest) (*Account, error)
-	Delete(context.Context, *DeleteAccountRequest) (*emptypb.Empty, error)
+	Delete(context.Context, *GetAccountRequest) (*emptypb.Empty, error)
 	Get(context.Context, *GetAccountRequest) (*Account, error)
 	List(context.Context, *ListAccountRequest) (*ListAccountResponse, error)
 	Update(context.Context, *UpdateAccountRequest) (*Account, error)
@@ -117,7 +117,7 @@ type UnimplementedAccountServiceServer struct {
 func (UnimplementedAccountServiceServer) Create(context.Context, *CreateAccountRequest) (*Account, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedAccountServiceServer) Delete(context.Context, *DeleteAccountRequest) (*emptypb.Empty, error) {
+func (UnimplementedAccountServiceServer) Delete(context.Context, *GetAccountRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedAccountServiceServer) Get(context.Context, *GetAccountRequest) (*Account, error) {
@@ -161,7 +161,7 @@ func _AccountService_Create_Handler(srv interface{}, ctx context.Context, dec fu
 }
 
 func _AccountService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteAccountRequest)
+	in := new(GetAccountRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ func _AccountService_Delete_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: AccountService_Delete_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccountServiceServer).Delete(ctx, req.(*DeleteAccountRequest))
+		return srv.(AccountServiceServer).Delete(ctx, req.(*GetAccountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -276,7 +276,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type IdentityServiceClient interface {
 	Create(ctx context.Context, in *CreateIdentityRequest, opts ...grpc.CallOption) (*Identity, error)
-	Delete(ctx context.Context, in *DeleteIdentityRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *GetIdentityRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Get(ctx context.Context, in *GetIdentityRequest, opts ...grpc.CallOption) (*Identity, error)
 	Update(ctx context.Context, in *UpdateIdentityRequest, opts ...grpc.CallOption) (*Identity, error)
 }
@@ -299,7 +299,7 @@ func (c *identityServiceClient) Create(ctx context.Context, in *CreateIdentityRe
 	return out, nil
 }
 
-func (c *identityServiceClient) Delete(ctx context.Context, in *DeleteIdentityRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *identityServiceClient) Delete(ctx context.Context, in *GetIdentityRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, IdentityService_Delete_FullMethodName, in, out, cOpts...)
@@ -334,7 +334,7 @@ func (c *identityServiceClient) Update(ctx context.Context, in *UpdateIdentityRe
 // for forward compatibility
 type IdentityServiceServer interface {
 	Create(context.Context, *CreateIdentityRequest) (*Identity, error)
-	Delete(context.Context, *DeleteIdentityRequest) (*emptypb.Empty, error)
+	Delete(context.Context, *GetIdentityRequest) (*emptypb.Empty, error)
 	Get(context.Context, *GetIdentityRequest) (*Identity, error)
 	Update(context.Context, *UpdateIdentityRequest) (*Identity, error)
 	mustEmbedUnimplementedIdentityServiceServer()
@@ -347,7 +347,7 @@ type UnimplementedIdentityServiceServer struct {
 func (UnimplementedIdentityServiceServer) Create(context.Context, *CreateIdentityRequest) (*Identity, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedIdentityServiceServer) Delete(context.Context, *DeleteIdentityRequest) (*emptypb.Empty, error) {
+func (UnimplementedIdentityServiceServer) Delete(context.Context, *GetIdentityRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedIdentityServiceServer) Get(context.Context, *GetIdentityRequest) (*Identity, error) {
@@ -388,7 +388,7 @@ func _IdentityService_Create_Handler(srv interface{}, ctx context.Context, dec f
 }
 
 func _IdentityService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteIdentityRequest)
+	in := new(GetIdentityRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -400,7 +400,7 @@ func _IdentityService_Delete_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: IdentityService_Delete_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IdentityServiceServer).Delete(ctx, req.(*DeleteIdentityRequest))
+		return srv.(IdentityServiceServer).Delete(ctx, req.(*GetIdentityRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -483,7 +483,7 @@ const (
 type InvitationServiceClient interface {
 	Accept(ctx context.Context, in *AcceptInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Create(ctx context.Context, in *CreateInvitationRequest, opts ...grpc.CallOption) (*Invitation, error)
-	Delete(ctx context.Context, in *DeleteInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *GetInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Get(ctx context.Context, in *GetInvitationRequest, opts ...grpc.CallOption) (*Invitation, error)
 	Update(ctx context.Context, in *UpdateInvitationRequest, opts ...grpc.CallOption) (*Invitation, error)
 }
@@ -516,7 +516,7 @@ func (c *invitationServiceClient) Create(ctx context.Context, in *CreateInvitati
 	return out, nil
 }
 
-func (c *invitationServiceClient) Delete(ctx context.Context, in *DeleteInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *invitationServiceClient) Delete(ctx context.Context, in *GetInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, InvitationService_Delete_FullMethodName, in, out, cOpts...)
@@ -552,7 +552,7 @@ func (c *invitationServiceClient) Update(ctx context.Context, in *UpdateInvitati
 type InvitationServiceServer interface {
 	Accept(context.Context, *AcceptInvitationRequest) (*emptypb.Empty, error)
 	Create(context.Context, *CreateInvitationRequest) (*Invitation, error)
-	Delete(context.Context, *DeleteInvitationRequest) (*emptypb.Empty, error)
+	Delete(context.Context, *GetInvitationRequest) (*emptypb.Empty, error)
 	Get(context.Context, *GetInvitationRequest) (*Invitation, error)
 	Update(context.Context, *UpdateInvitationRequest) (*Invitation, error)
 	mustEmbedUnimplementedInvitationServiceServer()
@@ -568,7 +568,7 @@ func (UnimplementedInvitationServiceServer) Accept(context.Context, *AcceptInvit
 func (UnimplementedInvitationServiceServer) Create(context.Context, *CreateInvitationRequest) (*Invitation, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedInvitationServiceServer) Delete(context.Context, *DeleteInvitationRequest) (*emptypb.Empty, error) {
+func (UnimplementedInvitationServiceServer) Delete(context.Context, *GetInvitationRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedInvitationServiceServer) Get(context.Context, *GetInvitationRequest) (*Invitation, error) {
@@ -627,7 +627,7 @@ func _InvitationService_Create_Handler(srv interface{}, ctx context.Context, dec
 }
 
 func _InvitationService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteInvitationRequest)
+	in := new(GetInvitationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -639,7 +639,7 @@ func _InvitationService_Delete_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: InvitationService_Delete_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvitationServiceServer).Delete(ctx, req.(*DeleteInvitationRequest))
+		return srv.(InvitationServiceServer).Delete(ctx, req.(*GetInvitationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -725,7 +725,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MembershipServiceClient interface {
 	Create(ctx context.Context, in *CreateMembershipRequest, opts ...grpc.CallOption) (*Membership, error)
-	Delete(ctx context.Context, in *DeleteMembershipRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *GetMembershipRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Get(ctx context.Context, in *GetMembershipRequest, opts ...grpc.CallOption) (*Membership, error)
 	List(ctx context.Context, in *ListMembershipRequest, opts ...grpc.CallOption) (*ListMembershipResponse, error)
 	Update(ctx context.Context, in *UpdateMembershipRequest, opts ...grpc.CallOption) (*Membership, error)
@@ -749,7 +749,7 @@ func (c *membershipServiceClient) Create(ctx context.Context, in *CreateMembersh
 	return out, nil
 }
 
-func (c *membershipServiceClient) Delete(ctx context.Context, in *DeleteMembershipRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *membershipServiceClient) Delete(ctx context.Context, in *GetMembershipRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, MembershipService_Delete_FullMethodName, in, out, cOpts...)
@@ -794,7 +794,7 @@ func (c *membershipServiceClient) Update(ctx context.Context, in *UpdateMembersh
 // for forward compatibility
 type MembershipServiceServer interface {
 	Create(context.Context, *CreateMembershipRequest) (*Membership, error)
-	Delete(context.Context, *DeleteMembershipRequest) (*emptypb.Empty, error)
+	Delete(context.Context, *GetMembershipRequest) (*emptypb.Empty, error)
 	Get(context.Context, *GetMembershipRequest) (*Membership, error)
 	List(context.Context, *ListMembershipRequest) (*ListMembershipResponse, error)
 	Update(context.Context, *UpdateMembershipRequest) (*Membership, error)
@@ -808,7 +808,7 @@ type UnimplementedMembershipServiceServer struct {
 func (UnimplementedMembershipServiceServer) Create(context.Context, *CreateMembershipRequest) (*Membership, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedMembershipServiceServer) Delete(context.Context, *DeleteMembershipRequest) (*emptypb.Empty, error) {
+func (UnimplementedMembershipServiceServer) Delete(context.Context, *GetMembershipRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedMembershipServiceServer) Get(context.Context, *GetMembershipRequest) (*Membership, error) {
@@ -852,7 +852,7 @@ func _MembershipService_Create_Handler(srv interface{}, ctx context.Context, dec
 }
 
 func _MembershipService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteMembershipRequest)
+	in := new(GetMembershipRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -864,7 +864,7 @@ func _MembershipService_Delete_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: MembershipService_Delete_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MembershipServiceServer).Delete(ctx, req.(*DeleteMembershipRequest))
+		return srv.(MembershipServiceServer).Delete(ctx, req.(*GetMembershipRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -967,7 +967,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SiloServiceClient interface {
 	Create(ctx context.Context, in *CreateSiloRequest, opts ...grpc.CallOption) (*Silo, error)
-	Delete(ctx context.Context, in *DeleteSiloRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *GetSiloRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Get(ctx context.Context, in *GetSiloRequest, opts ...grpc.CallOption) (*Silo, error)
 	Update(ctx context.Context, in *UpdateSiloRequest, opts ...grpc.CallOption) (*Silo, error)
 }
@@ -990,7 +990,7 @@ func (c *siloServiceClient) Create(ctx context.Context, in *CreateSiloRequest, o
 	return out, nil
 }
 
-func (c *siloServiceClient) Delete(ctx context.Context, in *DeleteSiloRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *siloServiceClient) Delete(ctx context.Context, in *GetSiloRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, SiloService_Delete_FullMethodName, in, out, cOpts...)
@@ -1025,7 +1025,7 @@ func (c *siloServiceClient) Update(ctx context.Context, in *UpdateSiloRequest, o
 // for forward compatibility
 type SiloServiceServer interface {
 	Create(context.Context, *CreateSiloRequest) (*Silo, error)
-	Delete(context.Context, *DeleteSiloRequest) (*emptypb.Empty, error)
+	Delete(context.Context, *GetSiloRequest) (*emptypb.Empty, error)
 	Get(context.Context, *GetSiloRequest) (*Silo, error)
 	Update(context.Context, *UpdateSiloRequest) (*Silo, error)
 	mustEmbedUnimplementedSiloServiceServer()
@@ -1038,7 +1038,7 @@ type UnimplementedSiloServiceServer struct {
 func (UnimplementedSiloServiceServer) Create(context.Context, *CreateSiloRequest) (*Silo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedSiloServiceServer) Delete(context.Context, *DeleteSiloRequest) (*emptypb.Empty, error) {
+func (UnimplementedSiloServiceServer) Delete(context.Context, *GetSiloRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedSiloServiceServer) Get(context.Context, *GetSiloRequest) (*Silo, error) {
@@ -1079,7 +1079,7 @@ func _SiloService_Create_Handler(srv interface{}, ctx context.Context, dec func(
 }
 
 func _SiloService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteSiloRequest)
+	in := new(GetSiloRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1091,7 +1091,7 @@ func _SiloService_Delete_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: SiloService_Delete_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SiloServiceServer).Delete(ctx, req.(*DeleteSiloRequest))
+		return srv.(SiloServiceServer).Delete(ctx, req.(*GetSiloRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1172,7 +1172,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TeamServiceClient interface {
 	Create(ctx context.Context, in *CreateTeamRequest, opts ...grpc.CallOption) (*Team, error)
-	Delete(ctx context.Context, in *DeleteTeamRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *GetTeamRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Get(ctx context.Context, in *GetTeamRequest, opts ...grpc.CallOption) (*Team, error)
 	Update(ctx context.Context, in *UpdateTeamRequest, opts ...grpc.CallOption) (*Team, error)
 }
@@ -1195,7 +1195,7 @@ func (c *teamServiceClient) Create(ctx context.Context, in *CreateTeamRequest, o
 	return out, nil
 }
 
-func (c *teamServiceClient) Delete(ctx context.Context, in *DeleteTeamRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *teamServiceClient) Delete(ctx context.Context, in *GetTeamRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, TeamService_Delete_FullMethodName, in, out, cOpts...)
@@ -1230,7 +1230,7 @@ func (c *teamServiceClient) Update(ctx context.Context, in *UpdateTeamRequest, o
 // for forward compatibility
 type TeamServiceServer interface {
 	Create(context.Context, *CreateTeamRequest) (*Team, error)
-	Delete(context.Context, *DeleteTeamRequest) (*emptypb.Empty, error)
+	Delete(context.Context, *GetTeamRequest) (*emptypb.Empty, error)
 	Get(context.Context, *GetTeamRequest) (*Team, error)
 	Update(context.Context, *UpdateTeamRequest) (*Team, error)
 	mustEmbedUnimplementedTeamServiceServer()
@@ -1243,7 +1243,7 @@ type UnimplementedTeamServiceServer struct {
 func (UnimplementedTeamServiceServer) Create(context.Context, *CreateTeamRequest) (*Team, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedTeamServiceServer) Delete(context.Context, *DeleteTeamRequest) (*emptypb.Empty, error) {
+func (UnimplementedTeamServiceServer) Delete(context.Context, *GetTeamRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedTeamServiceServer) Get(context.Context, *GetTeamRequest) (*Team, error) {
@@ -1284,7 +1284,7 @@ func _TeamService_Create_Handler(srv interface{}, ctx context.Context, dec func(
 }
 
 func _TeamService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteTeamRequest)
+	in := new(GetTeamRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1296,7 +1296,7 @@ func _TeamService_Delete_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: TeamService_Delete_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TeamServiceServer).Delete(ctx, req.(*DeleteTeamRequest))
+		return srv.(TeamServiceServer).Delete(ctx, req.(*GetTeamRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1377,7 +1377,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TokenServiceClient interface {
 	Create(ctx context.Context, in *CreateTokenRequest, opts ...grpc.CallOption) (*Token, error)
-	Delete(ctx context.Context, in *DeleteTokenRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Get(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*Token, error)
 	Update(ctx context.Context, in *UpdateTokenRequest, opts ...grpc.CallOption) (*Token, error)
 }
@@ -1400,7 +1400,7 @@ func (c *tokenServiceClient) Create(ctx context.Context, in *CreateTokenRequest,
 	return out, nil
 }
 
-func (c *tokenServiceClient) Delete(ctx context.Context, in *DeleteTokenRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *tokenServiceClient) Delete(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, TokenService_Delete_FullMethodName, in, out, cOpts...)
@@ -1435,7 +1435,7 @@ func (c *tokenServiceClient) Update(ctx context.Context, in *UpdateTokenRequest,
 // for forward compatibility
 type TokenServiceServer interface {
 	Create(context.Context, *CreateTokenRequest) (*Token, error)
-	Delete(context.Context, *DeleteTokenRequest) (*emptypb.Empty, error)
+	Delete(context.Context, *GetTokenRequest) (*emptypb.Empty, error)
 	Get(context.Context, *GetTokenRequest) (*Token, error)
 	Update(context.Context, *UpdateTokenRequest) (*Token, error)
 	mustEmbedUnimplementedTokenServiceServer()
@@ -1448,7 +1448,7 @@ type UnimplementedTokenServiceServer struct {
 func (UnimplementedTokenServiceServer) Create(context.Context, *CreateTokenRequest) (*Token, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedTokenServiceServer) Delete(context.Context, *DeleteTokenRequest) (*emptypb.Empty, error) {
+func (UnimplementedTokenServiceServer) Delete(context.Context, *GetTokenRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedTokenServiceServer) Get(context.Context, *GetTokenRequest) (*Token, error) {
@@ -1489,7 +1489,7 @@ func _TokenService_Create_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 func _TokenService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteTokenRequest)
+	in := new(GetTokenRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1501,7 +1501,7 @@ func _TokenService_Delete_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: TokenService_Delete_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TokenServiceServer).Delete(ctx, req.(*DeleteTokenRequest))
+		return srv.(TokenServiceServer).Delete(ctx, req.(*GetTokenRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1582,7 +1582,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
 	Create(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*User, error)
-	Delete(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Delete(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Get(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*User, error)
 	Update(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*User, error)
 }
@@ -1605,7 +1605,7 @@ func (c *userServiceClient) Create(ctx context.Context, in *CreateUserRequest, o
 	return out, nil
 }
 
-func (c *userServiceClient) Delete(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *userServiceClient) Delete(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, UserService_Delete_FullMethodName, in, out, cOpts...)
@@ -1640,7 +1640,7 @@ func (c *userServiceClient) Update(ctx context.Context, in *UpdateUserRequest, o
 // for forward compatibility
 type UserServiceServer interface {
 	Create(context.Context, *CreateUserRequest) (*User, error)
-	Delete(context.Context, *DeleteUserRequest) (*emptypb.Empty, error)
+	Delete(context.Context, *GetUserRequest) (*emptypb.Empty, error)
 	Get(context.Context, *GetUserRequest) (*User, error)
 	Update(context.Context, *UpdateUserRequest) (*User, error)
 	mustEmbedUnimplementedUserServiceServer()
@@ -1653,7 +1653,7 @@ type UnimplementedUserServiceServer struct {
 func (UnimplementedUserServiceServer) Create(context.Context, *CreateUserRequest) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedUserServiceServer) Delete(context.Context, *DeleteUserRequest) (*emptypb.Empty, error) {
+func (UnimplementedUserServiceServer) Delete(context.Context, *GetUserRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedUserServiceServer) Get(context.Context, *GetUserRequest) (*User, error) {
@@ -1694,7 +1694,7 @@ func _UserService_Create_Handler(srv interface{}, ctx context.Context, dec func(
 }
 
 func _UserService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteUserRequest)
+	in := new(GetUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1706,7 +1706,7 @@ func _UserService_Delete_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: UserService_Delete_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).Delete(ctx, req.(*DeleteUserRequest))
+		return srv.(UserServiceServer).Delete(ctx, req.(*GetUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -4,14 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/server/bare"
-	"khepri.dev/horus/server/frame"
 	"khepri.dev/horus/tokens"
 )
 
@@ -112,16 +108,6 @@ func UnaryInterceptor(svc horus.Server, db *ent.Client) grpc.UnaryServerIntercep
 			return handler(ctx, req)
 		}
 
-		token := horus.Must(ctx)
-
-		user, err := db.User.Get(ctx, uuid.UUID(token.Owner.Id))
-		if err != nil {
-			return nil, status.Error(codes.Internal, "failed to get user details")
-		}
-
-		ctx = frame.WithContext(ctx, &frame.Frame{
-			Actor: user,
-		})
 		return handler(ctx, req)
 	}
 }

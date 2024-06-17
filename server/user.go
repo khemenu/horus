@@ -21,9 +21,7 @@ func (s *UserServiceServer) Create(ctx context.Context, req *horus.CreateUserReq
 	if req == nil {
 		req = &horus.CreateUserRequest{}
 	}
-	req.Parent = &horus.User{
-		Id: f.Actor.ID[:],
-	}
+	req.Parent = horus.UserById(f.Actor.ID)
 	return s.bare.User().Create(ctx, req)
 }
 
@@ -48,9 +46,18 @@ func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) 
 }
 
 func (s *UserServiceServer) Update(ctx context.Context, req *horus.UpdateUserRequest) (*horus.User, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+	u, err := s.Get(ctx, req.GetKey())
+	if err != nil {
+		return nil, err
+	}
+	if req != nil {
+		req.Parent = nil
+	}
+
+	req.Key = horus.UserByIdV(u.Id)
+	return s.bare.User().Update(ctx, req)
 }
 
-func (s *UserServiceServer) Delete(ctx context.Context, req *horus.DeleteUserRequest) (*emptypb.Empty, error) {
+func (s *UserServiceServer) Delete(ctx context.Context, req *horus.GetUserRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }

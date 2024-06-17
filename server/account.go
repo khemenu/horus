@@ -102,9 +102,7 @@ func (s *AccountServiceServer) Get(ctx context.Context, req *horus.GetAccountReq
 }
 
 func (s *AccountServiceServer) Update(ctx context.Context, req *horus.UpdateAccountRequest) (*horus.Account, error) {
-	v, err := s.Get(ctx, &horus.GetAccountRequest{
-		Id: req.GetId(),
-	})
+	v, err := s.Get(ctx, req.GetKey())
 	if err != nil {
 		return nil, err
 	}
@@ -120,11 +118,10 @@ func (s *AccountServiceServer) Update(ctx context.Context, req *horus.UpdateAcco
 	return s.bare.Account().Update(ctx, req)
 }
 
-func (s *AccountServiceServer) Delete(ctx context.Context, req *horus.DeleteAccountRequest) (*emptypb.Empty, error) {
+func (s *AccountServiceServer) Delete(ctx context.Context, req *horus.GetAccountRequest) (*emptypb.Empty, error) {
 	f := frame.Must(ctx)
-	v, err := s.Get(ctx, &horus.GetAccountRequest{
-		Id: req.GetId(),
-	})
+
+	v, err := s.Get(ctx, req)
 	if err != nil {
 		return nil, err
 	}

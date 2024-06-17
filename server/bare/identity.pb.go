@@ -13,6 +13,7 @@ import (
 	ent "khepri.dev/horus/ent"
 	identity "khepri.dev/horus/ent/identity"
 	predicate "khepri.dev/horus/ent/predicate"
+	user "khepri.dev/horus/ent/user"
 )
 
 type IdentityServiceServer struct {
@@ -33,10 +34,10 @@ func (s *IdentityServiceServer) Create(ctx context.Context, req *horus.CreateIde
 	}
 	q.SetKind(req.GetKind())
 	q.SetVerifier(req.GetVerifier())
-	if v, err := GetUserId(ctx, s.db, req.GetOwner()); err != nil {
+	if id, err := GetUserId(ctx, s.db, req.GetOwner()); err != nil {
 		return nil, err
 	} else {
-		q.SetOwnerID(v)
+		q.SetOwnerID(id)
 	}
 
 	res, err := q.Save(ctx)
@@ -46,7 +47,7 @@ func (s *IdentityServiceServer) Create(ctx context.Context, req *horus.CreateIde
 
 	return ToProtoIdentity(res), nil
 }
-func (s *IdentityServiceServer) Delete(ctx context.Context, req *horus.DeleteIdentityRequest) (*emptypb.Empty, error) {
+func (s *IdentityServiceServer) Delete(ctx context.Context, req *horus.GetIdentityRequest) (*emptypb.Empty, error) {
 	q := s.db.Identity.Delete()
 	if v, err := uuid.FromBytes(req.GetId()); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
@@ -69,7 +70,7 @@ func (s *IdentityServiceServer) Get(ctx context.Context, req *horus.GetIdentityR
 		q.Where(p)
 	}
 
-	q.WithOwner(func(q *ent.UserQuery) { q.Select(identity.FieldID) })
+	q.WithOwner(func(q *ent.UserQuery) { q.Select(user.FieldID) })
 
 	res, err := q.Only(ctx)
 	if err != nil {
@@ -79,9 +80,9 @@ func (s *IdentityServiceServer) Get(ctx context.Context, req *horus.GetIdentityR
 	return ToProtoIdentity(res), nil
 }
 func (s *IdentityServiceServer) Update(ctx context.Context, req *horus.UpdateIdentityRequest) (*horus.Identity, error) {
-	id, err := uuid.FromBytes(req.GetId())
+	id, err := GetIdentityId(ctx, s.db, req.GetKey())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		return nil, err
 	}
 
 	q := s.db.Identity.UpdateOneID(id)

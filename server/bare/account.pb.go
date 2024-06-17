@@ -12,7 +12,10 @@ import (
 	horus "khepri.dev/horus"
 	ent "khepri.dev/horus/ent"
 	account "khepri.dev/horus/ent/account"
+	membership "khepri.dev/horus/ent/membership"
 	predicate "khepri.dev/horus/ent/predicate"
+	silo "khepri.dev/horus/ent/silo"
+	user "khepri.dev/horus/ent/user"
 )
 
 type AccountServiceServer struct {
@@ -35,15 +38,15 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 		q.SetDescription(*v)
 	}
 	q.SetRole(toEntRole(req.GetRole()))
-	if v, err := GetUserId(ctx, s.db, req.GetOwner()); err != nil {
+	if id, err := GetUserId(ctx, s.db, req.GetOwner()); err != nil {
 		return nil, err
 	} else {
-		q.SetOwnerID(v)
+		q.SetOwnerID(id)
 	}
-	if v, err := GetSiloId(ctx, s.db, req.GetSilo()); err != nil {
+	if id, err := GetSiloId(ctx, s.db, req.GetSilo()); err != nil {
 		return nil, err
 	} else {
-		q.SetSiloID(v)
+		q.SetSiloID(id)
 	}
 
 	res, err := q.Save(ctx)
@@ -53,7 +56,7 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 
 	return ToProtoAccount(res), nil
 }
-func (s *AccountServiceServer) Delete(ctx context.Context, req *horus.DeleteAccountRequest) (*emptypb.Empty, error) {
+func (s *AccountServiceServer) Delete(ctx context.Context, req *horus.GetAccountRequest) (*emptypb.Empty, error) {
 	q := s.db.Account.Delete()
 	if v, err := uuid.FromBytes(req.GetId()); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
@@ -76,9 +79,9 @@ func (s *AccountServiceServer) Get(ctx context.Context, req *horus.GetAccountReq
 		q.Where(p)
 	}
 
-	q.WithOwner(func(q *ent.UserQuery) { q.Select(account.FieldID) })
-	q.WithSilo(func(q *ent.SiloQuery) { q.Select(account.FieldID) })
-	q.WithMemberships(func(q *ent.MembershipQuery) { q.Select(account.FieldID) })
+	q.WithOwner(func(q *ent.UserQuery) { q.Select(user.FieldID) })
+	q.WithSilo(func(q *ent.SiloQuery) { q.Select(silo.FieldID) })
+	q.WithMemberships(func(q *ent.MembershipQuery) { q.Select(membership.FieldID) })
 
 	res, err := q.Only(ctx)
 	if err != nil {
@@ -88,9 +91,9 @@ func (s *AccountServiceServer) Get(ctx context.Context, req *horus.GetAccountReq
 	return ToProtoAccount(res), nil
 }
 func (s *AccountServiceServer) Update(ctx context.Context, req *horus.UpdateAccountRequest) (*horus.Account, error) {
-	id, err := uuid.FromBytes(req.GetId())
+	id, err := GetAccountId(ctx, s.db, req.GetKey())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		return nil, err
 	}
 
 	q := s.db.Account.UpdateOneID(id)

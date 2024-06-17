@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"khepri.dev/horus"
 )
 
@@ -20,29 +19,65 @@ func TestUser(t *testing.T) {
 	suite.Run(t, &s)
 }
 
-func (s *UserTestSuite) TestCreate() {
-	s.Run("current user is set as the new user's parent", func() {
-		v, err := s.svc.User().Create(s.ctx, nil)
-		s.NoError(err)
+func (t *UserTestSuite) TestCreate() {
+	t.Run("acting user is set as the new user's parent", func() {
+		v, err := t.svc.User().Create(t.ctx, nil)
+		t.NoError(err)
 
-		v, err = s.svc.User().Get(s.ctx, horus.UserByIdV(v.Id))
-		s.NoError(err)
-		s.Equal(s.me.Actor.ID[:], v.GetParent().GetId())
+		v, err = t.svc.User().Get(t.ctx, horus.UserByIdV(v.Id))
+		t.NoError(err)
+		t.Equal(t.me.Actor.ID[:], v.GetParent().GetId())
+	})
+	t.Run("cannot have same alias with other", func() {
+		_, err := t.svc.User().Create(t.ctx, &horus.CreateUserRequest{
+			Alias: &t.me.Actor.Alias,
+		})
+		t.ErrCode(err, codes.AlreadyExists)
+		t.ErrorContains(err, "alias")
 	})
 }
 
 func (t *UserTestSuite) TestGet() {
-	t.Run("alias _me returns me", func() {
+	t.Run("alias _me returns myself", func() {
 		v, err := t.svc.User().Get(t.ctx, horus.UserByAlias("_me"))
 		t.NoError(err)
 		t.Equal(t.me.Actor.ID[:], v.Id)
 	})
-	t.Run("not found error if user does not exist", func() {
+	t.Run("not found error if the user does not exist", func() {
 		_, err := t.svc.User().Get(t.ctx, horus.UserByAlias("not exist"))
-		t.Error(err)
+		t.ErrCode(err, codes.NotFound)
+	})
+	t.Run("permission denied error if try to get another existing user info", func() {
+		_, err := t.svc.User().Get(t.ctx, horus.UserById(t.other.Actor.ID))
+		t.ErrCode(err, codes.PermissionDenied)
+	})
+	t.Run("user can get their child user info", func() {
+		v, err := t.svc.User().Create(t.ctx, nil)
+		t.NoError(err)
 
-		s, ok := status.FromError(err)
-		t.True(ok)
-		t.Equal(codes.NotFound, s.Code())
+		_, err = t.svc.User().Get(t.ctx, horus.UserByIdV(v.Id))
+		t.NoError(err)
+	})
+}
+
+func (t *UserTestSuite) TestUpdate() {
+	t.Run("user can update info of their child", func() {
+		v, err := t.svc.User().Create(t.ctx, nil)
+		t.NoError(err)
+
+		alias := "django"
+		w, err := t.svc.User().Update(t.ctx, &horus.UpdateUserRequest{
+			Key:   horus.UserByIdV(v.Id),
+			Alias: &alias,
+		})
+		t.NoError(err)
+		t.Equal(alias, w.Alias)
+
+		w, err = t.svc.User().Get(t.ctx, horus.UserByAlias(alias))
+		t.NoError(err)
+		t.Equal(v.Id, w.Id)
+
+		_, err = t.svc.User().Get(t.ctx, horus.UserByAlias(v.Alias))
+		t.ErrCode(err, codes.NotFound)
 	})
 }

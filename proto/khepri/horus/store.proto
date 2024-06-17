@@ -13,7 +13,7 @@ option go_package = "khepri.dev/horus";
 
 service AccountService {
 	rpc Create (CreateAccountRequest) returns (Account);
-	rpc Delete (DeleteAccountRequest) returns (google.protobuf.Empty);
+	rpc Delete (GetAccountRequest) returns (google.protobuf.Empty);
 	rpc Get (GetAccountRequest) returns (Account);
 	rpc List (ListAccountRequest) returns (ListAccountResponse);
 	rpc Update (UpdateAccountRequest) returns (Account);
@@ -21,7 +21,7 @@ service AccountService {
 
 service IdentityService {
 	rpc Create (CreateIdentityRequest) returns (Identity);
-	rpc Delete (DeleteIdentityRequest) returns (google.protobuf.Empty);
+	rpc Delete (GetIdentityRequest) returns (google.protobuf.Empty);
 	rpc Get (GetIdentityRequest) returns (Identity);
 	rpc Update (UpdateIdentityRequest) returns (Identity);
 }
@@ -29,14 +29,14 @@ service IdentityService {
 service InvitationService {
 	rpc Accept (AcceptInvitationRequest) returns (google.protobuf.Empty);
 	rpc Create (CreateInvitationRequest) returns (Invitation);
-	rpc Delete (DeleteInvitationRequest) returns (google.protobuf.Empty);
+	rpc Delete (GetInvitationRequest) returns (google.protobuf.Empty);
 	rpc Get (GetInvitationRequest) returns (Invitation);
 	rpc Update (UpdateInvitationRequest) returns (Invitation);
 }
 
 service MembershipService {
 	rpc Create (CreateMembershipRequest) returns (Membership);
-	rpc Delete (DeleteMembershipRequest) returns (google.protobuf.Empty);
+	rpc Delete (GetMembershipRequest) returns (google.protobuf.Empty);
 	rpc Get (GetMembershipRequest) returns (Membership);
 	rpc List (ListMembershipRequest) returns (ListMembershipResponse);
 	rpc Update (UpdateMembershipRequest) returns (Membership);
@@ -44,28 +44,28 @@ service MembershipService {
 
 service SiloService {
 	rpc Create (CreateSiloRequest) returns (Silo);
-	rpc Delete (DeleteSiloRequest) returns (google.protobuf.Empty);
+	rpc Delete (GetSiloRequest) returns (google.protobuf.Empty);
 	rpc Get (GetSiloRequest) returns (Silo);
 	rpc Update (UpdateSiloRequest) returns (Silo);
 }
 
 service TeamService {
 	rpc Create (CreateTeamRequest) returns (Team);
-	rpc Delete (DeleteTeamRequest) returns (google.protobuf.Empty);
+	rpc Delete (GetTeamRequest) returns (google.protobuf.Empty);
 	rpc Get (GetTeamRequest) returns (Team);
 	rpc Update (UpdateTeamRequest) returns (Team);
 }
 
 service TokenService {
 	rpc Create (CreateTokenRequest) returns (Token);
-	rpc Delete (DeleteTokenRequest) returns (google.protobuf.Empty);
+	rpc Delete (GetTokenRequest) returns (google.protobuf.Empty);
 	rpc Get (GetTokenRequest) returns (Token);
 	rpc Update (UpdateTokenRequest) returns (Token);
 }
 
 service UserService {
 	rpc Create (CreateUserRequest) returns (User);
-	rpc Delete (DeleteUserRequest) returns (google.protobuf.Empty);
+	rpc Delete (GetUserRequest) returns (google.protobuf.Empty);
 	rpc Get (GetUserRequest) returns (User);
 	rpc Update (UpdateUserRequest) returns (User);
 }
@@ -74,7 +74,6 @@ message CreateAccountRequest {
 	optional string alias = 2;
 	GetUserRequest owner = 3;
 	GetSiloRequest silo = 4;
-	repeated Membership memberships = 5;
 	Role role = 6;
 	optional string name = 7;
 	optional string description = 8;
@@ -123,58 +122,13 @@ message CreateTokenRequest {
 	string type = 3;
 	optional string name = 4;
 	GetUserRequest owner = 5;
-	optional Token parent = 6;
-	repeated Token children = 7;
+	optional GetTokenRequest parent = 6;
 	google.protobuf.Timestamp date_expired = 14;
 }
 
 message CreateUserRequest {
 	optional string alias = 2;
-	optional User parent = 3;
-	repeated User children = 4;
-	repeated Identity identities = 5;
-	repeated Account accounts = 6;
-}
-
-message DeleteAccountRequest {
-	bytes id = 1;
-}
-
-message DeleteIdentityRequest {
-	bytes id = 1;
-}
-
-message DeleteInvitationRequest {
-	bytes id = 1;
-}
-
-message DeleteMembershipRequest {
-	bytes id = 1;
-}
-
-message DeleteSiloRequest {
-	oneof key {
-		bytes id = 1;
-		string alias = 2;
-	}
-}
-
-message DeleteTeamRequest {
-	bytes id = 1;
-}
-
-message DeleteTokenRequest {
-	oneof key {
-		bytes id = 1;
-		string value = 2;
-	}
-}
-
-message DeleteUserRequest {
-	oneof key {
-		bytes id = 1;
-		string alias = 2;
-	}
+	optional GetUserRequest parent = 3;
 }
 
 message GetAccountRequest {
@@ -219,7 +173,7 @@ message GetUserRequest {
 }
 
 message UpdateAccountRequest {
-	bytes id = 1;
+	GetAccountRequest key = 1;
 	optional string alias = 2;
 	optional Role role = 6;
 	optional string name = 7;
@@ -227,17 +181,14 @@ message UpdateAccountRequest {
 }
 
 message UpdateIdentityRequest {
-	bytes id = 1;
-	optional string kind = 3;
+	GetIdentityRequest key = 1;
 	optional string verifier = 4;
 	optional string name = 7;
 	optional string description = 8;
 }
 
 message UpdateInvitationRequest {
-	bytes id = 1;
-	optional string invitee = 4;
-	optional string type = 5;
+	GetInvitationRequest key = 1;
 	optional google.protobuf.Timestamp date_canceled = 11;
 	optional google.protobuf.Timestamp date_declined = 12;
 	optional google.protobuf.Timestamp date_accepted = 13;
@@ -245,34 +196,32 @@ message UpdateInvitationRequest {
 }
 
 message UpdateMembershipRequest {
-	bytes id = 1;
+	GetMembershipRequest key = 1;
 	optional Role role = 6;
 }
 
 message UpdateSiloRequest {
-	bytes id = 1;
+	GetSiloRequest key = 1;
 	optional string alias = 2;
 	optional string name = 7;
 	optional string description = 8;
 }
 
 message UpdateTeamRequest {
-	bytes id = 1;
+	GetTeamRequest key = 1;
 	optional string alias = 2;
 	optional string name = 7;
 	optional string description = 8;
 }
 
 message UpdateTokenRequest {
-	bytes id = 1;
-	optional string value = 2;
-	optional string type = 3;
+	GetTokenRequest key = 1;
 	optional string name = 4;
 	optional google.protobuf.Timestamp date_expired = 14;
 }
 
 message UpdateUserRequest {
-	bytes id = 1;
+	GetUserRequest key = 1;
 	optional string alias = 2;
-	optional User parent = 3;
+	optional GetUserRequest parent = 3;
 }

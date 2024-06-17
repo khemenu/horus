@@ -8,6 +8,7 @@ import (
 
 type Frame struct {
 	Actor         *ent.User
+	Token         *ent.Token
 	ActingAccount *ent.Account
 }
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc/codes"
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/server/frame"
@@ -21,38 +22,50 @@ func TestToken(t *testing.T) {
 	suite.Run(t, &s)
 }
 
-func (s *TokenTestSuite) TestCreate() {
-	s.Run("user cannot create tokens for other user", func() {
-		_, err := s.svc.Token().Create(s.ctx, &horus.CreateTokenRequest{
-			Type:  horus.TokenTypeRefresh,
-			Owner: horus.UserById(s.other.Actor.ID),
+func (t *TokenTestSuite) TestCreate() {
+	t.Run("password", func() {
+		pw := "very secure"
+		v, err := t.svc.Token().Create(t.ctx, &horus.CreateTokenRequest{
+			Value: pw,
+			Type:  horus.TokenTypeBasic,
 		})
-		s.ErrorContains(err, "Permission")
+		t.NoError(err)
+
+		res, err := t.svc.Auth().BasicSignIn(t.ctx, &horus.BasicSignInRequest{
+			Username: t.me.Actor.Alias,
+			Password: pw,
+		})
+		t.NoError(err)
+		t.Equal(horus.TokenTypeAccess, res.Token.Type)
+
+		v2, err := t.svc.Token().Get(t.ctx, horus.TokenByIdV(res.Token.Id))
+		t.NoError(err)
+		t.Equal(v.Id, v2.GetParent().GetId())
 	})
+	t.Run("user can create tokens for their child", func() {
+		child, err := t.svc.User().Create(t.ctx, nil)
+		t.NoError(err)
 
-	s.Run("parent user can create tokens for their child user", func() {
-		child, err := s.svc.User().Create(s.ctx, &horus.CreateUserRequest{})
-		s.NoError(err)
-
-		v, err := s.svc.Token().Create(s.ctx, &horus.CreateTokenRequest{
+		v, err := t.svc.Token().Create(t.ctx, &horus.CreateTokenRequest{
 			Type:  horus.TokenTypeRefresh,
 			Owner: horus.UserByIdV(child.Id),
 		})
-		s.NoError(err)
+		t.NoError(err)
 
-		_, err = s.svc.Token().Get(s.ctx, &horus.GetTokenRequest{Key: &horus.GetTokenRequest_Id{
-			Id: v.Id,
-		}})
-		s.ErrorContains(err, "not found")
+		_, err = t.svc.Token().Get(t.ctx, horus.TokenByIdV(v.Id))
+		t.ErrCode(err, codes.NotFound)
 
-		_, err = s.svc.Token().Get(
-			frame.WithContext(s.ctx, &frame.Frame{
-				Actor: &ent.User{ID: uuid.UUID(child.Id)},
-			}),
-			&horus.GetTokenRequest{Key: &horus.GetTokenRequest_Id{
-				Id: v.Id,
-			}},
-		)
-		s.NoError(err)
+		child_ctx := frame.WithContext(t.ctx, &frame.Frame{
+			Actor: &ent.User{ID: uuid.UUID(child.Id)},
+		})
+		_, err = t.svc.Token().Get(child_ctx, horus.TokenByIdV(v.Id))
+		t.NoError(err)
+	})
+	t.Run("user cannot create tokens for other user", func() {
+		_, err := t.svc.Token().Create(t.ctx, &horus.CreateTokenRequest{
+			Type:  horus.TokenTypeRefresh,
+			Owner: horus.UserById(t.other.Actor.ID),
+		})
+		t.ErrCode(err, codes.NotFound)
 	})
 }

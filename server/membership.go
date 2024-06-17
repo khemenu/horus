@@ -107,7 +107,7 @@ func (s *MembershipServiceServer) Get(ctx context.Context, req *horus.GetMembers
 }
 
 func (s *MembershipServiceServer) Update(ctx context.Context, req *horus.UpdateMembershipRequest) (*horus.Membership, error) {
-	res, err := s.Get(ctx, &horus.GetMembershipRequest{Id: req.GetId()})
+	res, err := s.Get(ctx, req.GetKey())
 	if err != nil {
 		return nil, err
 	}
@@ -138,8 +138,8 @@ func (s *MembershipServiceServer) Update(ctx context.Context, req *horus.UpdateM
 	return s.bare.Membership().Update(ctx, req)
 }
 
-func (s *MembershipServiceServer) Delete(ctx context.Context, req *horus.DeleteMembershipRequest) (*emptypb.Empty, error) {
-	res, err := s.Get(ctx, &horus.GetMembershipRequest{Id: req.GetId()})
+func (s *MembershipServiceServer) Delete(ctx context.Context, req *horus.GetMembershipRequest) (*emptypb.Empty, error) {
+	res, err := s.Get(ctx, req)
 	if err != nil {
 		return nil, err
 	}

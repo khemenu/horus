@@ -11,8 +11,10 @@ import (
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	horus "khepri.dev/horus"
 	ent "khepri.dev/horus/ent"
+	account "khepri.dev/horus/ent/account"
 	membership "khepri.dev/horus/ent/membership"
 	predicate "khepri.dev/horus/ent/predicate"
+	team "khepri.dev/horus/ent/team"
 )
 
 type MembershipServiceServer struct {
@@ -26,15 +28,15 @@ func NewMembershipServiceServer(db *ent.Client) *MembershipServiceServer {
 func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateMembershipRequest) (*horus.Membership, error) {
 	q := s.db.Membership.Create()
 	q.SetRole(toEntRole(req.GetRole()))
-	if v, err := GetAccountId(ctx, s.db, req.GetAccount()); err != nil {
+	if id, err := GetAccountId(ctx, s.db, req.GetAccount()); err != nil {
 		return nil, err
 	} else {
-		q.SetAccountID(v)
+		q.SetAccountID(id)
 	}
-	if v, err := GetTeamId(ctx, s.db, req.GetTeam()); err != nil {
+	if id, err := GetTeamId(ctx, s.db, req.GetTeam()); err != nil {
 		return nil, err
 	} else {
-		q.SetTeamID(v)
+		q.SetTeamID(id)
 	}
 
 	res, err := q.Save(ctx)
@@ -44,7 +46,7 @@ func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateM
 
 	return ToProtoMembership(res), nil
 }
-func (s *MembershipServiceServer) Delete(ctx context.Context, req *horus.DeleteMembershipRequest) (*emptypb.Empty, error) {
+func (s *MembershipServiceServer) Delete(ctx context.Context, req *horus.GetMembershipRequest) (*emptypb.Empty, error) {
 	q := s.db.Membership.Delete()
 	if v, err := uuid.FromBytes(req.GetId()); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
@@ -67,8 +69,8 @@ func (s *MembershipServiceServer) Get(ctx context.Context, req *horus.GetMembers
 		q.Where(p)
 	}
 
-	q.WithAccount(func(q *ent.AccountQuery) { q.Select(membership.FieldID) })
-	q.WithTeam(func(q *ent.TeamQuery) { q.Select(membership.FieldID) })
+	q.WithAccount(func(q *ent.AccountQuery) { q.Select(account.FieldID) })
+	q.WithTeam(func(q *ent.TeamQuery) { q.Select(team.FieldID) })
 
 	res, err := q.Only(ctx)
 	if err != nil {
@@ -78,9 +80,9 @@ func (s *MembershipServiceServer) Get(ctx context.Context, req *horus.GetMembers
 	return ToProtoMembership(res), nil
 }
 func (s *MembershipServiceServer) Update(ctx context.Context, req *horus.UpdateMembershipRequest) (*horus.Membership, error) {
-	id, err := uuid.FromBytes(req.GetId())
+	id, err := GetMembershipId(ctx, s.db, req.GetKey())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		return nil, err
 	}
 
 	q := s.db.Membership.UpdateOneID(id)

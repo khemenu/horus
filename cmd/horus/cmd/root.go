@@ -98,6 +98,7 @@ func Run(ctx context.Context, c *Config) error {
 						return svc_interceptor(ctx, req, info, handler)
 					}
 
+					ctx = frame.WithContext(ctx, frame.New())
 					return auth_interceptor(ctx, req, info, func(ctx context.Context, req any) (any, error) {
 						return svc_interceptor(ctx, req, info, handler)
 					})

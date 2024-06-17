@@ -12,6 +12,7 @@ import (
 	horus "khepri.dev/horus"
 	ent "khepri.dev/horus/ent"
 	predicate "khepri.dev/horus/ent/predicate"
+	silo "khepri.dev/horus/ent/silo"
 	team "khepri.dev/horus/ent/team"
 )
 
@@ -34,10 +35,10 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamReq
 	if v := req.Description; v != nil {
 		q.SetDescription(*v)
 	}
-	if v, err := GetSiloId(ctx, s.db, req.GetSilo()); err != nil {
+	if id, err := GetSiloId(ctx, s.db, req.GetSilo()); err != nil {
 		return nil, err
 	} else {
-		q.SetSiloID(v)
+		q.SetSiloID(id)
 	}
 
 	res, err := q.Save(ctx)
@@ -47,7 +48,7 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamReq
 
 	return ToProtoTeam(res), nil
 }
-func (s *TeamServiceServer) Delete(ctx context.Context, req *horus.DeleteTeamRequest) (*emptypb.Empty, error) {
+func (s *TeamServiceServer) Delete(ctx context.Context, req *horus.GetTeamRequest) (*emptypb.Empty, error) {
 	q := s.db.Team.Delete()
 	if v, err := uuid.FromBytes(req.GetId()); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
@@ -70,7 +71,7 @@ func (s *TeamServiceServer) Get(ctx context.Context, req *horus.GetTeamRequest) 
 		q.Where(p)
 	}
 
-	q.WithSilo(func(q *ent.SiloQuery) { q.Select(team.FieldID) })
+	q.WithSilo(func(q *ent.SiloQuery) { q.Select(silo.FieldID) })
 
 	res, err := q.Only(ctx)
 	if err != nil {
@@ -80,9 +81,9 @@ func (s *TeamServiceServer) Get(ctx context.Context, req *horus.GetTeamRequest) 
 	return ToProtoTeam(res), nil
 }
 func (s *TeamServiceServer) Update(ctx context.Context, req *horus.UpdateTeamRequest) (*horus.Team, error) {
-	id, err := uuid.FromBytes(req.GetId())
+	id, err := GetTeamId(ctx, s.db, req.GetKey())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		return nil, err
 	}
 
 	q := s.db.Team.UpdateOneID(id)

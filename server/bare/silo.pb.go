@@ -42,16 +42,16 @@ func (s *SiloServiceServer) Create(ctx context.Context, req *horus.CreateSiloReq
 
 	return ToProtoSilo(res), nil
 }
-func (s *SiloServiceServer) Delete(ctx context.Context, req *horus.DeleteSiloRequest) (*emptypb.Empty, error) {
+func (s *SiloServiceServer) Delete(ctx context.Context, req *horus.GetSiloRequest) (*emptypb.Empty, error) {
 	q := s.db.Silo.Delete()
 	switch t := req.GetKey().(type) {
-	case *horus.DeleteSiloRequest_Id:
+	case *horus.GetSiloRequest_Id:
 		if v, err := uuid.FromBytes(t.Id); err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
 		} else {
 			q.Where(silo.IDEQ(v))
 		}
-	case *horus.DeleteSiloRequest_Alias:
+	case *horus.GetSiloRequest_Alias:
 		q.Where(silo.AliasEQ(t.Alias))
 	default:
 		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
@@ -80,9 +80,9 @@ func (s *SiloServiceServer) Get(ctx context.Context, req *horus.GetSiloRequest) 
 	return ToProtoSilo(res), nil
 }
 func (s *SiloServiceServer) Update(ctx context.Context, req *horus.UpdateSiloRequest) (*horus.Silo, error) {
-	id, err := uuid.FromBytes(req.GetId())
+	id, err := GetSiloId(ctx, s.db, req.GetKey())
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		return nil, err
 	}
 
 	q := s.db.Silo.UpdateOneID(id)

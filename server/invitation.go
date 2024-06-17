@@ -32,17 +32,15 @@ func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.CreateI
 		return nil, status.Errorf(codes.Unimplemented, "type other than internal not implemented")
 	}
 
-	silo_specifier, err := bare.GetSiloSpecifier(req.GetSilo())
-	if err != nil {
+	q := s.db.Account.Query().
+		Where(account.HasOwnerWith(user.IDEQ(f.Actor.ID)))
+	if p, err := bare.GetSiloSpecifier(req.GetSilo()); err != nil {
 		return nil, err
+	} else {
+		q.Where(account.HasSiloWith(p))
 	}
 
-	actor_acct, err := s.db.Account.Query().
-		Where(
-			account.HasOwnerWith(user.IDEQ(f.Actor.ID)),
-			account.HasSiloWith(silo_specifier),
-		).
-		Only(ctx)
+	actor_acct, err := q.Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, status.Error(codes.NotFound, "account not found")
@@ -167,6 +165,6 @@ func (s *InvitationServiceServer) Accept(ctx context.Context, req *horus.AcceptI
 	})
 }
 
-func (s *InvitationServiceServer) Delete(ctx context.Context, req *horus.DeleteInvitationRequest) (*emptypb.Empty, error) {
+func (s *InvitationServiceServer) Delete(ctx context.Context, req *horus.GetInvitationRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }

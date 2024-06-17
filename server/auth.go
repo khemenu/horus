@@ -55,7 +55,10 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 		return nil, status.Errorf(codes.Unauthenticated, "password mismatch")
 	}
 
-	ctx = frame.WithContext(ctx, &frame.Frame{Actor: u})
+	ctx = frame.WithContext(ctx, &frame.Frame{
+		Actor: u,
+		Token: token,
+	})
 	access_token, err := s.covered.Token().Create(ctx, &horus.CreateTokenRequest{
 		Type: horus.TokenTypeAccess,
 	})
@@ -82,6 +85,11 @@ func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInReq
 		}
 
 		return nil, fmt.Errorf("query token: %w", err)
+	}
+
+	if frame, ok := frame.Get(ctx); ok {
+		frame.Actor = token.Edges.Owner
+		frame.Token = token
 	}
 
 	return &horus.TokenSignInResponse{
@@ -125,7 +133,7 @@ func (s *AuthService) Refresh(ctx context.Context, req *horus.RefreshRequest) (*
 		ctx = frame.WithContext(ctx, &frame.Frame{Actor: refresh_token.Edges.Owner})
 		access_token, err := (&TokenServiceServer{base: s.withClient(tx.Client())}).Create(ctx, &horus.CreateTokenRequest{
 			Type:   horus.TokenTypeAccess,
-			Parent: &horus.Token{Id: refresh_token.ID[:]},
+			Parent: horus.TokenById(refresh_token.ID),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("create access token: %w", err)
@@ -178,9 +186,7 @@ func (s *AuthService) SignOut(ctx context.Context, req *horus.SingOutRequest) (*
 	ctx = frame.WithContext(ctx, &frame.Frame{
 		Actor: token.Edges.Owner,
 	})
-	if _, err := s.covered.Token().Delete(ctx, &horus.DeleteTokenRequest{Key: &horus.DeleteTokenRequest_Id{
-		Id: token.ID[:],
-	}}); err != nil {
+	if _, err := s.covered.Token().Delete(ctx, horus.TokenById(token.ID)); err != nil {
 		return nil, fmt.Errorf("delete token: %w", err)
 	}
 

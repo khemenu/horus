@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -25,15 +24,15 @@ type TeamServiceServer struct {
 }
 
 func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamRequest) (*horus.Team, error) {
-	p, err := s.bare.Silo().Get(ctx, req.GetSilo())
-	if err != nil {
-		return nil, fmt.Errorf("get silo: %w", err)
+	f := frame.Must(ctx)
+	q := f.Actor.QueryAccounts()
+	if p, err := bare.GetSiloSpecifier(req.GetSilo()); err != nil {
+		return nil, err
+	} else {
+		q.Where(account.HasSiloWith(p))
 	}
 
-	f := frame.Must(ctx)
-	v, err := f.Actor.QueryAccounts().
-		Where(account.SiloID(uuid.UUID(p.Id))).
-		Only(ctx)
+	v, err := q.WithSilo().Only(ctx)
 	if err != nil {
 		return nil, bare.ToStatus(err)
 	}
@@ -41,7 +40,7 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamReq
 		return nil, status.Error(codes.PermissionDenied, "only owner can create a team")
 	}
 
-	req.Silo = &horus.GetSiloRequest{Key: &horus.GetSiloRequest_Id{Id: p.Id}}
+	req.Silo = horus.SiloById(v.Edges.Silo.ID)
 	return entutils.WithTxV(ctx, s.db, func(tx *ent.Tx) (*horus.Team, error) {
 		c := tx.Client()
 		res, err := bare.NewTeamServiceServer(c).Create(ctx, req)
@@ -51,8 +50,8 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamReq
 
 		_, err = bare.NewMembershipServiceServer(c).Create(ctx, &horus.CreateMembershipRequest{
 			Role:    horus.Role_ROLE_OWNER,
-			Account: &horus.GetAccountRequest{Id: v.ID[:]},
-			Team:    &horus.GetTeamRequest{Id: res.Id},
+			Account: horus.AccountById(v.ID),
+			Team:    horus.TeamByIdV(res.Id),
 		})
 		if err != nil {
 			return nil, err
@@ -100,9 +99,7 @@ func (s *TeamServiceServer) Get(ctx context.Context, req *horus.GetTeamRequest) 
 }
 
 func (s *TeamServiceServer) Update(ctx context.Context, req *horus.UpdateTeamRequest) (*horus.Team, error) {
-	v, err := s.Get(ctx, &horus.GetTeamRequest{
-		Id: req.GetId(),
-	})
+	v, err := s.Get(ctx, req.GetKey())
 	if err != nil {
 		return nil, err
 	}
@@ -129,6 +126,27 @@ func (s *TeamServiceServer) Update(ctx context.Context, req *horus.UpdateTeamReq
 	return s.bare.Team().Update(ctx, req)
 }
 
-func (s *TeamServiceServer) Delete(ctx context.Context, req *horus.DeleteTeamRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "team cannot be deleted manually")
+func (s *TeamServiceServer) Delete(ctx context.Context, req *horus.GetTeamRequest) (*emptypb.Empty, error) {
+	q := s.db.Membership.Query()
+	if p, err := bare.GetTeamSpecifier(req); err != nil {
+		return nil, err
+	} else {
+		q.Where(
+			membership.RoleEQ(role.Owner),
+			membership.HasTeamWith(p),
+		)
+	}
+
+	owners, err := q.All(ctx)
+	if err != nil {
+		return nil, bare.ToStatus(err)
+	}
+	switch len(owners) {
+	case 0:
+		return nil, status.Errorf(codes.NotFound, "team not found")
+	case 1:
+		return s.bare.Team().Delete(ctx, req)
+	default:
+		return nil, status.Error(codes.FailedPrecondition, "only teams with one owner can be deleted.")
+	}
 }

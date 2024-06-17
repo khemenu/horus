@@ -77,9 +77,7 @@ func (s *SiloServiceServer) Get(ctx context.Context, req *horus.GetSiloRequest) 
 }
 
 func (s *SiloServiceServer) Update(ctx context.Context, req *horus.UpdateSiloRequest) (*horus.Silo, error) {
-	_, err := s.Get(ctx, &horus.GetSiloRequest{Key: &horus.GetSiloRequest_Id{
-		Id: req.GetId(),
-	}})
+	_, err := s.Get(ctx, req.GetKey())
 	if err != nil {
 		return nil, err
 	}
@@ -92,6 +90,6 @@ func (s *SiloServiceServer) Update(ctx context.Context, req *horus.UpdateSiloReq
 	return s.bare.Silo().Update(ctx, req)
 }
 
-func (s *SiloServiceServer) Delete(ctx context.Context, req *horus.DeleteSiloRequest) (*emptypb.Empty, error) {
+func (s *SiloServiceServer) Delete(ctx context.Context, req *horus.GetSiloRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.PermissionDenied, "silo cannot be deleted manually")
 }

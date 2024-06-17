@@ -2,11 +2,14 @@ package server_test
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/account"
@@ -49,6 +52,12 @@ func (s *Suite) Run(name string, subtest func()) bool {
 	})
 }
 
+func (s *Suite) ErrCode(err error, code codes.Code) {
+	st, ok := status.FromError(err)
+	s.True(ok)
+	s.Equal(code, st.Code())
+}
+
 func (s *Suite) CtxOther() context.Context {
 	return frame.WithContext(s.ctx, s.other)
 }
@@ -71,7 +80,26 @@ func (s *Suite) SetupSubTest() {
 	if err != nil {
 		panic(err)
 	}
+	s.me.Token, err = c.Token.Create().
+		SetValue("foo").
+		SetType(horus.TokenTypeAccess).
+		SetDateExpired(time.Now().Add(time.Hour)).
+		SetOwner(s.me.Actor).
+		Save(s.ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	s.other.Actor, err = c.User.Create().Save(s.ctx)
+	if err != nil {
+		panic(err)
+	}
+	s.other.Token, err = c.Token.Create().
+		SetValue("bar").
+		SetType(horus.TokenTypeAccess).
+		SetDateExpired(time.Now().Add(time.Hour)).
+		SetOwner(s.other.Actor).
+		Save(s.ctx)
 	if err != nil {
 		panic(err)
 	}
