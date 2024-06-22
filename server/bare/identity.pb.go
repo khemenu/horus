@@ -48,15 +48,11 @@ func (s *IdentityServiceServer) Create(ctx context.Context, req *horus.CreateIde
 	return ToProtoIdentity(res), nil
 }
 func (s *IdentityServiceServer) Delete(ctx context.Context, req *horus.GetIdentityRequest) (*emptypb.Empty, error) {
-	q := s.db.Identity.Delete()
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		q.Where(identity.IDEQ(v))
-	}
-
-	_, err := q.Exec(ctx)
+	p, err := GetIdentitySpecifier(req)
 	if err != nil {
+		return nil, err
+	}
+	if _, err := s.db.Identity.Delete().Where(p).Exec(ctx); err != nil {
 		return nil, ToStatus(err)
 	}
 
@@ -70,14 +66,17 @@ func (s *IdentityServiceServer) Get(ctx context.Context, req *horus.GetIdentityR
 		q.Where(p)
 	}
 
-	q.WithOwner(func(q *ent.UserQuery) { q.Select(user.FieldID) })
-
-	res, err := q.Only(ctx)
+	res, err := QueryIdentityWithEdgeIds(q).Only(ctx)
 	if err != nil {
 		return nil, ToStatus(err)
 	}
 
 	return ToProtoIdentity(res), nil
+}
+func QueryIdentityWithEdgeIds(q *ent.IdentityQuery) *ent.IdentityQuery {
+	q.WithOwner(func(q *ent.UserQuery) { q.Select(user.FieldID) })
+
+	return q
 }
 func (s *IdentityServiceServer) Update(ctx context.Context, req *horus.UpdateIdentityRequest) (*horus.Identity, error) {
 	id, err := GetIdentityId(ctx, s.db, req.GetKey())

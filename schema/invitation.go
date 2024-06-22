@@ -69,7 +69,7 @@ func (Invitation) Annotations() []schema.Annotation {
 		entpb.Message(entpb.PathInherit, entpb.WithService(entpb.PathInherit,
 			&entpb.Rpc{
 				Ident: "Accept",
-				Req:   entpb.PbType{Ident: "AcceptInvitationRequest", Import: "khepri/horus/extend.proto"},
+				Req:   entpb.PbType{Ident: "AcceptInvitationRequest", Import: entpb.PbThis.Import},
 				Res:   entpb.PbEmpty,
 			},
 		)),

@@ -7,10 +7,18 @@ import (
 )
 
 func AccountById(k uuid.UUID) *GetAccountRequest {
-	return &GetAccountRequest{Id: k[:]}
+	return &GetAccountRequest{Key: &GetAccountRequest_Id{Id: k[:]}}
 }
 func AccountByIdV(k []byte) *GetAccountRequest {
-	return &GetAccountRequest{Id: k}
+	return &GetAccountRequest{Key: &GetAccountRequest_Id{Id: k}}
+}
+func AccountInSilo(k *GetSiloRequest, alias string) *GetAccountRequest {
+	return &GetAccountRequest{Key: &GetAccountRequest_InSilo{
+		InSilo: &GetAccountInSilo{
+			Silo:  k,
+			Alias: alias,
+		},
+	}}
 }
 func IdentityById(k uuid.UUID) *GetIdentityRequest {
 	return &GetIdentityRequest{Id: k[:]}
@@ -40,10 +48,18 @@ func SiloByAlias(k string) *GetSiloRequest {
 	return &GetSiloRequest{Key: &GetSiloRequest_Alias{Alias: k}}
 }
 func TeamById(k uuid.UUID) *GetTeamRequest {
-	return &GetTeamRequest{Id: k[:]}
+	return &GetTeamRequest{Key: &GetTeamRequest_Id{Id: k[:]}}
 }
 func TeamByIdV(k []byte) *GetTeamRequest {
-	return &GetTeamRequest{Id: k}
+	return &GetTeamRequest{Key: &GetTeamRequest_Id{Id: k}}
+}
+func TeamInSilo(k *GetSiloRequest, alias string) *GetTeamRequest {
+	return &GetTeamRequest{Key: &GetTeamRequest_InSilo{
+		InSilo: &GetTeamInSilo{
+			Silo:  k,
+			Alias: alias,
+		},
+	}}
 }
 func TokenById(k uuid.UUID) *GetTokenRequest {
 	return &GetTokenRequest{Key: &GetTokenRequest_Id{Id: k[:]}}

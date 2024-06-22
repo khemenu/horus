@@ -43,22 +43,11 @@ func (s *SiloServiceServer) Create(ctx context.Context, req *horus.CreateSiloReq
 	return ToProtoSilo(res), nil
 }
 func (s *SiloServiceServer) Delete(ctx context.Context, req *horus.GetSiloRequest) (*emptypb.Empty, error) {
-	q := s.db.Silo.Delete()
-	switch t := req.GetKey().(type) {
-	case *horus.GetSiloRequest_Id:
-		if v, err := uuid.FromBytes(t.Id); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-		} else {
-			q.Where(silo.IDEQ(v))
-		}
-	case *horus.GetSiloRequest_Alias:
-		q.Where(silo.AliasEQ(t.Alias))
-	default:
-		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
-	}
-
-	_, err := q.Exec(ctx)
+	p, err := GetSiloSpecifier(req)
 	if err != nil {
+		return nil, err
+	}
+	if _, err := s.db.Silo.Delete().Where(p).Exec(ctx); err != nil {
 		return nil, ToStatus(err)
 	}
 
@@ -72,12 +61,16 @@ func (s *SiloServiceServer) Get(ctx context.Context, req *horus.GetSiloRequest) 
 		q.Where(p)
 	}
 
-	res, err := q.Only(ctx)
+	res, err := QuerySiloWithEdgeIds(q).Only(ctx)
 	if err != nil {
 		return nil, ToStatus(err)
 	}
 
 	return ToProtoSilo(res), nil
+}
+func QuerySiloWithEdgeIds(q *ent.SiloQuery) *ent.SiloQuery {
+
+	return q
 }
 func (s *SiloServiceServer) Update(ctx context.Context, req *horus.UpdateSiloRequest) (*horus.Silo, error) {
 	id, err := GetSiloId(ctx, s.db, req.GetKey())
@@ -123,20 +116,17 @@ func GetSiloId(ctx context.Context, db *ent.Client, req *horus.GetSiloRequest) (
 		}
 	}
 
-	q := db.Silo.Query()
-	switch t := k.(type) {
-	case *horus.GetSiloRequest_Alias:
-		q.Where(silo.AliasEQ(t.Alias))
-	case nil:
-		return r, status.Errorf(codes.InvalidArgument, "key not provided")
-	default:
-		return r, status.Errorf(codes.Unimplemented, "unknown type of key")
+	p, err := GetSiloSpecifier(req)
+	if err != nil {
+		return r, err
 	}
-	if v, err := q.OnlyID(ctx); err != nil {
+
+	v, err := db.Silo.Query().Where(p).OnlyID(ctx)
+	if err != nil {
 		return r, ToStatus(err)
-	} else {
-		return v, nil
 	}
+
+	return v, nil
 }
 func GetSiloSpecifier(req *horus.GetSiloRequest) (predicate.Silo, error) {
 	switch t := req.GetKey().(type) {

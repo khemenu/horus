@@ -46,22 +46,11 @@ func (s *UserServiceServer) Create(ctx context.Context, req *horus.CreateUserReq
 	return ToProtoUser(res), nil
 }
 func (s *UserServiceServer) Delete(ctx context.Context, req *horus.GetUserRequest) (*emptypb.Empty, error) {
-	q := s.db.User.Delete()
-	switch t := req.GetKey().(type) {
-	case *horus.GetUserRequest_Id:
-		if v, err := uuid.FromBytes(t.Id); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-		} else {
-			q.Where(user.IDEQ(v))
-		}
-	case *horus.GetUserRequest_Alias:
-		q.Where(user.AliasEQ(t.Alias))
-	default:
-		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
-	}
-
-	_, err := q.Exec(ctx)
+	p, err := GetUserSpecifier(req)
 	if err != nil {
+		return nil, err
+	}
+	if _, err := s.db.User.Delete().Where(p).Exec(ctx); err != nil {
 		return nil, ToStatus(err)
 	}
 
@@ -75,17 +64,20 @@ func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) 
 		q.Where(p)
 	}
 
-	q.WithParent(func(q *ent.UserQuery) { q.Select(user.FieldID) })
-	q.WithIdentities(func(q *ent.IdentityQuery) { q.Select(identity.FieldID) })
-	q.WithAccounts(func(q *ent.AccountQuery) { q.Select(account.FieldID) })
-	q.WithChildren(func(q *ent.UserQuery) { q.Select(user.FieldID) })
-
-	res, err := q.Only(ctx)
+	res, err := QueryUserWithEdgeIds(q).Only(ctx)
 	if err != nil {
 		return nil, ToStatus(err)
 	}
 
 	return ToProtoUser(res), nil
+}
+func QueryUserWithEdgeIds(q *ent.UserQuery) *ent.UserQuery {
+	q.WithParent(func(q *ent.UserQuery) { q.Select(user.FieldID) })
+	q.WithIdentities(func(q *ent.IdentityQuery) { q.Select(identity.FieldID) })
+	q.WithAccounts(func(q *ent.AccountQuery) { q.Select(account.FieldID) })
+	q.WithChildren(func(q *ent.UserQuery) { q.Select(user.FieldID) })
+
+	return q
 }
 func (s *UserServiceServer) Update(ctx context.Context, req *horus.UpdateUserRequest) (*horus.User, error) {
 	id, err := GetUserId(ctx, s.db, req.GetKey())
@@ -142,20 +134,17 @@ func GetUserId(ctx context.Context, db *ent.Client, req *horus.GetUserRequest) (
 		}
 	}
 
-	q := db.User.Query()
-	switch t := k.(type) {
-	case *horus.GetUserRequest_Alias:
-		q.Where(user.AliasEQ(t.Alias))
-	case nil:
-		return r, status.Errorf(codes.InvalidArgument, "key not provided")
-	default:
-		return r, status.Errorf(codes.Unimplemented, "unknown type of key")
+	p, err := GetUserSpecifier(req)
+	if err != nil {
+		return r, err
 	}
-	if v, err := q.OnlyID(ctx); err != nil {
+
+	v, err := db.User.Query().Where(p).OnlyID(ctx)
+	if err != nil {
 		return r, ToStatus(err)
-	} else {
-		return v, nil
 	}
+
+	return v, nil
 }
 func GetUserSpecifier(req *horus.GetUserRequest) (predicate.User, error) {
 	switch t := req.GetKey().(type) {

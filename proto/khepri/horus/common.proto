@@ -10,8 +10,9 @@ option go_package = "khepri.dev/horus";
 
 enum Role {
 	ROLE_UNSPECIFIED = 0;
-	ROLE_OWNER = 10;
-	ROLE_MEMBER = 20;
+	ROLE_MEMBER = 10;
+	ROLE_ADMIN = 20;
+	ROLE_OWNER = 30;
 }
 
 message Account {

@@ -16,6 +16,11 @@ MODULE_NAME=khepri.dev/horus
 PROTO_ROOT="${__root}/proto"
 cd "${PROTO_ROOT}"
 
+cat \
+	"${PROTO_ROOT}/khepri/horus/.store.proto" \
+	"${PROTO_ROOT}/khepri/horus/.store.extend.proto" \
+	> "${PROTO_ROOT}/khepri/horus/store.proto"
+
 protoc \
 	--proto_path="${PROTO_ROOT}" \
 	\

@@ -49,15 +49,11 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamReq
 	return ToProtoTeam(res), nil
 }
 func (s *TeamServiceServer) Delete(ctx context.Context, req *horus.GetTeamRequest) (*emptypb.Empty, error) {
-	q := s.db.Team.Delete()
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		q.Where(team.IDEQ(v))
-	}
-
-	_, err := q.Exec(ctx)
+	p, err := GetTeamSpecifier(req)
 	if err != nil {
+		return nil, err
+	}
+	if _, err := s.db.Team.Delete().Where(p).Exec(ctx); err != nil {
 		return nil, ToStatus(err)
 	}
 
@@ -71,14 +67,17 @@ func (s *TeamServiceServer) Get(ctx context.Context, req *horus.GetTeamRequest) 
 		q.Where(p)
 	}
 
-	q.WithSilo(func(q *ent.SiloQuery) { q.Select(silo.FieldID) })
-
-	res, err := q.Only(ctx)
+	res, err := QueryTeamWithEdgeIds(q).Only(ctx)
 	if err != nil {
 		return nil, ToStatus(err)
 	}
 
 	return ToProtoTeam(res), nil
+}
+func QueryTeamWithEdgeIds(q *ent.TeamQuery) *ent.TeamQuery {
+	q.WithSilo(func(q *ent.SiloQuery) { q.Select(silo.FieldID) })
+
+	return q
 }
 func (s *TeamServiceServer) Update(ctx context.Context, req *horus.UpdateTeamRequest) (*horus.Team, error) {
 	id, err := GetTeamId(ctx, s.db, req.GetKey())
@@ -118,16 +117,48 @@ func ToProtoTeam(v *ent.Team) *horus.Team {
 }
 func GetTeamId(ctx context.Context, db *ent.Client, req *horus.GetTeamRequest) (uuid.UUID, error) {
 	var r uuid.UUID
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		return v, nil
+	k := req.GetKey()
+	if t, ok := k.(*horus.GetTeamRequest_Id); ok {
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return v, nil
+		}
 	}
+
+	p, err := GetTeamSpecifier(req)
+	if err != nil {
+		return r, err
+	}
+
+	v, err := db.Team.Query().Where(p).OnlyID(ctx)
+	if err != nil {
+		return r, ToStatus(err)
+	}
+
+	return v, nil
 }
 func GetTeamSpecifier(req *horus.GetTeamRequest) (predicate.Team, error) {
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		return team.IDEQ(v), nil
+	switch t := req.GetKey().(type) {
+	case *horus.GetTeamRequest_Id:
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return team.IDEQ(v), nil
+		}
+	case *horus.GetTeamRequest_InSilo:
+		ps := make([]predicate.Team, 0, 2)
+		if p, err := GetSiloSpecifier(t.InSilo.GetSilo()); err != nil {
+			s, _ := status.FromError(err)
+			return nil, status.Errorf(codes.InvalidArgument, "in_silo.%s", s.Message())
+		} else {
+			ps = append(ps, team.HasSiloWith(p))
+		}
+		ps = append(ps, team.AliasEQ(t.InSilo.GetAlias()))
+		return team.And(ps...), nil
+	case nil:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
+	default:
+		return nil, status.Errorf(codes.Unimplemented, "unknown type of key")
 	}
 }

@@ -14,3 +14,8 @@ const (
 const (
 	InvitationTypeInternal = "internal"
 )
+
+const (
+	// Me is an alias that indicates the resource the user own.
+	Me = "_me"
+)

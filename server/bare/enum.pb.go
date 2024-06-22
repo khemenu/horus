@@ -11,10 +11,12 @@ func toPbRole(v role.Role) horus.Role {
 	switch v {
 	case "UNSPECIFIED":
 		return 0
-	case "OWNER":
-		return 10
 	case "MEMBER":
+		return 10
+	case "ADMIN":
 		return 20
+	case "OWNER":
+		return 30
 	default:
 		return 0
 	}
@@ -25,9 +27,11 @@ func toEntRole(v horus.Role) role.Role {
 	case 0:
 		return "UNSPECIFIED"
 	case 10:
-		return "OWNER"
-	case 20:
 		return "MEMBER"
+	case 20:
+		return "ADMIN"
+	case 30:
+		return "OWNER"
 	default:
 		return ""
 	}

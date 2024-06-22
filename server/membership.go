@@ -28,27 +28,13 @@ type MembershipServiceServer struct {
 }
 
 func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateMembershipRequest) (*horus.Membership, error) {
-	p_acct := req.GetAccount()
-	if p_acct == nil {
-		return nil, newErrMissingRequiredField(".account.id")
-	}
-
-	p_team := req.GetTeam()
-	if p_team == nil {
-		return nil, newErrMissingRequiredField(".team.id")
-	}
-
-	target_account, err := s.bare.Account().Get(ctx, &horus.GetAccountRequest{
-		Id: p_acct.Id,
-	})
+	target_account, err := s.bare.Account().Get(ctx, req.GetAccount())
 	if err != nil {
 		return nil, err
 	}
 
 	// Ensure that team exists.
-	target_team, err := s.bare.Team().Get(ctx, &horus.GetTeamRequest{
-		Id: p_team.Id,
-	})
+	target_team, err := s.bare.Team().Get(ctx, req.GetTeam())
 	if err != nil {
 		return nil, err
 	}
@@ -96,9 +82,7 @@ func (s *MembershipServiceServer) Get(ctx context.Context, req *horus.GetMembers
 		return nil, err
 	}
 
-	_, err = s.covered.Account().Get(ctx, &horus.GetAccountRequest{
-		Id: res.Account.Id,
-	})
+	_, err = s.covered.Account().Get(ctx, horus.AccountByIdV(res.Account.Id))
 	if err != nil {
 		return nil, err
 	}

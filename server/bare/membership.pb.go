@@ -47,15 +47,11 @@ func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateM
 	return ToProtoMembership(res), nil
 }
 func (s *MembershipServiceServer) Delete(ctx context.Context, req *horus.GetMembershipRequest) (*emptypb.Empty, error) {
-	q := s.db.Membership.Delete()
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		q.Where(membership.IDEQ(v))
-	}
-
-	_, err := q.Exec(ctx)
+	p, err := GetMembershipSpecifier(req)
 	if err != nil {
+		return nil, err
+	}
+	if _, err := s.db.Membership.Delete().Where(p).Exec(ctx); err != nil {
 		return nil, ToStatus(err)
 	}
 
@@ -69,15 +65,18 @@ func (s *MembershipServiceServer) Get(ctx context.Context, req *horus.GetMembers
 		q.Where(p)
 	}
 
-	q.WithAccount(func(q *ent.AccountQuery) { q.Select(account.FieldID) })
-	q.WithTeam(func(q *ent.TeamQuery) { q.Select(team.FieldID) })
-
-	res, err := q.Only(ctx)
+	res, err := QueryMembershipWithEdgeIds(q).Only(ctx)
 	if err != nil {
 		return nil, ToStatus(err)
 	}
 
 	return ToProtoMembership(res), nil
+}
+func QueryMembershipWithEdgeIds(q *ent.MembershipQuery) *ent.MembershipQuery {
+	q.WithAccount(func(q *ent.AccountQuery) { q.Select(account.FieldID) })
+	q.WithTeam(func(q *ent.TeamQuery) { q.Select(team.FieldID) })
+
+	return q
 }
 func (s *MembershipServiceServer) Update(ctx context.Context, req *horus.UpdateMembershipRequest) (*horus.Membership, error) {
 	id, err := GetMembershipId(ctx, s.db, req.GetKey())

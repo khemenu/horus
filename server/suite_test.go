@@ -36,8 +36,8 @@ type Suite struct {
 	driver_name string
 	source_name string
 
-	client *ent.Client
-	svc    horus.Server
+	db  *ent.Client
+	svc horus.Server
 
 	me    *frame.Frame // Frame of actor.
 	other *frame.Frame // User who does not have any relation with the actor.
@@ -68,7 +68,7 @@ func (s *Suite) SetupSubTest() {
 		enttest.WithOptions(ent.Log(s.T().Log)),
 	)
 
-	s.client = c
+	s.db = c
 	s.svc = service.NewServer(c)
 
 	s.me = frame.New()
@@ -111,26 +111,38 @@ func (s *Suite) TearDownSubTest() {
 	s.other = nil
 	s.svc = nil
 
-	s.client.Close()
-	s.client = nil
+	s.db.Close()
+	s.db = nil
+}
+
+func (s *Suite) AsUser(id []byte) context.Context {
+	u, err := s.db.User.Get(s.ctx, uuid.UUID(id))
+	s.NoError(err)
+
+	return frame.WithContext(s.ctx, &frame.Frame{Actor: u})
 }
 
 type SuiteWithSilo struct {
 	Suite
 
-	amigo *frame.Frame // User who is in the same silo with the actor.
-	buddy *frame.Frame // User who is in the same silo with the actor.
+	silo_owner  *frame.Frame // Actor.
+	silo_admin  *frame.Frame // User who is in the same silo with the actor.
+	silo_member *frame.Frame // User who is in the same silo with the actor.
 
-	silo       *ent.Silo // Silo owned by actor.
-	other_silo *ent.Silo // Silo owned by actor.
+	silo       *ent.Silo // Silo owned by the actor.
+	other_silo *ent.Silo // Silo owned by the other.
 }
 
-func (s *SuiteWithSilo) CtxAmigo() context.Context {
-	return frame.WithContext(s.ctx, s.amigo)
+func (s *SuiteWithSilo) CtxSiloOwner() context.Context {
+	return frame.WithContext(s.ctx, s.silo_owner)
 }
 
-func (s *SuiteWithSilo) CtxBuddy() context.Context {
-	return frame.WithContext(s.ctx, s.buddy)
+func (s *SuiteWithSilo) CtxSiloAdmin() context.Context {
+	return frame.WithContext(s.ctx, s.silo_admin)
+}
+
+func (s *SuiteWithSilo) CtxSiloMember() context.Context {
+	return frame.WithContext(s.ctx, s.silo_member)
 }
 
 func (s *SuiteWithSilo) SetupSubTest() {
@@ -186,33 +198,35 @@ func (s *SuiteWithSilo) SetupSubTest() {
 
 	var err error
 
-	s.amigo = frame.New()
-	s.amigo.Actor, err = s.client.User.Create().Save(s.ctx)
+	s.silo_owner = s.me
+
+	s.silo_admin = frame.New()
+	s.silo_admin.Actor, err = s.db.User.Create().Save(s.ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	s.amigo.ActingAccount, err = s.client.Account.Create().
+	s.silo_admin.ActingAccount, err = s.db.Account.Create().
 		SetAlias("amigo").
 		SetName("O-Ren Ishii").
-		SetOwner(s.amigo.Actor).
+		SetOwner(s.silo_admin.Actor).
 		SetSiloID(s.silo.ID).
-		SetRole(role.Member).
+		SetRole(role.Admin).
 		Save(s.ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	s.buddy = frame.New()
-	s.buddy.Actor, err = s.client.User.Create().Save(s.ctx)
+	s.silo_member = frame.New()
+	s.silo_member.Actor, err = s.db.User.Create().Save(s.ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	s.buddy.ActingAccount, err = s.client.Account.Create().
+	s.silo_member.ActingAccount, err = s.db.Account.Create().
 		SetAlias("buddy").
 		SetName("Budd").
-		SetOwner(s.buddy.Actor).
+		SetOwner(s.silo_member.Actor).
 		SetSiloID(s.silo.ID).
 		SetRole(role.Member).
 		Save(s.ctx)
@@ -222,7 +236,9 @@ func (s *SuiteWithSilo) SetupSubTest() {
 }
 
 func (s *SuiteWithSilo) TearDownSubTest() {
-	s.amigo = nil
+	s.silo_member = nil
+	s.silo_admin = nil
+	s.silo_owner = nil
 	s.silo = nil
 	s.Suite.TearDownSubTest()
 }

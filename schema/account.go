@@ -73,8 +73,8 @@ func (Account) Annotations() []schema.Annotation {
 			entpb.WithService(entpb.PathInherit,
 				&entpb.Rpc{
 					Ident: "List",
-					Req:   entpb.PbType{Ident: "ListAccountRequest", Import: "khepri/horus/extend.proto"},
-					Res:   entpb.PbType{Ident: "ListAccountResponse", Import: "khepri/horus/extend.proto"},
+					Req:   entpb.PbType{Ident: "ListAccountRequest", Import: entpb.PbThis.Import},
+					Res:   entpb.PbType{Ident: "ListAccountResponse", Import: entpb.PbThis.Import},
 				},
 			),
 		),

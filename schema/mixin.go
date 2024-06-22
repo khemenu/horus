@@ -34,7 +34,7 @@ func (baseMixin) Fields() []ent.Field {
 func (baseMixin) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entpb.Message("khepri/horus/common.proto",
-			entpb.WithService("khepri/horus/store.proto",
+			entpb.WithService("khepri/horus/.store.proto",
 				entpb.RpcEntCreate(),
 				entpb.RpcEntGet(),
 				entpb.RpcEntUpdate(),

@@ -240,36 +240,3 @@ message UpdateUserRequest {
 	optional string alias = 2;
 	optional GetUserRequest parent = 3;
 }
-message AcceptInvitationRequest {
-	bytes id = 1;
-}
-
-message ListAccountRequest {
-	uint32                    limit = 1;
-	google.protobuf.Timestamp token = 2;
-
-	oneof key {
-		google.protobuf.Empty mine = 3;
-		GetSiloRequest        silo = 4;
-	}
-}
-message ListAccountResponse {
-	repeated Account items = 1;
-}
-
-message ListMembershipRequest {
-	uint32                    limit = 1;
-	google.protobuf.Timestamp token = 2;
-
-	oneof key {
-		google.protobuf.Empty mine = 3;
-
-		bytes  silo_id    = 4;
-		string silo_alias = 5;
-		bytes  team_id    = 6;
-		string team_alias = 7;
-	}
-}
-message ListMembershipResponse {
-	repeated Membership items = 1;
-}

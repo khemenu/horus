@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/account"
-	"khepri.dev/horus/ent/silo"
 	"khepri.dev/horus/internal/entutils"
 	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/role"
@@ -43,12 +41,8 @@ func (s *SiloServiceServer) Create(ctx context.Context, req *horus.CreateSiloReq
 
 			Role: horus.Role_ROLE_OWNER,
 
-			Owner: &horus.GetUserRequest{Key: &horus.GetUserRequest_Id{
-				Id: f.Actor.ID[:],
-			}},
-			Silo: &horus.GetSiloRequest{Key: &horus.GetSiloRequest_Id{
-				Id: v.Id,
-			}},
+			Owner: horus.UserById(f.Actor.ID),
+			Silo:  horus.SiloByIdV(v.Id),
 		})
 		if err != nil {
 			return nil, err
@@ -60,36 +54,62 @@ func (s *SiloServiceServer) Create(ctx context.Context, req *horus.CreateSiloReq
 
 func (s *SiloServiceServer) Get(ctx context.Context, req *horus.GetSiloRequest) (*horus.Silo, error) {
 	f := frame.Must(ctx)
-	res, err := s.bare.Silo().Get(ctx, req)
+
+	p, err := bare.GetSiloSpecifier(req)
 	if err != nil {
 		return nil, err
 	}
 
 	v, err := f.Actor.QueryAccounts().
-		Where(account.HasSiloWith(silo.ID(uuid.UUID(res.GetId())))).
+		Where(account.HasSiloWith(p)).
+		WithSilo().
 		Only(ctx)
 	if err != nil {
 		return nil, bare.ToStatus(err)
 	}
 
 	f.ActingAccount = v
-	return res, nil
+	return bare.ToProtoSilo(v.Edges.Silo), nil
 }
 
 func (s *SiloServiceServer) Update(ctx context.Context, req *horus.UpdateSiloRequest) (*horus.Silo, error) {
-	_, err := s.Get(ctx, req.GetKey())
+	f := frame.Must(ctx)
+
+	p, err := bare.GetSiloSpecifier(req.GetKey())
 	if err != nil {
 		return nil, err
 	}
 
-	f := frame.Must(ctx)
-	if f.ActingAccount.Role != role.Owner {
-		return nil, ErrPermissionDenied
+	v, err := f.Actor.QueryAccounts().
+		Where(account.HasSiloWith(p)).
+		Only(ctx)
+	if err != nil {
+		return nil, bare.ToStatus(err)
+	}
+	if v.Role != role.Owner {
+		return nil, status.Error(codes.PermissionDenied, "silo can only be updated by its owner")
 	}
 
 	return s.bare.Silo().Update(ctx, req)
 }
 
 func (s *SiloServiceServer) Delete(ctx context.Context, req *horus.GetSiloRequest) (*emptypb.Empty, error) {
-	return nil, status.Error(codes.PermissionDenied, "silo cannot be deleted manually")
+	f := frame.Must(ctx)
+
+	p, err := bare.GetSiloSpecifier(req)
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := f.Actor.QueryAccounts().
+		Where(account.HasSiloWith(p)).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if v.Role != role.Owner {
+		return nil, status.Error(codes.PermissionDenied, "silo can only be deleted by its owner")
+	}
+
+	return s.bare.Silo().Delete(ctx, req)
 }

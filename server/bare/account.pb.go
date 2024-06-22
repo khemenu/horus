@@ -57,15 +57,11 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 	return ToProtoAccount(res), nil
 }
 func (s *AccountServiceServer) Delete(ctx context.Context, req *horus.GetAccountRequest) (*emptypb.Empty, error) {
-	q := s.db.Account.Delete()
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		q.Where(account.IDEQ(v))
-	}
-
-	_, err := q.Exec(ctx)
+	p, err := GetAccountSpecifier(req)
 	if err != nil {
+		return nil, err
+	}
+	if _, err := s.db.Account.Delete().Where(p).Exec(ctx); err != nil {
 		return nil, ToStatus(err)
 	}
 
@@ -79,16 +75,19 @@ func (s *AccountServiceServer) Get(ctx context.Context, req *horus.GetAccountReq
 		q.Where(p)
 	}
 
-	q.WithOwner(func(q *ent.UserQuery) { q.Select(user.FieldID) })
-	q.WithSilo(func(q *ent.SiloQuery) { q.Select(silo.FieldID) })
-	q.WithMemberships(func(q *ent.MembershipQuery) { q.Select(membership.FieldID) })
-
-	res, err := q.Only(ctx)
+	res, err := QueryAccountWithEdgeIds(q).Only(ctx)
 	if err != nil {
 		return nil, ToStatus(err)
 	}
 
 	return ToProtoAccount(res), nil
+}
+func QueryAccountWithEdgeIds(q *ent.AccountQuery) *ent.AccountQuery {
+	q.WithOwner(func(q *ent.UserQuery) { q.Select(user.FieldID) })
+	q.WithSilo(func(q *ent.SiloQuery) { q.Select(silo.FieldID) })
+	q.WithMemberships(func(q *ent.MembershipQuery) { q.Select(membership.FieldID) })
+
+	return q
 }
 func (s *AccountServiceServer) Update(ctx context.Context, req *horus.UpdateAccountRequest) (*horus.Account, error) {
 	id, err := GetAccountId(ctx, s.db, req.GetKey())
@@ -138,16 +137,48 @@ func ToProtoAccount(v *ent.Account) *horus.Account {
 }
 func GetAccountId(ctx context.Context, db *ent.Client, req *horus.GetAccountRequest) (uuid.UUID, error) {
 	var r uuid.UUID
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		return v, nil
+	k := req.GetKey()
+	if t, ok := k.(*horus.GetAccountRequest_Id); ok {
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return v, nil
+		}
 	}
+
+	p, err := GetAccountSpecifier(req)
+	if err != nil {
+		return r, err
+	}
+
+	v, err := db.Account.Query().Where(p).OnlyID(ctx)
+	if err != nil {
+		return r, ToStatus(err)
+	}
+
+	return v, nil
 }
 func GetAccountSpecifier(req *horus.GetAccountRequest) (predicate.Account, error) {
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		return account.IDEQ(v), nil
+	switch t := req.GetKey().(type) {
+	case *horus.GetAccountRequest_Id:
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return account.IDEQ(v), nil
+		}
+	case *horus.GetAccountRequest_InSilo:
+		ps := make([]predicate.Account, 0, 2)
+		if p, err := GetSiloSpecifier(t.InSilo.GetSilo()); err != nil {
+			s, _ := status.FromError(err)
+			return nil, status.Errorf(codes.InvalidArgument, "in_silo.%s", s.Message())
+		} else {
+			ps = append(ps, account.HasSiloWith(p))
+		}
+		ps = append(ps, account.AliasEQ(t.InSilo.GetAlias()))
+		return account.And(ps...), nil
+	case nil:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
+	default:
+		return nil, status.Errorf(codes.Unimplemented, "unknown type of key")
 	}
 }

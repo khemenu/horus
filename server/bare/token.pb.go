@@ -56,22 +56,11 @@ func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenR
 	return ToProtoToken(res), nil
 }
 func (s *TokenServiceServer) Delete(ctx context.Context, req *horus.GetTokenRequest) (*emptypb.Empty, error) {
-	q := s.db.Token.Delete()
-	switch t := req.GetKey().(type) {
-	case *horus.GetTokenRequest_Id:
-		if v, err := uuid.FromBytes(t.Id); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-		} else {
-			q.Where(token.IDEQ(v))
-		}
-	case *horus.GetTokenRequest_Value:
-		q.Where(token.ValueEQ(t.Value))
-	default:
-		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
-	}
-
-	_, err := q.Exec(ctx)
+	p, err := GetTokenSpecifier(req)
 	if err != nil {
+		return nil, err
+	}
+	if _, err := s.db.Token.Delete().Where(p).Exec(ctx); err != nil {
 		return nil, ToStatus(err)
 	}
 
@@ -85,16 +74,19 @@ func (s *TokenServiceServer) Get(ctx context.Context, req *horus.GetTokenRequest
 		q.Where(p)
 	}
 
-	q.WithOwner(func(q *ent.UserQuery) { q.Select(user.FieldID) })
-	q.WithParent(func(q *ent.TokenQuery) { q.Select(token.FieldID) })
-	q.WithChildren(func(q *ent.TokenQuery) { q.Select(token.FieldID) })
-
-	res, err := q.Only(ctx)
+	res, err := QueryTokenWithEdgeIds(q).Only(ctx)
 	if err != nil {
 		return nil, ToStatus(err)
 	}
 
 	return ToProtoToken(res), nil
+}
+func QueryTokenWithEdgeIds(q *ent.TokenQuery) *ent.TokenQuery {
+	q.WithOwner(func(q *ent.UserQuery) { q.Select(user.FieldID) })
+	q.WithParent(func(q *ent.TokenQuery) { q.Select(token.FieldID) })
+	q.WithChildren(func(q *ent.TokenQuery) { q.Select(token.FieldID) })
+
+	return q
 }
 func (s *TokenServiceServer) Update(ctx context.Context, req *horus.UpdateTokenRequest) (*horus.Token, error) {
 	id, err := GetTokenId(ctx, s.db, req.GetKey())
@@ -148,20 +140,17 @@ func GetTokenId(ctx context.Context, db *ent.Client, req *horus.GetTokenRequest)
 		}
 	}
 
-	q := db.Token.Query()
-	switch t := k.(type) {
-	case *horus.GetTokenRequest_Value:
-		q.Where(token.ValueEQ(t.Value))
-	case nil:
-		return r, status.Errorf(codes.InvalidArgument, "key not provided")
-	default:
-		return r, status.Errorf(codes.Unimplemented, "unknown type of key")
+	p, err := GetTokenSpecifier(req)
+	if err != nil {
+		return r, err
 	}
-	if v, err := q.OnlyID(ctx); err != nil {
+
+	v, err := db.Token.Query().Where(p).OnlyID(ctx)
+	if err != nil {
 		return r, ToStatus(err)
-	} else {
-		return v, nil
 	}
+
+	return v, nil
 }
 func GetTokenSpecifier(req *horus.GetTokenRequest) (predicate.Token, error) {
 	switch t := req.GetKey().(type) {

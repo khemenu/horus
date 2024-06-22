@@ -64,15 +64,11 @@ func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.CreateI
 	return ToProtoInvitation(res), nil
 }
 func (s *InvitationServiceServer) Delete(ctx context.Context, req *horus.GetInvitationRequest) (*emptypb.Empty, error) {
-	q := s.db.Invitation.Delete()
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		q.Where(invitation.IDEQ(v))
-	}
-
-	_, err := q.Exec(ctx)
+	p, err := GetInvitationSpecifier(req)
 	if err != nil {
+		return nil, err
+	}
+	if _, err := s.db.Invitation.Delete().Where(p).Exec(ctx); err != nil {
 		return nil, ToStatus(err)
 	}
 
@@ -86,15 +82,18 @@ func (s *InvitationServiceServer) Get(ctx context.Context, req *horus.GetInvitat
 		q.Where(p)
 	}
 
-	q.WithSilo(func(q *ent.SiloQuery) { q.Select(silo.FieldID) })
-	q.WithInviter(func(q *ent.AccountQuery) { q.Select(account.FieldID) })
-
-	res, err := q.Only(ctx)
+	res, err := QueryInvitationWithEdgeIds(q).Only(ctx)
 	if err != nil {
 		return nil, ToStatus(err)
 	}
 
 	return ToProtoInvitation(res), nil
+}
+func QueryInvitationWithEdgeIds(q *ent.InvitationQuery) *ent.InvitationQuery {
+	q.WithSilo(func(q *ent.SiloQuery) { q.Select(silo.FieldID) })
+	q.WithInviter(func(q *ent.AccountQuery) { q.Select(account.FieldID) })
+
+	return q
 }
 func (s *InvitationServiceServer) Update(ctx context.Context, req *horus.UpdateInvitationRequest) (*horus.Invitation, error) {
 	id, err := GetInvitationId(ctx, s.db, req.GetKey())

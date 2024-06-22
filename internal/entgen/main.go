@@ -66,11 +66,12 @@ func main() {
 		entc.Extensions(entpb_ext),
 		entc.Annotations(
 			entpb.ProtoFiles{
-				"khepri/horus/store.proto": entpb.NewProtoFile(proto_file_init),
+				"khepri/horus/.store.proto": entpb.NewProtoFile(proto_file_init),
 				"khepri/horus/common.proto": entpb.NewProtoFile(proto_file_init,
 					entpb.WithEnum(map[role.Role]entpb.EnumDesc{
-						role.Owner:  {Number: 10},
-						role.Member: {Number: 20},
+						role.Owner:  {Number: role.Owner.V()},
+						role.Admin:  {Number: role.Admin.V()},
+						role.Member: {Number: role.Member.V()},
 					}),
 				),
 			},

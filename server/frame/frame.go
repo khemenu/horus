@@ -12,6 +12,14 @@ type Frame struct {
 	ActingAccount *ent.Account
 }
 
+func (f *Frame) MustGetActingAccount() *ent.Account {
+	if f.ActingAccount == nil {
+		panic("after Account.Get, if the target wasn't myself, acting account must be set")
+	}
+
+	return f.ActingAccount
+}
+
 var key = struct{}{}
 
 func New() *Frame {
