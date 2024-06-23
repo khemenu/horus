@@ -24,26 +24,16 @@ type AuthService struct {
 }
 
 func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInRequest) (*horus.BasicSignInResponse, error) {
-	u, err := s.db.User.Query().
-		Where(user.AliasEQ(req.Username)).
-		Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, status.Error(codes.NotFound, "user not found")
-		}
-
-		return nil, fmt.Errorf("query user: %w", err)
-	}
-
 	token, err := s.db.Token.Query().
 		Where(
 			token.Type(horus.TokenTypePassword),
-			token.HasOwnerWith(user.ID(u.ID)),
+			token.HasOwnerWith(user.AliasEQ(req.GetUsername())),
 		).
+		WithOwner().
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, status.Error(codes.FailedPrecondition, "user does not allow password login")
+			return nil, status.Error(codes.Unauthenticated, "")
 		}
 
 		return nil, fmt.Errorf("query token: %w", err)
@@ -52,14 +42,14 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 	if key, err := base64.RawStdEncoding.DecodeString(token.Value); err != nil {
 		return nil, fmt.Errorf("invalid format of basic token: %w", err)
 	} else if err := tokens.Compare([]byte(req.Password), key); err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "password mismatch")
+		return nil, status.Errorf(codes.Unauthenticated, "")
 	}
 
 	ctx = frame.WithContext(ctx, &frame.Frame{
-		Actor: u,
+		Actor: token.Edges.Owner,
 		Token: token,
 	})
-	access_token, err := s.covered.Token().Create(ctx, &horus.CreateTokenRequest{
+	v, err := s.covered.Token().Create(ctx, &horus.CreateTokenRequest{
 		Type: horus.TokenTypeAccess,
 	})
 	if err != nil {
@@ -67,48 +57,50 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 	}
 
 	return &horus.BasicSignInResponse{
-		Token: access_token,
+		Token: v,
 	}, nil
 }
 
 func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInRequest) (*horus.TokenSignInResponse, error) {
-	token, err := s.db.Token.Query().
+	v, err := s.db.Token.Query().
 		Where(
 			token.ValueEQ(req.Token),
 			token.Type(horus.TokenTypeAccess),
+			token.DateExpiredGT(time.Now()),
 		).
 		WithOwner().
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, status.Error(codes.Unauthenticated, "invalid token")
+			return nil, status.Error(codes.Unauthenticated, "")
 		}
 
 		return nil, fmt.Errorf("query token: %w", err)
 	}
 
 	if frame, ok := frame.Get(ctx); ok {
-		frame.Actor = token.Edges.Owner
-		frame.Token = token
+		frame.Actor = v.Edges.Owner
+		frame.Token = v
 	}
 
 	return &horus.TokenSignInResponse{
-		Token: bare.ToProtoToken(token),
+		Token: bare.ToProtoToken(v),
 	}, nil
 }
 
 func (s *AuthService) Refresh(ctx context.Context, req *horus.RefreshRequest) (*horus.RefreshResponse, error) {
 	return entutils.WithTxV(ctx, s.db, func(tx *ent.Tx) (*horus.RefreshResponse, error) {
 		refresh_token, err := tx.Token.Query().
-			Where(token.And(
+			Where(
 				token.ValueEQ(req.Token),
 				token.Type(horus.TokenTypeRefresh),
 				token.DateExpiredGT(time.Now()),
-			)).
+			).
+			WithOwner().
 			Only(ctx)
 		if err != nil {
 			if ent.IsNotFound(err) {
-				return nil, status.Error(codes.Unauthenticated, "invalid token")
+				return nil, status.Error(codes.Unauthenticated, "")
 			}
 
 			return nil, fmt.Errorf("query token: %w", err)
@@ -116,27 +108,27 @@ func (s *AuthService) Refresh(ctx context.Context, req *horus.RefreshRequest) (*
 
 		now := time.Now()
 		if _, err := tx.Token.Update().
-			Where(token.And(
+			Where(
 				token.Type(horus.TokenTypeAccess),
 				token.HasParentWith(token.ID(refresh_token.ID)),
 				token.DateExpiredGT(now),
-			)).
+			).
 			SetDateExpired(now).
 			Save(ctx); err != nil {
-			if ent.IsNotFound(err) {
-				return nil, status.Error(codes.Unauthenticated, "expires previous tokens")
+			if !ent.IsNotFound(err) {
+				return nil, fmt.Errorf("update token: %w", err)
 			}
-
-			return nil, fmt.Errorf("update token: %w", err)
 		}
 
-		ctx = frame.WithContext(ctx, &frame.Frame{Actor: refresh_token.Edges.Owner})
+		ctx = frame.WithContext(ctx, &frame.Frame{
+			Actor: refresh_token.Edges.Owner,
+			Token: refresh_token,
+		})
 		access_token, err := (&TokenServiceServer{base: s.withClient(tx.Client())}).Create(ctx, &horus.CreateTokenRequest{
-			Type:   horus.TokenTypeAccess,
-			Parent: horus.TokenById(refresh_token.ID),
+			Type: horus.TokenTypeAccess,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("create access token: %w", err)
+			return nil, err
 		}
 
 		return &horus.RefreshResponse{

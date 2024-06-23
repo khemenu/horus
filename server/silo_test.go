@@ -53,7 +53,7 @@ func (t *SiloTestSuite) TestCreate() {
 
 func (t *SiloTestSuite) TestGet() {
 	t.Run("as a silo owner", func() {
-		v, err := t.svc.Silo().Get(t.CtxMe(), horus.SiloById(t.silo.ID))
+		v, err := t.svc.Silo().Get(t.CtxSiloOwner(), horus.SiloById(t.silo.ID))
 		t.NoError(err)
 		t.Equal(t.silo.Alias, v.Alias)
 	})
@@ -79,13 +79,13 @@ func (t *SiloTestSuite) TestGet() {
 
 func (t *SiloTestSuite) TestUpdate() {
 	t.Run("as a silo owner", func() {
-		_, err := t.svc.Silo().Update(t.CtxMe(), &horus.UpdateSiloRequest{
+		_, err := t.svc.Silo().Update(t.CtxSiloOwner(), &horus.UpdateSiloRequest{
 			Key:  horus.SiloById(t.silo.ID),
 			Name: fx.Addr("Khepri"),
 		})
 		t.NoError(err)
 
-		v, err := t.svc.Silo().Get(t.CtxMe(), horus.SiloById(t.silo.ID))
+		v, err := t.svc.Silo().Get(t.CtxSiloOwner(), horus.SiloById(t.silo.ID))
 		t.NoError(err)
 		t.Equal("Khepri", v.Name)
 	})
@@ -113,20 +113,20 @@ func (t *SiloTestSuite) TestUpdate() {
 
 func (t *SiloTestSuite) TestDelete() {
 	t.Run("not found error if the silo is deleted", func() {
-		_, err := t.svc.Silo().Delete(t.CtxMe(), horus.SiloById(t.silo.ID))
+		_, err := t.svc.Silo().Delete(t.CtxSiloOwner(), horus.SiloById(t.silo.ID))
 		t.NoError(err)
 
-		_, err = t.svc.Silo().Get(t.CtxMe(), horus.SiloById(t.silo.ID))
+		_, err = t.svc.Silo().Get(t.CtxSiloOwner(), horus.SiloById(t.silo.ID))
 		t.ErrCode(err, codes.NotFound)
 	})
 	t.Run("all accounts in silo are deleted", func() {
-		_, err := t.svc.Account().Get(t.CtxMe(), horus.AccountInSilo(horus.SiloById(t.silo.ID), t.silo_admin.ActingAccount.Alias))
+		_, err := t.svc.Account().Get(t.CtxSiloOwner(), horus.AccountInSilo(horus.SiloById(t.silo.ID), t.silo_admin.ActingAccount.Alias))
 		t.NoError(err)
 
-		_, err = t.svc.Silo().Delete(t.CtxMe(), horus.SiloById(t.silo.ID))
+		_, err = t.svc.Silo().Delete(t.CtxSiloOwner(), horus.SiloById(t.silo.ID))
 		t.NoError(err)
 
-		_, err = t.svc.Account().Get(t.CtxMe(), horus.AccountInSilo(horus.SiloById(t.silo.ID), t.silo_admin.ActingAccount.Alias))
+		_, err = t.svc.Account().Get(t.CtxSiloOwner(), horus.AccountInSilo(horus.SiloById(t.silo.ID), t.silo_admin.ActingAccount.Alias))
 		t.ErrCode(err, codes.NotFound)
 	})
 	t.Run("permission denied error if the silo member tries to delete the silo", func() {

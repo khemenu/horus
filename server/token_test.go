@@ -47,6 +47,17 @@ func (t *TokenTestSuite) TestCreate() {
 			t.NoError(err)
 			t.Equal(t.me.Actor.ID[:], v.Owner.Id)
 		})
+		t.Run(fmt.Sprintf("token of type %s is created with actor's token as its parent", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			v, err = t.svc.Token().Get(t.CtxMe(), horus.TokenByIdV(v.Id))
+			t.NoError(err)
+			t.Equal(t.me.Token.ID[:], v.Parent.Id)
+		})
 		t.Run(fmt.Sprintf("token of type %s can be created with the actor's child as its owner", req.Type), func() {
 			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
 				Value: req.Value,
@@ -124,27 +135,6 @@ func (t *TokenTestSuite) TestCreate() {
 			Type: horus.TokenTypePassword,
 		})
 		t.ErrCode(err, codes.InvalidArgument)
-	})
-
-	// Move to auth test?
-	t.Run("password", func() {
-		pw := "very secure"
-		v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
-			Value: pw,
-			Type:  horus.TokenTypePassword,
-		})
-		t.NoError(err)
-
-		res, err := t.svc.Auth().BasicSignIn(t.CtxMe(), &horus.BasicSignInRequest{
-			Username: t.me.Actor.Alias,
-			Password: pw,
-		})
-		t.NoError(err)
-		t.Equal(horus.TokenTypeAccess, res.Token.Type)
-
-		v2, err := t.svc.Token().Get(t.CtxMe(), horus.TokenByIdV(res.Token.Id))
-		t.NoError(err)
-		t.Equal(v.Id, v2.GetParent().GetId())
 	})
 }
 

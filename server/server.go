@@ -69,6 +69,7 @@ type base struct {
 func (b *base) withClient(client *ent.Client) *base {
 	b_ := *b
 	b_.db = client
+	b_.bare = bare.NewStore(client)
 	return &b_
 }
 
