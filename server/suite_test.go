@@ -18,7 +18,7 @@ import (
 	"khepri.dev/horus/ent/team"
 	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/role"
-	service "khepri.dev/horus/server"
+	"khepri.dev/horus/server"
 	"khepri.dev/horus/server/frame"
 )
 
@@ -40,6 +40,7 @@ type Suite struct {
 	svc horus.Server
 
 	me    *frame.Frame // Frame of actor.
+	child *frame.Frame // Frame of actor's child.
 	other *frame.Frame // User who does not have any relation with the actor.
 
 	ctx context.Context
@@ -58,58 +59,66 @@ func (s *Suite) ErrCode(err error, code codes.Code) {
 	s.Equal(code, st.Code())
 }
 
+func (s *Suite) CtxMe() context.Context {
+	return frame.WithContext(s.ctx, s.me)
+
+}
+
+func (s *Suite) CtxChild() context.Context {
+	return frame.WithContext(s.ctx, s.child)
+}
+
 func (s *Suite) CtxOther() context.Context {
 	return frame.WithContext(s.ctx, s.other)
 }
 
+func (s *Suite) initActor() *frame.Frame {
+	var err error
+	f := frame.New()
+
+	f.Actor, err = s.db.User.Create().Save(s.ctx)
+	s.NoError(err)
+
+	f.Token, err = s.db.Token.Create().
+		SetValue("token-" + uuid.NewString()).
+		SetType(horus.TokenTypeAccess).
+		SetDateExpired(time.Now().Add(time.Hour)).
+		SetOwner(f.Actor).
+		Save(s.ctx)
+	s.NoError(err)
+
+	return f
+}
+
 func (s *Suite) SetupSubTest() {
+	s.Assertions = s.Require()
+
 	c := enttest.Open(
 		s.T(), s.driver_name, s.source_name,
 		enttest.WithOptions(ent.Log(s.T().Log)),
 	)
 
 	s.db = c
-	s.svc = service.NewServer(c)
+	s.svc = server.NewServer(c)
+	s.ctx = context.Background()
 
-	s.me = frame.New()
-	s.other = frame.New()
-	s.ctx = frame.WithContext(context.Background(), s.me)
+	s.me = s.initActor()
+	s.child = s.initActor()
+	s.other = s.initActor()
 
-	var err error
-	s.me.Actor, err = c.User.Create().Save(s.ctx)
-	if err != nil {
-		panic(err)
-	}
-	s.me.Token, err = c.Token.Create().
-		SetValue("foo").
-		SetType(horus.TokenTypeAccess).
-		SetDateExpired(time.Now().Add(time.Hour)).
-		SetOwner(s.me.Actor).
+	_, err := s.child.Actor.Update().
+		SetParentID(s.me.Actor.ID).
 		Save(s.ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	s.other.Actor, err = c.User.Create().Save(s.ctx)
-	if err != nil {
-		panic(err)
-	}
-	s.other.Token, err = c.Token.Create().
-		SetValue("bar").
-		SetType(horus.TokenTypeAccess).
-		SetDateExpired(time.Now().Add(time.Hour)).
-		SetOwner(s.other.Actor).
-		Save(s.ctx)
-	if err != nil {
-		panic(err)
-	}
+	s.NoError(err)
 }
 
 func (s *Suite) TearDownSubTest() {
-	s.ctx = nil
 	s.me = nil
+	s.child = nil
 	s.other = nil
+
 	s.svc = nil
+	s.ctx = nil
 
 	s.db.Close()
 	s.db = nil
@@ -150,26 +159,20 @@ func (s *SuiteWithSilo) SetupSubTest() {
 
 	// Actor's silo.
 	{
-		v, err := s.svc.Silo().Create(s.ctx, &horus.CreateSiloRequest{
+		v, err := s.svc.Silo().Create(s.CtxMe(), &horus.CreateSiloRequest{
 			Alias: fx.Addr("x"),
 			Name:  fx.Addr("Horus"),
 		})
-		if err != nil {
-			panic(err)
-		}
+		s.NoError(err)
 
 		s.me.ActingAccount, err = s.me.Actor.QueryAccounts().
 			Where(account.SiloID(uuid.UUID(v.Id))).
 			Only(s.ctx)
-		if err != nil {
-			panic(err)
-		}
+		s.NoError(err)
 
 		s.silo, err = s.me.ActingAccount.QuerySilo().
 			Only(s.ctx)
-		if err != nil {
-			panic(err)
-		}
+		s.NoError(err)
 	}
 
 	// Other's silo.
@@ -178,61 +181,31 @@ func (s *SuiteWithSilo) SetupSubTest() {
 			Alias: fx.Addr("y"),
 			Name:  fx.Addr("Isis"),
 		})
-		if err != nil {
-			panic(err)
-		}
+		s.NoError(err)
 
 		s.other.ActingAccount, err = s.other.Actor.QueryAccounts().
 			Where(account.SiloID(uuid.UUID(v.Id))).
 			Only(s.ctx)
-		if err != nil {
-			panic(err)
-		}
+		s.NoError(err)
 
 		s.other_silo, err = s.other.ActingAccount.QuerySilo().
 			Only(s.ctx)
-		if err != nil {
-			panic(err)
-		}
+		s.NoError(err)
 	}
 
 	var err error
 
 	s.silo_owner = s.me
 
-	s.silo_admin = frame.New()
-	s.silo_admin.Actor, err = s.db.User.Create().Save(s.ctx)
-	if err != nil {
-		panic(err)
-	}
+	s.silo_admin = s.initActor()
+	s.silo_admin.ActingAccount, err = s.db.Account.Create().SetSiloID(s.silo.ID).SetOwner(s.silo_admin.Actor).
+		SetAlias("admin").SetName("O-Ren Ishii").SetRole(role.Admin).Save(s.ctx)
+	s.NoError(err)
 
-	s.silo_admin.ActingAccount, err = s.db.Account.Create().
-		SetAlias("amigo").
-		SetName("O-Ren Ishii").
-		SetOwner(s.silo_admin.Actor).
-		SetSiloID(s.silo.ID).
-		SetRole(role.Admin).
-		Save(s.ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	s.silo_member = frame.New()
-	s.silo_member.Actor, err = s.db.User.Create().Save(s.ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	s.silo_member.ActingAccount, err = s.db.Account.Create().
-		SetAlias("buddy").
-		SetName("Budd").
-		SetOwner(s.silo_member.Actor).
-		SetSiloID(s.silo.ID).
-		SetRole(role.Member).
-		Save(s.ctx)
-	if err != nil {
-		panic(err)
-	}
+	s.silo_member = s.initActor()
+	s.silo_member.ActingAccount, err = s.db.Account.Create().SetSiloID(s.silo.ID).SetOwner(s.silo_member.Actor).
+		SetAlias("member").SetName("Budd").SetRole(role.Member).Save(s.ctx)
+	s.NoError(err)
 }
 
 func (s *SuiteWithSilo) TearDownSubTest() {

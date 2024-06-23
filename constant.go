@@ -1,10 +1,10 @@
 package horus
 
 const (
-	TokenTypeBasic   = "basic"
-	TokenTypeRefresh = "refresh"
-	TokenTypeAccess  = "access"
-	TokenTypeOtp     = "otp"
+	TokenTypePassword = "password"
+	TokenTypeRefresh  = "refresh"
+	TokenTypeAccess   = "access"
+	TokenTypeOtp      = "otp"
 )
 
 const (

@@ -65,7 +65,7 @@ func Run(ctx context.Context, c *Config) error {
 			ctx := frame.WithContext(ctx, &f)
 			if _, err := horus_server.Token().Create(ctx, &horus.CreateTokenRequest{
 				Value: u.Password,
-				Type:  horus.TokenTypeBasic,
+				Type:  horus.TokenTypePassword,
 			}); err != nil {
 				return fmt.Errorf("set password for user %s: %w", u.Alias, err)
 			}

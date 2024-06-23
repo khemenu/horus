@@ -1,14 +1,16 @@
 package server_test
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"khepri.dev/horus"
-	"khepri.dev/horus/ent"
-	"khepri.dev/horus/server/frame"
+	"khepri.dev/horus/internal/fx"
 )
 
 type TokenTestSuite struct {
@@ -23,49 +25,364 @@ func TestToken(t *testing.T) {
 }
 
 func (t *TokenTestSuite) TestCreate() {
-	t.Run("password", func() {
-		pw := "very secure"
-		v, err := t.svc.Token().Create(t.ctx, &horus.CreateTokenRequest{
+	pw := "0118 999 881 999 119 725 3"
+
+	for _, req := range []*horus.CreateTokenRequest{
+		{
 			Value: pw,
-			Type:  horus.TokenTypeBasic,
+			Type:  horus.TokenTypePassword,
+		},
+		{
+			Type: horus.TokenTypeRefresh,
+		},
+		{
+			Type: horus.TokenTypeAccess,
+		},
+	} {
+		t.Run(fmt.Sprintf("token of type %s is created with the actor as its owner", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+			t.Equal(t.me.Actor.ID[:], v.Owner.Id)
+		})
+		t.Run(fmt.Sprintf("token of type %s can be created with the actor's child as its owner", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+				Owner: horus.UserById(t.child.Actor.ID),
+			})
+			t.NoError(err)
+			t.Equal(t.child.Actor.ID[:], v.Owner.Id)
+		})
+		t.Run(fmt.Sprintf("token of type %s cannot be created with another user as its owner", req.Type), func() {
+			_, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+				Owner: horus.UserById(t.other.Actor.ID),
+			})
+			t.ErrCode(err, codes.NotFound)
+		})
+		t.Run(fmt.Sprintf("token of type %s cannot be created with a user that does not exist as its owner", req.Type), func() {
+			_, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+				Owner: horus.UserByAlias("not exist"),
+			})
+			t.ErrCode(err, codes.NotFound)
+		})
+	}
+	t.Run("token of password type does not reveal its value", func() {
+		v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+			Value: pw,
+			Type:  horus.TokenTypePassword,
+		})
+		t.NoError(err)
+		t.Empty(v.Value)
+	})
+	t.Run("token of password type is salted and hashed", func() {
+		v1, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+			Value: pw,
+			Type:  horus.TokenTypePassword,
 		})
 		t.NoError(err)
 
-		res, err := t.svc.Auth().BasicSignIn(t.ctx, &horus.BasicSignInRequest{
+		w1, err := t.db.Token.Get(t.ctx, uuid.UUID(v1.Id))
+		t.NoError(err)
+		t.NotEqual(pw, w1.Value)
+
+		v2, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+			Value: pw,
+			Type:  horus.TokenTypePassword,
+		})
+		t.NoError(err)
+
+		w2, err := t.db.Token.Get(t.ctx, uuid.UUID(v2.Id))
+		t.NoError(err)
+		t.NotEqual(pw, w2.Value)
+		t.NotEqual(w1.Value, w2.Value)
+	})
+	t.Run("token of password type is only one that exist", func() {
+		v1, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+			Value: pw,
+			Type:  horus.TokenTypePassword,
+		})
+		t.NoError(err)
+
+		_, err = t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+			Value: pw,
+			Type:  horus.TokenTypePassword,
+		})
+		t.NoError(err)
+
+		_, err = t.svc.Token().Get(t.CtxMe(), horus.TokenByIdV(v1.Id))
+		t.ErrCode(err, codes.NotFound)
+	})
+	t.Run("token of password type cannot be created without value", func() {
+		_, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+			Type: horus.TokenTypePassword,
+		})
+		t.ErrCode(err, codes.InvalidArgument)
+	})
+
+	// Move to auth test?
+	t.Run("password", func() {
+		pw := "very secure"
+		v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+			Value: pw,
+			Type:  horus.TokenTypePassword,
+		})
+		t.NoError(err)
+
+		res, err := t.svc.Auth().BasicSignIn(t.CtxMe(), &horus.BasicSignInRequest{
 			Username: t.me.Actor.Alias,
 			Password: pw,
 		})
 		t.NoError(err)
 		t.Equal(horus.TokenTypeAccess, res.Token.Type)
 
-		v2, err := t.svc.Token().Get(t.ctx, horus.TokenByIdV(res.Token.Id))
+		v2, err := t.svc.Token().Get(t.CtxMe(), horus.TokenByIdV(res.Token.Id))
 		t.NoError(err)
 		t.Equal(v.Id, v2.GetParent().GetId())
 	})
-	t.Run("user can create tokens for their child", func() {
-		child, err := t.svc.User().Create(t.ctx, nil)
-		t.NoError(err)
+}
 
-		v, err := t.svc.Token().Create(t.ctx, &horus.CreateTokenRequest{
-			Type:  horus.TokenTypeRefresh,
-			Owner: horus.UserByIdV(child.Id),
-		})
-		t.NoError(err)
+func (t *TokenTestSuite) TestGet() {
+	pw := "666"
 
-		_, err = t.svc.Token().Get(t.ctx, horus.TokenByIdV(v.Id))
-		t.ErrCode(err, codes.NotFound)
+	for _, req := range []*horus.CreateTokenRequest{
+		{
+			Value: pw,
+			Type:  horus.TokenTypePassword,
+		},
+		{
+			Type: horus.TokenTypeRefresh,
+		},
+		{
+			Type: horus.TokenTypeAccess,
+		},
+	} {
+		t.Run(fmt.Sprintf("token of type %s can be retrieved by its owner", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
 
-		child_ctx := frame.WithContext(t.ctx, &frame.Frame{
-			Actor: &ent.User{ID: uuid.UUID(child.Id)},
+			w, err := t.svc.Token().Get(t.CtxMe(), horus.TokenByIdV(v.Id))
+			t.NoError(err)
+			t.Equal(v.Id, w.Id)
 		})
-		_, err = t.svc.Token().Get(child_ctx, horus.TokenByIdV(v.Id))
-		t.NoError(err)
-	})
-	t.Run("user cannot create tokens for other user", func() {
-		_, err := t.svc.Token().Create(t.ctx, &horus.CreateTokenRequest{
-			Type:  horus.TokenTypeRefresh,
-			Owner: horus.UserById(t.other.Actor.ID),
+		t.Run(fmt.Sprintf("token of type %s cannot be retrieved by its owner's parent", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxChild(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			_, err = t.svc.Token().Get(t.CtxMe(), horus.TokenByIdV(v.Id))
+			t.ErrCode(err, codes.NotFound)
 		})
-		t.ErrCode(err, codes.NotFound)
-	})
+		t.Run(fmt.Sprintf("token of type %s cannot be retrieved by another user", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			_, err = t.svc.Token().Get(t.CtxOther(), horus.TokenByIdV(v.Id))
+			t.ErrCode(err, codes.NotFound)
+		})
+		t.Run(fmt.Sprintf("token of type %s cannot be retrieved with its value", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			w, err := t.svc.Token().Get(t.CtxMe(), horus.TokenByIdV(v.Id))
+			t.NoError(err)
+			t.Empty(w.Value)
+		})
+	}
+
+	for _, req := range []*horus.CreateTokenRequest{
+		{
+			Type: horus.TokenTypeRefresh,
+		},
+		{
+			Type: horus.TokenTypeAccess,
+		},
+	} {
+		t.Run(fmt.Sprintf("token of type %s cannot be created with value", req.Type), func() {
+			_, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: "Vincent",
+				Type:  req.Type,
+			})
+			t.ErrCode(err, codes.InvalidArgument)
+		})
+	}
+}
+
+func (t *TokenTestSuite) TestUpdate() {
+	pw := "0000"
+
+	for _, req := range []*horus.CreateTokenRequest{
+		{
+			Value: pw,
+			Type:  horus.TokenTypePassword,
+		},
+		{
+			Type: horus.TokenTypeRefresh,
+		},
+		{
+			Type: horus.TokenTypeAccess,
+		},
+	} {
+		t.Run(fmt.Sprintf("token of type %s can be updated by its owner", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			w, err := t.svc.Token().Update(t.CtxMe(), &horus.UpdateTokenRequest{
+				Key:  horus.TokenByIdV(v.Id),
+				Name: fx.Addr("Moreau"),
+			})
+			t.NoError(err)
+			t.Equal("Moreau", w.Name)
+		})
+		t.Run(fmt.Sprintf("token of type %s cannot be retrieved with its value by updating it", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			w, err := t.svc.Token().Update(t.CtxMe(), &horus.UpdateTokenRequest{
+				Key:  horus.TokenByIdV(v.Id),
+				Name: fx.Addr("Moreau"),
+			})
+			t.NoError(err)
+			t.Empty(w.Value)
+		})
+		t.Run(fmt.Sprintf("token of type %s cannot be updated by its owner's parent", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxChild(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			_, err = t.svc.Token().Update(t.CtxMe(), &horus.UpdateTokenRequest{
+				Key:  horus.TokenByIdV(v.Id),
+				Name: fx.Addr("Moreau"),
+			})
+			t.ErrCode(err, codes.NotFound)
+		})
+		t.Run(fmt.Sprintf("token of type %s cannot be updated by another user", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			_, err = t.svc.Token().Update(t.CtxOther(), &horus.UpdateTokenRequest{
+				Key:  horus.TokenByIdV(v.Id),
+				Name: fx.Addr("Moreau"),
+			})
+			t.ErrCode(err, codes.NotFound)
+		})
+		t.Run(fmt.Sprintf("token of type %s cannot be updated if it does not exist", req.Type), func() {
+			_, err := t.svc.Token().Update(t.CtxMe(), &horus.UpdateTokenRequest{
+				Key:  horus.TokenById(uuid.Nil),
+				Name: fx.Addr("Moreau"),
+			})
+			t.ErrCode(err, codes.NotFound)
+		})
+		t.Run(fmt.Sprintf("token of type %s cannot be updated if it is expired", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			_, err = t.svc.Token().Update(t.CtxMe(), &horus.UpdateTokenRequest{
+				Key:         horus.TokenByIdV(v.Id),
+				DateExpired: timestamppb.New(time.Now().Add(-time.Hour)),
+			})
+			t.NoError(err)
+
+			_, err = t.svc.Token().Update(t.CtxMe(), &horus.UpdateTokenRequest{
+				Key:  horus.TokenByIdV(v.Id),
+				Name: fx.Addr("Moreau"),
+			})
+			t.ErrCode(err, codes.NotFound)
+		})
+	}
+}
+
+func (t *TokenTestSuite) TestDelete() {
+	pw := "SHER"
+
+	for _, req := range []*horus.CreateTokenRequest{
+		{
+			Value: pw,
+			Type:  horus.TokenTypePassword,
+		},
+		{
+			Type: horus.TokenTypeRefresh,
+		},
+		{
+			Type: horus.TokenTypeAccess,
+		},
+	} {
+		t.Run(fmt.Sprintf("token of type %s can be deleted by its owner", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			_, err = t.svc.Token().Delete(t.CtxMe(), horus.TokenByIdV(v.Id))
+			t.NoError(err)
+		})
+		t.Run(fmt.Sprintf("token of type %s cannot be deleted by its owner's parent", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxChild(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			_, err = t.svc.Token().Delete(t.CtxMe(), horus.TokenByIdV(v.Id))
+			t.ErrCode(err, codes.NotFound)
+		})
+		t.Run(fmt.Sprintf("token of type %s cannot be deleted by another user", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			_, err = t.svc.Token().Delete(t.CtxOther(), horus.TokenByIdV(v.Id))
+			t.ErrCode(err, codes.NotFound)
+		})
+		t.Run(fmt.Sprintf("token of type %s cannot be deleted if it is expired", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			_, err = t.svc.Token().Update(t.CtxMe(), &horus.UpdateTokenRequest{
+				Key:         horus.TokenByIdV(v.Id),
+				DateExpired: timestamppb.New(time.Now().Add(-time.Hour)),
+			})
+			t.NoError(err)
+
+			_, err = t.svc.Token().Delete(t.CtxMe(), horus.TokenByIdV(v.Id))
+			t.ErrCode(err, codes.NotFound)
+		})
+	}
 }

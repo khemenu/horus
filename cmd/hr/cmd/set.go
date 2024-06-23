@@ -48,7 +48,7 @@ var CmdSetPassword = &cli.Command{
 
 		_, err = c.Token().Create(ctx.Context, &horus.CreateTokenRequest{
 			Value: string(pw),
-			Type:  horus.TokenTypeBasic,
+			Type:  horus.TokenTypePassword,
 		})
 		if err != nil {
 			return err

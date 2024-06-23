@@ -25,7 +25,7 @@ func TestSilo(t *testing.T) {
 
 func (t *SiloTestSuite) TestCreate() {
 	t.Run("owner account is created when the silo is created", func() {
-		v, err := t.svc.Silo().Create(t.ctx, &horus.CreateSiloRequest{
+		v, err := t.svc.Silo().Create(t.CtxMe(), &horus.CreateSiloRequest{
 			Alias: fx.Addr("horus"),
 			Name:  fx.Addr("Horus"),
 		})
@@ -33,17 +33,17 @@ func (t *SiloTestSuite) TestCreate() {
 		t.Equal("horus", v.Alias)
 		t.Equal("Horus", v.Name)
 
-		v, err = t.svc.Silo().Get(t.ctx, horus.SiloByIdV(v.Id))
+		v, err = t.svc.Silo().Get(t.CtxMe(), horus.SiloByIdV(v.Id))
 		t.NoError(err)
 		t.Equal("horus", v.Alias)
 		t.Equal("Horus", v.Name)
 
-		w, err := t.svc.Account().Get(t.ctx, horus.AccountInSilo(horus.SiloByIdV(v.Id), "founder"))
+		w, err := t.svc.Account().Get(t.CtxMe(), horus.AccountInSilo(horus.SiloByIdV(v.Id), "founder"))
 		t.NoError(err)
 		t.Equal(horus.Role_ROLE_OWNER, w.Role)
 	})
 	t.Run("silo alias cannot be duplicated", func() {
-		_, err := t.svc.Silo().Create(t.ctx, &horus.CreateSiloRequest{
+		_, err := t.svc.Silo().Create(t.CtxMe(), &horus.CreateSiloRequest{
 			Alias: &t.silo.Alias,
 			Name:  fx.Addr("Horus"),
 		})
@@ -53,7 +53,7 @@ func (t *SiloTestSuite) TestCreate() {
 
 func (t *SiloTestSuite) TestGet() {
 	t.Run("as a silo owner", func() {
-		v, err := t.svc.Silo().Get(t.ctx, horus.SiloById(t.silo.ID))
+		v, err := t.svc.Silo().Get(t.CtxMe(), horus.SiloById(t.silo.ID))
 		t.NoError(err)
 		t.Equal(t.silo.Alias, v.Alias)
 	})
@@ -79,13 +79,13 @@ func (t *SiloTestSuite) TestGet() {
 
 func (t *SiloTestSuite) TestUpdate() {
 	t.Run("as a silo owner", func() {
-		_, err := t.svc.Silo().Update(t.ctx, &horus.UpdateSiloRequest{
+		_, err := t.svc.Silo().Update(t.CtxMe(), &horus.UpdateSiloRequest{
 			Key:  horus.SiloById(t.silo.ID),
 			Name: fx.Addr("Khepri"),
 		})
 		t.NoError(err)
 
-		v, err := t.svc.Silo().Get(t.ctx, horus.SiloById(t.silo.ID))
+		v, err := t.svc.Silo().Get(t.CtxMe(), horus.SiloById(t.silo.ID))
 		t.NoError(err)
 		t.Equal("Khepri", v.Name)
 	})
@@ -113,20 +113,20 @@ func (t *SiloTestSuite) TestUpdate() {
 
 func (t *SiloTestSuite) TestDelete() {
 	t.Run("not found error if the silo is deleted", func() {
-		_, err := t.svc.Silo().Delete(t.ctx, horus.SiloById(t.silo.ID))
+		_, err := t.svc.Silo().Delete(t.CtxMe(), horus.SiloById(t.silo.ID))
 		t.NoError(err)
 
-		_, err = t.svc.Silo().Get(t.ctx, horus.SiloById(t.silo.ID))
+		_, err = t.svc.Silo().Get(t.CtxMe(), horus.SiloById(t.silo.ID))
 		t.ErrCode(err, codes.NotFound)
 	})
 	t.Run("all accounts in silo are deleted", func() {
-		_, err := t.svc.Account().Get(t.ctx, horus.AccountInSilo(horus.SiloById(t.silo.ID), t.silo_admin.ActingAccount.Alias))
+		_, err := t.svc.Account().Get(t.CtxMe(), horus.AccountInSilo(horus.SiloById(t.silo.ID), t.silo_admin.ActingAccount.Alias))
 		t.NoError(err)
 
-		_, err = t.svc.Silo().Delete(t.ctx, horus.SiloById(t.silo.ID))
+		_, err = t.svc.Silo().Delete(t.CtxMe(), horus.SiloById(t.silo.ID))
 		t.NoError(err)
 
-		_, err = t.svc.Account().Get(t.ctx, horus.AccountInSilo(horus.SiloById(t.silo.ID), t.silo_admin.ActingAccount.Alias))
+		_, err = t.svc.Account().Get(t.CtxMe(), horus.AccountInSilo(horus.SiloById(t.silo.ID), t.silo_admin.ActingAccount.Alias))
 		t.ErrCode(err, codes.NotFound)
 	})
 	t.Run("permission denied error if the silo member tries to delete the silo", func() {

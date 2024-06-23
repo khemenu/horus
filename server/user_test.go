@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"khepri.dev/horus"
+	"khepri.dev/horus/internal/fx"
 )
 
 type UserTestSuite struct {
@@ -20,64 +21,83 @@ func TestUser(t *testing.T) {
 }
 
 func (t *UserTestSuite) TestCreate() {
-	t.Run("acting user is set as the new user's parent", func() {
-		v, err := t.svc.User().Create(t.ctx, nil)
+	t.Run("user is created with the parent as actor", func() {
+		v, err := t.svc.User().Create(t.CtxMe(), nil)
 		t.NoError(err)
 
-		v, err = t.svc.User().Get(t.ctx, horus.UserByIdV(v.Id))
+		v, err = t.svc.User().Get(t.CtxMe(), horus.UserByIdV(v.Id))
 		t.NoError(err)
 		t.Equal(t.me.Actor.ID[:], v.GetParent().GetId())
 	})
-	t.Run("cannot have same alias with other", func() {
-		_, err := t.svc.User().Create(t.ctx, &horus.CreateUserRequest{
+	t.Run("user cannot be created if the alias is used by another user", func() {
+		_, err := t.svc.User().Create(t.CtxMe(), &horus.CreateUserRequest{
 			Alias: &t.me.Actor.Alias,
 		})
 		t.ErrCode(err, codes.AlreadyExists)
 		t.ErrorContains(err, "alias")
 	})
+	t.Run("user cannot be create with explicit parent", func() {
+		_, err := t.svc.User().Create(t.CtxMe(), &horus.CreateUserRequest{
+			Parent: horus.UserById(t.other.Actor.ID),
+		})
+		t.ErrCode(err, codes.InvalidArgument)
+	})
 }
 
 func (t *UserTestSuite) TestGet() {
-	t.Run("alias _me returns myself", func() {
-		v, err := t.svc.User().Get(t.ctx, horus.UserByAlias("_me"))
+	t.Run("user owned by the actor can be retrieved with an empty input", func() {
+		v, err := t.svc.User().Get(t.CtxMe(), nil)
 		t.NoError(err)
 		t.Equal(t.me.Actor.ID[:], v.Id)
 	})
-	t.Run("not found error if the user does not exist", func() {
-		_, err := t.svc.User().Get(t.ctx, horus.UserByAlias("not exist"))
-		t.ErrCode(err, codes.NotFound)
+	t.Run("user owned by the actor can be retrieved using alias Me", func() {
+		v, err := t.svc.User().Get(t.CtxMe(), horus.UserByAlias(horus.Me))
+		t.NoError(err)
+		t.Equal(t.me.Actor.ID[:], v.Id)
 	})
-	t.Run("permission denied error if try to get another existing user info", func() {
-		_, err := t.svc.User().Get(t.ctx, horus.UserById(t.other.Actor.ID))
+	t.Run("user can be retrieved by its parent", func() {
+		_, err := t.svc.User().Get(t.CtxMe(), horus.UserById(t.child.Actor.ID))
+		t.NoError(err)
+	})
+	t.Run("user cannot be retrieved if the user is not child of the actor", func() {
+		_, err := t.svc.User().Get(t.CtxMe(), horus.UserById(t.other.Actor.ID))
 		t.ErrCode(err, codes.PermissionDenied)
 	})
-	t.Run("user can get their child user info", func() {
-		v, err := t.svc.User().Create(t.ctx, nil)
-		t.NoError(err)
-
-		_, err = t.svc.User().Get(t.ctx, horus.UserByIdV(v.Id))
-		t.NoError(err)
+	t.Run("user cannot be retrieved if the user does not exist", func() {
+		_, err := t.svc.User().Get(t.CtxMe(), horus.UserByAlias("not exist"))
+		t.ErrCode(err, codes.NotFound)
 	})
 }
 
 func (t *UserTestSuite) TestUpdate() {
-	t.Run("user can update info of their child", func() {
-		v, err := t.svc.User().Create(t.ctx, nil)
-		t.NoError(err)
-
-		alias := "django"
-		w, err := t.svc.User().Update(t.ctx, &horus.UpdateUserRequest{
-			Key:   horus.UserByIdV(v.Id),
-			Alias: &alias,
+	t.Run("user can be updated by its owner", func() {
+		v, err := t.svc.User().Update(t.CtxMe(), &horus.UpdateUserRequest{
+			Key:   horus.UserById(t.me.Actor.ID),
+			Alias: fx.Addr("django"),
 		})
 		t.NoError(err)
-		t.Equal(alias, w.Alias)
-
-		w, err = t.svc.User().Get(t.ctx, horus.UserByAlias(alias))
+		t.Equal("django", v.Alias)
+	})
+	t.Run("user can be updated by its parent", func() {
+		v, err := t.svc.User().Update(t.CtxMe(), &horus.UpdateUserRequest{
+			Key:   horus.UserById(t.child.Actor.ID),
+			Alias: fx.Addr("django"),
+		})
 		t.NoError(err)
-		t.Equal(v.Id, w.Id)
-
-		_, err = t.svc.User().Get(t.ctx, horus.UserByAlias(v.Alias))
+		t.Equal("django", v.Alias)
+	})
+	t.Run("user cannot be updated by other", func() {
+		_, err := t.svc.User().Update(t.CtxMe(), &horus.UpdateUserRequest{
+			Key:   horus.UserById(t.other.Actor.ID),
+			Alias: fx.Addr("django"),
+		})
+		t.ErrCode(err, codes.PermissionDenied)
+	})
+	t.Run("user cannot be updated if the user does not exist", func() {
+		_, err := t.svc.User().Update(t.CtxMe(), &horus.UpdateUserRequest{
+			Key:   horus.UserByAlias("not exist"),
+			Alias: fx.Addr("django"),
+		})
 		t.ErrCode(err, codes.NotFound)
 	})
 }

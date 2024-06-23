@@ -21,6 +21,9 @@ func (s *UserServiceServer) Create(ctx context.Context, req *horus.CreateUserReq
 	if req == nil {
 		req = &horus.CreateUserRequest{}
 	}
+	if req.Parent != nil {
+		return nil, status.Error(codes.InvalidArgument, "parent cannot be set manually")
+	}
 	req.Parent = horus.UserById(f.Actor.ID)
 	return s.bare.User().Create(ctx, req)
 }

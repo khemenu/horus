@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
@@ -10,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -29,22 +29,48 @@ type TokenServiceServer struct {
 	*base
 }
 
-func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
+func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenRequest) (v *horus.Token, err error) {
 	f := frame.Must(ctx)
-	if req != nil {
-		req.Parent = horus.TokenById(f.Token.ID)
+	if req == nil {
+		req = &horus.CreateTokenRequest{}
 	}
 
+	var owner_id uuid.UUID
+	if owner := req.Owner; owner == nil {
+		owner_id = f.Actor.ID
+	} else {
+		p, err := bare.GetUserSpecifier(owner)
+		if err != nil {
+			return nil, err
+		}
+
+		id, err := s.db.User.Query().Where(p, user.HasParentWith(user.IDEQ(f.Actor.ID))).OnlyID(ctx)
+		if err != nil {
+			return nil, bare.ToStatus(err)
+		}
+
+		owner_id = id
+	}
+
+	req.Parent = horus.TokenById(f.Token.ID)
+	req.Owner = horus.UserById(owner_id)
+
 	switch req.GetType() {
-	case horus.TokenTypeBasic:
-		return s.createBasic(ctx, req)
+	case horus.TokenTypePassword:
+		v, err = s.createBasic(ctx, req)
 	case horus.TokenTypeRefresh:
-		return s.createBearer(ctx, req, horus.TokenTypeRefresh)
+		v, err = s.createBearer(ctx, req, horus.TokenTypeRefresh)
 	case horus.TokenTypeAccess:
-		return s.createBearer(ctx, req, horus.TokenTypeAccess)
+		v, err = s.createBearer(ctx, req, horus.TokenTypeAccess)
 	default:
 		return nil, status.Error(codes.Unimplemented, "unimplemented")
 	}
+	if err != nil {
+		return
+	}
+
+	v.Owner = &horus.User{Id: owner_id[:]}
+	return
 }
 
 func (s *TokenServiceServer) createBasic(ctx context.Context, req *horus.CreateTokenRequest) (*horus.Token, error) {
@@ -68,22 +94,27 @@ func (s *TokenServiceServer) createBasic(ctx context.Context, req *horus.CreateT
 		key_str = base64.RawStdEncoding.EncodeToString(b)
 	}
 
+	owner_id, err := bare.GetUserId(ctx, s.db, req.GetOwner())
+	if err != nil {
+		return nil, err
+	}
+
 	v, err := entutils.WithTxV(ctx, s.db, func(tx *ent.Tx) (*ent.Token, error) {
 		_, err := tx.Token.Delete().
 			Where(
-				token.TypeEQ(horus.TokenTypeBasic),
-				token.HasOwnerWith(user.IDEQ(f.Actor.ID)),
+				token.TypeEQ(horus.TokenTypePassword),
+				token.HasOwnerWith(user.IDEQ(owner_id)),
 			).
 			Exec(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("delete existing basic tokens: %w", err)
+			return nil, fmt.Errorf("delete existing password: %w", err)
 		}
 
 		v, err := tx.Token.Create().
 			SetValue(key_str).
-			SetType(horus.TokenTypeBasic).
+			SetType(horus.TokenTypePassword).
 			SetDateExpired(time.Now().Add(10 * 365 * 24 * time.Hour)).
-			SetOwnerID(f.Actor.ID).
+			SetOwnerID(owner_id).
 			SetParentID(f.Token.ID).
 			Save(ctx)
 		if err != nil {
@@ -96,17 +127,16 @@ func (s *TokenServiceServer) createBasic(ctx context.Context, req *horus.CreateT
 		return nil, err
 	}
 
-	return &horus.Token{
-		Id:          v.ID[:],
-		Type:        horus.TokenTypeBasic,
-		DateExpired: timestamppb.New(v.DateExpired),
-		DateCreated: timestamppb.New(v.DateCreated),
-	}, nil
+	v.Value = ""
+	return bare.ToProtoToken(v), nil
 }
 
 func (s *TokenServiceServer) createBearer(ctx context.Context, req *horus.CreateTokenRequest, t string) (*horus.Token, error) {
-	f := frame.Must(ctx)
-	v, err := s.generateToken()
+	if req.GetValue() != "" {
+		return nil, status.Error(codes.InvalidArgument, "value ot bearer cannot be set manually")
+	}
+
+	token_value, err := s.generateToken()
 	if err != nil {
 		return nil, fmt.Errorf("generate token: %w", err)
 	}
@@ -129,31 +159,15 @@ func (s *TokenServiceServer) createBearer(ctx context.Context, req *horus.Create
 		ts_expired = timestamppb.New(date_expired)
 	}
 
-	owner_id := f.Actor.ID[:]
-	if get_child := req.GetOwner(); get_child != nil {
-		if bytes.Equal(get_child.GetId(), owner_id) || get_child.GetAlias() == f.Actor.Alias {
-			// get_child was not a child but myself.
-		} else {
-			p, err := bare.GetUserSpecifier(get_child)
-			if err != nil {
-				return nil, err
-			}
-
-			child, err := s.db.User.Query().
-				Where(p, user.HasParentWith(user.IDEQ(f.Actor.ID))).
-				OnlyID(ctx)
-			if err != nil {
-				return nil, bare.ToStatus(err)
-			}
-
-			owner_id = child[:]
-		}
+	owner_id, err := bare.GetUserId(ctx, s.db, req.GetOwner())
+	if err != nil {
+		return nil, err
 	}
 
 	return s.bare.Token().Create(ctx, &horus.CreateTokenRequest{
-		Value:  v,
+		Value:  token_value,
 		Type:   t,
-		Owner:  horus.UserByIdV(owner_id),
+		Owner:  horus.UserById(owner_id),
 		Parent: req.GetParent(),
 
 		DateExpired: ts_expired,
@@ -182,55 +196,49 @@ func (*TokenServiceServer) generateToken() (string, error) {
 func (s *TokenServiceServer) Get(ctx context.Context, req *horus.GetTokenRequest) (*horus.Token, error) {
 	f := frame.Must(ctx)
 
-	token, err := s.bare.Token().Get(ctx, req)
+	p, err := bare.GetTokenSpecifier(req)
 	if err != nil {
 		return nil, err
 	}
-	if !bytes.Equal(token.Owner.Id, f.Actor.ID[:]) {
-		return nil, status.Error(codes.NotFound, "not found")
+
+	v, err := bare.QueryTokenWithEdgeIds(s.db.Token.Query()).
+		Where(p,
+			token.HasOwnerWith(user.IDEQ(f.Actor.ID)),
+			token.DateExpiredGT(time.Now()),
+		).
+		Only(ctx)
+	if err != nil {
+		return nil, bare.ToStatus(err)
+	} else {
+		v.Value = ""
 	}
 
-	token.Value = ""
-	return token, nil
+	return bare.ToProtoToken(v), nil
 }
 
 func (s *TokenServiceServer) Update(ctx context.Context, req *horus.UpdateTokenRequest) (*horus.Token, error) {
-	f := frame.Must(ctx)
-
-	p, err := bare.GetTokenSpecifier(req.GetKey())
+	v, err := s.Get(ctx, req.GetKey())
 	if err != nil {
 		return nil, err
 	}
 
-	id, err := s.db.Token.Query().
-		Where(p, token.HasOwnerWith(user.IDEQ(f.Actor.ID))).
-		OnlyID(ctx)
+	req.Key = horus.TokenByIdV(v.Id)
+	v, err = s.bare.Token().Update(ctx, req)
 	if err != nil {
-		return nil, bare.ToStatus(err)
+		return nil, err
 	}
 
-	req.Key = horus.TokenById(id)
-	return s.bare.Token().Update(ctx, req)
+	v.Value = ""
+	return v, nil
 }
 
 func (s *TokenServiceServer) Delete(ctx context.Context, req *horus.GetTokenRequest) (*emptypb.Empty, error) {
-	f := frame.Must(ctx)
-
-	token, err := s.bare.Token().Get(ctx, &horus.GetTokenRequest{Key: &horus.GetTokenRequest_Id{
-		Id: req.GetId(),
-	}})
-	if err != nil {
-		return nil, fmt.Errorf("get token: %w", err)
-	}
-	if !bytes.Equal(token.GetOwner().Id, f.Actor.ID[:]) {
-		return nil, status.Error(codes.NotFound, "not found")
-	}
-
-	if _, err := s.bare.Token().Update(ctx, &horus.UpdateTokenRequest{
-		Key:         horus.TokenByIdV(token.Id),
+	_, err := s.Update(ctx, &horus.UpdateTokenRequest{
+		Key:         req,
 		DateExpired: timestamppb.Now(),
-	}); err != nil {
-		return nil, fmt.Errorf("update token expired date: %w", err)
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return &emptypb.Empty{}, nil

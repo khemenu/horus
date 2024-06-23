@@ -600,14 +600,14 @@ func (t *AccountTestSuite) TestDelete() {
 
 func (t *AccountTestSuite) TestList() {
 	t.Run("list accounts I owned", func() {
-		u, err := t.svc.User().Create(t.ctx, nil)
+		u, err := t.svc.User().Create(t.CtxMe(), nil)
 		t.NoError(err)
 
-		s, err := t.svc.Silo().Create(t.ctx, nil)
+		s, err := t.svc.Silo().Create(t.CtxMe(), nil)
 		t.NoError(err)
 
 		// Account owned by `u` where the role is a silo owner.
-		v1, err := t.svc.Account().Create(t.ctx, &horus.CreateAccountRequest{
+		v1, err := t.svc.Account().Create(t.CtxMe(), &horus.CreateAccountRequest{
 			Owner: horus.UserByIdV(u.Id),
 			Silo:  horus.SiloByIdV(s.Id),
 		})
@@ -630,22 +630,22 @@ func (t *AccountTestSuite) TestList() {
 	})
 
 	t.Run("list accounts of silo", func() {
-		s, err := t.svc.Silo().Create(t.ctx, nil)
+		s, err := t.svc.Silo().Create(t.CtxMe(), nil)
 		t.NoError(err)
 
-		v1, err := t.svc.Account().Get(t.ctx, horus.AccountInSilo(horus.SiloByIdV(s.Id), horus.Me))
+		v1, err := t.svc.Account().Get(t.CtxMe(), horus.AccountInSilo(horus.SiloByIdV(s.Id), horus.Me))
 		t.NoError(err)
 
-		child, err := t.svc.User().Create(t.ctx, nil)
+		child, err := t.svc.User().Create(t.CtxMe(), nil)
 		t.NoError(err)
 
-		v2, err := t.svc.Account().Create(t.ctx, &horus.CreateAccountRequest{
+		v2, err := t.svc.Account().Create(t.CtxMe(), &horus.CreateAccountRequest{
 			Owner: horus.UserByIdV(child.Id),
 			Silo:  horus.SiloByIdV(s.Id),
 		})
 		t.NoError(err)
 
-		res, err := t.svc.Account().List(t.ctx, &horus.ListAccountRequest{Key: &horus.ListAccountRequest_Silo{
+		res, err := t.svc.Account().List(t.CtxMe(), &horus.ListAccountRequest{Key: &horus.ListAccountRequest_Silo{
 			Silo: horus.SiloByIdV(s.Id),
 		}})
 		t.NoError(err)
