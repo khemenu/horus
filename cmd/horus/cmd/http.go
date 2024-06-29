@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -12,7 +14,45 @@ import (
 )
 
 func HandleAuth(mux *http.ServeMux, svr horus.Server) {
-	mux.HandleFunc("/auth/basic/sign-in", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /auth/bearer", func(w http.ResponseWriter, r *http.Request) {
+		l := log.From(r.Context())
+
+		h := r.Header.Get("Authorization")
+		if h == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprintln(w, "Authorization header is missing")
+			return
+		}
+		if !strings.HasPrefix(h, "Bearer ") {
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprintln(w, "Invalid authorization header format")
+			return
+		}
+
+		v := h[len("Bearer "):]
+		_, err := svr.Auth().TokenSignIn(r.Context(), &horus.TokenSignInRequest{
+			Token: v,
+		})
+		if err != nil {
+			s, ok := status.FromError(err)
+			if ok {
+				switch s.Code() {
+				case codes.NotFound:
+					fallthrough
+				case codes.Unauthenticated:
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+			}
+
+			l.Error("bearer ", slog.String("err", err.Error()))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	})
+	mux.HandleFunc("GET /auth/basic/sign-in", func(w http.ResponseWriter, r *http.Request) {
 		l := log.From(r.Context())
 
 		username, password, ok := r.BasicAuth()
@@ -54,7 +94,7 @@ func HandleAuth(mux *http.ServeMux, svr horus.Server) {
 			SameSite: http.SameSiteStrictMode,
 		})
 	})
-	mux.HandleFunc("/auth/sign-out", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /auth/sign-out", func(w http.ResponseWriter, r *http.Request) {
 		if cookie, err := r.Cookie(horus.TokenKeyName); err != nil {
 			// No token found
 		} else if _, err := svr.Auth().SignOut(r.Context(), &horus.SingOutRequest{Token: cookie.Value}); err == nil {

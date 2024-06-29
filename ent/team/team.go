@@ -44,7 +44,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "membership" package.
 	MembersInverseTable = "memberships"
 	// MembersColumn is the table column denoting the members relation/edge.
-	MembersColumn = "team_members"
+	MembersColumn = "team_id"
 )
 
 // Columns holds all SQL columns for team fields.

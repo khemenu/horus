@@ -26,7 +26,7 @@ var (
 		PrimaryKey: []*schema.Column{AccountsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "accounts_silos_members",
+				Symbol:     "accounts_silos_accounts",
 				Columns:    []*schema.Column{AccountsColumns[6]},
 				RefColumns: []*schema.Column{SilosColumns[0]},
 				OnDelete:   schema.Cascade,
@@ -113,8 +113,8 @@ var (
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "date_created", Type: field.TypeTime},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"OWNER", "ADMIN", "MEMBER"}},
-		{Name: "account_memberships", Type: field.TypeUUID},
-		{Name: "team_members", Type: field.TypeUUID},
+		{Name: "account_id", Type: field.TypeUUID},
+		{Name: "team_id", Type: field.TypeUUID},
 	}
 	// MembershipsTable holds the schema information for the "memberships" table.
 	MembershipsTable = &schema.Table{
@@ -133,6 +133,13 @@ var (
 				Columns:    []*schema.Column{MembershipsColumns[4]},
 				RefColumns: []*schema.Column{TeamsColumns[0]},
 				OnDelete:   schema.Cascade,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "membership_account_id_team_id",
+				Unique:  true,
+				Columns: []*schema.Column{MembershipsColumns[3], MembershipsColumns[4]},
 			},
 		},
 	}

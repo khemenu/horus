@@ -14,8 +14,6 @@ import (
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/enttest"
-	"khepri.dev/horus/ent/membership"
-	"khepri.dev/horus/ent/team"
 	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/role"
 	"khepri.dev/horus/server"
@@ -142,6 +140,24 @@ type SuiteWithSilo struct {
 	other_silo *ent.Silo // Silo owned by the other.
 }
 
+func (t *SuiteWithSilo) SetSiloRole(actor *frame.Frame, target *frame.Frame, role role.Role) error {
+	ctx := frame.WithContext(t.ctx, actor)
+	_, err := t.svc.Account().Update(ctx, &horus.UpdateAccountRequest{
+		Key:  horus.AccountById(target.ActingAccount.ID),
+		Role: fx.Addr(horus.RoleFrom(role)),
+	})
+	return err
+}
+
+// func (t *SuiteWithSilo) SetTeamRole(actor *frame.Frame, target *frame.Frame, role role.Role) error {
+// 	ctx := frame.WithContext(t.ctx, actor)
+// 	_, err := t.svc.Account().Update(ctx, &horus.UpdateAccountRequest{
+// 		Key:  horus.AccountById(target.ActingAccount.ID),
+// 		Role: fx.Addr(horus.RoleFrom(role)),
+// 	})
+// 	return err
+// }
+
 func (s *SuiteWithSilo) CtxSiloOwner() context.Context {
 	return frame.WithContext(s.ctx, s.silo_owner)
 }
@@ -209,48 +225,91 @@ func (s *SuiteWithSilo) SetupSubTest() {
 }
 
 func (s *SuiteWithSilo) TearDownSubTest() {
-	s.silo_member = nil
-	s.silo_admin = nil
 	s.silo_owner = nil
+	s.silo_admin = nil
+	s.silo_member = nil
 	s.silo = nil
+	s.other_silo = nil
 	s.Suite.TearDownSubTest()
 }
 
 type SuiteWithTeam struct {
 	SuiteWithSilo
 
-	team       *ent.Team
-	membership *ent.Membership
+	// All users in the team are silo member.
+	team_owner  *frame.Frame
+	team_admin  *frame.Frame
+	team_member *frame.Frame
+
+	team       *ent.Team // Owned by `team_owner`.
+	other_team *ent.Team // Team in another silo.
+}
+
+func (s *SuiteWithTeam) CtxTeamOwner() context.Context {
+	return frame.WithContext(s.ctx, s.team_owner)
+}
+
+func (s *SuiteWithTeam) CtxTeamAdmin() context.Context {
+	return frame.WithContext(s.ctx, s.team_admin)
+}
+
+func (s *SuiteWithTeam) CtxTeamMember() context.Context {
+	return frame.WithContext(s.ctx, s.team_member)
 }
 
 func (s *SuiteWithTeam) SetupSubTest() {
 	s.SuiteWithSilo.SetupSubTest()
-	v, err := s.svc.Team().Create(s.ctx, &horus.CreateTeamRequest{
-		Alias: fx.Addr("x"),
-		Name:  fx.Addr("A-Team"),
-		Silo: &horus.GetSiloRequest{Key: &horus.GetSiloRequest_Id{
-			Id: s.silo.ID[:],
-		}},
-	})
-	if err != nil {
-		panic(err)
-	}
 
-	s.membership, err = s.me.ActingAccount.QueryMemberships().
-		Where(membership.HasTeamWith(team.ID(uuid.UUID(v.Id)))).
-		Only(s.ctx)
-	if err != nil {
-		panic(err)
-	}
+	var err error
+	s.team, err = s.db.Team.Create().
+		SetSiloID(s.silo.ID).
+		Save(s.ctx)
+	s.NoError(err)
 
-	s.team, err = s.membership.QueryTeam().
-		Only(s.ctx)
-	if err != nil {
-		panic(err)
+	s.other_team, err = s.db.Team.Create().
+		SetSiloID(s.other_silo.ID).
+		Save(s.ctx)
+	s.NoError(err)
+
+	_, err = s.db.Membership.Create().
+		SetTeamID(s.other_team.ID).
+		SetAccountID(s.other.ActingAccount.ID).
+		SetRole(role.Owner).
+		Save(s.ctx)
+	s.NoError(err)
+
+	for _, act := range []struct {
+		User **frame.Frame
+		Role role.Role
+	}{
+		{
+			User: &s.team_owner,
+		},
+	} {
+		f := s.initActor()
+		f.ActingAccount, err = s.db.Account.Create().
+			SetSiloID(s.silo.ID).
+			SetOwner(f.Actor).
+			SetRole(role.Member).
+			Save(s.ctx)
+		s.NoError(err)
+
+		_, err = s.db.Membership.Create().
+			SetTeamID(s.team.ID).
+			SetAccountID(f.ActingAccount.ID).
+			SetRole(act.Role).
+			Save(s.ctx)
+		s.NoError(err)
+
+		*act.User = f
 	}
 }
 
 func (s *SuiteWithTeam) TearDownSubTest() {
+	s.team_owner = nil
+	s.team_admin = nil
+	s.team_member = nil
 	s.team = nil
+	s.other_team = nil
 	s.SuiteWithSilo.TearDownSubTest()
 }

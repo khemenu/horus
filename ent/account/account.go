@@ -61,7 +61,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "membership" package.
 	MembershipsInverseTable = "memberships"
 	// MembershipsColumn is the table column denoting the memberships relation/edge.
-	MembershipsColumn = "account_memberships"
+	MembershipsColumn = "account_id"
 	// InvitationsTable is the table that holds the invitations relation/edge.
 	InvitationsTable = "invitations"
 	// InvitationsInverseTable is the table name for the Invitation entity.

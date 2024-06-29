@@ -24,7 +24,7 @@ func (Silo) Fields() []ent.Field {
 
 func (Silo) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("members", Account.Type).
+		edge.To("accounts", Account.Type).
 			Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.To("teams", Team.Type).
 			Annotations(entsql.OnDelete(entsql.Cascade)),

@@ -26,15 +26,6 @@ func TestAccount(t *testing.T) {
 	suite.Run(t, &s)
 }
 
-func (t *AccountTestSuite) setRole(actor *frame.Frame, target *frame.Frame, role role.Role) error {
-	ctx := frame.WithContext(t.ctx, actor)
-	_, err := t.svc.Account().Update(ctx, &horus.UpdateAccountRequest{
-		Key:  horus.AccountById(target.ActingAccount.ID),
-		Role: fx.Addr(horus.RoleFrom(role)),
-	})
-	return err
-}
-
 func (t *AccountTestSuite) TestCreate() {
 	type Act struct {
 		Actor role.Role
@@ -86,16 +77,12 @@ func (t *AccountTestSuite) TestCreate() {
 		},
 	} {
 		title := "silo " + strings.ToLower(string(act.Actor)) + " "
-		if act.Fail {
-			title += "cannot"
-		} else {
-			title += "can"
-		}
+		title += fx.Cond(act.Fail, "cannot", "can")
 		title += " create an account with role " + strings.ToLower(string(act.As)) + " for their child"
 
 		t.Run(title, func() {
 			actor := t.silo_admin
-			err := t.setRole(t.silo_owner, actor, act.Actor)
+			err := t.SetSiloRole(t.silo_owner, actor, act.Actor)
 			t.NoError(err)
 
 			ctx := frame.WithContext(t.ctx, actor)
@@ -199,14 +186,14 @@ func (t *AccountTestSuite) TestUpdate() {
 	}
 	prepare := func(act Act) (*frame.Frame, *frame.Frame) {
 		actor := t.silo_admin
-		err := t.setRole(t.silo_owner, actor, act.Actor)
+		err := t.SetSiloRole(t.silo_owner, actor, act.Actor)
 		t.NoError(err)
 
 		target := t.silo_member
 		if act.Self {
 			target = actor
 		} else {
-			err := t.setRole(t.silo_owner, target, act.Target)
+			err := t.SetSiloRole(t.silo_owner, target, act.Target)
 			t.NoError(err)
 		}
 
@@ -273,17 +260,9 @@ func (t *AccountTestSuite) TestUpdate() {
 		},
 	} {
 		title := "silo " + strings.ToLower(string(act.Actor)) + " "
-		if act.Fail {
-			title += "cannot"
-		} else {
-			title += "can"
-		}
+		title += fx.Cond(act.Fail, "cannot", "can")
 		title += " update "
-		if act.Self {
-			title += "itself"
-		} else {
-			title += "silo " + strings.ToLower(string(act.Target))
-		}
+		title += fx.Cond(act.Self, "itself", "silo "+strings.ToLower(string(act.Target)))
 
 		t.Run(title, func() {
 			actor, target := prepare(act)
@@ -460,7 +439,7 @@ func (t *AccountTestSuite) TestUpdate() {
 		t.Run(title, func() {
 			actor, target := prepare(act)
 
-			err := t.setRole(actor, target, act.To)
+			err := t.SetSiloRole(actor, target, act.To)
 			if act.Fail {
 				t.ErrCode(err, codes.PermissionDenied)
 			} else {
@@ -470,7 +449,7 @@ func (t *AccountTestSuite) TestUpdate() {
 	}
 
 	t.Run("silo owner cannot demote itself if it is sole owner", func() {
-		err := t.setRole(t.silo_owner, t.silo_owner, role.Admin)
+		err := t.SetSiloRole(t.silo_owner, t.silo_owner, role.Admin)
 		t.ErrCode(err, codes.FailedPrecondition)
 	})
 }
@@ -484,14 +463,14 @@ func (t *AccountTestSuite) TestDelete() {
 	}
 	prepare := func(act Act) (*frame.Frame, *frame.Frame) {
 		actor := t.silo_admin
-		err := t.setRole(t.silo_owner, actor, act.Actor)
+		err := t.SetSiloRole(t.silo_owner, actor, act.Actor)
 		t.NoError(err)
 
 		target := t.silo_member
 		if act.Self {
 			target = actor
 		} else {
-			err := t.setRole(t.silo_owner, target, act.Target)
+			err := t.SetSiloRole(t.silo_owner, target, act.Target)
 			t.NoError(err)
 		}
 

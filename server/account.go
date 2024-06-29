@@ -28,8 +28,8 @@ type AccountServiceServer struct {
 func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAccountRequest) (*horus.Account, error) {
 	f := frame.Must(ctx)
 
-	// Actor must be owner or admin of the silo.
-	// Actor must be parent of the account owner.
+	// Actor must be a silo owner or a silo admin.
+	// Actor must be a parent of the account owner.
 	// Actor except for the owner must have higher role than creating account.
 
 	if p, err := bare.GetUserSpecifier(req.GetOwner()); err != nil {
@@ -55,7 +55,7 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 	} else if actor_account.Role != role.Owner && actor_account.Role != role.Admin {
 		return nil, status.Error(codes.PermissionDenied, "account can be created only by a silo owner or a silo admin")
 	} else if actor_account.Role != role.Owner && !req.GetRole().LowerThan(actor_account.Role) {
-		return nil, status.Error(codes.PermissionDenied, "account can only be created by a user with higher role")
+		return nil, status.Error(codes.PermissionDenied, "account can only be created by a user with higher role than the actor")
 	} else {
 		req.Silo = horus.SiloById(actor_account.SiloID)
 	}

@@ -25,19 +25,21 @@ type TeamServiceServer struct {
 
 func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamRequest) (*horus.Team, error) {
 	f := frame.Must(ctx)
-	q := f.Actor.QueryAccounts()
-	if p, err := bare.GetSiloSpecifier(req.GetSilo()); err != nil {
+
+	p, err := bare.GetSiloSpecifier(req.GetSilo())
+	if err != nil {
 		return nil, err
-	} else {
-		q.Where(account.HasSiloWith(p))
 	}
 
-	v, err := q.WithSilo().Only(ctx)
+	v, err := f.Actor.QueryAccounts().
+		Where(account.HasSiloWith(p)).
+		WithSilo().
+		Only(ctx)
 	if err != nil {
 		return nil, bare.ToStatus(err)
 	}
-	if v.Role != role.Owner {
-		return nil, status.Error(codes.PermissionDenied, "only owner can create a team")
+	if v.Role.LowerThan(role.Admin) {
+		return nil, status.Error(codes.PermissionDenied, "team can be created only by a silo owner or a silo admin")
 	}
 
 	req.Silo = horus.SiloById(v.Edges.Silo.ID)
@@ -62,82 +64,79 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamReq
 }
 
 func (s *TeamServiceServer) Get(ctx context.Context, req *horus.GetTeamRequest) (*horus.Team, error) {
-	res, err := s.bare.Team().Get(ctx, req)
+	v, err := s.bare.Team().Get(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	f := frame.Must(ctx)
-	v, err := f.Actor.QueryAccounts().
-		Where(account.SiloID(uuid.UUID(res.Silo.Id))).
+	acct, err := f.Actor.QueryAccounts().
+		Where(account.SiloID(uuid.UUID(v.Silo.Id))).
+		Only(ctx)
+	if err != nil {
+		return nil, bare.ToStatus(err)
+	}
+
+	f.ActingAccount = acct
+	if acct.Role.HigherThan(role.Member) {
+		return v, nil
+	}
+
+	_, err = acct.QueryMemberships().
+		Where(membership.HasTeamWith(team.ID(uuid.UUID(v.Id)))).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, status.Errorf(codes.NotFound, "not found: %s", err)
+			return nil, status.Errorf(codes.PermissionDenied, "team can be retrieved only by the team members, silo owners, or silo admins")
 		}
 
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, bare.ToStatus(err)
 	}
 
-	f.ActingAccount = v
-	if v.Role == role.Owner {
-		return res, nil
-	}
-
-	_, err = v.QueryMemberships().
-		Where(membership.HasTeamWith(team.ID(uuid.UUID(res.Id)))).
-		Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, status.Errorf(codes.PermissionDenied, "only member who has membership can access: %s", err)
-		}
-
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return res, nil
+	return v, nil
 }
 
 func (s *TeamServiceServer) Update(ctx context.Context, req *horus.UpdateTeamRequest) (*horus.Team, error) {
+	f := frame.Must(ctx)
+
 	v, err := s.Get(ctx, req.GetKey())
 	if err != nil {
 		return nil, err
 	}
 
-	f := frame.Must(ctx)
-	if f.ActingAccount.Role == role.Owner {
+	req.Key = horus.TeamByIdV(v.Id)
+
+	account := f.MustGetActingAccount()
+	if account.Role.HigherThan(role.Member) {
+		// Silo owner and silo admin can update any team in the silo.
 		return s.bare.Team().Update(ctx, req)
 	}
 
-	member, err := f.ActingAccount.QueryMemberships().
+	membership, err := account.QueryMemberships().
 		Where(membership.HasTeamWith(team.IDEQ(uuid.UUID(v.Id)))).
 		Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, ErrPermissionDenied
-		}
-
-		return nil, status.Error(codes.Internal, err.Error())
+	if err == nil && membership.Role.HigherThan(role.Member) {
+		return s.bare.Team().Update(ctx, req)
 	}
-	if member.Role != role.Owner {
-		return nil, ErrPermissionDenied
+	if !ent.IsNotFound(err) {
+		return nil, bare.ToStatus(err)
 	}
 
-	return s.bare.Team().Update(ctx, req)
+	return nil, status.Error(codes.PermissionDenied, "team can be updated only by the owners or admins")
 }
 
 func (s *TeamServiceServer) Delete(ctx context.Context, req *horus.GetTeamRequest) (*emptypb.Empty, error) {
-	q := s.db.Membership.Query()
-	if p, err := bare.GetTeamSpecifier(req); err != nil {
+	p, err := bare.GetTeamSpecifier(req)
+	if err != nil {
 		return nil, err
-	} else {
-		q.Where(
-			membership.RoleEQ(role.Owner),
-			membership.HasTeamWith(p),
-		)
 	}
 
-	owners, err := q.All(ctx)
+	owners, err := s.db.Membership.Query().
+		Where(
+			membership.RoleEQ(role.Owner),
+			membership.HasTeamWith(p),
+		).
+		All(ctx)
 	if err != nil {
 		return nil, bare.ToStatus(err)
 	}

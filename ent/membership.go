@@ -23,14 +23,16 @@ type Membership struct {
 	ID uuid.UUID `json:"id,omitempty"`
 	// DateCreated holds the value of the "date_created" field.
 	DateCreated time.Time `json:"date_created,omitempty"`
+	// AccountID holds the value of the "account_id" field.
+	AccountID uuid.UUID `json:"account_id,omitempty"`
+	// TeamID holds the value of the "team_id" field.
+	TeamID uuid.UUID `json:"team_id,omitempty"`
 	// Role holds the value of the "role" field.
 	Role role.Role `json:"role,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the MembershipQuery when eager-loading is set.
-	Edges               MembershipEdges `json:"edges"`
-	account_memberships *uuid.UUID
-	team_members        *uuid.UUID
-	selectValues        sql.SelectValues
+	Edges        MembershipEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // MembershipEdges holds the relations/edges for other nodes in the graph.
@@ -75,12 +77,8 @@ func (*Membership) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case membership.FieldDateCreated:
 			values[i] = new(sql.NullTime)
-		case membership.FieldID:
+		case membership.FieldID, membership.FieldAccountID, membership.FieldTeamID:
 			values[i] = new(uuid.UUID)
-		case membership.ForeignKeys[0]: // account_memberships
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
-		case membership.ForeignKeys[1]: // team_members
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -108,25 +106,23 @@ func (m *Membership) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				m.DateCreated = value.Time
 			}
+		case membership.FieldAccountID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field account_id", values[i])
+			} else if value != nil {
+				m.AccountID = *value
+			}
+		case membership.FieldTeamID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field team_id", values[i])
+			} else if value != nil {
+				m.TeamID = *value
+			}
 		case membership.FieldRole:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field role", values[i])
 			} else if value.Valid {
 				m.Role = role.Role(value.String)
-			}
-		case membership.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field account_memberships", values[i])
-			} else if value.Valid {
-				m.account_memberships = new(uuid.UUID)
-				*m.account_memberships = *value.S.(*uuid.UUID)
-			}
-		case membership.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field team_members", values[i])
-			} else if value.Valid {
-				m.team_members = new(uuid.UUID)
-				*m.team_members = *value.S.(*uuid.UUID)
 			}
 		default:
 			m.selectValues.Set(columns[i], values[i])
@@ -176,6 +172,12 @@ func (m *Membership) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", m.ID))
 	builder.WriteString("date_created=")
 	builder.WriteString(m.DateCreated.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("account_id=")
+	builder.WriteString(fmt.Sprintf("%v", m.AccountID))
+	builder.WriteString(", ")
+	builder.WriteString("team_id=")
+	builder.WriteString(fmt.Sprintf("%v", m.TeamID))
 	builder.WriteString(", ")
 	builder.WriteString("role=")
 	builder.WriteString(fmt.Sprintf("%v", m.Role))

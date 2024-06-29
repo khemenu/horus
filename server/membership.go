@@ -28,49 +28,33 @@ type MembershipServiceServer struct {
 }
 
 func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateMembershipRequest) (*horus.Membership, error) {
-	target_account, err := s.bare.Account().Get(ctx, req.GetAccount())
-	if err != nil {
-		return nil, err
-	}
-
-	// Ensure that team exists.
-	target_team, err := s.bare.Team().Get(ctx, req.GetTeam())
-	if err != nil {
-		return nil, err
-	}
-
 	f := frame.Must(ctx)
-	if f.ActingAccount == nil {
-		// Trying to make myself as a team member.
-		if target_account.Role != horus.Role_ROLE_OWNER {
-			// Maybe I'm already a member but returns PermissionDenied.
-			return nil, ErrPermissionDenied
-		}
 
-		return s.bare.Membership().Create(ctx, req)
+	q := s.db.Silo.Query()
+	if p, err := bare.GetAccountSpecifier(req.GetAccount()); err != nil {
+		return nil, err
+	} else {
+		q.Where(silo.HasAccountsWith(p))
 	}
-	if f.ActingAccount.Role == role.Owner {
-		if target_account.Role == horus.Role_ROLE_OWNER {
-			// Cannot put other owner to the team even if the actor is an owner.
-			return nil, ErrPermissionDenied
-		}
-
-		return s.bare.Membership().Create(ctx, req)
+	if p, err := bare.GetTeamSpecifier(req.GetTeam()); err != nil {
+		return nil, err
+	} else {
+		q.Where(silo.HasTeamsWith(p))
 	}
 
-	v, err := f.ActingAccount.QueryMemberships().
-		Where(membership.HasTeamWith(team.IDEQ(uuid.UUID(target_team.Id)))).
+	silo, err := q.Only(ctx)
+	if err != nil {
+		return nil, bare.ToStatus(err)
+	}
+
+	actor_account, err := f.Actor.QueryAccounts().
+		Where(account.SiloIDEQ(silo.ID)).
 		Only(ctx)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			// We know that the team exists, so membership does not exist.
-			return nil, ErrPermissionDenied
-		}
-
-		return nil, status.Errorf(codes.Internal, "query membership: %s", err.Error())
+		return nil, bare.ToStatus(err)
 	}
-	if v.Role != role.Owner {
-		return nil, ErrPermissionDenied
+	if actor_account.Role != role.Owner && actor_account.Role != role.Admin {
+		return nil, status.Error(codes.PermissionDenied, "membership can be created ony by a silo owner or a silo admin")
 	}
 
 	return s.bare.Membership().Create(ctx, req)

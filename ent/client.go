@@ -1048,15 +1048,15 @@ func (c *SiloClient) GetX(ctx context.Context, id uuid.UUID) *Silo {
 	return obj
 }
 
-// QueryMembers queries the members edge of a Silo.
-func (c *SiloClient) QueryMembers(s *Silo) *AccountQuery {
+// QueryAccounts queries the accounts edge of a Silo.
+func (c *SiloClient) QueryAccounts(s *Silo) *AccountQuery {
 	query := (&AccountClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := s.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(silo.Table, silo.FieldID, id),
 			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, silo.MembersTable, silo.MembersColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, silo.AccountsTable, silo.AccountsColumn),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil

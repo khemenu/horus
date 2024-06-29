@@ -12,7 +12,7 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"         # Root directory of projec
 
 DST="${HOME}/.kube"
 mkdir -p "${DST}"
-sudo sed 's/127.0.0.1/k3s/g' /etc/rancher/k3s/k3s.yaml > "${DST}/config"
+sed 's/127.0.0.1/k3s/g' /etc/kubeconfig/kubeconfig.yaml > "${DST}/config"
 
 kubectl cluster-info
 kubectl create namespace horus 2> /dev/null || true

@@ -38,6 +38,18 @@ func (mc *MembershipCreate) SetNillableDateCreated(t *time.Time) *MembershipCrea
 	return mc
 }
 
+// SetAccountID sets the "account_id" field.
+func (mc *MembershipCreate) SetAccountID(u uuid.UUID) *MembershipCreate {
+	mc.mutation.SetAccountID(u)
+	return mc
+}
+
+// SetTeamID sets the "team_id" field.
+func (mc *MembershipCreate) SetTeamID(u uuid.UUID) *MembershipCreate {
+	mc.mutation.SetTeamID(u)
+	return mc
+}
+
 // SetRole sets the "role" field.
 func (mc *MembershipCreate) SetRole(r role.Role) *MembershipCreate {
 	mc.mutation.SetRole(r)
@@ -58,21 +70,9 @@ func (mc *MembershipCreate) SetNillableID(u *uuid.UUID) *MembershipCreate {
 	return mc
 }
 
-// SetAccountID sets the "account" edge to the Account entity by ID.
-func (mc *MembershipCreate) SetAccountID(id uuid.UUID) *MembershipCreate {
-	mc.mutation.SetAccountID(id)
-	return mc
-}
-
 // SetAccount sets the "account" edge to the Account entity.
 func (mc *MembershipCreate) SetAccount(a *Account) *MembershipCreate {
 	return mc.SetAccountID(a.ID)
-}
-
-// SetTeamID sets the "team" edge to the Team entity by ID.
-func (mc *MembershipCreate) SetTeamID(id uuid.UUID) *MembershipCreate {
-	mc.mutation.SetTeamID(id)
-	return mc
 }
 
 // SetTeam sets the "team" edge to the Team entity.
@@ -129,6 +129,12 @@ func (mc *MembershipCreate) defaults() {
 func (mc *MembershipCreate) check() error {
 	if _, ok := mc.mutation.DateCreated(); !ok {
 		return &ValidationError{Name: "date_created", err: errors.New(`ent: missing required field "Membership.date_created"`)}
+	}
+	if _, ok := mc.mutation.AccountID(); !ok {
+		return &ValidationError{Name: "account_id", err: errors.New(`ent: missing required field "Membership.account_id"`)}
+	}
+	if _, ok := mc.mutation.TeamID(); !ok {
+		return &ValidationError{Name: "team_id", err: errors.New(`ent: missing required field "Membership.team_id"`)}
 	}
 	if _, ok := mc.mutation.Role(); !ok {
 		return &ValidationError{Name: "role", err: errors.New(`ent: missing required field "Membership.role"`)}
@@ -201,7 +207,7 @@ func (mc *MembershipCreate) createSpec() (*Membership, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.account_memberships = &nodes[0]
+		_node.AccountID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := mc.mutation.TeamIDs(); len(nodes) > 0 {
@@ -218,7 +224,7 @@ func (mc *MembershipCreate) createSpec() (*Membership, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.team_members = &nodes[0]
+		_node.TeamID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

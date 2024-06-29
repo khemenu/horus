@@ -35,7 +35,7 @@ echo(`==========`)
 echo(`test start: kubectl version`)
 await $`
 	kubectl \
-		--kubeconfig=${path.join(__dirname, "test-webhook-authn-config.yaml")} \
+		--kubeconfig=${path.join(__dirname, "test-webhook-authn.yaml")} \
 		--token=${token} \
 		version`
 echo(`test passes`)

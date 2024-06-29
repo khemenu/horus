@@ -26,7 +26,7 @@ type SiloQuery struct {
 	order           []silo.OrderOption
 	inters          []Interceptor
 	predicates      []predicate.Silo
-	withMembers     *AccountQuery
+	withAccounts    *AccountQuery
 	withTeams       *TeamQuery
 	withInvitations *InvitationQuery
 	// intermediate query (i.e. traversal path).
@@ -65,8 +65,8 @@ func (sq *SiloQuery) Order(o ...silo.OrderOption) *SiloQuery {
 	return sq
 }
 
-// QueryMembers chains the current query on the "members" edge.
-func (sq *SiloQuery) QueryMembers() *AccountQuery {
+// QueryAccounts chains the current query on the "accounts" edge.
+func (sq *SiloQuery) QueryAccounts() *AccountQuery {
 	query := (&AccountClient{config: sq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := sq.prepareQuery(ctx); err != nil {
@@ -79,7 +79,7 @@ func (sq *SiloQuery) QueryMembers() *AccountQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(silo.Table, silo.FieldID, selector),
 			sqlgraph.To(account.Table, account.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, silo.MembersTable, silo.MembersColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, silo.AccountsTable, silo.AccountsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
 		return fromU, nil
@@ -323,7 +323,7 @@ func (sq *SiloQuery) Clone() *SiloQuery {
 		order:           append([]silo.OrderOption{}, sq.order...),
 		inters:          append([]Interceptor{}, sq.inters...),
 		predicates:      append([]predicate.Silo{}, sq.predicates...),
-		withMembers:     sq.withMembers.Clone(),
+		withAccounts:    sq.withAccounts.Clone(),
 		withTeams:       sq.withTeams.Clone(),
 		withInvitations: sq.withInvitations.Clone(),
 		// clone intermediate query.
@@ -332,14 +332,14 @@ func (sq *SiloQuery) Clone() *SiloQuery {
 	}
 }
 
-// WithMembers tells the query-builder to eager-load the nodes that are connected to
-// the "members" edge. The optional arguments are used to configure the query builder of the edge.
-func (sq *SiloQuery) WithMembers(opts ...func(*AccountQuery)) *SiloQuery {
+// WithAccounts tells the query-builder to eager-load the nodes that are connected to
+// the "accounts" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *SiloQuery) WithAccounts(opts ...func(*AccountQuery)) *SiloQuery {
 	query := (&AccountClient{config: sq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	sq.withMembers = query
+	sq.withAccounts = query
 	return sq
 }
 
@@ -444,7 +444,7 @@ func (sq *SiloQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Silo, e
 		nodes       = []*Silo{}
 		_spec       = sq.querySpec()
 		loadedTypes = [3]bool{
-			sq.withMembers != nil,
+			sq.withAccounts != nil,
 			sq.withTeams != nil,
 			sq.withInvitations != nil,
 		}
@@ -467,10 +467,10 @@ func (sq *SiloQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Silo, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := sq.withMembers; query != nil {
-		if err := sq.loadMembers(ctx, query, nodes,
-			func(n *Silo) { n.Edges.Members = []*Account{} },
-			func(n *Silo, e *Account) { n.Edges.Members = append(n.Edges.Members, e) }); err != nil {
+	if query := sq.withAccounts; query != nil {
+		if err := sq.loadAccounts(ctx, query, nodes,
+			func(n *Silo) { n.Edges.Accounts = []*Account{} },
+			func(n *Silo, e *Account) { n.Edges.Accounts = append(n.Edges.Accounts, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -491,7 +491,7 @@ func (sq *SiloQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Silo, e
 	return nodes, nil
 }
 
-func (sq *SiloQuery) loadMembers(ctx context.Context, query *AccountQuery, nodes []*Silo, init func(*Silo), assign func(*Silo, *Account)) error {
+func (sq *SiloQuery) loadAccounts(ctx context.Context, query *AccountQuery, nodes []*Silo, init func(*Silo), assign func(*Silo, *Account)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[uuid.UUID]*Silo)
 	for i := range nodes {
@@ -505,7 +505,7 @@ func (sq *SiloQuery) loadMembers(ctx context.Context, query *AccountQuery, nodes
 		query.ctx.AppendFieldOnce(account.FieldSiloID)
 	}
 	query.Where(predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(silo.MembersColumn), fks...))
+		s.Where(sql.InValues(s.C(silo.AccountsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

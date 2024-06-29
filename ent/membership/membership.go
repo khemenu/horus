@@ -19,6 +19,10 @@ const (
 	FieldID = "id"
 	// FieldDateCreated holds the string denoting the date_created field in the database.
 	FieldDateCreated = "date_created"
+	// FieldAccountID holds the string denoting the account_id field in the database.
+	FieldAccountID = "account_id"
+	// FieldTeamID holds the string denoting the team_id field in the database.
+	FieldTeamID = "team_id"
 	// FieldRole holds the string denoting the role field in the database.
 	FieldRole = "role"
 	// EdgeAccount holds the string denoting the account edge name in mutations.
@@ -33,39 +37,29 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "account" package.
 	AccountInverseTable = "accounts"
 	// AccountColumn is the table column denoting the account relation/edge.
-	AccountColumn = "account_memberships"
+	AccountColumn = "account_id"
 	// TeamTable is the table that holds the team relation/edge.
 	TeamTable = "memberships"
 	// TeamInverseTable is the table name for the Team entity.
 	// It exists in this package in order to avoid circular dependency with the "team" package.
 	TeamInverseTable = "teams"
 	// TeamColumn is the table column denoting the team relation/edge.
-	TeamColumn = "team_members"
+	TeamColumn = "team_id"
 )
 
 // Columns holds all SQL columns for membership fields.
 var Columns = []string{
 	FieldID,
 	FieldDateCreated,
+	FieldAccountID,
+	FieldTeamID,
 	FieldRole,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "memberships"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"account_memberships",
-	"team_members",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -100,6 +94,16 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByDateCreated orders the results by the date_created field.
 func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDateCreated, opts...).ToFunc()
+}
+
+// ByAccountID orders the results by the account_id field.
+func ByAccountID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAccountID, opts...).ToFunc()
+}
+
+// ByTeamID orders the results by the team_id field.
+func ByTeamID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTeamID, opts...).ToFunc()
 }
 
 // ByRole orders the results by the role field.

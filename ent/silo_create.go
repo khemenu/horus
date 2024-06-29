@@ -94,19 +94,19 @@ func (sc *SiloCreate) SetNillableID(u *uuid.UUID) *SiloCreate {
 	return sc
 }
 
-// AddMemberIDs adds the "members" edge to the Account entity by IDs.
-func (sc *SiloCreate) AddMemberIDs(ids ...uuid.UUID) *SiloCreate {
-	sc.mutation.AddMemberIDs(ids...)
+// AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
+func (sc *SiloCreate) AddAccountIDs(ids ...uuid.UUID) *SiloCreate {
+	sc.mutation.AddAccountIDs(ids...)
 	return sc
 }
 
-// AddMembers adds the "members" edges to the Account entity.
-func (sc *SiloCreate) AddMembers(a ...*Account) *SiloCreate {
+// AddAccounts adds the "accounts" edges to the Account entity.
+func (sc *SiloCreate) AddAccounts(a ...*Account) *SiloCreate {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return sc.AddMemberIDs(ids...)
+	return sc.AddAccountIDs(ids...)
 }
 
 // AddTeamIDs adds the "teams" edge to the Team entity by IDs.
@@ -276,12 +276,12 @@ func (sc *SiloCreate) createSpec() (*Silo, *sqlgraph.CreateSpec) {
 		_spec.SetField(silo.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if nodes := sc.mutation.MembersIDs(); len(nodes) > 0 {
+	if nodes := sc.mutation.AccountsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   silo.MembersTable,
-			Columns: []string{silo.MembersColumn},
+			Table:   silo.AccountsTable,
+			Columns: []string{silo.AccountsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),

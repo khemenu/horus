@@ -16,13 +16,9 @@ services:
       - type: bind
         source: ${HOME}/workspace
         target: /workspace
-      - type: bind
-        source: ./k3s/
-        target: /etc/rancher/k3s/
-
-    expose:
-      - 35122
-      - 35123
+      - type: volume
+        source: kubeconfig
+        target: /etc/kubeconfig
 
   gw:
     image: envoyproxy/envoy:v1.30-latest
@@ -52,13 +48,26 @@ services:
 
   k3s:
     image: rancher/k3s:v1.30.0-k3s1
-    command:
-      - server
-      - --tls-san-security=false
-    
+    environment:
+      - K3S_KUBECONFIG_OUTPUT=/etc/kubeconfig/kubeconfig.yaml
+      - K3S_KUBECONFIG_MODE=666
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >-
+        /intercept-dns;
+        /bin/k3s server \
+          --tls-san=k3s
+
     privileged: true
 
     volumes:
       - type: bind
-        source: ./k3s/
-        target: /etc/rancher/k3s/
+        source: ./intercept-dns.sh
+        target: /intercept-dns
+      - type: volume
+        source: kubeconfig
+        target: /etc/kubeconfig
+
+volumes:
+  kubeconfig:

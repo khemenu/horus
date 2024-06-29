@@ -48,7 +48,7 @@ func (Account) Edges() []ent.Edge {
 			Required(),
 		edge.From("silo", Silo.Type).
 			Annotations(entpb.Field(4)).
-			Ref("members").
+			Ref("accounts").
 			Field("silo_id").
 			Immutable().
 			Unique().

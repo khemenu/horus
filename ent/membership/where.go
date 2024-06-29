@@ -62,6 +62,16 @@ func DateCreated(v time.Time) predicate.Membership {
 	return predicate.Membership(sql.FieldEQ(FieldDateCreated, v))
 }
 
+// AccountID applies equality check predicate on the "account_id" field. It's identical to AccountIDEQ.
+func AccountID(v uuid.UUID) predicate.Membership {
+	return predicate.Membership(sql.FieldEQ(FieldAccountID, v))
+}
+
+// TeamID applies equality check predicate on the "team_id" field. It's identical to TeamIDEQ.
+func TeamID(v uuid.UUID) predicate.Membership {
+	return predicate.Membership(sql.FieldEQ(FieldTeamID, v))
+}
+
 // DateCreatedEQ applies the EQ predicate on the "date_created" field.
 func DateCreatedEQ(v time.Time) predicate.Membership {
 	return predicate.Membership(sql.FieldEQ(FieldDateCreated, v))
@@ -100,6 +110,46 @@ func DateCreatedLT(v time.Time) predicate.Membership {
 // DateCreatedLTE applies the LTE predicate on the "date_created" field.
 func DateCreatedLTE(v time.Time) predicate.Membership {
 	return predicate.Membership(sql.FieldLTE(FieldDateCreated, v))
+}
+
+// AccountIDEQ applies the EQ predicate on the "account_id" field.
+func AccountIDEQ(v uuid.UUID) predicate.Membership {
+	return predicate.Membership(sql.FieldEQ(FieldAccountID, v))
+}
+
+// AccountIDNEQ applies the NEQ predicate on the "account_id" field.
+func AccountIDNEQ(v uuid.UUID) predicate.Membership {
+	return predicate.Membership(sql.FieldNEQ(FieldAccountID, v))
+}
+
+// AccountIDIn applies the In predicate on the "account_id" field.
+func AccountIDIn(vs ...uuid.UUID) predicate.Membership {
+	return predicate.Membership(sql.FieldIn(FieldAccountID, vs...))
+}
+
+// AccountIDNotIn applies the NotIn predicate on the "account_id" field.
+func AccountIDNotIn(vs ...uuid.UUID) predicate.Membership {
+	return predicate.Membership(sql.FieldNotIn(FieldAccountID, vs...))
+}
+
+// TeamIDEQ applies the EQ predicate on the "team_id" field.
+func TeamIDEQ(v uuid.UUID) predicate.Membership {
+	return predicate.Membership(sql.FieldEQ(FieldTeamID, v))
+}
+
+// TeamIDNEQ applies the NEQ predicate on the "team_id" field.
+func TeamIDNEQ(v uuid.UUID) predicate.Membership {
+	return predicate.Membership(sql.FieldNEQ(FieldTeamID, v))
+}
+
+// TeamIDIn applies the In predicate on the "team_id" field.
+func TeamIDIn(vs ...uuid.UUID) predicate.Membership {
+	return predicate.Membership(sql.FieldIn(FieldTeamID, vs...))
+}
+
+// TeamIDNotIn applies the NotIn predicate on the "team_id" field.
+func TeamIDNotIn(vs ...uuid.UUID) predicate.Membership {
+	return predicate.Membership(sql.FieldNotIn(FieldTeamID, vs...))
 }
 
 // RoleEQ applies the EQ predicate on the "role" field.

@@ -311,21 +311,21 @@ func DescriptionContainsFold(v string) predicate.Silo {
 	return predicate.Silo(sql.FieldContainsFold(FieldDescription, v))
 }
 
-// HasMembers applies the HasEdge predicate on the "members" edge.
-func HasMembers() predicate.Silo {
+// HasAccounts applies the HasEdge predicate on the "accounts" edge.
+func HasAccounts() predicate.Silo {
 	return predicate.Silo(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, MembersTable, MembersColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, AccountsTable, AccountsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasMembersWith applies the HasEdge predicate on the "members" edge with a given conditions (other predicates).
-func HasMembersWith(preds ...predicate.Account) predicate.Silo {
+// HasAccountsWith applies the HasEdge predicate on the "accounts" edge with a given conditions (other predicates).
+func HasAccountsWith(preds ...predicate.Account) predicate.Silo {
 	return predicate.Silo(func(s *sql.Selector) {
-		step := newMembersStep()
+		step := newAccountsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

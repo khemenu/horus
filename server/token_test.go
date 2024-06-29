@@ -83,6 +83,35 @@ func (t *TokenTestSuite) TestCreate() {
 			})
 			t.ErrCode(err, codes.NotFound)
 		})
+		t.Run(fmt.Sprintf("token type of %s cannot be created using an access token created by another access token", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Type: horus.TokenTypeAccess,
+			})
+			t.NoError(err)
+
+			t.me.Token, err = t.db.Token.Get(t.ctx, uuid.UUID(v.Id))
+			t.NoError(err)
+
+			_, err = t.svc.Token().Create(t.CtxMe(), req)
+			t.ErrCode(err, codes.PermissionDenied)
+		})
+		t.Run(fmt.Sprintf("token type of %s cannot be created using an access token created by refresh token", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Type: horus.TokenTypeRefresh,
+			})
+			t.NoError(err)
+
+			w, err := t.svc.Auth().Refresh(t.ctx, &horus.RefreshRequest{
+				Token: v.Value,
+			})
+			t.NoError(err)
+
+			t.me.Token, err = t.db.Token.Get(t.ctx, uuid.UUID(w.Token.Id))
+			t.NoError(err)
+
+			_, err = t.svc.Token().Create(t.CtxMe(), req)
+			t.ErrCode(err, codes.PermissionDenied)
+		})
 	}
 	t.Run("token of password type does not reveal its value", func() {
 		v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
@@ -310,6 +339,73 @@ func (t *TokenTestSuite) TestUpdate() {
 			})
 			t.ErrCode(err, codes.NotFound)
 		})
+		t.Run(fmt.Sprintf("token type of %s can be updated using an access token created by password", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: pw,
+				Type:  horus.TokenTypePassword,
+			})
+			t.NoError(err)
+
+			t.me.Token, err = t.db.Token.Get(t.ctx, uuid.UUID(v.Id))
+			t.NoError(err)
+
+			w, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Type: horus.TokenTypeAccess,
+			})
+			t.NoError(err)
+
+			t.me.Token, err = t.db.Token.Get(t.ctx, uuid.UUID(w.Id))
+			t.NoError(err)
+
+			x, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			x, err = t.svc.Token().Update(t.CtxMe(), &horus.UpdateTokenRequest{
+				Key:  horus.TokenByIdV(x.Id),
+				Name: fx.Addr("Moreau"),
+			})
+			t.NoError(err)
+			t.Equal("Moreau", x.Name)
+		})
+
+		for _, parent := range []string{
+			horus.TokenTypeRefresh,
+			horus.TokenTypeAccess,
+		} {
+			t.Run(fmt.Sprintf("token type of %s cannot be updated using an access token created by token type of %s", req.Type, parent), func() {
+				t.me.Token = nil
+				v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+					Value: req.Value,
+					Type:  req.Type,
+				})
+				t.NoError(err)
+
+				w, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+					Type: parent,
+				})
+				t.NoError(err)
+
+				t.me.Token, err = t.db.Token.Get(t.ctx, uuid.UUID(w.Id))
+				t.NoError(err)
+
+				x, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+					Type: horus.TokenTypeAccess,
+				})
+				t.NoError(err)
+
+				t.me.Token, err = t.db.Token.Get(t.ctx, uuid.UUID(x.Id))
+				t.NoError(err)
+
+				_, err = t.svc.Token().Update(t.CtxMe(), &horus.UpdateTokenRequest{
+					Key:  horus.TokenByIdV(v.Id),
+					Name: fx.Addr("Moreau"),
+				})
+				t.ErrCode(err, codes.PermissionDenied)
+			})
+		}
 	}
 }
 
@@ -374,5 +470,65 @@ func (t *TokenTestSuite) TestDelete() {
 			_, err = t.svc.Token().Delete(t.CtxMe(), horus.TokenByIdV(v.Id))
 			t.ErrCode(err, codes.NotFound)
 		})
+		t.Run(fmt.Sprintf("token type of %s can be deleted using an access token created by password", req.Type), func() {
+			v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: pw,
+				Type:  horus.TokenTypePassword,
+			})
+			t.NoError(err)
+
+			t.me.Token, err = t.db.Token.Get(t.ctx, uuid.UUID(v.Id))
+			t.NoError(err)
+
+			w, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Type: horus.TokenTypeAccess,
+			})
+			t.NoError(err)
+
+			t.me.Token, err = t.db.Token.Get(t.ctx, uuid.UUID(w.Id))
+			t.NoError(err)
+
+			x, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+				Value: req.Value,
+				Type:  req.Type,
+			})
+			t.NoError(err)
+
+			_, err = t.svc.Token().Delete(t.CtxMe(), horus.TokenByIdV(x.Id))
+			t.NoError(err)
+		})
+
+		for _, parent := range []string{
+			horus.TokenTypeRefresh,
+			horus.TokenTypeAccess,
+		} {
+			t.Run(fmt.Sprintf("token type of %s cannot be deleted using an access token created by token type of %s", req.Type, parent), func() {
+				t.me.Token = nil
+				v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+					Value: req.Value,
+					Type:  req.Type,
+				})
+				t.NoError(err)
+
+				w, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+					Type: parent,
+				})
+				t.NoError(err)
+
+				t.me.Token, err = t.db.Token.Get(t.ctx, uuid.UUID(w.Id))
+				t.NoError(err)
+
+				x, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+					Type: horus.TokenTypeAccess,
+				})
+				t.NoError(err)
+
+				t.me.Token, err = t.db.Token.Get(t.ctx, uuid.UUID(x.Id))
+				t.NoError(err)
+
+				_, err = t.svc.Token().Delete(t.CtxMe(), horus.TokenByIdV(v.Id))
+				t.ErrCode(err, codes.PermissionDenied)
+			})
+		}
 	}
 }

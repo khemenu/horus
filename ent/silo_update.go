@@ -73,19 +73,19 @@ func (su *SiloUpdate) SetNillableDescription(s *string) *SiloUpdate {
 	return su
 }
 
-// AddMemberIDs adds the "members" edge to the Account entity by IDs.
-func (su *SiloUpdate) AddMemberIDs(ids ...uuid.UUID) *SiloUpdate {
-	su.mutation.AddMemberIDs(ids...)
+// AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
+func (su *SiloUpdate) AddAccountIDs(ids ...uuid.UUID) *SiloUpdate {
+	su.mutation.AddAccountIDs(ids...)
 	return su
 }
 
-// AddMembers adds the "members" edges to the Account entity.
-func (su *SiloUpdate) AddMembers(a ...*Account) *SiloUpdate {
+// AddAccounts adds the "accounts" edges to the Account entity.
+func (su *SiloUpdate) AddAccounts(a ...*Account) *SiloUpdate {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return su.AddMemberIDs(ids...)
+	return su.AddAccountIDs(ids...)
 }
 
 // AddTeamIDs adds the "teams" edge to the Team entity by IDs.
@@ -123,25 +123,25 @@ func (su *SiloUpdate) Mutation() *SiloMutation {
 	return su.mutation
 }
 
-// ClearMembers clears all "members" edges to the Account entity.
-func (su *SiloUpdate) ClearMembers() *SiloUpdate {
-	su.mutation.ClearMembers()
+// ClearAccounts clears all "accounts" edges to the Account entity.
+func (su *SiloUpdate) ClearAccounts() *SiloUpdate {
+	su.mutation.ClearAccounts()
 	return su
 }
 
-// RemoveMemberIDs removes the "members" edge to Account entities by IDs.
-func (su *SiloUpdate) RemoveMemberIDs(ids ...uuid.UUID) *SiloUpdate {
-	su.mutation.RemoveMemberIDs(ids...)
+// RemoveAccountIDs removes the "accounts" edge to Account entities by IDs.
+func (su *SiloUpdate) RemoveAccountIDs(ids ...uuid.UUID) *SiloUpdate {
+	su.mutation.RemoveAccountIDs(ids...)
 	return su
 }
 
-// RemoveMembers removes "members" edges to Account entities.
-func (su *SiloUpdate) RemoveMembers(a ...*Account) *SiloUpdate {
+// RemoveAccounts removes "accounts" edges to Account entities.
+func (su *SiloUpdate) RemoveAccounts(a ...*Account) *SiloUpdate {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return su.RemoveMemberIDs(ids...)
+	return su.RemoveAccountIDs(ids...)
 }
 
 // ClearTeams clears all "teams" edges to the Team entity.
@@ -254,12 +254,12 @@ func (su *SiloUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := su.mutation.Description(); ok {
 		_spec.SetField(silo.FieldDescription, field.TypeString, value)
 	}
-	if su.mutation.MembersCleared() {
+	if su.mutation.AccountsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   silo.MembersTable,
-			Columns: []string{silo.MembersColumn},
+			Table:   silo.AccountsTable,
+			Columns: []string{silo.AccountsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
@@ -267,12 +267,12 @@ func (su *SiloUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := su.mutation.RemovedMembersIDs(); len(nodes) > 0 && !su.mutation.MembersCleared() {
+	if nodes := su.mutation.RemovedAccountsIDs(); len(nodes) > 0 && !su.mutation.AccountsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   silo.MembersTable,
-			Columns: []string{silo.MembersColumn},
+			Table:   silo.AccountsTable,
+			Columns: []string{silo.AccountsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
@@ -283,12 +283,12 @@ func (su *SiloUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := su.mutation.MembersIDs(); len(nodes) > 0 {
+	if nodes := su.mutation.AccountsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   silo.MembersTable,
-			Columns: []string{silo.MembersColumn},
+			Table:   silo.AccountsTable,
+			Columns: []string{silo.AccountsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
@@ -451,19 +451,19 @@ func (suo *SiloUpdateOne) SetNillableDescription(s *string) *SiloUpdateOne {
 	return suo
 }
 
-// AddMemberIDs adds the "members" edge to the Account entity by IDs.
-func (suo *SiloUpdateOne) AddMemberIDs(ids ...uuid.UUID) *SiloUpdateOne {
-	suo.mutation.AddMemberIDs(ids...)
+// AddAccountIDs adds the "accounts" edge to the Account entity by IDs.
+func (suo *SiloUpdateOne) AddAccountIDs(ids ...uuid.UUID) *SiloUpdateOne {
+	suo.mutation.AddAccountIDs(ids...)
 	return suo
 }
 
-// AddMembers adds the "members" edges to the Account entity.
-func (suo *SiloUpdateOne) AddMembers(a ...*Account) *SiloUpdateOne {
+// AddAccounts adds the "accounts" edges to the Account entity.
+func (suo *SiloUpdateOne) AddAccounts(a ...*Account) *SiloUpdateOne {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return suo.AddMemberIDs(ids...)
+	return suo.AddAccountIDs(ids...)
 }
 
 // AddTeamIDs adds the "teams" edge to the Team entity by IDs.
@@ -501,25 +501,25 @@ func (suo *SiloUpdateOne) Mutation() *SiloMutation {
 	return suo.mutation
 }
 
-// ClearMembers clears all "members" edges to the Account entity.
-func (suo *SiloUpdateOne) ClearMembers() *SiloUpdateOne {
-	suo.mutation.ClearMembers()
+// ClearAccounts clears all "accounts" edges to the Account entity.
+func (suo *SiloUpdateOne) ClearAccounts() *SiloUpdateOne {
+	suo.mutation.ClearAccounts()
 	return suo
 }
 
-// RemoveMemberIDs removes the "members" edge to Account entities by IDs.
-func (suo *SiloUpdateOne) RemoveMemberIDs(ids ...uuid.UUID) *SiloUpdateOne {
-	suo.mutation.RemoveMemberIDs(ids...)
+// RemoveAccountIDs removes the "accounts" edge to Account entities by IDs.
+func (suo *SiloUpdateOne) RemoveAccountIDs(ids ...uuid.UUID) *SiloUpdateOne {
+	suo.mutation.RemoveAccountIDs(ids...)
 	return suo
 }
 
-// RemoveMembers removes "members" edges to Account entities.
-func (suo *SiloUpdateOne) RemoveMembers(a ...*Account) *SiloUpdateOne {
+// RemoveAccounts removes "accounts" edges to Account entities.
+func (suo *SiloUpdateOne) RemoveAccounts(a ...*Account) *SiloUpdateOne {
 	ids := make([]uuid.UUID, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
-	return suo.RemoveMemberIDs(ids...)
+	return suo.RemoveAccountIDs(ids...)
 }
 
 // ClearTeams clears all "teams" edges to the Team entity.
@@ -662,12 +662,12 @@ func (suo *SiloUpdateOne) sqlSave(ctx context.Context) (_node *Silo, err error) 
 	if value, ok := suo.mutation.Description(); ok {
 		_spec.SetField(silo.FieldDescription, field.TypeString, value)
 	}
-	if suo.mutation.MembersCleared() {
+	if suo.mutation.AccountsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   silo.MembersTable,
-			Columns: []string{silo.MembersColumn},
+			Table:   silo.AccountsTable,
+			Columns: []string{silo.AccountsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
@@ -675,12 +675,12 @@ func (suo *SiloUpdateOne) sqlSave(ctx context.Context) (_node *Silo, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := suo.mutation.RemovedMembersIDs(); len(nodes) > 0 && !suo.mutation.MembersCleared() {
+	if nodes := suo.mutation.RemovedAccountsIDs(); len(nodes) > 0 && !suo.mutation.AccountsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   silo.MembersTable,
-			Columns: []string{silo.MembersColumn},
+			Table:   silo.AccountsTable,
+			Columns: []string{silo.AccountsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),
@@ -691,12 +691,12 @@ func (suo *SiloUpdateOne) sqlSave(ctx context.Context) (_node *Silo, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := suo.mutation.MembersIDs(); len(nodes) > 0 {
+	if nodes := suo.mutation.AccountsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   silo.MembersTable,
-			Columns: []string{silo.MembersColumn},
+			Table:   silo.AccountsTable,
+			Columns: []string{silo.AccountsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(account.FieldID, field.TypeUUID),

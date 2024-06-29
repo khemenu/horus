@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,8 +28,35 @@ type TokenServiceServer struct {
 	*base
 }
 
+func (s *TokenServiceServer) hasPermission(ctx context.Context, v *ent.Token) error {
+	if v == nil {
+		return nil
+	}
+	if v.Type != horus.TokenTypeAccess {
+		return nil
+	}
+
+	n, err := s.db.Token.Query().
+		Where(
+			token.IDEQ(v.ID),
+			token.HasParentWith(token.TypeNEQ(horus.TokenTypePassword)),
+		).
+		Count(ctx)
+	if err != nil {
+		return bare.ToStatus(err)
+	}
+	if n > 0 {
+		return status.Error(codes.PermissionDenied, "it is not allowed to access a token service using a token created by another access token or a refresh token")
+	}
+
+	return nil
+}
+
 func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenRequest) (v *horus.Token, err error) {
 	f := frame.Must(ctx)
+	if err := s.hasPermission(ctx, f.Token); err != nil {
+		return nil, err
+	}
 	if req == nil {
 		req = &horus.CreateTokenRequest{}
 	}
@@ -52,8 +78,10 @@ func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenR
 		owner_id = id
 	}
 
-	req.Parent = horus.TokenById(f.Token.ID)
 	req.Owner = horus.UserById(owner_id)
+	if f.Token != nil {
+		req.Parent = horus.TokenById(f.Token.ID)
+	}
 
 	switch req.GetType() {
 	case horus.TokenTypePassword:
@@ -80,7 +108,6 @@ func (s *TokenServiceServer) createBasic(ctx context.Context, req *horus.CreateT
 	if pw == "" {
 		return nil, status.Error(codes.InvalidArgument, `"Token.value" must be provided`)
 	}
-	pw = strings.TrimSpace(pw)
 
 	key, err := s.keyer.Key([]byte(pw))
 	if err != nil {
@@ -110,13 +137,16 @@ func (s *TokenServiceServer) createBasic(ctx context.Context, req *horus.CreateT
 			return nil, fmt.Errorf("delete existing password: %w", err)
 		}
 
-		v, err := tx.Token.Create().
+		q := tx.Token.Create().
 			SetValue(key_str).
 			SetType(horus.TokenTypePassword).
 			SetDateExpired(time.Now().Add(10 * 365 * 24 * time.Hour)).
-			SetOwnerID(owner_id).
-			SetParentID(f.Token.ID).
-			Save(ctx)
+			SetOwnerID(owner_id)
+		if f.Token != nil {
+			q.SetParentID(f.Token.ID)
+		}
+
+		v, err := q.Save(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("create token: %w", err)
 		}
@@ -217,6 +247,11 @@ func (s *TokenServiceServer) Get(ctx context.Context, req *horus.GetTokenRequest
 }
 
 func (s *TokenServiceServer) Update(ctx context.Context, req *horus.UpdateTokenRequest) (*horus.Token, error) {
+	f := frame.Must(ctx)
+	if err := s.hasPermission(ctx, f.Token); err != nil {
+		return nil, err
+	}
+
 	v, err := s.Get(ctx, req.GetKey())
 	if err != nil {
 		return nil, err

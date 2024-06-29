@@ -7,8 +7,8 @@ http:
   port: 35123
 
 db:
-  driver:
-  source:
+  driver: sqlite3
+  source: file:horus.db?cache=shared&_fk=1
 
 client:
   connect_with: db
@@ -20,7 +20,7 @@ debug:
   enabled: true
   unsecured: true
   mem_db:
-    enabled: true
+    enabled: false
     users:
       - alias: ra
         password: 1234

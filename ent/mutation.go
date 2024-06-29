@@ -2582,6 +2582,78 @@ func (m *MembershipMutation) ResetDateCreated() {
 	m.date_created = nil
 }
 
+// SetAccountID sets the "account_id" field.
+func (m *MembershipMutation) SetAccountID(u uuid.UUID) {
+	m.account = &u
+}
+
+// AccountID returns the value of the "account_id" field in the mutation.
+func (m *MembershipMutation) AccountID() (r uuid.UUID, exists bool) {
+	v := m.account
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAccountID returns the old "account_id" field's value of the Membership entity.
+// If the Membership object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MembershipMutation) OldAccountID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAccountID: %w", err)
+	}
+	return oldValue.AccountID, nil
+}
+
+// ResetAccountID resets all changes to the "account_id" field.
+func (m *MembershipMutation) ResetAccountID() {
+	m.account = nil
+}
+
+// SetTeamID sets the "team_id" field.
+func (m *MembershipMutation) SetTeamID(u uuid.UUID) {
+	m.team = &u
+}
+
+// TeamID returns the value of the "team_id" field in the mutation.
+func (m *MembershipMutation) TeamID() (r uuid.UUID, exists bool) {
+	v := m.team
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTeamID returns the old "team_id" field's value of the Membership entity.
+// If the Membership object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MembershipMutation) OldTeamID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTeamID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTeamID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTeamID: %w", err)
+	}
+	return oldValue.TeamID, nil
+}
+
+// ResetTeamID resets all changes to the "team_id" field.
+func (m *MembershipMutation) ResetTeamID() {
+	m.team = nil
+}
+
 // SetRole sets the "role" field.
 func (m *MembershipMutation) SetRole(r role.Role) {
 	m.role = &r
@@ -2618,27 +2690,15 @@ func (m *MembershipMutation) ResetRole() {
 	m.role = nil
 }
 
-// SetAccountID sets the "account" edge to the Account entity by id.
-func (m *MembershipMutation) SetAccountID(id uuid.UUID) {
-	m.account = &id
-}
-
 // ClearAccount clears the "account" edge to the Account entity.
 func (m *MembershipMutation) ClearAccount() {
 	m.clearedaccount = true
+	m.clearedFields[membership.FieldAccountID] = struct{}{}
 }
 
 // AccountCleared reports if the "account" edge to the Account entity was cleared.
 func (m *MembershipMutation) AccountCleared() bool {
 	return m.clearedaccount
-}
-
-// AccountID returns the "account" edge ID in the mutation.
-func (m *MembershipMutation) AccountID() (id uuid.UUID, exists bool) {
-	if m.account != nil {
-		return *m.account, true
-	}
-	return
 }
 
 // AccountIDs returns the "account" edge IDs in the mutation.
@@ -2657,27 +2717,15 @@ func (m *MembershipMutation) ResetAccount() {
 	m.clearedaccount = false
 }
 
-// SetTeamID sets the "team" edge to the Team entity by id.
-func (m *MembershipMutation) SetTeamID(id uuid.UUID) {
-	m.team = &id
-}
-
 // ClearTeam clears the "team" edge to the Team entity.
 func (m *MembershipMutation) ClearTeam() {
 	m.clearedteam = true
+	m.clearedFields[membership.FieldTeamID] = struct{}{}
 }
 
 // TeamCleared reports if the "team" edge to the Team entity was cleared.
 func (m *MembershipMutation) TeamCleared() bool {
 	return m.clearedteam
-}
-
-// TeamID returns the "team" edge ID in the mutation.
-func (m *MembershipMutation) TeamID() (id uuid.UUID, exists bool) {
-	if m.team != nil {
-		return *m.team, true
-	}
-	return
 }
 
 // TeamIDs returns the "team" edge IDs in the mutation.
@@ -2730,9 +2778,15 @@ func (m *MembershipMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *MembershipMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 4)
 	if m.date_created != nil {
 		fields = append(fields, membership.FieldDateCreated)
+	}
+	if m.account != nil {
+		fields = append(fields, membership.FieldAccountID)
+	}
+	if m.team != nil {
+		fields = append(fields, membership.FieldTeamID)
 	}
 	if m.role != nil {
 		fields = append(fields, membership.FieldRole)
@@ -2747,6 +2801,10 @@ func (m *MembershipMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case membership.FieldDateCreated:
 		return m.DateCreated()
+	case membership.FieldAccountID:
+		return m.AccountID()
+	case membership.FieldTeamID:
+		return m.TeamID()
 	case membership.FieldRole:
 		return m.Role()
 	}
@@ -2760,6 +2818,10 @@ func (m *MembershipMutation) OldField(ctx context.Context, name string) (ent.Val
 	switch name {
 	case membership.FieldDateCreated:
 		return m.OldDateCreated(ctx)
+	case membership.FieldAccountID:
+		return m.OldAccountID(ctx)
+	case membership.FieldTeamID:
+		return m.OldTeamID(ctx)
 	case membership.FieldRole:
 		return m.OldRole(ctx)
 	}
@@ -2777,6 +2839,20 @@ func (m *MembershipMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDateCreated(v)
+		return nil
+	case membership.FieldAccountID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAccountID(v)
+		return nil
+	case membership.FieldTeamID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTeamID(v)
 		return nil
 	case membership.FieldRole:
 		v, ok := value.(role.Role)
@@ -2836,6 +2912,12 @@ func (m *MembershipMutation) ResetField(name string) error {
 	switch name {
 	case membership.FieldDateCreated:
 		m.ResetDateCreated()
+		return nil
+	case membership.FieldAccountID:
+		m.ResetAccountID()
+		return nil
+	case membership.FieldTeamID:
+		m.ResetTeamID()
 		return nil
 	case membership.FieldRole:
 		m.ResetRole()
@@ -2947,9 +3029,9 @@ type SiloMutation struct {
 	name               *string
 	description        *string
 	clearedFields      map[string]struct{}
-	members            map[uuid.UUID]struct{}
-	removedmembers     map[uuid.UUID]struct{}
-	clearedmembers     bool
+	accounts           map[uuid.UUID]struct{}
+	removedaccounts    map[uuid.UUID]struct{}
+	clearedaccounts    bool
 	teams              map[uuid.UUID]struct{}
 	removedteams       map[uuid.UUID]struct{}
 	clearedteams       bool
@@ -3209,58 +3291,58 @@ func (m *SiloMutation) ResetDescription() {
 	m.description = nil
 }
 
-// AddMemberIDs adds the "members" edge to the Account entity by ids.
-func (m *SiloMutation) AddMemberIDs(ids ...uuid.UUID) {
-	if m.members == nil {
-		m.members = make(map[uuid.UUID]struct{})
+// AddAccountIDs adds the "accounts" edge to the Account entity by ids.
+func (m *SiloMutation) AddAccountIDs(ids ...uuid.UUID) {
+	if m.accounts == nil {
+		m.accounts = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
-		m.members[ids[i]] = struct{}{}
+		m.accounts[ids[i]] = struct{}{}
 	}
 }
 
-// ClearMembers clears the "members" edge to the Account entity.
-func (m *SiloMutation) ClearMembers() {
-	m.clearedmembers = true
+// ClearAccounts clears the "accounts" edge to the Account entity.
+func (m *SiloMutation) ClearAccounts() {
+	m.clearedaccounts = true
 }
 
-// MembersCleared reports if the "members" edge to the Account entity was cleared.
-func (m *SiloMutation) MembersCleared() bool {
-	return m.clearedmembers
+// AccountsCleared reports if the "accounts" edge to the Account entity was cleared.
+func (m *SiloMutation) AccountsCleared() bool {
+	return m.clearedaccounts
 }
 
-// RemoveMemberIDs removes the "members" edge to the Account entity by IDs.
-func (m *SiloMutation) RemoveMemberIDs(ids ...uuid.UUID) {
-	if m.removedmembers == nil {
-		m.removedmembers = make(map[uuid.UUID]struct{})
+// RemoveAccountIDs removes the "accounts" edge to the Account entity by IDs.
+func (m *SiloMutation) RemoveAccountIDs(ids ...uuid.UUID) {
+	if m.removedaccounts == nil {
+		m.removedaccounts = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
-		delete(m.members, ids[i])
-		m.removedmembers[ids[i]] = struct{}{}
+		delete(m.accounts, ids[i])
+		m.removedaccounts[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedMembers returns the removed IDs of the "members" edge to the Account entity.
-func (m *SiloMutation) RemovedMembersIDs() (ids []uuid.UUID) {
-	for id := range m.removedmembers {
+// RemovedAccounts returns the removed IDs of the "accounts" edge to the Account entity.
+func (m *SiloMutation) RemovedAccountsIDs() (ids []uuid.UUID) {
+	for id := range m.removedaccounts {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// MembersIDs returns the "members" edge IDs in the mutation.
-func (m *SiloMutation) MembersIDs() (ids []uuid.UUID) {
-	for id := range m.members {
+// AccountsIDs returns the "accounts" edge IDs in the mutation.
+func (m *SiloMutation) AccountsIDs() (ids []uuid.UUID) {
+	for id := range m.accounts {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetMembers resets all changes to the "members" edge.
-func (m *SiloMutation) ResetMembers() {
-	m.members = nil
-	m.clearedmembers = false
-	m.removedmembers = nil
+// ResetAccounts resets all changes to the "accounts" edge.
+func (m *SiloMutation) ResetAccounts() {
+	m.accounts = nil
+	m.clearedaccounts = false
+	m.removedaccounts = nil
 }
 
 // AddTeamIDs adds the "teams" edge to the Team entity by ids.
@@ -3556,8 +3638,8 @@ func (m *SiloMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *SiloMutation) AddedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.members != nil {
-		edges = append(edges, silo.EdgeMembers)
+	if m.accounts != nil {
+		edges = append(edges, silo.EdgeAccounts)
 	}
 	if m.teams != nil {
 		edges = append(edges, silo.EdgeTeams)
@@ -3572,9 +3654,9 @@ func (m *SiloMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *SiloMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case silo.EdgeMembers:
-		ids := make([]ent.Value, 0, len(m.members))
-		for id := range m.members {
+	case silo.EdgeAccounts:
+		ids := make([]ent.Value, 0, len(m.accounts))
+		for id := range m.accounts {
 			ids = append(ids, id)
 		}
 		return ids
@@ -3597,8 +3679,8 @@ func (m *SiloMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *SiloMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.removedmembers != nil {
-		edges = append(edges, silo.EdgeMembers)
+	if m.removedaccounts != nil {
+		edges = append(edges, silo.EdgeAccounts)
 	}
 	if m.removedteams != nil {
 		edges = append(edges, silo.EdgeTeams)
@@ -3613,9 +3695,9 @@ func (m *SiloMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *SiloMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case silo.EdgeMembers:
-		ids := make([]ent.Value, 0, len(m.removedmembers))
-		for id := range m.removedmembers {
+	case silo.EdgeAccounts:
+		ids := make([]ent.Value, 0, len(m.removedaccounts))
+		for id := range m.removedaccounts {
 			ids = append(ids, id)
 		}
 		return ids
@@ -3638,8 +3720,8 @@ func (m *SiloMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *SiloMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.clearedmembers {
-		edges = append(edges, silo.EdgeMembers)
+	if m.clearedaccounts {
+		edges = append(edges, silo.EdgeAccounts)
 	}
 	if m.clearedteams {
 		edges = append(edges, silo.EdgeTeams)
@@ -3654,8 +3736,8 @@ func (m *SiloMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *SiloMutation) EdgeCleared(name string) bool {
 	switch name {
-	case silo.EdgeMembers:
-		return m.clearedmembers
+	case silo.EdgeAccounts:
+		return m.clearedaccounts
 	case silo.EdgeTeams:
 		return m.clearedteams
 	case silo.EdgeInvitations:
@@ -3676,8 +3758,8 @@ func (m *SiloMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *SiloMutation) ResetEdge(name string) error {
 	switch name {
-	case silo.EdgeMembers:
-		m.ResetMembers()
+	case silo.EdgeAccounts:
+		m.ResetAccounts()
 		return nil
 	case silo.EdgeTeams:
 		m.ResetTeams()

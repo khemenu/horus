@@ -5,6 +5,8 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
+	"github.com/google/uuid"
 	"github.com/lesomnus/entpb"
 	"khepri.dev/horus/role"
 )
@@ -20,6 +22,11 @@ func (Membership) Mixin() []ent.Mixin {
 }
 func (Membership) Fields() []ent.Field {
 	return []ent.Field{
+		field.UUID("account_id", uuid.UUID{}).
+			Immutable(),
+		field.UUID("team_id", uuid.UUID{}).
+			Immutable(),
+
 		field.Enum("role").
 			Annotations(entpb.Field(6)).
 			GoType(role.Role("")),
@@ -31,15 +38,23 @@ func (Membership) Edges() []ent.Edge {
 		edge.From("account", Account.Type).
 			Annotations(entpb.Field(2)).
 			Ref("memberships").
+			Field("account_id").
 			Immutable().
 			Unique().
 			Required(),
 		edge.From("team", Team.Type).
 			Annotations(entpb.Field(3)).
 			Ref("members").
+			Field("team_id").
 			Immutable().
 			Unique().
 			Required(),
+	}
+}
+
+func (Membership) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("account_id", "team_id").Unique(),
 	}
 }
 

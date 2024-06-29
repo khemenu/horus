@@ -34,8 +34,8 @@ type Silo struct {
 
 // SiloEdges holds the relations/edges for other nodes in the graph.
 type SiloEdges struct {
-	// Members holds the value of the members edge.
-	Members []*Account `json:"members,omitempty"`
+	// Accounts holds the value of the accounts edge.
+	Accounts []*Account `json:"accounts,omitempty"`
 	// Teams holds the value of the teams edge.
 	Teams []*Team `json:"teams,omitempty"`
 	// Invitations holds the value of the invitations edge.
@@ -45,13 +45,13 @@ type SiloEdges struct {
 	loadedTypes [3]bool
 }
 
-// MembersOrErr returns the Members value or an error if the edge
+// AccountsOrErr returns the Accounts value or an error if the edge
 // was not loaded in eager-loading.
-func (e SiloEdges) MembersOrErr() ([]*Account, error) {
+func (e SiloEdges) AccountsOrErr() ([]*Account, error) {
 	if e.loadedTypes[0] {
-		return e.Members, nil
+		return e.Accounts, nil
 	}
-	return nil, &NotLoadedError{edge: "members"}
+	return nil, &NotLoadedError{edge: "accounts"}
 }
 
 // TeamsOrErr returns the Teams value or an error if the edge
@@ -141,9 +141,9 @@ func (s *Silo) Value(name string) (ent.Value, error) {
 	return s.selectValues.Get(name)
 }
 
-// QueryMembers queries the "members" edge of the Silo entity.
-func (s *Silo) QueryMembers() *AccountQuery {
-	return NewSiloClient(s.config).QueryMembers(s)
+// QueryAccounts queries the "accounts" edge of the Silo entity.
+func (s *Silo) QueryAccounts() *AccountQuery {
+	return NewSiloClient(s.config).QueryAccounts(s)
 }
 
 // QueryTeams queries the "teams" edge of the Silo entity.
