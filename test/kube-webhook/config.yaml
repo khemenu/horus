@@ -10,7 +10,7 @@ clusters:
 users:
   - name: default
     user:
-      token: asdf
+      token: invalid
 
 current-context: default
 contexts:

@@ -1,3 +1,4 @@
+.devcontainer/k3s/k3s.yaml
 /node_modules
 
 /horus.db

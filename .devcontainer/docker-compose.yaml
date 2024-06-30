@@ -56,12 +56,14 @@ services:
       - -c
       - >-
         /intercept-dns;
-        /bin/k3s server \
-          --tls-san=k3s
+        /bin/k3s server
 
     privileged: true
 
     volumes:
+      - type: bind
+        source: ./k3s
+        target: /etc/rancher/k3s/
       - type: bind
         source: ./intercept-dns.sh
         target: /intercept-dns

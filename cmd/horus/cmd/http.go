@@ -14,6 +14,10 @@ import (
 )
 
 func HandleAuth(mux *http.ServeMux, svr horus.Server) {
+	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
 	mux.HandleFunc("GET /auth/bearer", func(w http.ResponseWriter, r *http.Request) {
 		l := log.From(r.Context())
 

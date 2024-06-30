@@ -3,7 +3,7 @@ kind: Config
 clusters:
   - name: webhook
     cluster:
-      server: http://localhost:35123/auth/kube
+      server: http://dev:35123/auth/kube
       insecure-skip-tls-verify: true
 
 users:
