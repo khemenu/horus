@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 	"syscall"
 
 	"github.com/urfave/cli/v2"
@@ -46,6 +47,7 @@ var CmdSetPassword = &cli.Command{
 			return fmt.Errorf("read password from stdin: %w", err)
 		}
 
+		pw = strings.TrimSpace(pw)
 		_, err = c.Token().Create(ctx.Context, &horus.CreateTokenRequest{
 			Value: string(pw),
 			Type:  horus.TokenTypePassword,
