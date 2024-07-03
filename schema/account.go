@@ -62,8 +62,10 @@ func (Account) Edges() []ent.Edge {
 
 func (Account) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("silo_id", "owner_id").Unique(),
-		index.Fields("silo_id", "alias").Unique(),
+		index.Fields("alias", "silo_id").Unique().
+			Annotations(entpb.Key("by_alias_in_silo", 2)),
+		index.Fields("owner_id", "silo_id").Unique().
+			Annotations(entpb.Key("by_owner_in_silo", 3)),
 	}
 }
 

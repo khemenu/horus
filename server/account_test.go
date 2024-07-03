@@ -150,7 +150,7 @@ func (t *AccountTestSuite) TestGet() {
 		}
 	})
 	t.Run("account cannot be get if the account does not exist", func() {
-		_, err := t.svc.Account().Get(t.CtxSiloOwner(), horus.AccountInSilo(horus.SiloById(t.silo.ID), "not exist"))
+		_, err := t.svc.Account().Get(t.CtxSiloOwner(), horus.AccountByAliasInSilo("not exist", horus.SiloById(t.silo.ID)))
 		t.ErrCode(err, codes.NotFound)
 	})
 	t.Run("account cannot be get if the account is in another silo", func() {
@@ -158,11 +158,11 @@ func (t *AccountTestSuite) TestGet() {
 		t.ErrCode(err, codes.NotFound)
 	})
 	t.Run("my account cannot be get if the account does not exist", func() {
-		_, err := t.svc.Account().Get(t.CtxOther(), horus.AccountInSilo(horus.SiloById(t.silo.ID), horus.Me))
+		_, err := t.svc.Account().Get(t.CtxOther(), horus.AccountByAliasInSilo(horus.Me, horus.SiloById(t.silo.ID)))
 		t.ErrCode(err, codes.NotFound)
 	})
 	t.Run("my account cannot be get if the silo does not exist", func() {
-		_, err := t.svc.Account().Get(t.CtxOther(), horus.AccountInSilo(horus.SiloById(uuid.Nil), horus.Me))
+		_, err := t.svc.Account().Get(t.CtxOther(), horus.AccountByAliasInSilo(horus.Me, horus.SiloById(uuid.Nil)))
 		t.ErrCode(err, codes.NotFound)
 	})
 }
@@ -597,7 +597,7 @@ func (t *AccountTestSuite) TestList() {
 		t.NoError(err)
 
 		// Account owned by `u` where the role is a silo member.
-		v2, err := t.svc.Account().Get(ctx_u, horus.AccountInSilo(horus.SiloByIdV(s_u.Id), horus.Me))
+		v2, err := t.svc.Account().Get(ctx_u, horus.AccountByAliasInSilo(horus.Me, horus.SiloByIdV(s_u.Id)))
 		t.NoError(err)
 
 		res, err := t.svc.Account().List(ctx_u, &horus.ListAccountRequest{Key: &horus.ListAccountRequest_Mine{}})
@@ -612,7 +612,7 @@ func (t *AccountTestSuite) TestList() {
 		s, err := t.svc.Silo().Create(t.CtxMe(), nil)
 		t.NoError(err)
 
-		v1, err := t.svc.Account().Get(t.CtxMe(), horus.AccountInSilo(horus.SiloByIdV(s.Id), horus.Me))
+		v1, err := t.svc.Account().Get(t.CtxMe(), horus.AccountByAliasInSilo(horus.Me, horus.SiloByIdV(s.Id)))
 		t.NoError(err)
 
 		child, err := t.svc.User().Create(t.CtxMe(), nil)

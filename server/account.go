@@ -69,7 +69,7 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 func (s *AccountServiceServer) Get(ctx context.Context, req *horus.GetAccountRequest) (*horus.Account, error) {
 	f := frame.Must(ctx)
 
-	if k := req.GetInSilo(); k.GetAlias() == horus.Me {
+	if k := req.GetByAliasInSilo(); k.GetAlias() == horus.Me {
 		p, err := bare.GetSiloSpecifier(k.Silo)
 		if err != nil {
 			return nil, err

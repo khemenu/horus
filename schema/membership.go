@@ -36,14 +36,14 @@ func (Membership) Fields() []ent.Field {
 func (Membership) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("account", Account.Type).
-			Annotations(entpb.Field(2)).
+			Annotations(entpb.Field(3)).
 			Ref("memberships").
 			Field("account_id").
 			Immutable().
 			Unique().
 			Required(),
 		edge.From("team", Team.Type).
-			Annotations(entpb.Field(3)).
+			Annotations(entpb.Field(4)).
 			Ref("members").
 			Field("team_id").
 			Immutable().
@@ -54,7 +54,8 @@ func (Membership) Edges() []ent.Edge {
 
 func (Membership) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("account_id", "team_id").Unique(),
+		index.Fields("account_id", "team_id").Unique().
+			Annotations(entpb.Key("by_account_in_team", 3)),
 	}
 }
 

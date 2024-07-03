@@ -12,11 +12,19 @@ func AccountById(k uuid.UUID) *GetAccountRequest {
 func AccountByIdV(k []byte) *GetAccountRequest {
 	return &GetAccountRequest{Key: &GetAccountRequest_Id{Id: k}}
 }
-func AccountInSilo(k *GetSiloRequest, alias string) *GetAccountRequest {
-	return &GetAccountRequest{Key: &GetAccountRequest_InSilo{
-		InSilo: &GetAccountInSilo{
-			Silo:  k,
+func AccountByAliasInSilo(alias string, silo *GetSiloRequest) *GetAccountRequest {
+	return &GetAccountRequest{Key: &GetAccountRequest_ByAliasInSilo{
+		ByAliasInSilo: &GetAccountByAliasInSilo{
 			Alias: alias,
+			Silo:  silo,
+		},
+	}}
+}
+func AccountByOwnerInSilo(owner *GetUserRequest, silo *GetSiloRequest) *GetAccountRequest {
+	return &GetAccountRequest{Key: &GetAccountRequest_ByOwnerInSilo{
+		ByOwnerInSilo: &GetAccountByOwnerInSilo{
+			Owner: owner,
+			Silo:  silo,
 		},
 	}}
 }
@@ -33,10 +41,18 @@ func InvitationByIdV(k []byte) *GetInvitationRequest {
 	return &GetInvitationRequest{Id: k}
 }
 func MembershipById(k uuid.UUID) *GetMembershipRequest {
-	return &GetMembershipRequest{Id: k[:]}
+	return &GetMembershipRequest{Key: &GetMembershipRequest_Id{Id: k[:]}}
 }
 func MembershipByIdV(k []byte) *GetMembershipRequest {
-	return &GetMembershipRequest{Id: k}
+	return &GetMembershipRequest{Key: &GetMembershipRequest_Id{Id: k}}
+}
+func MembershipByAccountInTeam(account *GetAccountRequest, team *GetTeamRequest) *GetMembershipRequest {
+	return &GetMembershipRequest{Key: &GetMembershipRequest_ByAccountInTeam{
+		ByAccountInTeam: &GetMembershipByAccountInTeam{
+			Account: account,
+			Team:    team,
+		},
+	}}
 }
 func SiloById(k uuid.UUID) *GetSiloRequest {
 	return &GetSiloRequest{Key: &GetSiloRequest_Id{Id: k[:]}}
@@ -53,11 +69,11 @@ func TeamById(k uuid.UUID) *GetTeamRequest {
 func TeamByIdV(k []byte) *GetTeamRequest {
 	return &GetTeamRequest{Key: &GetTeamRequest_Id{Id: k}}
 }
-func TeamInSilo(k *GetSiloRequest, alias string) *GetTeamRequest {
-	return &GetTeamRequest{Key: &GetTeamRequest_InSilo{
-		InSilo: &GetTeamInSilo{
-			Silo:  k,
+func TeamByAliasInSilo(alias string, silo *GetSiloRequest) *GetTeamRequest {
+	return &GetTeamRequest{Key: &GetTeamRequest_ByAliasInSilo{
+		ByAliasInSilo: &GetTeamByAliasInSilo{
 			Alias: alias,
+			Silo:  silo,
 		},
 	}}
 }

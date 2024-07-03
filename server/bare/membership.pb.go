@@ -111,16 +111,53 @@ func ToProtoMembership(v *ent.Membership) *horus.Membership {
 }
 func GetMembershipId(ctx context.Context, db *ent.Client, req *horus.GetMembershipRequest) (uuid.UUID, error) {
 	var r uuid.UUID
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		return v, nil
+	k := req.GetKey()
+	if t, ok := k.(*horus.GetMembershipRequest_Id); ok {
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return v, nil
+		}
 	}
+
+	p, err := GetMembershipSpecifier(req)
+	if err != nil {
+		return r, err
+	}
+
+	v, err := db.Membership.Query().Where(p).OnlyID(ctx)
+	if err != nil {
+		return r, ToStatus(err)
+	}
+
+	return v, nil
 }
 func GetMembershipSpecifier(req *horus.GetMembershipRequest) (predicate.Membership, error) {
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		return membership.IDEQ(v), nil
+	switch t := req.GetKey().(type) {
+	case *horus.GetMembershipRequest_Id:
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return membership.IDEQ(v), nil
+		}
+	case *horus.GetMembershipRequest_ByAccountInTeam:
+		ps := make([]predicate.Membership, 0, 2)
+		if p, err := GetAccountSpecifier(t.ByAccountInTeam.GetAccount()); err != nil {
+			s, _ := status.FromError(err)
+			return nil, status.Errorf(codes.InvalidArgument, "by_account_in_team.%s", s.Message())
+		} else {
+			ps = append(ps, membership.HasAccountWith(p))
+		}
+		if p, err := GetTeamSpecifier(t.ByAccountInTeam.GetTeam()); err != nil {
+			s, _ := status.FromError(err)
+			return nil, status.Errorf(codes.InvalidArgument, "by_account_in_team.%s", s.Message())
+		} else {
+			ps = append(ps, membership.HasTeamWith(p))
+		}
+		return membership.And(ps...), nil
+	case nil:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
+	default:
+		return nil, status.Errorf(codes.Unimplemented, "unknown type of key")
 	}
 }

@@ -146,15 +146,15 @@ func GetTeamSpecifier(req *horus.GetTeamRequest) (predicate.Team, error) {
 		} else {
 			return team.IDEQ(v), nil
 		}
-	case *horus.GetTeamRequest_InSilo:
+	case *horus.GetTeamRequest_ByAliasInSilo:
 		ps := make([]predicate.Team, 0, 2)
-		if p, err := GetSiloSpecifier(t.InSilo.GetSilo()); err != nil {
+		ps = append(ps, team.AliasEQ(t.ByAliasInSilo.GetAlias()))
+		if p, err := GetSiloSpecifier(t.ByAliasInSilo.GetSilo()); err != nil {
 			s, _ := status.FromError(err)
-			return nil, status.Errorf(codes.InvalidArgument, "in_silo.%s", s.Message())
+			return nil, status.Errorf(codes.InvalidArgument, "by_alias_in_silo.%s", s.Message())
 		} else {
 			ps = append(ps, team.HasSiloWith(p))
 		}
-		ps = append(ps, team.AliasEQ(t.InSilo.GetAlias()))
 		return team.And(ps...), nil
 	case nil:
 		return nil, status.Errorf(codes.InvalidArgument, "key not provided")

@@ -98,8 +98,8 @@ message CreateInvitationRequest {
 }
 
 message CreateMembershipRequest {
-	GetAccountRequest account = 2;
-	GetTeamRequest team = 3;
+	GetAccountRequest account = 3;
+	GetTeamRequest team = 4;
 	Role role = 6;
 }
 
@@ -130,15 +130,21 @@ message CreateUserRequest {
 	optional GetUserRequest parent = 3;
 }
 
-message GetAccountInSilo {
+message GetAccountByAliasInSilo {
 	string alias = 2;
+	GetSiloRequest silo = 4;
+}
+
+message GetAccountByOwnerInSilo {
+	GetUserRequest owner = 3;
 	GetSiloRequest silo = 4;
 }
 
 message GetAccountRequest {
 	oneof key {
 		bytes id = 1;
-		GetAccountInSilo in_silo = 4;
+		GetAccountByAliasInSilo by_alias_in_silo = 2;
+		GetAccountByOwnerInSilo by_owner_in_silo = 3;
 	}
 }
 
@@ -150,8 +156,16 @@ message GetInvitationRequest {
 	bytes id = 1;
 }
 
+message GetMembershipByAccountInTeam {
+	GetAccountRequest account = 3;
+	GetTeamRequest team = 4;
+}
+
 message GetMembershipRequest {
-	bytes id = 1;
+	oneof key {
+		bytes id = 1;
+		GetMembershipByAccountInTeam by_account_in_team = 3;
+	}
 }
 
 message GetSiloRequest {
@@ -161,7 +175,7 @@ message GetSiloRequest {
 	}
 }
 
-message GetTeamInSilo {
+message GetTeamByAliasInSilo {
 	string alias = 2;
 	GetSiloRequest silo = 3;
 }
@@ -169,7 +183,7 @@ message GetTeamInSilo {
 message GetTeamRequest {
 	oneof key {
 		bytes id = 1;
-		GetTeamInSilo in_silo = 3;
+		GetTeamByAliasInSilo by_alias_in_silo = 2;
 	}
 }
 

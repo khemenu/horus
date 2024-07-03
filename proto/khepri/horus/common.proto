@@ -52,8 +52,8 @@ message Invitation {
 
 message Membership {
 	bytes id = 1;
-	Account account = 2;
-	Team team = 3;
+	Account account = 3;
+	Team team = 4;
 	Role role = 6;
 	google.protobuf.Timestamp date_created = 15;
 }

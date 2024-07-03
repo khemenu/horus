@@ -45,6 +45,7 @@ func (Team) Edges() []ent.Edge {
 
 func (Team) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("silo_id", "alias").Unique(),
+		index.Fields("alias", "silo_id").Unique().
+			Annotations(entpb.Key("by_alias_in_silo", 2)),
 	}
 }

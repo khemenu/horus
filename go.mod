@@ -5,7 +5,7 @@ go 1.22.3
 require (
 	entgo.io/ent v0.13.1
 	github.com/google/uuid v1.6.0
-	github.com/lesomnus/entpb v0.0.0-20240618162008-19b654cb83f7
+	github.com/lesomnus/entpb v0.0.0-20240703161013-ad76add02e14
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/rs/xid v1.5.0
 	github.com/spf13/afero v1.11.0

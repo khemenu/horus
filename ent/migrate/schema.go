@@ -40,14 +40,14 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "account_silo_id_owner_id",
+				Name:    "account_alias_silo_id",
 				Unique:  true,
-				Columns: []*schema.Column{AccountsColumns[6], AccountsColumns[7]},
+				Columns: []*schema.Column{AccountsColumns[2], AccountsColumns[6]},
 			},
 			{
-				Name:    "account_silo_id_alias",
+				Name:    "account_owner_id_silo_id",
 				Unique:  true,
-				Columns: []*schema.Column{AccountsColumns[6], AccountsColumns[2]},
+				Columns: []*schema.Column{AccountsColumns[7], AccountsColumns[6]},
 			},
 		},
 	}
@@ -181,9 +181,9 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "team_silo_id_alias",
+				Name:    "team_alias_silo_id",
 				Unique:  true,
-				Columns: []*schema.Column{TeamsColumns[5], TeamsColumns[2]},
+				Columns: []*schema.Column{TeamsColumns[2], TeamsColumns[5]},
 			},
 		},
 	}

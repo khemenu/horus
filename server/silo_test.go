@@ -38,7 +38,7 @@ func (t *SiloTestSuite) TestCreate() {
 		t.Equal("horus", v.Alias)
 		t.Equal("Horus", v.Name)
 
-		w, err := t.svc.Account().Get(t.CtxMe(), horus.AccountInSilo(horus.SiloByIdV(v.Id), "founder"))
+		w, err := t.svc.Account().Get(t.CtxMe(), horus.AccountByAliasInSilo("founder", horus.SiloByIdV(v.Id)))
 		t.NoError(err)
 		t.Equal(horus.Role_ROLE_OWNER, w.Role)
 	})
@@ -120,13 +120,13 @@ func (t *SiloTestSuite) TestDelete() {
 		t.ErrCode(err, codes.NotFound)
 	})
 	t.Run("all accounts in silo are deleted", func() {
-		_, err := t.svc.Account().Get(t.CtxSiloOwner(), horus.AccountInSilo(horus.SiloById(t.silo.ID), t.silo_admin.ActingAccount.Alias))
+		_, err := t.svc.Account().Get(t.CtxSiloOwner(), horus.AccountByAliasInSilo(t.silo_admin.ActingAccount.Alias, horus.SiloById(t.silo.ID)))
 		t.NoError(err)
 
 		_, err = t.svc.Silo().Delete(t.CtxSiloOwner(), horus.SiloById(t.silo.ID))
 		t.NoError(err)
 
-		_, err = t.svc.Account().Get(t.CtxSiloOwner(), horus.AccountInSilo(horus.SiloById(t.silo.ID), t.silo_admin.ActingAccount.Alias))
+		_, err = t.svc.Account().Get(t.CtxSiloOwner(), horus.AccountByAliasInSilo(t.silo_admin.ActingAccount.Alias, horus.SiloById(t.silo.ID)))
 		t.ErrCode(err, codes.NotFound)
 	})
 	t.Run("permission denied error if the silo member tries to delete the silo", func() {

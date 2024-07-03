@@ -166,15 +166,30 @@ func GetAccountSpecifier(req *horus.GetAccountRequest) (predicate.Account, error
 		} else {
 			return account.IDEQ(v), nil
 		}
-	case *horus.GetAccountRequest_InSilo:
+	case *horus.GetAccountRequest_ByAliasInSilo:
 		ps := make([]predicate.Account, 0, 2)
-		if p, err := GetSiloSpecifier(t.InSilo.GetSilo()); err != nil {
+		ps = append(ps, account.AliasEQ(t.ByAliasInSilo.GetAlias()))
+		if p, err := GetSiloSpecifier(t.ByAliasInSilo.GetSilo()); err != nil {
 			s, _ := status.FromError(err)
-			return nil, status.Errorf(codes.InvalidArgument, "in_silo.%s", s.Message())
+			return nil, status.Errorf(codes.InvalidArgument, "by_alias_in_silo.%s", s.Message())
 		} else {
 			ps = append(ps, account.HasSiloWith(p))
 		}
-		ps = append(ps, account.AliasEQ(t.InSilo.GetAlias()))
+		return account.And(ps...), nil
+	case *horus.GetAccountRequest_ByOwnerInSilo:
+		ps := make([]predicate.Account, 0, 2)
+		if p, err := GetUserSpecifier(t.ByOwnerInSilo.GetOwner()); err != nil {
+			s, _ := status.FromError(err)
+			return nil, status.Errorf(codes.InvalidArgument, "by_owner_in_silo.%s", s.Message())
+		} else {
+			ps = append(ps, account.HasOwnerWith(p))
+		}
+		if p, err := GetSiloSpecifier(t.ByOwnerInSilo.GetSilo()); err != nil {
+			s, _ := status.FromError(err)
+			return nil, status.Errorf(codes.InvalidArgument, "by_owner_in_silo.%s", s.Message())
+		} else {
+			ps = append(ps, account.HasSiloWith(p))
+		}
 		return account.And(ps...), nil
 	case nil:
 		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
