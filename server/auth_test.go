@@ -1,8 +1,10 @@
 package server_test
 
 import (
+	"encoding/base64"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"khepri.dev/horus"
@@ -111,8 +113,9 @@ func (t *AuthTestSuite) TestTokenSignIn() {
 		t.ErrCode(err, codes.Unauthenticated)
 	})
 	t.Run("user cannot sign in using an access token that does not exist", func() {
+		v := append(uuid.Nil[:], []byte("not exist")...)
 		_, err := t.svc.Auth().TokenSignIn(t.ctx, &horus.TokenSignInRequest{
-			Token: "not exist",
+			Token: base64.RawStdEncoding.EncodeToString(v),
 		})
 		t.ErrCode(err, codes.Unauthenticated)
 	})

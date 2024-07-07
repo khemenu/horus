@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/google/uuid"
@@ -166,9 +167,22 @@ func (s *TokenServiceServer) createBearer(ctx context.Context, req *horus.Create
 		return nil, status.Error(codes.InvalidArgument, "value ot bearer cannot be set manually")
 	}
 
-	token_value, err := s.generateToken()
+	var token [128]byte
+	_, err := io.ReadFull(rand.Reader, token[:])
 	if err != nil {
 		return nil, fmt.Errorf("generate token: %w", err)
+	}
+
+	key, err := s.keyer.Key(token[:])
+	if err != nil {
+		return nil, fmt.Errorf("key: %w", err)
+	}
+
+	key_str := ""
+	if b, err := proto.Marshal(key); err != nil {
+		return nil, fmt.Errorf("marshal key: %w", err)
+	} else {
+		key_str = base64.RawStdEncoding.EncodeToString(b)
 	}
 
 	var date_expired time.Time
@@ -194,14 +208,20 @@ func (s *TokenServiceServer) createBearer(ctx context.Context, req *horus.Create
 		return nil, err
 	}
 
-	return s.bare.Token().Create(ctx, &horus.CreateTokenRequest{
-		Value:  token_value,
+	v, err := s.bare.Token().Create(ctx, &horus.CreateTokenRequest{
+		Value:  key_str,
 		Type:   t,
 		Owner:  horus.UserById(owner_id),
 		Parent: req.GetParent(),
 
 		DateExpired: ts_expired,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	v.Value = base64.RawStdEncoding.EncodeToString(append(v.Id, token[:]...))
+	return v, nil
 }
 
 func (*TokenServiceServer) generateToken() (string, error) {

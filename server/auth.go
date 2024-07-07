@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"khepri.dev/horus"
@@ -61,11 +62,24 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 	}, nil
 }
 
-func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInRequest) (*horus.TokenSignInResponse, error) {
+func (s *AuthService) verifyToken(ctx context.Context, token_str string, token_type string) (*ent.Token, error) {
+	t, err := base64.RawStdEncoding.DecodeString(token_str)
+	if err == nil && len(t) < 16 {
+		err = fmt.Errorf("too short")
+	}
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid token format: %s", err.Error())
+	}
+
+	id, err := uuid.FromBytes(t[:16])
+	if err != nil {
+		panic(fmt.Errorf("too short: %w", err))
+	}
+
 	v, err := s.db.Token.Query().
 		Where(
-			token.ValueEQ(req.Token),
-			token.Type(horus.TokenTypeAccess),
+			token.IDEQ(id),
+			token.TypeEQ(token_type),
 			token.DateExpiredGT(time.Now()),
 		).
 		WithOwner().
@@ -76,6 +90,21 @@ func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInReq
 		}
 
 		return nil, fmt.Errorf("query token: %w", err)
+	}
+
+	if key, err := base64.RawStdEncoding.DecodeString(v.Value); err != nil {
+		return nil, fmt.Errorf("invalid token format: %w", err)
+	} else if err := tokens.Compare(t[16:], key); err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "")
+	}
+
+	return v, nil
+}
+
+func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInRequest) (*horus.TokenSignInResponse, error) {
+	v, err := s.verifyToken(ctx, req.GetToken(), horus.TokenTypeAccess)
+	if err != nil {
+		return nil, err
 	}
 
 	if frame, ok := frame.Get(ctx); ok {
@@ -89,23 +118,12 @@ func (s *AuthService) TokenSignIn(ctx context.Context, req *horus.TokenSignInReq
 }
 
 func (s *AuthService) Refresh(ctx context.Context, req *horus.RefreshRequest) (*horus.RefreshResponse, error) {
+	refresh_token, err := s.verifyToken(ctx, req.GetToken(), horus.TokenTypeRefresh)
+	if err != nil {
+		return nil, err
+	}
+
 	return entutils.WithTxV(ctx, s.db, func(tx *ent.Tx) (*horus.RefreshResponse, error) {
-		refresh_token, err := tx.Token.Query().
-			Where(
-				token.ValueEQ(req.Token),
-				token.Type(horus.TokenTypeRefresh),
-				token.DateExpiredGT(time.Now()),
-			).
-			WithOwner().
-			Only(ctx)
-		if err != nil {
-			if ent.IsNotFound(err) {
-				return nil, status.Error(codes.Unauthenticated, "")
-			}
-
-			return nil, fmt.Errorf("query token: %w", err)
-		}
-
 		now := time.Now()
 		if _, err := tx.Token.Update().
 			Where(
