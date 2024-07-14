@@ -1,10 +1,24 @@
 package role
 
+import (
+	"strings"
+
+	"khepri.dev/horus/internal/fx"
+)
+
 const (
 	Owner  Role = "OWNER"
 	Admin  Role = "ADMIN"
 	Member Role = "MEMBER"
 )
+
+func Values() []Role {
+	return []Role{
+		Owner,
+		Admin,
+		Member,
+	}
+}
 
 type Role string
 
@@ -20,13 +34,18 @@ func (r Role) V() int {
 		return 0
 	}
 }
+func (r Role) IsNil() bool {
+	return r.V() == 0
+}
 
 func (r Role) Values() []string {
-	return []string{
-		string(Owner),
-		string(Admin),
-		string(Member),
-	}
+	return fx.MapV(Values(), func(v Role) string {
+		return string(v)
+	})
+}
+
+func (r Role) String() string {
+	return strings.ToLower(string(r))
 }
 
 // -1 if x has less permissions than y,

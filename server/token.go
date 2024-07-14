@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/binary"
 	"fmt"
 	"io"
 	"time"
@@ -163,11 +162,13 @@ func (s *TokenServiceServer) createBasic(ctx context.Context, req *horus.CreateT
 }
 
 func (s *TokenServiceServer) createBearer(ctx context.Context, req *horus.CreateTokenRequest, t string) (*horus.Token, error) {
+	const TokenLength = 128
+
 	if req.GetValue() != "" {
 		return nil, status.Error(codes.InvalidArgument, "value ot bearer cannot be set manually")
 	}
 
-	var token [128]byte
+	var token [TokenLength]byte
 	_, err := io.ReadFull(rand.Reader, token[:])
 	if err != nil {
 		return nil, fmt.Errorf("generate token: %w", err)
@@ -222,25 +223,6 @@ func (s *TokenServiceServer) createBearer(ctx context.Context, req *horus.Create
 
 	v.Value = base64.RawStdEncoding.EncodeToString(append(v.Id, token[:]...))
 	return v, nil
-}
-
-func (*TokenServiceServer) generateToken() (string, error) {
-	const Size = 128
-	charSet := []rune("-.ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz0123456789~")
-
-	rst := make([]rune, Size)
-	buff := make([]byte, 8)
-
-	for i := range rst {
-		if _, err := rand.Read(buff); err != nil {
-			return "", fmt.Errorf("crypto rand: %w", err)
-		}
-
-		idx := binary.LittleEndian.Uint64(buff) % uint64(len(charSet))
-		rst[i] = charSet[idx]
-	}
-
-	return string(rst), nil
 }
 
 func (s *TokenServiceServer) Get(ctx context.Context, req *horus.GetTokenRequest) (*horus.Token, error) {

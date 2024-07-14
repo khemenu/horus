@@ -11,6 +11,7 @@ import (
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/membership"
+	"khepri.dev/horus/ent/silo"
 	"khepri.dev/horus/ent/team"
 	"khepri.dev/horus/internal/entutils"
 	"khepri.dev/horus/role"
@@ -31,35 +32,41 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamReq
 		return nil, err
 	}
 
-	v, err := f.Actor.QueryAccounts().
+	a, err := f.Actor.QueryAccounts().
 		Where(account.HasSiloWith(p)).
 		WithSilo().
 		Only(ctx)
 	if err != nil {
 		return nil, bare.ToStatus(err)
 	}
-	if v.Role.LowerThan(role.Admin) {
-		return nil, status.Error(codes.PermissionDenied, "team can be created only by a silo owner or a silo admin")
+	switch a.Role {
+	case role.Owner:
+		fallthrough
+	case role.Admin:
+		break
+
+	default:
+		return nil, status.Error(codes.PermissionDenied, "team can be created only by the silo owners or silo admins")
 	}
 
-	req.Silo = horus.SiloById(v.Edges.Silo.ID)
+	req.Silo = horus.SiloById(a.Edges.Silo.ID)
 	return entutils.WithTxV(ctx, s.db, func(tx *ent.Tx) (*horus.Team, error) {
 		c := tx.Client()
-		res, err := bare.NewTeamServiceServer(c).Create(ctx, req)
+		s, err := bare.NewTeamServiceServer(c).Create(ctx, req)
 		if err != nil {
 			return nil, err
 		}
 
 		_, err = bare.NewMembershipServiceServer(c).Create(ctx, &horus.CreateMembershipRequest{
 			Role:    horus.Role_ROLE_OWNER,
-			Account: horus.AccountById(v.ID),
-			Team:    horus.TeamByIdV(res.Id),
+			Account: horus.AccountById(a.ID),
+			Team:    horus.TeamByIdV(s.Id),
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		return res, nil
+		return s, nil
 	})
 }
 
@@ -70,82 +77,77 @@ func (s *TeamServiceServer) Get(ctx context.Context, req *horus.GetTeamRequest) 
 	}
 
 	f := frame.Must(ctx)
-	acct, err := f.Actor.QueryAccounts().
+	account, err := f.Actor.QueryAccounts().
 		Where(account.SiloID(uuid.UUID(v.Silo.Id))).
 		Only(ctx)
 	if err != nil {
 		return nil, bare.ToStatus(err)
 	}
 
-	f.ActingAccount = acct
-	if acct.Role.HigherThan(role.Member) {
+	f.ActingAccount = account
+	switch account.Role {
+	case role.Owner:
+		fallthrough
+	case role.Admin:
 		return v, nil
 	}
 
-	_, err = acct.QueryMemberships().
+	_, err = account.QueryMemberships().
 		Where(membership.HasTeamWith(team.ID(uuid.UUID(v.Id)))).
 		Only(ctx)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, status.Errorf(codes.PermissionDenied, "team can be retrieved only by the team members, silo owners, or silo admins")
-		}
-
 		return nil, bare.ToStatus(err)
 	}
 
 	return v, nil
 }
 
-func (s *TeamServiceServer) Update(ctx context.Context, req *horus.UpdateTeamRequest) (*horus.Team, error) {
+func (s *TeamServiceServer) actorCanModify(ctx context.Context, req *horus.GetTeamRequest) error {
 	f := frame.Must(ctx)
 
-	v, err := s.Get(ctx, req.GetKey())
+	p, err := bare.GetTeamSpecifier(req)
 	if err != nil {
+		return err
+	}
+
+	a, err := f.Actor.QueryAccounts().
+		Where(account.HasSiloWith(silo.HasTeamsWith(p))).
+		Only(ctx)
+	if err != nil {
+		return bare.ToStatus(err)
+	}
+	switch a.Role {
+	case role.Owner:
+		fallthrough
+	case role.Admin:
+		return nil
+	}
+
+	m, err := a.QueryMemberships().
+		Where(membership.HasTeamWith(p)).
+		Only(ctx)
+	if err != nil {
+		return bare.ToStatus(err)
+	}
+	if m.Role == role.Owner {
+		return nil
+	}
+
+	return status.Error(codes.PermissionDenied, "team can only be modified by the silo owners, silo admins, or team owners")
+}
+
+func (s *TeamServiceServer) Update(ctx context.Context, req *horus.UpdateTeamRequest) (*horus.Team, error) {
+	if err := s.actorCanModify(ctx, req.GetKey()); err != nil {
 		return nil, err
 	}
 
-	req.Key = horus.TeamByIdV(v.Id)
-
-	account := f.MustGetActingAccount()
-	if account.Role.HigherThan(role.Member) {
-		// Silo owner and silo admin can update any team in the silo.
-		return s.bare.Team().Update(ctx, req)
-	}
-
-	membership, err := account.QueryMemberships().
-		Where(membership.HasTeamWith(team.IDEQ(uuid.UUID(v.Id)))).
-		Only(ctx)
-	if err == nil && membership.Role.HigherThan(role.Member) {
-		return s.bare.Team().Update(ctx, req)
-	}
-	if !ent.IsNotFound(err) {
-		return nil, bare.ToStatus(err)
-	}
-
-	return nil, status.Error(codes.PermissionDenied, "team can be updated only by the owners or admins")
+	return s.bare.Team().Update(ctx, req)
 }
 
 func (s *TeamServiceServer) Delete(ctx context.Context, req *horus.GetTeamRequest) (*emptypb.Empty, error) {
-	p, err := bare.GetTeamSpecifier(req)
-	if err != nil {
+	if err := s.actorCanModify(ctx, req); err != nil {
 		return nil, err
 	}
 
-	owners, err := s.db.Membership.Query().
-		Where(
-			membership.RoleEQ(role.Owner),
-			membership.HasTeamWith(p),
-		).
-		All(ctx)
-	if err != nil {
-		return nil, bare.ToStatus(err)
-	}
-	switch len(owners) {
-	case 0:
-		return nil, status.Errorf(codes.NotFound, "team not found")
-	case 1:
-		return s.bare.Team().Delete(ctx, req)
-	default:
-		return nil, status.Error(codes.FailedPrecondition, "only teams with one owner can be deleted.")
-	}
+	return s.bare.Team().Delete(ctx, req)
 }

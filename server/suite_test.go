@@ -20,6 +20,12 @@ import (
 	"khepri.dev/horus/server/frame"
 )
 
+type Fail bool
+
+func (f Fail) String() string {
+	return fx.Cond(f, "cannot", "can")
+}
+
 func NewSuiteWithSqliteStore() Suite {
 	return Suite{
 		driver_name: "sqlite3",
@@ -146,18 +152,10 @@ func (t *SuiteWithSilo) SetSiloRole(actor *frame.Frame, target *frame.Frame, rol
 		Key:  horus.AccountById(target.ActingAccount.ID),
 		Role: fx.Addr(horus.RoleFrom(role)),
 	})
+
+	target.ActingAccount.Role = role
 	return err
 }
-
-// func (t *SuiteWithSilo) SetTeamRole(actor *frame.Frame, target *frame.Frame, role role.Role) error {
-// 	ctx := frame.WithContext(t.ctx, actor)
-// 	_, err := t.svc.Account().Update(ctx, &horus.UpdateAccountRequest{
-// 		Key:  horus.AccountById(target.ActingAccount.ID),
-// 		Role: fx.Addr(horus.RoleFrom(role)),
-// 	})
-// 	return err
-// }
-
 func (s *SuiteWithSilo) CtxSiloOwner() context.Context {
 	return frame.WithContext(s.ctx, s.silo_owner)
 }
@@ -245,6 +243,15 @@ type SuiteWithTeam struct {
 	other_team *ent.Team // Team in another silo.
 }
 
+func (t *SuiteWithSilo) SetTeamRole(actor *frame.Frame, target *frame.Frame, team *horus.GetTeamRequest, role role.Role) error {
+	ctx := frame.WithContext(t.ctx, actor)
+	_, err := t.svc.Membership().Update(ctx, &horus.UpdateMembershipRequest{
+		Key:  horus.MembershipByAccountInTeam(horus.AccountById(target.ActingAccount.ID), team),
+		Role: fx.Addr(horus.RoleFrom(role)),
+	})
+	return err
+}
+
 func (s *SuiteWithTeam) CtxTeamOwner() context.Context {
 	return frame.WithContext(s.ctx, s.team_owner)
 }
@@ -284,6 +291,15 @@ func (s *SuiteWithTeam) SetupSubTest() {
 	}{
 		{
 			User: &s.team_owner,
+			Role: role.Owner,
+		},
+		{
+			User: &s.team_admin,
+			Role: role.Admin,
+		},
+		{
+			User: &s.team_member,
+			Role: role.Member,
 		},
 	} {
 		f := s.initActor()

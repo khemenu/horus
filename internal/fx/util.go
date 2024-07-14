@@ -20,10 +20,30 @@ func Fallback[T comparable](first T, second T) T {
 	return second
 }
 
-func Cond[T any](cond bool, t T, f T) T {
+func Cond[C ~bool, T any](cond C, t T, f T) T {
 	if cond {
 		return t
 	} else {
 		return f
 	}
+}
+
+func And(cs ...bool) bool {
+	for _, c := range cs {
+		if !c {
+			return false
+		}
+	}
+
+	return true
+}
+
+func Or(cs ...bool) bool {
+	for _, c := range cs {
+		if c {
+			return true
+		}
+	}
+
+	return false
 }

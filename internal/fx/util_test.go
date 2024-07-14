@@ -39,3 +39,61 @@ func TestCond(t *testing.T) {
 		require.Equal(t, v, 42)
 	}
 }
+
+func TestAnd(t *testing.T) {
+	o := true
+	x := false
+
+	for _, vs := range [][]bool{
+		{o},
+
+		{x, x},
+		{o, o},
+
+		{x, x, x},
+		{x, o, x},
+		{x, x, o},
+		{o, o, o},
+
+		{x, x, x, x},
+		{x, o, x, x},
+		{x, x, o, x},
+		{x, o, o, x},
+		{x, x, x, o},
+		{x, o, x, o},
+		{x, x, o, o},
+		{o, o, o, o},
+	} {
+		v := fx.And(vs[1:]...)
+		require.Equal(t, vs[0], v)
+	}
+}
+
+func TestOr(t *testing.T) {
+	o := true
+	x := false
+
+	for _, vs := range [][]bool{
+		{x},
+
+		{x, x},
+		{o, o},
+
+		{x, x, x},
+		{o, o, x},
+		{o, x, o},
+		{o, o, o},
+
+		{x, x, x, x},
+		{o, o, x, x},
+		{o, x, o, x},
+		{o, o, o, x},
+		{o, x, x, o},
+		{o, o, x, o},
+		{o, x, o, o},
+		{o, o, o, o},
+	} {
+		v := fx.Or(vs[1:]...)
+		require.Equal(t, vs[0], v)
+	}
+}

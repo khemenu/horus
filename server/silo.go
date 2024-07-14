@@ -72,43 +72,38 @@ func (s *SiloServiceServer) Get(ctx context.Context, req *horus.GetSiloRequest) 
 	return bare.ToProtoSilo(v.Edges.Silo), nil
 }
 
-func (s *SiloServiceServer) Update(ctx context.Context, req *horus.UpdateSiloRequest) (*horus.Silo, error) {
+func (s *SiloServiceServer) actorCanModify(ctx context.Context, req *horus.GetSiloRequest) error {
 	f := frame.Must(ctx)
 
-	p, err := bare.GetSiloSpecifier(req.GetKey())
+	p, err := bare.GetSiloSpecifier(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	v, err := f.Actor.QueryAccounts().
 		Where(account.HasSiloWith(p)).
 		Only(ctx)
 	if err != nil {
-		return nil, bare.ToStatus(err)
+		return bare.ToStatus(err)
 	}
 	if v.Role != role.Owner {
-		return nil, status.Error(codes.PermissionDenied, "silo can only be updated by its owner")
+		return status.Error(codes.PermissionDenied, "silo can only be modified by its owner")
+	}
+
+	return nil
+}
+
+func (s *SiloServiceServer) Update(ctx context.Context, req *horus.UpdateSiloRequest) (*horus.Silo, error) {
+	if err := s.actorCanModify(ctx, req.GetKey()); err != nil {
+		return nil, err
 	}
 
 	return s.bare.Silo().Update(ctx, req)
 }
 
 func (s *SiloServiceServer) Delete(ctx context.Context, req *horus.GetSiloRequest) (*emptypb.Empty, error) {
-	f := frame.Must(ctx)
-
-	p, err := bare.GetSiloSpecifier(req)
-	if err != nil {
+	if err := s.actorCanModify(ctx, req); err != nil {
 		return nil, err
-	}
-
-	v, err := f.Actor.QueryAccounts().
-		Where(account.HasSiloWith(p)).
-		Only(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if v.Role != role.Owner {
-		return nil, status.Error(codes.PermissionDenied, "silo can only be deleted by its owner")
 	}
 
 	return s.bare.Silo().Delete(ctx, req)
