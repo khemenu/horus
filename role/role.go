@@ -1,8 +1,6 @@
 package role
 
 import (
-	"strings"
-
 	"khepri.dev/horus/internal/fx"
 )
 
@@ -42,10 +40,6 @@ func (r Role) Values() []string {
 	return fx.MapV(Values(), func(v Role) string {
 		return string(v)
 	})
-}
-
-func (r Role) String() string {
-	return strings.ToLower(string(r))
 }
 
 // -1 if x has less permissions than y,

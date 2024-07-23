@@ -19,6 +19,10 @@ const (
 	FieldDateCreated = "date_created"
 	// FieldAlias holds the string denoting the alias field in the database.
 	FieldAlias = "alias"
+	// FieldSignInAttemptCount holds the string denoting the sign_in_attempt_count field in the database.
+	FieldSignInAttemptCount = "sign_in_attempt_count"
+	// FieldDateUnlocked holds the string denoting the date_unlocked field in the database.
+	FieldDateUnlocked = "date_unlocked"
 	// EdgeParent holds the string denoting the parent edge name in mutations.
 	EdgeParent = "parent"
 	// EdgeChildren holds the string denoting the children edge name in mutations.
@@ -67,6 +71,8 @@ var Columns = []string{
 	FieldID,
 	FieldDateCreated,
 	FieldAlias,
+	FieldSignInAttemptCount,
+	FieldDateUnlocked,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "users"
@@ -97,6 +103,8 @@ var (
 	DefaultAlias func() string
 	// AliasValidator is a validator for the "alias" field. It is called by the builders before save.
 	AliasValidator func(string) error
+	// DefaultSignInAttemptCount holds the default value on creation for the "sign_in_attempt_count" field.
+	DefaultSignInAttemptCount uint
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -117,6 +125,16 @@ func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
 // ByAlias orders the results by the alias field.
 func ByAlias(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAlias, opts...).ToFunc()
+}
+
+// BySignInAttemptCount orders the results by the sign_in_attempt_count field.
+func BySignInAttemptCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSignInAttemptCount, opts...).ToFunc()
+}
+
+// ByDateUnlocked orders the results by the date_unlocked field.
+func ByDateUnlocked(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDateUnlocked, opts...).ToFunc()
 }
 
 // ByParentField orders the results by parent field.

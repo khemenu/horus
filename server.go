@@ -10,6 +10,7 @@ type Server interface {
 }
 
 type Store interface {
+	Conf() ConfServiceServer
 	User() UserServiceServer
 	Account() AccountServiceServer
 	Invitation() InvitationServiceServer
@@ -21,6 +22,7 @@ type Store interface {
 
 func GrpcRegister(s *grpc.Server, svr Server) {
 	RegisterAuthServiceServer(s, svr.Auth())
+	RegisterConfServiceServer(s, svr.Conf())
 	RegisterUserServiceServer(s, svr.User())
 	RegisterAccountServiceServer(s, svr.Account())
 	RegisterInvitationServiceServer(s, svr.Invitation())

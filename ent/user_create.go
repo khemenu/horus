@@ -52,6 +52,34 @@ func (uc *UserCreate) SetNillableAlias(s *string) *UserCreate {
 	return uc
 }
 
+// SetSignInAttemptCount sets the "sign_in_attempt_count" field.
+func (uc *UserCreate) SetSignInAttemptCount(u uint) *UserCreate {
+	uc.mutation.SetSignInAttemptCount(u)
+	return uc
+}
+
+// SetNillableSignInAttemptCount sets the "sign_in_attempt_count" field if the given value is not nil.
+func (uc *UserCreate) SetNillableSignInAttemptCount(u *uint) *UserCreate {
+	if u != nil {
+		uc.SetSignInAttemptCount(*u)
+	}
+	return uc
+}
+
+// SetDateUnlocked sets the "date_unlocked" field.
+func (uc *UserCreate) SetDateUnlocked(t time.Time) *UserCreate {
+	uc.mutation.SetDateUnlocked(t)
+	return uc
+}
+
+// SetNillableDateUnlocked sets the "date_unlocked" field if the given value is not nil.
+func (uc *UserCreate) SetNillableDateUnlocked(t *time.Time) *UserCreate {
+	if t != nil {
+		uc.SetDateUnlocked(*t)
+	}
+	return uc
+}
+
 // SetID sets the "id" field.
 func (uc *UserCreate) SetID(u uuid.UUID) *UserCreate {
 	uc.mutation.SetID(u)
@@ -188,6 +216,10 @@ func (uc *UserCreate) defaults() {
 		v := user.DefaultAlias()
 		uc.mutation.SetAlias(v)
 	}
+	if _, ok := uc.mutation.SignInAttemptCount(); !ok {
+		v := user.DefaultSignInAttemptCount
+		uc.mutation.SetSignInAttemptCount(v)
+	}
 	if _, ok := uc.mutation.ID(); !ok {
 		v := user.DefaultID()
 		uc.mutation.SetID(v)
@@ -206,6 +238,9 @@ func (uc *UserCreate) check() error {
 		if err := user.AliasValidator(v); err != nil {
 			return &ValidationError{Name: "alias", err: fmt.Errorf(`ent: validator failed for field "User.alias": %w`, err)}
 		}
+	}
+	if _, ok := uc.mutation.SignInAttemptCount(); !ok {
+		return &ValidationError{Name: "sign_in_attempt_count", err: errors.New(`ent: missing required field "User.sign_in_attempt_count"`)}
 	}
 	return nil
 }
@@ -249,6 +284,14 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.Alias(); ok {
 		_spec.SetField(user.FieldAlias, field.TypeString, value)
 		_node.Alias = value
+	}
+	if value, ok := uc.mutation.SignInAttemptCount(); ok {
+		_spec.SetField(user.FieldSignInAttemptCount, field.TypeUint, value)
+		_node.SignInAttemptCount = value
+	}
+	if value, ok := uc.mutation.DateUnlocked(); ok {
+		_spec.SetField(user.FieldDateUnlocked, field.TypeTime, value)
+		_node.DateUnlocked = &value
 	}
 	if nodes := uc.mutation.ParentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

@@ -17,6 +17,7 @@ import (
 	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/role"
 	"khepri.dev/horus/server"
+	"khepri.dev/horus/server/bare"
 	"khepri.dev/horus/server/frame"
 )
 
@@ -40,8 +41,9 @@ type Suite struct {
 	driver_name string
 	source_name string
 
-	db  *ent.Client
-	svc horus.Server
+	db   *ent.Client
+	bare horus.Store
+	svc  horus.Server
 
 	me    *frame.Frame // Frame of actor.
 	child *frame.Frame // Frame of actor's child.
@@ -103,6 +105,7 @@ func (s *Suite) SetupSubTest() {
 	)
 
 	s.db = c
+	s.bare = bare.NewStore(c)
 	s.svc = server.NewServer(c)
 	s.ctx = context.Background()
 
@@ -141,6 +144,9 @@ type SuiteWithSilo struct {
 	silo_owner  *frame.Frame // Actor.
 	silo_admin  *frame.Frame // User who is in the same silo with the actor.
 	silo_member *frame.Frame // User who is in the same silo with the actor.
+
+	other_silo_owner *frame.Frame
+	other_silo_admin *frame.Frame
 
 	silo       *ent.Silo // Silo owned by the actor.
 	other_silo *ent.Silo // Silo owned by the other.
@@ -219,6 +225,12 @@ func (s *SuiteWithSilo) SetupSubTest() {
 	s.silo_member = s.initActor()
 	s.silo_member.ActingAccount, err = s.db.Account.Create().SetSiloID(s.silo.ID).SetOwner(s.silo_member.Actor).
 		SetAlias("member").SetName("Budd").SetRole(role.Member).Save(s.ctx)
+	s.NoError(err)
+
+	s.other_silo_owner = s.other
+	s.other_silo_admin = s.initActor()
+	s.other_silo_admin.ActingAccount, err = s.db.Account.Create().SetSiloID(s.other_silo.ID).SetOwner(s.other_silo_admin.Actor).
+		SetAlias("admin").SetName("Vernita").SetRole(role.Admin).Save(s.ctx)
 	s.NoError(err)
 }
 

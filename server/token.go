@@ -137,9 +137,11 @@ func (s *TokenServiceServer) createBasic(ctx context.Context, req *horus.CreateT
 			return nil, fmt.Errorf("delete existing password: %w", err)
 		}
 
+		// TODO: use bare server to create?
 		q := tx.Token.Create().
 			SetValue(key_str).
 			SetType(horus.TokenTypePassword).
+			SetUseCountLimit(req.GetUseCountLimit()).
 			SetDateExpired(time.Now().Add(10 * 365 * 24 * time.Hour)).
 			SetOwnerID(owner_id)
 		if f.Token != nil {

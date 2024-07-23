@@ -61,7 +61,7 @@ func (c *ClientConfig) isBareServer() bool {
 
 func (c *ClientConfig) toBeBareServe() error {
 	if !c.isBareServer() {
-		return fmt.Errorf("this operation requires server to be bare server")
+		return fmt.Errorf("this operation requires the server to be a bare server")
 	}
 
 	return nil

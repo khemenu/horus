@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
+	"entgo.io/ent/schema/field"
 	"github.com/lesomnus/entpb"
 )
 
@@ -19,7 +20,14 @@ func (User) Mixin() []ent.Mixin {
 }
 
 func (User) Fields() []ent.Field {
-	return []ent.Field{}
+	return []ent.Field{
+		field.Uint("sign_in_attempt_count").
+			Default(0),
+
+		field.Time("date_unlocked").
+			Optional().
+			Nillable(),
+	}
 }
 
 func (User) Edges() []ent.Edge {

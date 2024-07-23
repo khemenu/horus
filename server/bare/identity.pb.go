@@ -120,7 +120,8 @@ func GetIdentityId(ctx context.Context, db *ent.Client, req *horus.GetIdentityRe
 	if v, err := uuid.FromBytes(req.GetId()); err != nil {
 		return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
 	} else {
-		return v, nil
+		r = v
+		return r, nil
 	}
 }
 func GetIdentitySpecifier(req *horus.GetIdentityRequest) (predicate.Identity, error) {

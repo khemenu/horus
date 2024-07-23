@@ -13,6 +13,10 @@ type store struct {
 	db *ent.Client
 }
 
+func (s *store) Conf() horus.ConfServiceServer {
+	return NewConfServiceServer(s.db)
+}
+
 func (s *store) User() horus.UserServiceServer {
 	return NewUserServiceServer(s.db)
 }

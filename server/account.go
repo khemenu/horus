@@ -32,16 +32,6 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 	// Actor must be a parent of the account owner.
 	// Actor except for the owner must have higher role than creating account.
 
-	if p, err := bare.GetUserSpecifier(req.GetOwner()); err != nil {
-		return nil, err
-	} else if owner, err := s.db.User.Query().Where(p).WithParent().Only(ctx); err != nil {
-		return nil, bare.ToStatus(err)
-	} else if p := owner.Edges.Parent; p == nil || p.ID != f.Actor.ID {
-		return nil, status.Error(codes.FailedPrecondition, "account cannot be created for a user who is not your child")
-	} else {
-		req.Owner = horus.UserById(owner.ID)
-	}
-
 	if p, err := bare.GetSiloSpecifier(req.GetSilo()); err != nil {
 		return nil, err
 	} else if actor_account, err := s.db.Account.Query().
@@ -55,9 +45,19 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 	} else if actor_account.Role != role.Owner && actor_account.Role != role.Admin {
 		return nil, status.Error(codes.PermissionDenied, "account can be created only by a silo owner or a silo admin")
 	} else if actor_account.Role != role.Owner && !req.GetRole().LowerThan(actor_account.Role) {
-		return nil, status.Error(codes.PermissionDenied, "account can only be created by a user with higher role than the actor")
+		return nil, status.Error(codes.PermissionDenied, "account cannot be created if the role is not lower than the role of actor's account")
 	} else {
 		req.Silo = horus.SiloById(actor_account.SiloID)
+	}
+
+	if p, err := bare.GetUserSpecifier(req.GetOwner()); err != nil {
+		return nil, err
+	} else if owner, err := s.db.User.Query().Where(p).WithParent().Only(ctx); err != nil {
+		return nil, bare.ToStatus(err)
+	} else if p := owner.Edges.Parent; p == nil || p.ID != f.Actor.ID {
+		return nil, status.Error(codes.FailedPrecondition, "account cannot be created for a user who is not your child")
+	} else {
+		req.Owner = horus.UserById(owner.ID)
 	}
 
 	if req.Role == horus.Role_ROLE_UNSPECIFIED {

@@ -22,6 +22,10 @@ type User struct {
 	DateCreated time.Time `json:"date_created,omitempty"`
 	// Alias holds the value of the "alias" field.
 	Alias string `json:"alias,omitempty"`
+	// SignInAttemptCount holds the value of the "sign_in_attempt_count" field.
+	SignInAttemptCount uint `json:"sign_in_attempt_count,omitempty"`
+	// DateUnlocked holds the value of the "date_unlocked" field.
+	DateUnlocked *time.Time `json:"date_unlocked,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges         UserEdges `json:"edges"`
@@ -98,9 +102,11 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case user.FieldSignInAttemptCount:
+			values[i] = new(sql.NullInt64)
 		case user.FieldAlias:
 			values[i] = new(sql.NullString)
-		case user.FieldDateCreated:
+		case user.FieldDateCreated, user.FieldDateUnlocked:
 			values[i] = new(sql.NullTime)
 		case user.FieldID:
 			values[i] = new(uuid.UUID)
@@ -138,6 +144,19 @@ func (u *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field alias", values[i])
 			} else if value.Valid {
 				u.Alias = value.String
+			}
+		case user.FieldSignInAttemptCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sign_in_attempt_count", values[i])
+			} else if value.Valid {
+				u.SignInAttemptCount = uint(value.Int64)
+			}
+		case user.FieldDateUnlocked:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field date_unlocked", values[i])
+			} else if value.Valid {
+				u.DateUnlocked = new(time.Time)
+				*u.DateUnlocked = value.Time
 			}
 		case user.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
@@ -212,6 +231,14 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("alias=")
 	builder.WriteString(u.Alias)
+	builder.WriteString(", ")
+	builder.WriteString("sign_in_attempt_count=")
+	builder.WriteString(fmt.Sprintf("%v", u.SignInAttemptCount))
+	builder.WriteString(", ")
+	if v := u.DateUnlocked; v != nil {
+		builder.WriteString("date_unlocked=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -1,6 +1,7 @@
 package server_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -28,71 +29,43 @@ func TestAccount(t *testing.T) {
 
 func (t *AccountTestSuite) TestCreate() {
 	type Act struct {
-		Actor role.Role
-		As    role.Role
-		Fail  bool
+		SiloRole   role.Role
+		TargetRole role.Role
+
+		Fail Fail
+		Code codes.Code
 	}
 
-	for _, act := range []Act{
-		{
-			Actor: role.Owner,
-			As:    role.Owner,
-		},
-		{
-			Actor: role.Owner,
-			As:    role.Admin,
-		},
-		{
-			Actor: role.Owner,
-			As:    role.Member,
-		},
-		{
-			Actor: role.Admin,
-			As:    role.Owner,
-			Fail:  true,
-		},
-		{
-			Actor: role.Admin,
-			As:    role.Admin,
-			Fail:  true,
-		},
-		{
-			Actor: role.Admin,
-			As:    role.Member,
-		},
-		{
-			Actor: role.Member,
-			As:    role.Owner,
-			Fail:  true,
-		},
-		{
-			Actor: role.Member,
-			As:    role.Admin,
-			Fail:  true,
-		},
-		{
-			Actor: role.Member,
-			As:    role.Member,
-			Fail:  true,
-		},
-	} {
-		title := "silo " + strings.ToLower(string(act.Actor)) + " "
-		title += fx.Cond(act.Fail, "cannot", "can")
-		title += " create an account with role " + strings.ToLower(string(act.As)) + " for their child"
+	acts := []Act{}
+	for _, silo_role := range role.Values() {
+		for _, target_role := range role.Values() {
+			acts = append(acts, Act{
+				SiloRole:   silo_role,
+				TargetRole: target_role,
 
-		t.Run(title, func() {
+				Fail: Fail(!fx.Or(
+					silo_role == role.Owner,
+					silo_role.HigherThan(target_role),
+				)),
+				Code: codes.PermissionDenied,
+			})
+		}
+	}
+	for _, act := range acts {
+		t.Run(fmt.Sprintf("account with %s role %s be created by the silo %s for their child user", act.TargetRole, act.Fail, act.SiloRole), func() {
 			actor := t.silo_admin
-			err := t.SetSiloRole(t.silo_owner, actor, act.Actor)
+			ctx := frame.WithContext(t.ctx, actor)
+
+			err := t.SetSiloRole(t.silo_owner, actor, act.SiloRole)
 			t.NoError(err)
 
-			ctx := frame.WithContext(t.ctx, actor)
 			child, err := t.svc.User().Create(ctx, nil)
 			t.NoError(err)
 
 			_, err = t.svc.Account().Create(ctx, &horus.CreateAccountRequest{
 				Silo:  horus.SiloByIdV(t.silo.ID[:]),
 				Owner: horus.UserByIdV(child.Id),
-				Role:  horus.RoleFrom(act.As),
+				Role:  horus.RoleFrom(act.TargetRole),
 			})
 			if act.Fail {
 				t.ErrCode(err, codes.PermissionDenied)
@@ -102,21 +75,39 @@ func (t *AccountTestSuite) TestCreate() {
 		})
 	}
 
-	t.Run("account cannot be create if the user is not a child of the actor", func() {
-		_, err := t.svc.Account().Create(t.CtxSiloOwner(), &horus.CreateAccountRequest{
-			Silo:  horus.SiloByIdV(t.silo.ID[:]),
-			Owner: horus.UserByIdV(t.other.Actor.ID[:]),
+	acts = []Act{}
+	for _, silo_role := range role.Values() {
+		acts = append(acts, Act{
+			SiloRole: silo_role,
+
+			Fail: true,
+			Code: fx.Cond(
+				fx.Or(
+					silo_role == role.Owner,
+					silo_role == role.Admin,
+				),
+				codes.FailedPrecondition,
+				codes.PermissionDenied, // Member does not allowed to create an account.
+			),
 		})
-		t.ErrCode(err, codes.FailedPrecondition)
-	})
-	t.Run("silo admin cannot create an account if the user is not a child", func() {
-		_, err := t.svc.Account().Create(t.CtxSiloAdmin(), &horus.CreateAccountRequest{
-			Silo:  horus.SiloByIdV(t.silo.ID[:]),
-			Owner: horus.UserByIdV(t.other.Actor.ID[:]),
+	}
+	for _, act := range acts {
+		t.Run(fmt.Sprintf("account cannot be created if the user is not a child of the silo %s", act.SiloRole), func() {
+			actor := t.silo_admin
+			ctx := frame.WithContext(t.ctx, actor)
+
+			err := t.SetSiloRole(t.silo_owner, actor, act.SiloRole)
+			t.NoError(err)
+
+			_, err = t.svc.Account().Create(ctx, &horus.CreateAccountRequest{
+				Silo:  horus.SiloById(t.silo.ID),
+				Owner: horus.UserById(t.other.Actor.ID),
+			})
+			t.ErrCode(err, act.Code)
 		})
-		t.ErrCode(err, codes.FailedPrecondition)
-	})
-	t.Run("user cannot have multiple accounts in the silo", func() {
+	}
+
+	t.Run("only one account can be created for the same owner in the silo.", func() {
 		child, err := t.svc.User().Create(t.CtxSiloOwner(), nil)
 		t.NoError(err)
 
@@ -135,6 +126,81 @@ func (t *AccountTestSuite) TestCreate() {
 }
 
 func (t *AccountTestSuite) TestGet() {
+	type Act struct {
+		SiloRole role.Role
+
+		OtherSilo bool
+
+		Fail Fail
+		Code codes.Code
+	}
+
+	acts := []Act{}
+	for _, silo_role := range role.Values() {
+		acts = append(acts, Act{
+			SiloRole: silo_role,
+
+			Fail: false,
+		})
+	}
+	for _, silo_role := range role.Values() {
+		acts = append(acts, Act{
+			SiloRole: silo_role,
+
+			OtherSilo: true,
+
+			Fail: true,
+			Code: codes.NotFound,
+		})
+	}
+
+	for _, silo_role := range role.Values() {
+		t.Run(fmt.Sprintf("account can be retrieved by its owner who is silo %s", silo_role), func() {
+			actor := t.silo_admin
+			err := t.SetSiloRole(t.silo_owner, actor, silo_role)
+			t.NoError(err)
+
+			ctx := frame.WithContext(t.ctx, actor)
+			a, err := t.svc.Account().Get(ctx, horus.AccountById(actor.ActingAccount.ID))
+			t.NoError(err)
+			t.Equal(actor.Actor.ID[:], a.Owner.Id)
+		})
+	}
+	for _, act := range acts {
+		for _, target_silo_role := range role.Values() {
+			title := fmt.Sprintf("account owned by silo %s %s be retrieved by silo %s", target_silo_role, act.Fail, act.SiloRole)
+			if act.OtherSilo {
+				title += " who is in another silo"
+			}
+
+			t.Run(title, func() {
+				actor := t.silo_admin
+				err := t.SetSiloRole(t.silo_owner, actor, act.SiloRole)
+				t.NoError(err)
+
+				var target *frame.Frame
+				if act.OtherSilo {
+					target = t.other_silo_admin
+					err := t.SetSiloRole(t.other_silo_owner, target, target_silo_role)
+					t.NoError(err)
+				} else {
+					target = t.silo_member
+					err := t.SetSiloRole(t.silo_owner, target, target_silo_role)
+					t.NoError(err)
+				}
+
+				ctx := frame.WithContext(t.ctx, actor)
+				a, err := t.svc.Account().Get(ctx, horus.AccountById(target.ActingAccount.ID))
+				if act.Fail {
+					t.ErrCode(err, act.Code)
+				} else {
+					t.NoError(err)
+					t.Equal(target.Actor.ID[:], a.Owner.Id)
+				}
+			})
+		}
+	}
+
 	t.Run("account can be get by a user who has an account in the same silo", func() {
 		fs := []*frame.Frame{
 			t.silo_owner,

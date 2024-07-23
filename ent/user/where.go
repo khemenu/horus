@@ -66,6 +66,16 @@ func Alias(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldAlias, v))
 }
 
+// SignInAttemptCount applies equality check predicate on the "sign_in_attempt_count" field. It's identical to SignInAttemptCountEQ.
+func SignInAttemptCount(v uint) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldSignInAttemptCount, v))
+}
+
+// DateUnlocked applies equality check predicate on the "date_unlocked" field. It's identical to DateUnlockedEQ.
+func DateUnlocked(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldDateUnlocked, v))
+}
+
 // DateCreatedEQ applies the EQ predicate on the "date_created" field.
 func DateCreatedEQ(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldDateCreated, v))
@@ -169,6 +179,96 @@ func AliasEqualFold(v string) predicate.User {
 // AliasContainsFold applies the ContainsFold predicate on the "alias" field.
 func AliasContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldAlias, v))
+}
+
+// SignInAttemptCountEQ applies the EQ predicate on the "sign_in_attempt_count" field.
+func SignInAttemptCountEQ(v uint) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldSignInAttemptCount, v))
+}
+
+// SignInAttemptCountNEQ applies the NEQ predicate on the "sign_in_attempt_count" field.
+func SignInAttemptCountNEQ(v uint) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldSignInAttemptCount, v))
+}
+
+// SignInAttemptCountIn applies the In predicate on the "sign_in_attempt_count" field.
+func SignInAttemptCountIn(vs ...uint) predicate.User {
+	return predicate.User(sql.FieldIn(FieldSignInAttemptCount, vs...))
+}
+
+// SignInAttemptCountNotIn applies the NotIn predicate on the "sign_in_attempt_count" field.
+func SignInAttemptCountNotIn(vs ...uint) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldSignInAttemptCount, vs...))
+}
+
+// SignInAttemptCountGT applies the GT predicate on the "sign_in_attempt_count" field.
+func SignInAttemptCountGT(v uint) predicate.User {
+	return predicate.User(sql.FieldGT(FieldSignInAttemptCount, v))
+}
+
+// SignInAttemptCountGTE applies the GTE predicate on the "sign_in_attempt_count" field.
+func SignInAttemptCountGTE(v uint) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldSignInAttemptCount, v))
+}
+
+// SignInAttemptCountLT applies the LT predicate on the "sign_in_attempt_count" field.
+func SignInAttemptCountLT(v uint) predicate.User {
+	return predicate.User(sql.FieldLT(FieldSignInAttemptCount, v))
+}
+
+// SignInAttemptCountLTE applies the LTE predicate on the "sign_in_attempt_count" field.
+func SignInAttemptCountLTE(v uint) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldSignInAttemptCount, v))
+}
+
+// DateUnlockedEQ applies the EQ predicate on the "date_unlocked" field.
+func DateUnlockedEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldDateUnlocked, v))
+}
+
+// DateUnlockedNEQ applies the NEQ predicate on the "date_unlocked" field.
+func DateUnlockedNEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldDateUnlocked, v))
+}
+
+// DateUnlockedIn applies the In predicate on the "date_unlocked" field.
+func DateUnlockedIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldIn(FieldDateUnlocked, vs...))
+}
+
+// DateUnlockedNotIn applies the NotIn predicate on the "date_unlocked" field.
+func DateUnlockedNotIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldDateUnlocked, vs...))
+}
+
+// DateUnlockedGT applies the GT predicate on the "date_unlocked" field.
+func DateUnlockedGT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGT(FieldDateUnlocked, v))
+}
+
+// DateUnlockedGTE applies the GTE predicate on the "date_unlocked" field.
+func DateUnlockedGTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldDateUnlocked, v))
+}
+
+// DateUnlockedLT applies the LT predicate on the "date_unlocked" field.
+func DateUnlockedLT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLT(FieldDateUnlocked, v))
+}
+
+// DateUnlockedLTE applies the LTE predicate on the "date_unlocked" field.
+func DateUnlockedLTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldDateUnlocked, v))
+}
+
+// DateUnlockedIsNil applies the IsNil predicate on the "date_unlocked" field.
+func DateUnlockedIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldDateUnlocked))
+}
+
+// DateUnlockedNotNil applies the NotNil predicate on the "date_unlocked" field.
+func DateUnlockedNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldDateUnlocked))
 }
 
 // HasParent applies the HasEdge predicate on the "parent" edge.

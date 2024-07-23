@@ -51,6 +51,19 @@ var (
 			},
 		},
 	}
+	// ConfsColumns holds the columns for the "confs" table.
+	ConfsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "date_created", Type: field.TypeTime},
+		{Name: "value", Type: field.TypeString},
+		{Name: "date_updated", Type: field.TypeTime},
+	}
+	// ConfsTable holds the schema information for the "confs" table.
+	ConfsTable = &schema.Table{
+		Name:       "confs",
+		Columns:    ConfsColumns,
+		PrimaryKey: []*schema.Column{ConfsColumns[0]},
+	}
 	// IdentitiesColumns holds the columns for the "identities" table.
 	IdentitiesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
@@ -194,6 +207,7 @@ var (
 		{Name: "value", Type: field.TypeString, Unique: true},
 		{Name: "type", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString, Default: ""},
+		{Name: "use_count_limit", Type: field.TypeUint64, Default: 0},
 		{Name: "date_expired", Type: field.TypeTime},
 		{Name: "token_children", Type: field.TypeUUID, Nullable: true},
 		{Name: "user_tokens", Type: field.TypeUUID},
@@ -206,13 +220,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "tokens_tokens_children",
-				Columns:    []*schema.Column{TokensColumns[6]},
+				Columns:    []*schema.Column{TokensColumns[7]},
 				RefColumns: []*schema.Column{TokensColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tokens_users_tokens",
-				Columns:    []*schema.Column{TokensColumns[7]},
+				Columns:    []*schema.Column{TokensColumns[8]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -223,6 +237,8 @@ var (
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "date_created", Type: field.TypeTime},
 		{Name: "alias", Type: field.TypeString, Unique: true, Size: 32},
+		{Name: "sign_in_attempt_count", Type: field.TypeUint, Default: 0},
+		{Name: "date_unlocked", Type: field.TypeTime, Nullable: true},
 		{Name: "user_children", Type: field.TypeUUID, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
@@ -233,7 +249,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "users_users_children",
-				Columns:    []*schema.Column{UsersColumns[3]},
+				Columns:    []*schema.Column{UsersColumns[5]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -242,6 +258,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AccountsTable,
+		ConfsTable,
 		IdentitiesTable,
 		InvitationsTable,
 		MembershipsTable,

@@ -31,6 +31,9 @@ func (s *TokenServiceServer) Create(ctx context.Context, req *horus.CreateTokenR
 	if v := req.Name; v != nil {
 		q.SetName(*v)
 	}
+	if v := req.UseCountLimit; v != nil {
+		q.SetUseCountLimit(*v)
+	}
 	if v := req.GetDateExpired(); v != nil {
 		w := v.AsTime()
 		q.SetDateExpired(w)
@@ -98,6 +101,9 @@ func (s *TokenServiceServer) Update(ctx context.Context, req *horus.UpdateTokenR
 	if v := req.Name; v != nil {
 		q.SetName(*v)
 	}
+	if v := req.UseCountLimit; v != nil {
+		q.SetUseCountLimit(*v)
+	}
 	if v := req.DateExpired; v != nil {
 		w := v.AsTime()
 		q.SetDateExpired(w)
@@ -117,6 +123,7 @@ func ToProtoToken(v *ent.Token) *horus.Token {
 	m.Value = v.Value
 	m.Type = v.Type
 	m.Name = v.Name
+	m.UseCountLimit = v.UseCountLimit
 	m.DateExpired = timestamppb.New(v.DateExpired)
 	if v := v.Edges.Owner; v != nil {
 		m.Owner = ToProtoUser(v)

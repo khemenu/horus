@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"khepri.dev/horus"
+	"khepri.dev/horus/conf"
+	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/server/frame"
 )
 
@@ -74,6 +76,82 @@ func (t *AuthTestSuite) TestBasicSignIn() {
 
 		_, err = t.svc.Auth().BasicSignIn(t.ctx, &horus.BasicSignInRequest{
 			Username: t.other.Actor.Alias,
+			Password: pw,
+		})
+		t.ErrCode(err, codes.Unauthenticated)
+	})
+	t.Run("user cannot sign in if it is locked out", func() {
+		c := conf.ConfSignInLockout{
+			Enabled:      true,
+			Count:        1,
+			LockedPeriod: 60,
+		}
+		err := conf.MarshalInto(t.ctx, &c, t.bare.Conf())
+		t.NoError(err)
+
+		_, err = t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+			Value: pw,
+			Type:  horus.TokenTypePassword,
+		})
+		t.NoError(err)
+
+		_, err = t.svc.Auth().BasicSignIn(t.ctx, &horus.BasicSignInRequest{
+			Username: t.me.Actor.Alias,
+			Password: "0000 0000",
+		})
+		t.ErrCode(err, codes.Unauthenticated)
+
+		_, err = t.svc.Auth().BasicSignIn(t.ctx, &horus.BasicSignInRequest{
+			Username: t.me.Actor.Alias,
+			Password: "0000 0001",
+		})
+		t.ErrCode(err, codes.FailedPrecondition)
+	})
+	t.Run("user can try sign in again after locked period of time", func() {
+		c := conf.ConfSignInLockout{
+			Enabled:      true,
+			Count:        1,
+			LockedPeriod: 0,
+		}
+		err := conf.MarshalInto(t.ctx, c, t.bare.Conf())
+		t.NoError(err)
+
+		_, err = t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+			Value: pw,
+			Type:  horus.TokenTypePassword,
+		})
+		t.NoError(err)
+
+		_, err = t.svc.Auth().BasicSignIn(t.ctx, &horus.BasicSignInRequest{
+			Username: t.me.Actor.Alias,
+			Password: "0000 0000",
+		})
+		t.ErrCode(err, codes.Unauthenticated)
+
+		_, err = t.svc.Auth().BasicSignIn(t.ctx, &horus.BasicSignInRequest{
+			Username: t.me.Actor.Alias,
+			Password: "0000 0001",
+		})
+		t.ErrCode(err, codes.Unauthenticated)
+	})
+	t.Run("user cannot sign in with credentials that have reached the use count limit", func() {
+		_, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+			Value: pw,
+			Type:  horus.TokenTypePassword,
+
+			UseCountLimit: fx.Addr(uint64(1)),
+		})
+		t.NoError(err)
+
+		v, err := t.svc.Auth().BasicSignIn(t.ctx, &horus.BasicSignInRequest{
+			Username: t.me.Actor.Alias,
+			Password: pw,
+		})
+		t.NoError(err)
+		t.Equal(horus.TokenTypeAccess, v.Token.Type)
+
+		_, err = t.svc.Auth().BasicSignIn(t.ctx, &horus.BasicSignInRequest{
+			Username: t.me.Actor.Alias,
 			Password: pw,
 		})
 		t.ErrCode(err, codes.Unauthenticated)

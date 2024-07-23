@@ -21,6 +21,7 @@ func (s *server) Auth() horus.AuthServiceServer {
 }
 
 type store struct {
+	conf       horus.ConfServiceServer
 	user       horus.UserServiceServer
 	account    horus.AccountServiceServer
 	invitation horus.InvitationServiceServer
@@ -28,6 +29,10 @@ type store struct {
 	silo       horus.SiloServiceServer
 	team       horus.TeamServiceServer
 	token      horus.TokenServiceServer
+}
+
+func (s *store) Conf() horus.ConfServiceServer {
+	return s.conf
 }
 
 func (s *store) User() horus.UserServiceServer {
@@ -89,6 +94,7 @@ func NewServer(client *ent.Client) horus.Server {
 	svc := &server{
 		auth: &AuthService{base: b},
 		store: store{
+			conf:       &ConfServiceServer{base: b},
 			user:       &UserServiceServer{base: b},
 			account:    &AccountServiceServer{base: b},
 			invitation: &InvitationServiceServer{base: b},

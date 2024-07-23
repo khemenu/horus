@@ -23,6 +23,8 @@ const (
 	FieldType = "type"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// FieldUseCountLimit holds the string denoting the use_count_limit field in the database.
+	FieldUseCountLimit = "use_count_limit"
 	// FieldDateExpired holds the string denoting the date_expired field in the database.
 	FieldDateExpired = "date_expired"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
@@ -57,6 +59,7 @@ var Columns = []string{
 	FieldValue,
 	FieldType,
 	FieldName,
+	FieldUseCountLimit,
 	FieldDateExpired,
 }
 
@@ -91,6 +94,8 @@ var (
 	TypeValidator func(string) error
 	// DefaultName holds the default value on creation for the "name" field.
 	DefaultName string
+	// DefaultUseCountLimit holds the default value on creation for the "use_count_limit" field.
+	DefaultUseCountLimit uint64
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -121,6 +126,11 @@ func ByType(opts ...sql.OrderTermOption) OrderOption {
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByUseCountLimit orders the results by the use_count_limit field.
+func ByUseCountLimit(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUseCountLimit, opts...).ToFunc()
 }
 
 // ByDateExpired orders the results by the date_expired field.

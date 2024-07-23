@@ -27,6 +27,8 @@ type Token struct {
 	Type string `json:"type,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
+	// UseCountLimit holds the value of the "use_count_limit" field.
+	UseCountLimit uint64 `json:"use_count_limit,omitempty"`
 	// DateExpired holds the value of the "date_expired" field.
 	DateExpired time.Time `json:"date_expired,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -86,6 +88,8 @@ func (*Token) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case token.FieldUseCountLimit:
+			values[i] = new(sql.NullInt64)
 		case token.FieldValue, token.FieldType, token.FieldName:
 			values[i] = new(sql.NullString)
 		case token.FieldDateCreated, token.FieldDateExpired:
@@ -140,6 +144,12 @@ func (t *Token) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				t.Name = value.String
+			}
+		case token.FieldUseCountLimit:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field use_count_limit", values[i])
+			} else if value.Valid {
+				t.UseCountLimit = uint64(value.Int64)
 			}
 		case token.FieldDateExpired:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -222,6 +232,9 @@ func (t *Token) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(t.Name)
+	builder.WriteString(", ")
+	builder.WriteString("use_count_limit=")
+	builder.WriteString(fmt.Sprintf("%v", t.UseCountLimit))
 	builder.WriteString(", ")
 	builder.WriteString("date_expired=")
 	builder.WriteString(t.DateExpired.Format(time.ANSIC))

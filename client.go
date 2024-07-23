@@ -7,6 +7,7 @@ import (
 type Client interface {
 	Auth() AuthServiceClient
 
+	Conf() ConfServiceClient
 	User() UserServiceClient
 	Account() AccountServiceClient
 	Invitation() InvitationServiceClient
@@ -19,6 +20,7 @@ type Client interface {
 type client struct {
 	auth AuthServiceClient
 
+	conf       ConfServiceClient
 	user       UserServiceClient
 	account    AccountServiceClient
 	invitation InvitationServiceClient
@@ -32,6 +34,7 @@ func NewClient(conn grpc.ClientConnInterface) Client {
 	return &client{
 		auth: NewAuthServiceClient(conn),
 
+		conf:       NewConfServiceClient(conn),
 		user:       NewUserServiceClient(conn),
 		account:    NewAccountServiceClient(conn),
 		invitation: NewInvitationServiceClient(conn),
@@ -44,6 +47,10 @@ func NewClient(conn grpc.ClientConnInterface) Client {
 
 func (c *client) Auth() AuthServiceClient {
 	return c.auth
+}
+
+func (c *client) Conf() ConfServiceClient {
+	return c.conf
 }
 
 func (c *client) User() UserServiceClient {

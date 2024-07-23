@@ -260,6 +260,207 @@ var AccountService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
+	ConfService_Create_FullMethodName = "/khepri.horus.ConfService/Create"
+	ConfService_Delete_FullMethodName = "/khepri.horus.ConfService/Delete"
+	ConfService_Get_FullMethodName    = "/khepri.horus.ConfService/Get"
+	ConfService_Update_FullMethodName = "/khepri.horus.ConfService/Update"
+)
+
+// ConfServiceClient is the client API for ConfService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type ConfServiceClient interface {
+	Create(ctx context.Context, in *CreateConfRequest, opts ...grpc.CallOption) (*Conf, error)
+	Delete(ctx context.Context, in *GetConfRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Get(ctx context.Context, in *GetConfRequest, opts ...grpc.CallOption) (*Conf, error)
+	Update(ctx context.Context, in *UpdateConfRequest, opts ...grpc.CallOption) (*Conf, error)
+}
+
+type confServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewConfServiceClient(cc grpc.ClientConnInterface) ConfServiceClient {
+	return &confServiceClient{cc}
+}
+
+func (c *confServiceClient) Create(ctx context.Context, in *CreateConfRequest, opts ...grpc.CallOption) (*Conf, error) {
+	out := new(Conf)
+	err := c.cc.Invoke(ctx, ConfService_Create_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *confServiceClient) Delete(ctx context.Context, in *GetConfRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ConfService_Delete_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *confServiceClient) Get(ctx context.Context, in *GetConfRequest, opts ...grpc.CallOption) (*Conf, error) {
+	out := new(Conf)
+	err := c.cc.Invoke(ctx, ConfService_Get_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *confServiceClient) Update(ctx context.Context, in *UpdateConfRequest, opts ...grpc.CallOption) (*Conf, error) {
+	out := new(Conf)
+	err := c.cc.Invoke(ctx, ConfService_Update_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ConfServiceServer is the server API for ConfService service.
+// All implementations must embed UnimplementedConfServiceServer
+// for forward compatibility
+type ConfServiceServer interface {
+	Create(context.Context, *CreateConfRequest) (*Conf, error)
+	Delete(context.Context, *GetConfRequest) (*emptypb.Empty, error)
+	Get(context.Context, *GetConfRequest) (*Conf, error)
+	Update(context.Context, *UpdateConfRequest) (*Conf, error)
+	mustEmbedUnimplementedConfServiceServer()
+}
+
+// UnimplementedConfServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedConfServiceServer struct {
+}
+
+func (UnimplementedConfServiceServer) Create(context.Context, *CreateConfRequest) (*Conf, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
+func (UnimplementedConfServiceServer) Delete(context.Context, *GetConfRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (UnimplementedConfServiceServer) Get(context.Context, *GetConfRequest) (*Conf, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedConfServiceServer) Update(context.Context, *UpdateConfRequest) (*Conf, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (UnimplementedConfServiceServer) mustEmbedUnimplementedConfServiceServer() {}
+
+// UnsafeConfServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ConfServiceServer will
+// result in compilation errors.
+type UnsafeConfServiceServer interface {
+	mustEmbedUnimplementedConfServiceServer()
+}
+
+func RegisterConfServiceServer(s grpc.ServiceRegistrar, srv ConfServiceServer) {
+	s.RegisterService(&ConfService_ServiceDesc, srv)
+}
+
+func _ConfService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateConfRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfServiceServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ConfService_Create_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfServiceServer).Create(ctx, req.(*CreateConfRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ConfService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetConfRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfServiceServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ConfService_Delete_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfServiceServer).Delete(ctx, req.(*GetConfRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ConfService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetConfRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ConfService_Get_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfServiceServer).Get(ctx, req.(*GetConfRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ConfService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateConfRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfServiceServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ConfService_Update_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfServiceServer).Update(ctx, req.(*UpdateConfRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// ConfService_ServiceDesc is the grpc.ServiceDesc for ConfService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ConfService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "khepri.horus.ConfService",
+	HandlerType: (*ConfServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Create",
+			Handler:    _ConfService_Create_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _ConfService_Delete_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _ConfService_Get_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _ConfService_Update_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "khepri/horus/store.proto",
+}
+
+const (
 	IdentityService_Create_FullMethodName = "/khepri.horus.IdentityService/Create"
 	IdentityService_Delete_FullMethodName = "/khepri.horus.IdentityService/Delete"
 	IdentityService_Get_FullMethodName    = "/khepri.horus.IdentityService/Get"

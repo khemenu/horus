@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// Account is the client for interacting with the Account builders.
 	Account *AccountClient
+	// Conf is the client for interacting with the Conf builders.
+	Conf *ConfClient
 	// Identity is the client for interacting with the Identity builders.
 	Identity *IdentityClient
 	// Invitation is the client for interacting with the Invitation builders.
@@ -160,6 +162,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Account = NewAccountClient(tx.config)
+	tx.Conf = NewConfClient(tx.config)
 	tx.Identity = NewIdentityClient(tx.config)
 	tx.Invitation = NewInvitationClient(tx.config)
 	tx.Membership = NewMembershipClient(tx.config)

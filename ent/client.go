@@ -17,6 +17,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"khepri.dev/horus/ent/account"
+	"khepri.dev/horus/ent/conf"
 	"khepri.dev/horus/ent/identity"
 	"khepri.dev/horus/ent/invitation"
 	"khepri.dev/horus/ent/membership"
@@ -33,6 +34,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// Account is the client for interacting with the Account builders.
 	Account *AccountClient
+	// Conf is the client for interacting with the Conf builders.
+	Conf *ConfClient
 	// Identity is the client for interacting with the Identity builders.
 	Identity *IdentityClient
 	// Invitation is the client for interacting with the Invitation builders.
@@ -59,6 +62,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Account = NewAccountClient(c.config)
+	c.Conf = NewConfClient(c.config)
 	c.Identity = NewIdentityClient(c.config)
 	c.Invitation = NewInvitationClient(c.config)
 	c.Membership = NewMembershipClient(c.config)
@@ -159,6 +163,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:        ctx,
 		config:     cfg,
 		Account:    NewAccountClient(cfg),
+		Conf:       NewConfClient(cfg),
 		Identity:   NewIdentityClient(cfg),
 		Invitation: NewInvitationClient(cfg),
 		Membership: NewMembershipClient(cfg),
@@ -186,6 +191,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:        ctx,
 		config:     cfg,
 		Account:    NewAccountClient(cfg),
+		Conf:       NewConfClient(cfg),
 		Identity:   NewIdentityClient(cfg),
 		Invitation: NewInvitationClient(cfg),
 		Membership: NewMembershipClient(cfg),
@@ -222,8 +228,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Account, c.Identity, c.Invitation, c.Membership, c.Silo, c.Team, c.Token,
-		c.User,
+		c.Account, c.Conf, c.Identity, c.Invitation, c.Membership, c.Silo, c.Team,
+		c.Token, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -233,8 +239,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Account, c.Identity, c.Invitation, c.Membership, c.Silo, c.Team, c.Token,
-		c.User,
+		c.Account, c.Conf, c.Identity, c.Invitation, c.Membership, c.Silo, c.Team,
+		c.Token, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -245,6 +251,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *AccountMutation:
 		return c.Account.mutate(ctx, m)
+	case *ConfMutation:
+		return c.Conf.mutate(ctx, m)
 	case *IdentityMutation:
 		return c.Identity.mutate(ctx, m)
 	case *InvitationMutation:
@@ -458,6 +466,139 @@ func (c *AccountClient) mutate(ctx context.Context, m *AccountMutation) (Value, 
 		return (&AccountDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Account mutation op: %q", m.Op())
+	}
+}
+
+// ConfClient is a client for the Conf schema.
+type ConfClient struct {
+	config
+}
+
+// NewConfClient returns a client for the Conf from the given config.
+func NewConfClient(c config) *ConfClient {
+	return &ConfClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `conf.Hooks(f(g(h())))`.
+func (c *ConfClient) Use(hooks ...Hook) {
+	c.hooks.Conf = append(c.hooks.Conf, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `conf.Intercept(f(g(h())))`.
+func (c *ConfClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Conf = append(c.inters.Conf, interceptors...)
+}
+
+// Create returns a builder for creating a Conf entity.
+func (c *ConfClient) Create() *ConfCreate {
+	mutation := newConfMutation(c.config, OpCreate)
+	return &ConfCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Conf entities.
+func (c *ConfClient) CreateBulk(builders ...*ConfCreate) *ConfCreateBulk {
+	return &ConfCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ConfClient) MapCreateBulk(slice any, setFunc func(*ConfCreate, int)) *ConfCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ConfCreateBulk{err: fmt.Errorf("calling to ConfClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ConfCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ConfCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Conf.
+func (c *ConfClient) Update() *ConfUpdate {
+	mutation := newConfMutation(c.config, OpUpdate)
+	return &ConfUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ConfClient) UpdateOne(co *Conf) *ConfUpdateOne {
+	mutation := newConfMutation(c.config, OpUpdateOne, withConf(co))
+	return &ConfUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ConfClient) UpdateOneID(id string) *ConfUpdateOne {
+	mutation := newConfMutation(c.config, OpUpdateOne, withConfID(id))
+	return &ConfUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Conf.
+func (c *ConfClient) Delete() *ConfDelete {
+	mutation := newConfMutation(c.config, OpDelete)
+	return &ConfDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ConfClient) DeleteOne(co *Conf) *ConfDeleteOne {
+	return c.DeleteOneID(co.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ConfClient) DeleteOneID(id string) *ConfDeleteOne {
+	builder := c.Delete().Where(conf.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ConfDeleteOne{builder}
+}
+
+// Query returns a query builder for Conf.
+func (c *ConfClient) Query() *ConfQuery {
+	return &ConfQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeConf},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Conf entity by its id.
+func (c *ConfClient) Get(ctx context.Context, id string) (*Conf, error) {
+	return c.Query().Where(conf.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ConfClient) GetX(ctx context.Context, id string) *Conf {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ConfClient) Hooks() []Hook {
+	return c.hooks.Conf
+}
+
+// Interceptors returns the client interceptors.
+func (c *ConfClient) Interceptors() []Interceptor {
+	return c.inters.Conf
+}
+
+func (c *ConfClient) mutate(ctx context.Context, m *ConfMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ConfCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ConfUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ConfUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ConfDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Conf mutation op: %q", m.Op())
 	}
 }
 
@@ -1683,10 +1824,11 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Account, Identity, Invitation, Membership, Silo, Team, Token, User []ent.Hook
+		Account, Conf, Identity, Invitation, Membership, Silo, Team, Token,
+		User []ent.Hook
 	}
 	inters struct {
-		Account, Identity, Invitation, Membership, Silo, Team, Token,
+		Account, Conf, Identity, Invitation, Membership, Silo, Team, Token,
 		User []ent.Interceptor
 	}
 )

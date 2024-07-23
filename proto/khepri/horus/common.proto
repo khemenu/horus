@@ -27,6 +27,13 @@ message Account {
 	google.protobuf.Timestamp date_created = 15;
 }
 
+message Conf {
+	string id = 1;
+	string value = 2;
+	google.protobuf.Timestamp date_updated = 14;
+	google.protobuf.Timestamp date_created = 15;
+}
+
 message Identity {
 	bytes id = 1;
 	User owner = 2;
@@ -83,6 +90,7 @@ message Token {
 	User owner = 5;
 	optional Token parent = 6;
 	repeated Token children = 7;
+	uint64 use_count_limit = 8;
 	google.protobuf.Timestamp date_expired = 14;
 	google.protobuf.Timestamp date_created = 15;
 }

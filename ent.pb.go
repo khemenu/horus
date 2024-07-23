@@ -28,6 +28,9 @@ func AccountByOwnerInSilo(owner *GetUserRequest, silo *GetSiloRequest) *GetAccou
 		},
 	}}
 }
+func ConfById(k string) *GetConfRequest {
+	return &GetConfRequest{Id: k}
+}
 func IdentityById(k uuid.UUID) *GetIdentityRequest {
 	return &GetIdentityRequest{Id: k[:]}
 }

@@ -62,6 +62,20 @@ func (tc *TokenCreate) SetNillableName(s *string) *TokenCreate {
 	return tc
 }
 
+// SetUseCountLimit sets the "use_count_limit" field.
+func (tc *TokenCreate) SetUseCountLimit(u uint64) *TokenCreate {
+	tc.mutation.SetUseCountLimit(u)
+	return tc
+}
+
+// SetNillableUseCountLimit sets the "use_count_limit" field if the given value is not nil.
+func (tc *TokenCreate) SetNillableUseCountLimit(u *uint64) *TokenCreate {
+	if u != nil {
+		tc.SetUseCountLimit(*u)
+	}
+	return tc
+}
+
 // SetDateExpired sets the "date_expired" field.
 func (tc *TokenCreate) SetDateExpired(t time.Time) *TokenCreate {
 	tc.mutation.SetDateExpired(t)
@@ -170,6 +184,10 @@ func (tc *TokenCreate) defaults() {
 		v := token.DefaultName
 		tc.mutation.SetName(v)
 	}
+	if _, ok := tc.mutation.UseCountLimit(); !ok {
+		v := token.DefaultUseCountLimit
+		tc.mutation.SetUseCountLimit(v)
+	}
 	if _, ok := tc.mutation.ID(); !ok {
 		v := token.DefaultID()
 		tc.mutation.SetID(v)
@@ -199,6 +217,9 @@ func (tc *TokenCreate) check() error {
 	}
 	if _, ok := tc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Token.name"`)}
+	}
+	if _, ok := tc.mutation.UseCountLimit(); !ok {
+		return &ValidationError{Name: "use_count_limit", err: errors.New(`ent: missing required field "Token.use_count_limit"`)}
 	}
 	if _, ok := tc.mutation.DateExpired(); !ok {
 		return &ValidationError{Name: "date_expired", err: errors.New(`ent: missing required field "Token.date_expired"`)}
@@ -256,6 +277,10 @@ func (tc *TokenCreate) createSpec() (*Token, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.Name(); ok {
 		_spec.SetField(token.FieldName, field.TypeString, value)
 		_node.Name = value
+	}
+	if value, ok := tc.mutation.UseCountLimit(); ok {
+		_spec.SetField(token.FieldUseCountLimit, field.TypeUint64, value)
+		_node.UseCountLimit = value
 	}
 	if value, ok := tc.mutation.DateExpired(); ok {
 		_spec.SetField(token.FieldDateExpired, field.TypeTime, value)

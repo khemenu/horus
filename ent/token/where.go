@@ -76,6 +76,11 @@ func Name(v string) predicate.Token {
 	return predicate.Token(sql.FieldEQ(FieldName, v))
 }
 
+// UseCountLimit applies equality check predicate on the "use_count_limit" field. It's identical to UseCountLimitEQ.
+func UseCountLimit(v uint64) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldUseCountLimit, v))
+}
+
 // DateExpired applies equality check predicate on the "date_expired" field. It's identical to DateExpiredEQ.
 func DateExpired(v time.Time) predicate.Token {
 	return predicate.Token(sql.FieldEQ(FieldDateExpired, v))
@@ -314,6 +319,46 @@ func NameEqualFold(v string) predicate.Token {
 // NameContainsFold applies the ContainsFold predicate on the "name" field.
 func NameContainsFold(v string) predicate.Token {
 	return predicate.Token(sql.FieldContainsFold(FieldName, v))
+}
+
+// UseCountLimitEQ applies the EQ predicate on the "use_count_limit" field.
+func UseCountLimitEQ(v uint64) predicate.Token {
+	return predicate.Token(sql.FieldEQ(FieldUseCountLimit, v))
+}
+
+// UseCountLimitNEQ applies the NEQ predicate on the "use_count_limit" field.
+func UseCountLimitNEQ(v uint64) predicate.Token {
+	return predicate.Token(sql.FieldNEQ(FieldUseCountLimit, v))
+}
+
+// UseCountLimitIn applies the In predicate on the "use_count_limit" field.
+func UseCountLimitIn(vs ...uint64) predicate.Token {
+	return predicate.Token(sql.FieldIn(FieldUseCountLimit, vs...))
+}
+
+// UseCountLimitNotIn applies the NotIn predicate on the "use_count_limit" field.
+func UseCountLimitNotIn(vs ...uint64) predicate.Token {
+	return predicate.Token(sql.FieldNotIn(FieldUseCountLimit, vs...))
+}
+
+// UseCountLimitGT applies the GT predicate on the "use_count_limit" field.
+func UseCountLimitGT(v uint64) predicate.Token {
+	return predicate.Token(sql.FieldGT(FieldUseCountLimit, v))
+}
+
+// UseCountLimitGTE applies the GTE predicate on the "use_count_limit" field.
+func UseCountLimitGTE(v uint64) predicate.Token {
+	return predicate.Token(sql.FieldGTE(FieldUseCountLimit, v))
+}
+
+// UseCountLimitLT applies the LT predicate on the "use_count_limit" field.
+func UseCountLimitLT(v uint64) predicate.Token {
+	return predicate.Token(sql.FieldLT(FieldUseCountLimit, v))
+}
+
+// UseCountLimitLTE applies the LTE predicate on the "use_count_limit" field.
+func UseCountLimitLTE(v uint64) predicate.Token {
+	return predicate.Token(sql.FieldLTE(FieldUseCountLimit, v))
 }
 
 // DateExpiredEQ applies the EQ predicate on the "date_expired" field.

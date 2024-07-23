@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"khepri.dev/horus"
+	"khepri.dev/horus/conf"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/token"
 	"khepri.dev/horus/ent/user"
@@ -29,6 +30,7 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 		Where(
 			token.Type(horus.TokenTypePassword),
 			token.HasOwnerWith(user.AliasEQ(req.GetUsername())),
+			token.DateExpiredGT(time.Now()),
 		).
 		WithOwner().
 		Only(ctx)
@@ -40,9 +42,42 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 		return nil, fmt.Errorf("query token: %w", err)
 	}
 
+	owner := token.Edges.Owner
+	if owner.DateUnlocked != nil && owner.DateUnlocked.After(time.Now()) {
+		return nil, status.Error(codes.FailedPrecondition, "locked out")
+	}
+
 	if key, err := base64.RawStdEncoding.DecodeString(token.Value); err != nil {
 		return nil, fmt.Errorf("invalid format of basic token: %w", err)
 	} else if err := tokens.Compare([]byte(req.Password), key); err != nil {
+		lock_out := conf.ConfSignInLockout{}
+		err := conf.UnmarshalFrom(ctx, s.bare.Conf(), &lock_out)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", lock_out.Id(), err)
+		}
+
+		err = entutils.WithTx(ctx, s.db, func(tx *ent.Tx) error {
+			u, err := tx.User.Get(ctx, owner.ID)
+			if err != nil {
+				return fmt.Errorf("query owner")
+			}
+
+			count := u.SignInAttemptCount + 1
+			q := tx.User.UpdateOneID(owner.ID).
+				SetSignInAttemptCount(count)
+			if lock_out.Enabled && lock_out.Count <= count {
+				q.SetDateUnlocked(time.Now().Add(time.Minute * time.Duration(lock_out.LockedPeriod)))
+			}
+			if _, err := q.Save(ctx); err != nil {
+				return fmt.Errorf("update owner")
+			}
+
+			return nil
+		})
+		if err != nil {
+			return nil, bare.ToStatus(err)
+		}
+
 		return nil, status.Errorf(codes.Unauthenticated, "")
 	}
 
@@ -55,6 +90,13 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create access token: %w", err)
+	}
+
+	// TODO: count usage and handle the case where UseCountLimit > 1.
+	if token.UseCountLimit == 1 {
+		if _, err := s.covered.Token().Delete(ctx, horus.TokenById(token.ID)); err != nil {
+			return nil, fmt.Errorf("delete token that reached to limit: %w", err)
+		}
 	}
 
 	return &horus.BasicSignInResponse{
@@ -98,6 +140,7 @@ func (s *AuthService) verifyToken(ctx context.Context, token_str string, token_t
 		return nil, status.Errorf(codes.Unauthenticated, "")
 	}
 
+	v.Value = token_str
 	return v, nil
 }
 

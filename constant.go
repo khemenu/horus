@@ -12,10 +12,15 @@ const (
 )
 
 const (
+	// Name of the silo that holds the permission for `Conf`.
+	ConfSiloName = "_config"
+)
+
+const (
 	InvitationTypeInternal = "internal"
 )
 
 const (
-	// Me is an alias that indicates the resource the user own.
+	// Me is an alias that indicates a resource the user owns.
 	Me = "_me"
 )

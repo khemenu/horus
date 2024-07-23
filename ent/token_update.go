@@ -43,6 +43,27 @@ func (tu *TokenUpdate) SetNillableName(s *string) *TokenUpdate {
 	return tu
 }
 
+// SetUseCountLimit sets the "use_count_limit" field.
+func (tu *TokenUpdate) SetUseCountLimit(u uint64) *TokenUpdate {
+	tu.mutation.ResetUseCountLimit()
+	tu.mutation.SetUseCountLimit(u)
+	return tu
+}
+
+// SetNillableUseCountLimit sets the "use_count_limit" field if the given value is not nil.
+func (tu *TokenUpdate) SetNillableUseCountLimit(u *uint64) *TokenUpdate {
+	if u != nil {
+		tu.SetUseCountLimit(*u)
+	}
+	return tu
+}
+
+// AddUseCountLimit adds u to the "use_count_limit" field.
+func (tu *TokenUpdate) AddUseCountLimit(u int64) *TokenUpdate {
+	tu.mutation.AddUseCountLimit(u)
+	return tu
+}
+
 // SetDateExpired sets the "date_expired" field.
 func (tu *TokenUpdate) SetDateExpired(t time.Time) *TokenUpdate {
 	tu.mutation.SetDateExpired(t)
@@ -148,6 +169,12 @@ func (tu *TokenUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := tu.mutation.Name(); ok {
 		_spec.SetField(token.FieldName, field.TypeString, value)
 	}
+	if value, ok := tu.mutation.UseCountLimit(); ok {
+		_spec.SetField(token.FieldUseCountLimit, field.TypeUint64, value)
+	}
+	if value, ok := tu.mutation.AddedUseCountLimit(); ok {
+		_spec.AddField(token.FieldUseCountLimit, field.TypeUint64, value)
+	}
 	if value, ok := tu.mutation.DateExpired(); ok {
 		_spec.SetField(token.FieldDateExpired, field.TypeTime, value)
 	}
@@ -227,6 +254,27 @@ func (tuo *TokenUpdateOne) SetNillableName(s *string) *TokenUpdateOne {
 	if s != nil {
 		tuo.SetName(*s)
 	}
+	return tuo
+}
+
+// SetUseCountLimit sets the "use_count_limit" field.
+func (tuo *TokenUpdateOne) SetUseCountLimit(u uint64) *TokenUpdateOne {
+	tuo.mutation.ResetUseCountLimit()
+	tuo.mutation.SetUseCountLimit(u)
+	return tuo
+}
+
+// SetNillableUseCountLimit sets the "use_count_limit" field if the given value is not nil.
+func (tuo *TokenUpdateOne) SetNillableUseCountLimit(u *uint64) *TokenUpdateOne {
+	if u != nil {
+		tuo.SetUseCountLimit(*u)
+	}
+	return tuo
+}
+
+// AddUseCountLimit adds u to the "use_count_limit" field.
+func (tuo *TokenUpdateOne) AddUseCountLimit(u int64) *TokenUpdateOne {
+	tuo.mutation.AddUseCountLimit(u)
 	return tuo
 }
 
@@ -364,6 +412,12 @@ func (tuo *TokenUpdateOne) sqlSave(ctx context.Context) (_node *Token, err error
 	}
 	if value, ok := tuo.mutation.Name(); ok {
 		_spec.SetField(token.FieldName, field.TypeString, value)
+	}
+	if value, ok := tuo.mutation.UseCountLimit(); ok {
+		_spec.SetField(token.FieldUseCountLimit, field.TypeUint64, value)
+	}
+	if value, ok := tuo.mutation.AddedUseCountLimit(); ok {
+		_spec.AddField(token.FieldUseCountLimit, field.TypeUint64, value)
 	}
 	if value, ok := tuo.mutation.DateExpired(); ok {
 		_spec.SetField(token.FieldDateExpired, field.TypeTime, value)

@@ -25,15 +25,17 @@ func (Token) Fields() []ent.Field {
 			NotEmpty().
 			Unique().
 			Sensitive(),
-
 		field.String("type").
 			Annotations(entpb.Field(3)).
 			Immutable().
 			NotEmpty(),
-
 		field.String("name").
 			Annotations(entpb.Field(4)).
 			Default(""),
+
+		field.Uint64("use_count_limit").
+			Annotations(entpb.Field(8)).
+			Default(0),
 
 		field.Time("date_expired").
 			Annotations(entpb.Field(14)),

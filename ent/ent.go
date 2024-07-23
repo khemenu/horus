@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"khepri.dev/horus/ent/account"
+	"khepri.dev/horus/ent/conf"
 	"khepri.dev/horus/ent/identity"
 	"khepri.dev/horus/ent/invitation"
 	"khepri.dev/horus/ent/membership"
@@ -81,6 +82,7 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			account.Table:    account.ValidColumn,
+			conf.Table:       conf.ValidColumn,
 			identity.Table:   identity.ValidColumn,
 			invitation.Table: invitation.ValidColumn,
 			membership.Table: membership.ValidColumn,
