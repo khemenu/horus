@@ -112,6 +112,8 @@ var (
 	DefaultID func() uuid.UUID
 )
 
+const DefaultRole role.Role = "MEMBER"
+
 // RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
 func RoleValidator(r role.Role) error {
 	switch r {

@@ -65,7 +65,7 @@ func (t *AccountTestSuite) TestCreate() {
 			_, err = t.svc.Account().Create(ctx, &horus.CreateAccountRequest{
 				Silo:  horus.SiloByIdV(t.silo.ID[:]),
 				Owner: horus.UserByIdV(child.Id),
-				Role:  horus.RoleFrom(act.TargetRole),
+				Role:  fx.Addr(horus.RoleFrom(act.TargetRole)),
 			})
 			if act.Fail {
 				t.ErrCode(err, codes.PermissionDenied)
@@ -122,6 +122,16 @@ func (t *AccountTestSuite) TestCreate() {
 			Owner: horus.UserByIdV(child.Id),
 		})
 		t.ErrCode(err, codes.AlreadyExists)
+	})
+	t.Run("if owner is not provided, new child user of the actor then creates an account.", func() {
+		a, err := t.svc.Account().Create(t.CtxSiloOwner(), &horus.CreateAccountRequest{
+			Silo: horus.SiloByIdV(t.silo.ID[:]),
+		})
+		t.NoError(err)
+
+		u, err := t.svc.User().Get(t.CtxSiloOwner(), horus.UserByIdV(a.Owner.Id))
+		t.NoError(err)
+		t.Equal(t.silo_owner.Actor.ID[:], u.Parent.Id)
 	})
 }
 

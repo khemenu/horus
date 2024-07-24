@@ -15,7 +15,7 @@ var (
 		{Name: "alias", Type: field.TypeString, Size: 32},
 		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"OWNER", "ADMIN", "MEMBER"}},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"OWNER", "ADMIN", "MEMBER"}, Default: "MEMBER"},
 		{Name: "silo_id", Type: field.TypeUUID},
 		{Name: "owner_id", Type: field.TypeUUID},
 	}
@@ -125,7 +125,7 @@ var (
 	MembershipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "date_created", Type: field.TypeTime},
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"OWNER", "ADMIN", "MEMBER"}},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"OWNER", "ADMIN", "MEMBER"}, Default: "MEMBER"},
 		{Name: "account_id", Type: field.TypeUUID},
 		{Name: "team_id", Type: field.TypeUUID},
 	}

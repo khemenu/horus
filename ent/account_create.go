@@ -100,6 +100,14 @@ func (ac *AccountCreate) SetRole(r role.Role) *AccountCreate {
 	return ac
 }
 
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (ac *AccountCreate) SetNillableRole(r *role.Role) *AccountCreate {
+	if r != nil {
+		ac.SetRole(*r)
+	}
+	return ac
+}
+
 // SetID sets the "id" field.
 func (ac *AccountCreate) SetID(u uuid.UUID) *AccountCreate {
 	ac.mutation.SetID(u)
@@ -204,6 +212,10 @@ func (ac *AccountCreate) defaults() {
 	if _, ok := ac.mutation.Description(); !ok {
 		v := account.DefaultDescription
 		ac.mutation.SetDescription(v)
+	}
+	if _, ok := ac.mutation.Role(); !ok {
+		v := account.DefaultRole
+		ac.mutation.SetRole(v)
 	}
 	if _, ok := ac.mutation.ID(); !ok {
 		v := account.DefaultID()

@@ -33,7 +33,8 @@ func (Account) Fields() []ent.Field {
 
 		field.Enum("role").
 			Annotations(entpb.Field(6)).
-			GoType(role.Role("")),
+			GoType(role.Role("")).
+			Default(string(role.Member)),
 	}
 }
 

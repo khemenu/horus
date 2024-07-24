@@ -14,6 +14,7 @@ import (
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/silo"
 	"khepri.dev/horus/ent/user"
+	"khepri.dev/horus/internal/entutils"
 	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/role"
 	"khepri.dev/horus/server/bare"
@@ -50,6 +51,30 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 		req.Silo = horus.SiloById(actor_account.SiloID)
 	}
 
+	if req.GetRole() == horus.Role_ROLE_UNSPECIFIED {
+		req.Role = fx.Addr(horus.Role_ROLE_MEMBER)
+	}
+
+	if req.GetOwner() == nil {
+		// Creates a new chid user of the actor if owner is not provided.
+		return entutils.WithTxV(ctx, s.db, func(tx *ent.Tx) (*horus.Account, error) {
+			s := s.withClient(tx.Client())
+			u, err := s.covered.User().Create(ctx, nil)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Owner = horus.UserByIdV(u.Id)
+			a, err := s.bare.Account().Create(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+
+			a.Owner = u
+			return a, nil
+		})
+	}
+
 	if p, err := bare.GetUserSpecifier(req.GetOwner()); err != nil {
 		return nil, err
 	} else if owner, err := s.db.User.Query().Where(p).WithParent().Only(ctx); err != nil {
@@ -60,9 +85,6 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 		req.Owner = horus.UserById(owner.ID)
 	}
 
-	if req.Role == horus.Role_ROLE_UNSPECIFIED {
-		req.Role = horus.Role_ROLE_MEMBER
-	}
 	return s.bare.Account().Create(ctx, req)
 }
 

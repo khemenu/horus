@@ -14,6 +14,7 @@ import (
 	"khepri.dev/horus/ent/silo"
 	"khepri.dev/horus/ent/team"
 	"khepri.dev/horus/internal/entutils"
+	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/role"
 	"khepri.dev/horus/server/bare"
 	"khepri.dev/horus/server/frame"
@@ -58,7 +59,7 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamReq
 		}
 
 		_, err = bare.NewMembershipServiceServer(c).Create(ctx, &horus.CreateMembershipRequest{
-			Role:    horus.Role_ROLE_OWNER,
+			Role:    fx.Addr(horus.Role_ROLE_OWNER),
 			Account: horus.AccountById(a.ID),
 			Team:    horus.TeamByIdV(s.Id),
 		})

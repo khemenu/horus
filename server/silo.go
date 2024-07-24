@@ -39,7 +39,7 @@ func (s *SiloServiceServer) Create(ctx context.Context, req *horus.CreateSiloReq
 			Name:        fx.Addr("Founder"),
 			Description: fx.Addr(fmt.Sprintf("Founder of %s", v.Name)),
 
-			Role: horus.Role_ROLE_OWNER,
+			Role: fx.Addr(horus.Role_ROLE_OWNER),
 
 			Owner: horus.UserById(f.Actor.ID),
 			Silo:  horus.SiloByIdV(v.Id),

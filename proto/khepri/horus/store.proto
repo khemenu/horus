@@ -81,7 +81,7 @@ message CreateAccountRequest {
 	optional string alias = 2;
 	GetUserRequest owner = 3;
 	GetSiloRequest silo = 4;
-	Role role = 6;
+	optional Role role = 6;
 	optional string name = 7;
 	optional string description = 8;
 }
@@ -113,7 +113,7 @@ message CreateInvitationRequest {
 message CreateMembershipRequest {
 	GetAccountRequest account = 3;
 	GetTeamRequest team = 4;
-	Role role = 6;
+	optional Role role = 6;
 }
 
 message CreateSiloRequest {

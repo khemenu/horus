@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/urfave/cli/v2"
 	"khepri.dev/horus"
+	"khepri.dev/horus/internal/fx"
 )
 
 var CmdCreateAccount = &cli.Command{
@@ -58,7 +59,7 @@ var CmdCreateAccount = &cli.Command{
 
 		v, err := c.Account().Create(ctx.Context, &horus.CreateAccountRequest{
 			Alias: &acct_alias,
-			Role:  horus.Role_ROLE_MEMBER,
+			Role:  fx.Addr(horus.Role_ROLE_MEMBER),
 			Owner: user_by,
 			Silo:  silo_by,
 		})
