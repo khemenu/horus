@@ -66,6 +66,7 @@ service TokenService {
 	rpc Create (CreateTokenRequest) returns (Token);
 	rpc Delete (GetTokenRequest) returns (google.protobuf.Empty);
 	rpc Get (GetTokenRequest) returns (Token);
+	rpc List (ListTokenRequest) returns (ListTokenResponse);
 	rpc Update (UpdateTokenRequest) returns (Token);
 }
 

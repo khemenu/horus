@@ -8,6 +8,7 @@ import (
 	"io"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -19,6 +20,7 @@ import (
 	"khepri.dev/horus/ent/token"
 	"khepri.dev/horus/ent/user"
 	"khepri.dev/horus/internal/entutils"
+	"khepri.dev/horus/internal/fx"
 	"khepri.dev/horus/server/bare"
 	"khepri.dev/horus/server/frame"
 )
@@ -248,6 +250,42 @@ func (s *TokenServiceServer) Get(ctx context.Context, req *horus.GetTokenRequest
 	}
 
 	return bare.ToProtoToken(v), nil
+}
+
+func (s *TokenServiceServer) List(ctx context.Context, req *horus.ListTokenRequest) (*horus.ListTokenResponse, error) {
+	f := frame.Must(ctx)
+
+	q := s.db.Token.Query().
+		Order(token.ByDateCreated(sql.OrderDesc())).
+		Where(
+			token.HasOwnerWith(user.IDEQ(f.Actor.ID)),
+			token.DateExpiredGT(time.Now()),
+		)
+	if l := req.GetLimit(); l > 0 {
+		q.Limit(int(l))
+	}
+	if t := req.GetToken(); t != nil {
+		q.Where(token.DateCreatedLT(t.AsTime()))
+	}
+
+	var (
+		vs  []*ent.Token
+		err error
+	)
+	switch k := req.GetKey().(type) {
+	case *horus.ListTokenRequest_Type:
+		vs, err = q.Where(token.TypeEQ(k.Type)).All(ctx)
+	}
+	if err != nil {
+		return nil, bare.ToStatus(err)
+	}
+
+	return &horus.ListTokenResponse{
+		Items: fx.MapV(vs, func(v *ent.Token) *horus.Token {
+			v.Value = ""
+			return bare.ToProtoToken(v)
+		}),
+	}, nil
 }
 
 func (s *TokenServiceServer) Update(ctx context.Context, req *horus.UpdateTokenRequest) (*horus.Token, error) {

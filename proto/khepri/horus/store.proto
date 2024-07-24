@@ -66,6 +66,7 @@ service TokenService {
 	rpc Create (CreateTokenRequest) returns (Token);
 	rpc Delete (GetTokenRequest) returns (google.protobuf.Empty);
 	rpc Get (GetTokenRequest) returns (Token);
+	rpc List (ListTokenRequest) returns (ListTokenResponse);
 	rpc Update (UpdateTokenRequest) returns (Token);
 }
 
@@ -279,6 +280,18 @@ message UpdateUserRequest {
 }
 message AcceptInvitationRequest {
 	bytes id = 1;
+}
+
+message ListTokenRequest {
+	uint32                    limit = 1;
+	google.protobuf.Timestamp token = 2;
+
+	oneof key {
+		string type = 3;
+	}
+}
+message ListTokenResponse {
+	repeated Token items = 1;
 }
 
 message ListAccountRequest {

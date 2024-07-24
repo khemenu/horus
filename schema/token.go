@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/lesomnus/entpb"
@@ -56,5 +57,19 @@ func (Token) Edges() []ent.Edge {
 			Annotations(entpb.Field(6)).
 			Immutable().
 			Unique(),
+	}
+}
+
+func (Token) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		entpb.Message(entpb.PathInherit,
+			entpb.WithService(entpb.PathInherit,
+				&entpb.Rpc{
+					Ident: "List",
+					Req:   entpb.PbType{Ident: "ListTokenRequest", Import: entpb.PbThis.Import},
+					Res:   entpb.PbType{Ident: "ListTokenResponse", Import: entpb.PbThis.Import},
+				},
+			),
+		),
 	}
 }

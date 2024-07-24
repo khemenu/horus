@@ -244,6 +244,32 @@ func (t *TokenTestSuite) TestGet() {
 	}
 }
 
+func (t *TokenTestSuite) TestList() {
+	pw := "0000 0000"
+
+	t.Run("tokens can be retrieved by type", func() {
+		v, err := t.svc.Token().Create(t.CtxMe(), &horus.CreateTokenRequest{
+			Value: pw,
+			Type:  horus.TokenTypePassword,
+		})
+		t.NoError(err)
+
+		w, err := t.svc.Token().List(t.CtxMe(), &horus.ListTokenRequest{Key: &horus.ListTokenRequest_Type{
+			Type: horus.TokenTypePassword,
+		}})
+		t.NoError(err)
+		t.Len(w.Items, 1)
+		t.Equal(v.Id, w.Items[0].Id)
+	})
+	t.Run("empty list is returned if there is no tokens", func() {
+		w, err := t.svc.Token().List(t.CtxMe(), &horus.ListTokenRequest{Key: &horus.ListTokenRequest_Type{
+			Type: horus.TokenTypePassword,
+		}})
+		t.NoError(err)
+		t.Len(w.Items, 0)
+	})
+}
+
 func (t *TokenTestSuite) TestUpdate() {
 	pw := "0000"
 

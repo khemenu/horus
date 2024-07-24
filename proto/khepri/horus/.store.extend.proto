@@ -2,6 +2,18 @@ message AcceptInvitationRequest {
 	bytes id = 1;
 }
 
+message ListTokenRequest {
+	uint32                    limit = 1;
+	google.protobuf.Timestamp token = 2;
+
+	oneof key {
+		string type = 3;
+	}
+}
+message ListTokenResponse {
+	repeated Token items = 1;
+}
+
 message ListAccountRequest {
 	uint32                    limit = 1;
 	google.protobuf.Timestamp token = 2;

@@ -1543,6 +1543,7 @@ const (
 	TokenService_Create_FullMethodName = "/khepri.horus.TokenService/Create"
 	TokenService_Delete_FullMethodName = "/khepri.horus.TokenService/Delete"
 	TokenService_Get_FullMethodName    = "/khepri.horus.TokenService/Get"
+	TokenService_List_FullMethodName   = "/khepri.horus.TokenService/List"
 	TokenService_Update_FullMethodName = "/khepri.horus.TokenService/Update"
 )
 
@@ -1553,6 +1554,7 @@ type TokenServiceClient interface {
 	Create(ctx context.Context, in *CreateTokenRequest, opts ...grpc.CallOption) (*Token, error)
 	Delete(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Get(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*Token, error)
+	List(ctx context.Context, in *ListTokenRequest, opts ...grpc.CallOption) (*ListTokenResponse, error)
 	Update(ctx context.Context, in *UpdateTokenRequest, opts ...grpc.CallOption) (*Token, error)
 }
 
@@ -1591,6 +1593,15 @@ func (c *tokenServiceClient) Get(ctx context.Context, in *GetTokenRequest, opts 
 	return out, nil
 }
 
+func (c *tokenServiceClient) List(ctx context.Context, in *ListTokenRequest, opts ...grpc.CallOption) (*ListTokenResponse, error) {
+	out := new(ListTokenResponse)
+	err := c.cc.Invoke(ctx, TokenService_List_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tokenServiceClient) Update(ctx context.Context, in *UpdateTokenRequest, opts ...grpc.CallOption) (*Token, error) {
 	out := new(Token)
 	err := c.cc.Invoke(ctx, TokenService_Update_FullMethodName, in, out, opts...)
@@ -1607,6 +1618,7 @@ type TokenServiceServer interface {
 	Create(context.Context, *CreateTokenRequest) (*Token, error)
 	Delete(context.Context, *GetTokenRequest) (*emptypb.Empty, error)
 	Get(context.Context, *GetTokenRequest) (*Token, error)
+	List(context.Context, *ListTokenRequest) (*ListTokenResponse, error)
 	Update(context.Context, *UpdateTokenRequest) (*Token, error)
 	mustEmbedUnimplementedTokenServiceServer()
 }
@@ -1623,6 +1635,9 @@ func (UnimplementedTokenServiceServer) Delete(context.Context, *GetTokenRequest)
 }
 func (UnimplementedTokenServiceServer) Get(context.Context, *GetTokenRequest) (*Token, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedTokenServiceServer) List(context.Context, *ListTokenRequest) (*ListTokenResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
 func (UnimplementedTokenServiceServer) Update(context.Context, *UpdateTokenRequest) (*Token, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
@@ -1694,6 +1709,24 @@ func _TokenService_Get_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TokenService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TokenServiceServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TokenService_List_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TokenServiceServer).List(ctx, req.(*ListTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _TokenService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateTokenRequest)
 	if err := dec(in); err != nil {
@@ -1730,6 +1763,10 @@ var TokenService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Get",
 			Handler:    _TokenService_Get_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _TokenService_List_Handler,
 		},
 		{
 			MethodName: "Update",
