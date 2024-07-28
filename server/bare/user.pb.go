@@ -109,6 +109,9 @@ func ToProtoUser(v *ent.User) *horus.User {
 	m.Id = v.ID[:]
 	m.DateCreated = timestamppb.New(v.DateCreated)
 	m.Alias = v.Alias
+	if v.DateUnlocked != nil {
+		m.DateUnlocked = timestamppb.New(*v.DateUnlocked)
+	}
 	if v := v.Edges.Parent; v != nil {
 		m.Parent = ToProtoUser(v)
 	}

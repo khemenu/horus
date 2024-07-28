@@ -24,7 +24,7 @@ type User struct {
 	Alias string `json:"alias,omitempty"`
 	// SignInAttemptCount holds the value of the "sign_in_attempt_count" field.
 	SignInAttemptCount uint `json:"sign_in_attempt_count,omitempty"`
-	// DateUnlocked holds the value of the "date_unlocked" field.
+	// For users created by other users, this value is initially NULL.
 	DateUnlocked *time.Time `json:"date_unlocked,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.

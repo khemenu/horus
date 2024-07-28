@@ -57,6 +57,10 @@ func (s *MembershipServiceServer) Create(ctx context.Context, req *horus.CreateM
 		return nil, status.Error(codes.PermissionDenied, "membership can be created ony by a silo owner or a silo admin")
 	}
 
+	if req.GetRole() == horus.Role_ROLE_UNSPECIFIED {
+		req.Role = fx.Addr(horus.Role_ROLE_MEMBER)
+	}
+
 	return s.bare.Membership().Create(ctx, req)
 }
 

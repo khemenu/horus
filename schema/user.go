@@ -25,6 +25,8 @@ func (User) Fields() []ent.Field {
 			Default(0),
 
 		field.Time("date_unlocked").
+			Comment("For users created by other users, this value is initially NULL.").
+			Annotations(entpb.Field(14, entpb.WithReadOnly())).
 			Optional().
 			Nillable(),
 	}

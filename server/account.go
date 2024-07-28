@@ -54,6 +54,9 @@ func (s *AccountServiceServer) Create(ctx context.Context, req *horus.CreateAcco
 	if req.GetRole() == horus.Role_ROLE_UNSPECIFIED {
 		req.Role = fx.Addr(horus.Role_ROLE_MEMBER)
 	}
+	if req.GetAlias() == "" {
+		req.Alias = nil
+	}
 
 	if req.GetOwner() == nil {
 		// Creates a new chid user of the actor if owner is not provided.
@@ -108,24 +111,35 @@ func (s *AccountServiceServer) Get(ctx context.Context, req *horus.GetAccountReq
 		return bare.ToProtoAccount(v), nil
 	}
 
-	v, err := s.bare.Account().Get(ctx, req)
+	p, err := bare.GetAccountSpecifier(req)
 	if err != nil {
 		return nil, err
 	}
-	if bytes.Equal(v.Owner.Id, f.Actor.ID[:]) {
-		return v, nil
+
+	q := s.db.Account.Query().Where(p)
+	bare.QueryAccountWithEdgeIds(q).
+		WithOwner(func(q *ent.UserQuery) {
+			bare.QueryUserWithEdgeIds(q)
+		})
+
+	v, err := q.Only(ctx)
+	if err != nil {
+		return nil, bare.ToStatus(err)
+	}
+	if v.Edges.Owner.ID == f.Actor.ID {
+		return bare.ToProtoAccount(v), nil
 	}
 
 	// Test if the actor has an account in the same silo where the account to get.
 	w, err := bare.QueryAccountWithEdgeIds(f.Actor.QueryAccounts()).
-		Where(account.SiloID(uuid.UUID(v.Silo.Id))).
+		Where(account.SiloID(v.SiloID)).
 		Only(ctx)
 	if err != nil {
 		return nil, bare.ToStatus(err)
 	}
 
 	f.ActingAccount = w
-	return v, nil
+	return bare.ToProtoAccount(v), nil
 }
 
 func (s *AccountServiceServer) Update(ctx context.Context, req *horus.UpdateAccountRequest) (*horus.Account, error) {
@@ -206,7 +220,8 @@ func (s *AccountServiceServer) List(ctx context.Context, req *horus.ListAccountR
 	f := frame.Must(ctx)
 
 	q := s.db.Account.Query().
-		Order(account.ByDateCreated(sql.OrderDesc()))
+		Order(account.ByDateCreated(sql.OrderDesc())).
+		WithOwner()
 	if l := req.GetLimit(); l > 0 {
 		q.Limit(int(l))
 	}

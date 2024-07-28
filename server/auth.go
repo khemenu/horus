@@ -43,7 +43,7 @@ func (s *AuthService) BasicSignIn(ctx context.Context, req *horus.BasicSignInReq
 	}
 
 	owner := token.Edges.Owner
-	if owner.DateUnlocked != nil && owner.DateUnlocked.After(time.Now()) {
+	if owner.DateUnlocked == nil || owner.DateUnlocked.After(time.Now()) {
 		return nil, status.Error(codes.FailedPrecondition, "locked out")
 	}
 

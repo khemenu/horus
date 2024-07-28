@@ -101,3 +101,50 @@ func (t *UserTestSuite) TestUpdate() {
 		t.ErrCode(err, codes.NotFound)
 	})
 }
+
+func (t *UserTestSuite) TestDelete() {
+	t.Run("user cannot be deleted who is a root user", func() {
+		_, err := t.svc.User().Delete(t.CtxMe(), horus.UserById(t.me.Actor.ID))
+		t.ErrCode(err, codes.FailedPrecondition)
+	})
+	t.Run("user cannot be deleted if the user does not exist", func() {
+		_, err := t.svc.User().Delete(t.CtxMe(), horus.UserByAlias("not exists"))
+		t.ErrCode(err, codes.NotFound)
+	})
+	t.Run("user can be deleted by its parent", func() {
+		_, err := t.svc.User().Delete(t.CtxChild(), horus.UserById(t.child.Actor.ID))
+		t.NoError(err)
+
+		_, err = t.svc.User().Get(t.CtxMe(), horus.UserById(t.child.Actor.ID))
+		t.ErrCode(err, codes.NotFound)
+	})
+	t.Run("user can be deleted by its ancestor", func() {
+		grand_child, err := t.svc.User().Create(t.CtxChild(), nil)
+		t.NoError(err)
+
+		_, err = t.svc.User().Delete(t.CtxMe(), horus.UserByIdV(grand_child.Id))
+		t.NoError(err)
+
+		_, err = t.svc.User().Get(t.CtxMe(), horus.UserByIdV(grand_child.Id))
+		t.ErrCode(err, codes.NotFound)
+	})
+	t.Run("when a user is deleted, the parent of the deleted user becomes the parent of that user's child users", func() {
+		grand_child, err := t.svc.User().Create(t.CtxChild(), nil)
+		t.NoError(err)
+
+		_, err = t.svc.User().Delete(t.CtxMe(), horus.UserById(t.child.Actor.ID))
+		t.NoError(err)
+
+		grand_child, err = t.svc.User().Get(t.CtxMe(), horus.UserByIdV(grand_child.Id))
+		t.NoError(err)
+		t.Equal(t.me.Actor.ID[:], grand_child.Parent.Id)
+	})
+	t.Run("user cannot be deleted by the user who is not its ancestor", func() {
+		_, err := t.svc.User().Delete(t.CtxOther(), horus.UserById(t.child.Actor.ID))
+		t.ErrCode(err, codes.PermissionDenied)
+	})
+	t.Run("user cannot be delete by their children", func() {
+		_, err := t.svc.User().Delete(t.CtxChild(), horus.UserById(t.me.Actor.ID))
+		t.ErrCode(err, codes.PermissionDenied)
+	})
+}

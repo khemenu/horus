@@ -61,6 +61,7 @@ func (s *Suite) Run(name string, subtest func()) bool {
 
 func (s *Suite) ErrCode(err error, code codes.Code) {
 	st, ok := status.FromError(err)
+	s.T().Log(err)
 	s.True(ok)
 	s.Equal(code, st.Code())
 }

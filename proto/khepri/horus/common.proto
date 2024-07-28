@@ -102,5 +102,7 @@ message User {
 	repeated User children = 4;
 	repeated Identity identities = 5;
 	repeated Account accounts = 6;
+	// For users created by other users, this value is initially NULL.
+	optional google.protobuf.Timestamp date_unlocked = 14;
 	google.protobuf.Timestamp date_created = 15;
 }

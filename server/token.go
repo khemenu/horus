@@ -123,16 +123,21 @@ func (s *TokenServiceServer) createBasic(ctx context.Context, req *horus.CreateT
 		key_str = base64.RawStdEncoding.EncodeToString(b)
 	}
 
-	owner_id, err := bare.GetUserId(ctx, s.db, req.GetOwner())
+	p, err := bare.GetUserSpecifier(req.GetOwner())
 	if err != nil {
 		return nil, err
+	}
+
+	owner, err := s.db.User.Query().Where(p).Only(ctx)
+	if err != nil {
+		return nil, bare.ToStatus(err)
 	}
 
 	v, err := entutils.WithTxV(ctx, s.db, func(tx *ent.Tx) (*ent.Token, error) {
 		_, err := tx.Token.Delete().
 			Where(
 				token.TypeEQ(horus.TokenTypePassword),
-				token.HasOwnerWith(user.IDEQ(owner_id)),
+				token.HasOwnerWith(user.IDEQ(owner.ID)),
 			).
 			Exec(ctx)
 		if err != nil {
@@ -145,9 +150,19 @@ func (s *TokenServiceServer) createBasic(ctx context.Context, req *horus.CreateT
 			SetType(horus.TokenTypePassword).
 			SetUseCountLimit(req.GetUseCountLimit()).
 			SetDateExpired(time.Now().Add(10 * 365 * 24 * time.Hour)).
-			SetOwnerID(owner_id)
+			SetOwnerID(owner.ID)
 		if f.Token != nil {
 			q.SetParentID(f.Token.ID)
+		}
+
+		now := time.Now()
+		if owner.DateUnlocked == nil || owner.DateUnlocked.After(now) {
+			err := tx.User.UpdateOneID(owner.ID).
+				SetDateUnlocked(now).
+				Exec(ctx)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		v, err := q.Save(ctx)
