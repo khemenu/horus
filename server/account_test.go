@@ -2,7 +2,6 @@ package server_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -107,25 +106,25 @@ func (t *AccountTestSuite) TestCreate() {
 		})
 	}
 
-	t.Run("only one account can be created for the same owner in the silo.", func() {
+	t.Run("account cannot be created if the owner already has an account in the silo", func() {
 		child, err := t.svc.User().Create(t.CtxSiloOwner(), nil)
 		t.NoError(err)
 
 		_, err = t.svc.Account().Create(t.CtxSiloOwner(), &horus.CreateAccountRequest{
-			Silo:  horus.SiloByIdV(t.silo.ID[:]),
+			Silo:  horus.SiloById(t.silo.ID),
 			Owner: horus.UserByIdV(child.Id),
 		})
 		t.NoError(err)
 
 		_, err = t.svc.Account().Create(t.CtxSiloOwner(), &horus.CreateAccountRequest{
-			Silo:  horus.SiloByIdV(t.silo.ID[:]),
+			Silo:  horus.SiloById(t.silo.ID),
 			Owner: horus.UserByIdV(child.Id),
 		})
 		t.ErrCode(err, codes.AlreadyExists)
 	})
-	t.Run("if owner is not provided, new child user of the actor then creates an account.", func() {
+	t.Run("account is created with new user as an owner if the owner is not provided", func() {
 		a, err := t.svc.Account().Create(t.CtxSiloOwner(), &horus.CreateAccountRequest{
-			Silo: horus.SiloByIdV(t.silo.ID[:]),
+			Silo: horus.SiloById(t.silo.ID),
 		})
 		t.NoError(err)
 
@@ -211,7 +210,7 @@ func (t *AccountTestSuite) TestGet() {
 		}
 	}
 
-	t.Run("account can be get by a user who has an account in the same silo", func() {
+	t.Run("account can be retrieved by a user who has an account in the same silo", func() {
 		fs := []*frame.Frame{
 			t.silo_owner,
 			t.silo_admin,
@@ -225,19 +224,24 @@ func (t *AccountTestSuite) TestGet() {
 			}
 		}
 	})
-	t.Run("account cannot be get if the account does not exist", func() {
+	t.Run("account cannot be retrieved if the account does not exist", func() {
 		_, err := t.svc.Account().Get(t.CtxSiloOwner(), horus.AccountByAliasInSilo("not exist", horus.SiloById(t.silo.ID)))
 		t.ErrCode(err, codes.NotFound)
 	})
-	t.Run("account cannot be get if the account is in another silo", func() {
+	t.Run("account cannot be retrieved if the account is in another silo", func() {
 		_, err := t.svc.Account().Get(t.CtxOther(), horus.AccountById(t.silo_owner.ActingAccount.ID))
 		t.ErrCode(err, codes.NotFound)
 	})
-	t.Run("my account cannot be get if the account does not exist", func() {
+	t.Run("account of the actor can be retrieved using Me alias", func() {
+		v, err := t.svc.Account().Get(t.CtxSiloMember(), horus.AccountByAliasInSilo(horus.Me, horus.SiloById(t.silo.ID)))
+		t.NoError(err)
+		t.Equal(t.silo_member.ActingAccount.ID[:], v.Id)
+	})
+	t.Run("account of the actor cannot be retrieved using Me alias if the account does not exist", func() {
 		_, err := t.svc.Account().Get(t.CtxOther(), horus.AccountByAliasInSilo(horus.Me, horus.SiloById(t.silo.ID)))
 		t.ErrCode(err, codes.NotFound)
 	})
-	t.Run("my account cannot be get if the silo does not exist", func() {
+	t.Run("account of the actor cannot be retrieved using Me alias if the silo does not exist", func() {
 		_, err := t.svc.Account().Get(t.CtxOther(), horus.AccountByAliasInSilo(horus.Me, horus.SiloById(uuid.Nil)))
 		t.ErrCode(err, codes.NotFound)
 	})
@@ -258,7 +262,8 @@ func (t *AccountTestSuite) TestUpdate() {
 		Target role.Role
 		To     role.Role
 		Self   bool
-		Fail   bool
+
+		Fail Fail
 	}
 	prepare := func(act Act) (*frame.Frame, *frame.Frame) {
 		actor := t.silo_admin
@@ -276,69 +281,32 @@ func (t *AccountTestSuite) TestUpdate() {
 		return actor, target
 	}
 
+	acts := []Act{}
+	for _, actor_role := range role.Values() {
+		acts = append(acts, Act{
+			Actor: actor_role,
+			Self:  true,
+		})
+	}
+	for _, actor_role := range role.Values() {
+		for _, target_role := range role.Values() {
+			acts = append(acts, Act{
+				Actor:  actor_role,
+				Target: target_role,
+
+				Fail: Fail(actor_role != role.Owner && !actor_role.HigherThan(target_role)),
+			})
+		}
+	}
+
 	// Update info.
-	for _, act := range []Act{
-		// As owner.
-		{
-			Actor: role.Owner,
-			Self:  true,
-		},
-		{
-			Actor:  role.Owner,
-			Target: role.Owner,
-		},
-		{
-			Actor:  role.Owner,
-			Target: role.Admin,
-		},
-		{
-			Actor:  role.Owner,
-			Target: role.Member,
-		},
-		// As admin.
-		{
-			Actor: role.Admin,
-			Self:  true,
-		},
-		{
-			Actor:  role.Admin,
-			Target: role.Owner,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Admin,
-			Target: role.Admin,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Admin,
-			Target: role.Member,
-		},
-		// As member.
-		{
-			Actor: role.Member,
-			Self:  true,
-		},
-		{
-			Actor:  role.Member,
-			Target: role.Owner,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Member,
-			Target: role.Admin,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Member,
-			Target: role.Member,
-			Fail:   true,
-		},
-	} {
-		title := "silo " + strings.ToLower(string(act.Actor)) + " "
-		title += fx.Cond(act.Fail, "cannot", "can")
-		title += " update "
-		title += fx.Cond(act.Self, "itself", "silo "+strings.ToLower(string(act.Target)))
+	for _, act := range acts {
+		title := fmt.Sprintf("account owned by silo %s %s be updated by ", act.Target, act.Fail)
+		if act.Self {
+			title += "account owner themselves"
+		} else {
+			title += fmt.Sprintf("silo %s", act.Actor)
+		}
 
 		t.Run(title, func() {
 			actor, target := prepare(act)
@@ -352,164 +320,47 @@ func (t *AccountTestSuite) TestUpdate() {
 		})
 	}
 
-	// Update role.
-	for _, act := range []Act{
-		// As a silo owner.
-		{
-			Actor: role.Owner,
-			To:    role.Admin,
-			Self:  true,
-		},
-		{
-			Actor: role.Owner,
-			To:    role.Member,
-			Self:  true,
-		},
-		{
-			Actor:  role.Owner,
-			Target: role.Owner,
-			To:     role.Admin,
-		},
-		{
-			Actor:  role.Owner,
-			Target: role.Owner,
-			To:     role.Member,
-		},
-		{
-			Actor:  role.Owner,
-			Target: role.Admin,
-			To:     role.Owner,
-		},
-		{
-			Actor:  role.Owner,
-			Target: role.Admin,
-			To:     role.Member,
-		},
-		{
-			Actor:  role.Owner,
-			Target: role.Member,
-			To:     role.Owner,
-		},
-		{
-			Actor:  role.Owner,
-			Target: role.Member,
-			To:     role.Admin,
-		},
-		// As a silo admin.
-		{
-			Actor: role.Admin,
-			To:    role.Owner,
-			Self:  true,
-			Fail:  true,
-		},
-		{
-			Actor: role.Admin,
-			To:    role.Member,
-			Self:  true,
-		},
-		{
-			Actor:  role.Admin,
-			Target: role.Owner,
-			To:     role.Admin,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Admin,
-			Target: role.Owner,
-			To:     role.Member,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Admin,
-			Target: role.Admin,
-			To:     role.Owner,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Admin,
-			Target: role.Admin,
-			To:     role.Member,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Admin,
-			Target: role.Member,
-			To:     role.Owner,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Admin,
-			Target: role.Member,
-			To:     role.Admin,
-			Fail:   true,
-		},
-		// As a silo member.
-		{
-			Actor: role.Member,
-			To:    role.Owner,
-			Self:  true,
-			Fail:  true,
-		},
-		{
-			Actor: role.Member,
-			To:    role.Admin,
-			Self:  true,
-			Fail:  true,
-		},
-		{
-			Actor:  role.Member,
-			Target: role.Owner,
-			To:     role.Owner,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Member,
-			Target: role.Owner,
-			To:     role.Admin,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Member,
-			Target: role.Admin,
-			To:     role.Owner,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Member,
-			Target: role.Admin,
-			To:     role.Member,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Member,
-			Target: role.Member,
-			To:     role.Owner,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Member,
-			Target: role.Member,
-			To:     role.Admin,
-			Fail:   true,
-		},
-	} {
-		title := "silo " + strings.ToLower(string(act.Actor)) + " "
-		if act.Fail {
-			title += "cannot"
-		} else {
-			title += "can"
+	acts = []Act{}
+	for _, actor_role := range role.Values() {
+		for _, role_to := range role.Values() {
+			if actor_role == role_to {
+				continue
+			}
+
+			acts = append(acts, Act{
+				Actor: actor_role,
+				To:    role_to,
+				Self:  true,
+
+				Fail: Fail(actor_role.LowerThan(role_to)),
+			})
 		}
-		title += " "
-		if act.Actor.HigherThan(act.Target) {
-			title += "promote"
-		} else {
-			title += "demote"
+	}
+	for _, actor_role := range role.Values() {
+		for _, target_role := range role.Values() {
+			for _, role_to := range role.Values() {
+				if target_role == role_to {
+					continue
+				}
+
+				higher_than_actor := !actor_role.HigherThan(target_role) || !actor_role.HigherThan(role_to)
+				acts = append(acts, Act{
+					Actor:  actor_role,
+					Target: target_role,
+					To:     role_to,
+
+					Fail: Fail(actor_role != role.Owner && higher_than_actor),
+				})
+			}
 		}
-		title += " "
+	}
+	for _, act := range acts {
+		dir := fx.Cond(act.Target.HigherThan(act.To), "demoted", "promoted")
+		title := fmt.Sprintf("silo %s %s %s to %s by ", act.Target, act.Fail, dir, act.To)
 		if act.Self {
-			title += "itself"
+			title += "themselves"
 		} else {
-			title += "silo " + strings.ToLower(string(act.Target))
+			title += fmt.Sprintf("silo %s", act.Actor)
 		}
 
 		t.Run(title, func() {
@@ -524,7 +375,7 @@ func (t *AccountTestSuite) TestUpdate() {
 		})
 	}
 
-	t.Run("silo owner cannot demote itself if it is sole owner", func() {
+	t.Run("account owned by silo owner cannot be demoted themselves if the actor is sole owner of the silo", func() {
 		err := t.SetSiloRole(t.silo_owner, t.silo_owner, role.Admin)
 		t.ErrCode(err, codes.FailedPrecondition)
 	})
@@ -535,7 +386,8 @@ func (t *AccountTestSuite) TestDelete() {
 		Actor  role.Role
 		Target role.Role
 		Self   bool
-		Fail   bool
+
+		Fail Fail
 	}
 	prepare := func(act Act) (*frame.Frame, *frame.Frame) {
 		actor := t.silo_admin
@@ -553,70 +405,30 @@ func (t *AccountTestSuite) TestDelete() {
 		return actor, target
 	}
 
-	for _, act := range []Act{
-		// As a silo owner.
-		{
-			Actor: role.Owner,
+	acts := []Act{}
+	for _, actor_role := range role.Values() {
+		acts = append(acts, Act{
+			Actor: actor_role,
 			Self:  true,
-		},
-		{
-			Actor:  role.Owner,
-			Target: role.Owner,
-		},
-		{
-			Actor:  role.Owner,
-			Target: role.Admin,
-		},
-		{
-			Actor:  role.Owner,
-			Target: role.Member,
-		},
-		// As a silo admin.
-		{
-			Actor: role.Admin,
-			Self:  true,
-		},
-		{
-			Actor:  role.Admin,
-			Target: role.Owner,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Admin,
-			Target: role.Member,
-		},
-		// As a silo member.
-		{
-			Actor: role.Member,
-			Self:  true,
-		},
-		{
-			Actor:  role.Member,
-			Target: role.Owner,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Member,
-			Target: role.Admin,
-			Fail:   true,
-		},
-		{
-			Actor:  role.Member,
-			Target: role.Member,
-			Fail:   true,
-		},
-	} {
-		title := "silo " + strings.ToLower(string(act.Actor)) + " "
-		if act.Fail {
-			title += "cannot"
-		} else {
-			title += "can"
+		})
+	}
+	for _, actor_role := range role.Values() {
+		for _, target_role := range role.Values() {
+			acts = append(acts, Act{
+				Actor:  actor_role,
+				Target: target_role,
+
+				Fail: Fail(actor_role != role.Owner && !actor_role.HigherThan(target_role)),
+			})
 		}
-		title += " delete "
+	}
+
+	for _, act := range acts {
+		title := fmt.Sprintf("account owned by %s %s deleted by ", act.Target, act.Fail)
 		if act.Self {
-			title += "itself"
+			title += "themselves"
 		} else {
-			title += "silo " + strings.ToLower(string(act.Target))
+			title += fmt.Sprintf("silo %s", act.Actor)
 		}
 
 		t.Run(title, func() {
@@ -632,7 +444,7 @@ func (t *AccountTestSuite) TestDelete() {
 		})
 	}
 
-	t.Run("silo owner cannot delete itself if it is sole owner", func() {
+	t.Run("account owned by silo owner cannot be deleted themselves if the actor is sole owner in the silo", func() {
 		_, err := t.svc.Account().Delete(t.CtxSiloOwner(), horus.AccountById(t.silo_owner.ActingAccount.ID))
 		t.ErrCode(err, codes.FailedPrecondition)
 	})
