@@ -38,20 +38,21 @@ func HandleAuth(mux *http.ServeMux, svr horus.Server) {
 			Token: v,
 		})
 		if err != nil {
-			s, ok := status.FromError(err)
-			if ok {
-				switch s.Code() {
-				case codes.NotFound:
-					fallthrough
-				case codes.Unauthenticated:
-					w.WriteHeader(http.StatusUnauthorized)
-					return
-				}
-			}
+			s, _ := status.FromError(err)
+			switch s.Code() {
+			case codes.InvalidArgument:
+				fallthrough
+			case codes.NotFound:
+				fallthrough
+			case codes.Unauthenticated:
+				w.WriteHeader(http.StatusUnauthorized)
+				return
 
-			l.Error("bearer ", slog.String("err", err.Error()))
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+			default:
+				l.Error("bearer ", slog.String("err", err.Error()))
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -70,20 +71,19 @@ func HandleAuth(mux *http.ServeMux, svr horus.Server) {
 			Password: password,
 		})
 		if err != nil {
-			s, ok := status.FromError(err)
-			if ok {
-				switch s.Code() {
-				case codes.NotFound:
-					fallthrough
-				case codes.Unauthenticated:
-					w.WriteHeader(http.StatusUnauthorized)
-					return
-				}
-			}
+			s, _ := status.FromError(err)
+			switch s.Code() {
+			case codes.NotFound:
+				fallthrough
+			case codes.Unauthenticated:
+				w.WriteHeader(http.StatusUnauthorized)
+				return
 
-			l.Error("basic sign-in", slog.String("err", err.Error()))
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+			default:
+				l.Error("basic sign-in", slog.String("err", err.Error()))
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 		}
 
 		http.SetCookie(w, &http.Cookie{

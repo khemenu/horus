@@ -7,6 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/lesomnus/entpb v0.0.0-20240703161013-ad76add02e14
 	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/pasztorpisti/qs v0.0.0-20171216220353-8d6c33ee906c
 	github.com/rs/xid v1.5.0
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.9.0

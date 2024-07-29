@@ -36,6 +36,8 @@ export default async function setup({ }: GlobalSetupContext) {
 		throw new Error('hr create user horus', { cause: p })
 	}
 
+	await $`echo ${'horus_pass'}`.pipe($`hr --as horus set password`)
+
 	const horus = within(() => {
 		return $`go run ./cmd/horus`.quiet(false).nothrow()
 	})

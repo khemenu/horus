@@ -71,5 +71,15 @@ services:
         source: kubeconfig
         target: /etc/kubeconfig
 
+  rabbitmq:
+    image: rabbitmq:3
+    volumes:
+      - type: bind
+        source: ./rabbitmq/enabled_plugins
+        target: /etc/rabbitmq/enabled_plugins
+      - type: bind
+        source: ./rabbitmq/rabbitmq.conf
+        target: /etc/rabbitmq/rabbitmq.conf
+
 volumes:
   kubeconfig:

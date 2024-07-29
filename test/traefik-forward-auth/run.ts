@@ -12,7 +12,7 @@ $.quiet = true
 beforeAll(async () => {
 	const manifest = path.join(import.meta.dirname, 'manifest.yaml')
 	await $`kubectl apply -f ${manifest}`
-	await retry(30, '0.1s', () => $`curl --fail -H ${header} http://k3s/api/http/middlewares/kube-system-${name}@kubernetescrd`)
+	await retry(10, '0.3s', () => $`curl --fail -H ${header} http://k3s/api/http/middlewares/kube-system-${name}@kubernetescrd`)
 
 	return () => $`kubectl delete -f ${manifest}`
 })
@@ -30,7 +30,11 @@ test('request with invalid Authorization format', async () => {
 })
 
 test('request with invalid token', async () => {
-	const p = await $`curl --fail -H ${headerMw} -H "Authorization: Bearer invalid" ${target}`.nothrow()
+	// Well-formed but invalid token.
+	const token = "a".repeat(16) + 'bbbb'
+
+	const p = await $`curl --fail -H ${headerMw} -H "Authorization: Bearer ${token}" ${target}`.nothrow()
+	console.log(p.stderr)
 	expect(p.exitCode).toBe(ERR_CURL_NOT_200)
 	expect(p.stderr).contains('401')
 })

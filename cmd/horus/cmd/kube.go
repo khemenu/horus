@@ -19,12 +19,8 @@ import (
 )
 
 func HandleKubeWebhook(mux *http.ServeMux, svr horus.Server) {
-	mux.HandleFunc("/auth/kube", func(w http.ResponseWriter, r *http.Request) {
-		l := log.From(r.Context())
-		if r.Method != http.MethodPost {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
+	mux.HandleFunc("POST /auth/kube", func(w http.ResponseWriter, r *http.Request) {
+		l := log.From(r.Context()).With("handler", "kube-webhook")
 
 		review := authnV1.TokenReview{}
 		if err := json.NewDecoder(r.Body).Decode(&review); err != nil {
@@ -63,7 +59,14 @@ Supported API versions are: %s
 			reviewed.Status.Authenticated = false
 
 			s, _ := status.FromError(err)
-			if s.Code() != codes.Unauthenticated {
+			switch s.Code() {
+			case codes.InvalidArgument:
+				fallthrough
+			case codes.Unauthenticated:
+				break
+
+			default:
+				l.Error("unexpected response from the auth service", slog.String("err", err.Error()))
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}

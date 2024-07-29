@@ -115,6 +115,7 @@ func Run(ctx context.Context, c *Config) error {
 	http_mux := http.NewServeMux()
 	HandleAuth(http_mux, horus_server)
 	HandleKubeWebhook(http_mux, horus_server)
+	HandleRabbitMqHttpAuth(http_mux, horus_server)
 	http_server.Handler = log.HttpLogger(l, slog.LevelInfo, http_mux)
 
 	shutdown := func() {
