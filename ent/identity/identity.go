@@ -21,8 +21,12 @@ const (
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldOwnerID holds the string denoting the owner_id field in the database.
+	FieldOwnerID = "owner_id"
 	// FieldKind holds the string denoting the kind field in the database.
 	FieldKind = "kind"
+	// FieldValue holds the string denoting the value field in the database.
+	FieldValue = "value"
 	// FieldVerifier holds the string denoting the verifier field in the database.
 	FieldVerifier = "verifier"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
@@ -35,7 +39,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	OwnerInverseTable = "users"
 	// OwnerColumn is the table column denoting the owner relation/edge.
-	OwnerColumn = "user_identities"
+	OwnerColumn = "owner_id"
 )
 
 // Columns holds all SQL columns for identity fields.
@@ -44,25 +48,16 @@ var Columns = []string{
 	FieldDateCreated,
 	FieldName,
 	FieldDescription,
+	FieldOwnerID,
 	FieldKind,
+	FieldValue,
 	FieldVerifier,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "identities"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"user_identities",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -82,8 +77,6 @@ var (
 	DescriptionValidator func(string) error
 	// KindValidator is a validator for the "kind" field. It is called by the builders before save.
 	KindValidator func(string) error
-	// VerifierValidator is a validator for the "verifier" field. It is called by the builders before save.
-	VerifierValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -111,9 +104,19 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
+// ByOwnerID orders the results by the owner_id field.
+func ByOwnerID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOwnerID, opts...).ToFunc()
+}
+
 // ByKind orders the results by the kind field.
 func ByKind(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldKind, opts...).ToFunc()
+}
+
+// ByValue orders the results by the value field.
+func ByValue(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldValue, opts...).ToFunc()
 }
 
 // ByVerifier orders the results by the verifier field.

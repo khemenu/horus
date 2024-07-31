@@ -1,12 +1,14 @@
 package server_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"khepri.dev/horus"
 	"khepri.dev/horus/internal/fx"
+	"khepri.dev/horus/server/frame"
 )
 
 type UserTestSuite struct {
@@ -21,7 +23,7 @@ func TestUser(t *testing.T) {
 }
 
 func (t *UserTestSuite) TestCreate() {
-	t.Run("user is created with the parent as actor", func() {
+	t.Run("user is created with the actor as a parent", func() {
 		v, err := t.svc.User().Create(t.CtxMe(), nil)
 		t.NoError(err)
 
@@ -45,23 +47,30 @@ func (t *UserTestSuite) TestCreate() {
 }
 
 func (t *UserTestSuite) TestGet() {
+	for _, act := range t.UserPermissionActs() {
+		t.Run(fmt.Sprintf("user %s be retrieved by %s", act.Fail, act.Name), func() {
+			actor := frame.WithContext(t.ctx, *act.Actor)
+			target := (*act.Target).Actor
+
+			v, err := t.svc.User().Get(actor, horus.UserById(target.ID))
+			if act.Fail {
+				t.ErrCode(err, codes.PermissionDenied)
+				return
+			}
+			t.NoError(err)
+			t.Equal(target.ID[:], v.Id)
+		})
+	}
+
 	t.Run("user owned by the actor can be retrieved with an empty input", func() {
 		v, err := t.svc.User().Get(t.CtxMe(), nil)
 		t.NoError(err)
 		t.Equal(t.me.Actor.ID[:], v.Id)
 	})
-	t.Run("user owned by the actor can be retrieved using alias Me", func() {
+	t.Run("user owned by the actor can be retrieved using an alias Me", func() {
 		v, err := t.svc.User().Get(t.CtxMe(), horus.UserByAlias(horus.Me))
 		t.NoError(err)
 		t.Equal(t.me.Actor.ID[:], v.Id)
-	})
-	t.Run("user can be retrieved by its parent", func() {
-		_, err := t.svc.User().Get(t.CtxMe(), horus.UserById(t.child.Actor.ID))
-		t.NoError(err)
-	})
-	t.Run("user cannot be retrieved if the user is not child of the actor", func() {
-		_, err := t.svc.User().Get(t.CtxMe(), horus.UserById(t.other.Actor.ID))
-		t.ErrCode(err, codes.PermissionDenied)
 	})
 	t.Run("user cannot be retrieved if the user does not exist", func() {
 		_, err := t.svc.User().Get(t.CtxMe(), horus.UserByAlias("not exist"))
@@ -70,29 +79,24 @@ func (t *UserTestSuite) TestGet() {
 }
 
 func (t *UserTestSuite) TestUpdate() {
-	t.Run("user can be updated by its owner", func() {
-		v, err := t.svc.User().Update(t.CtxMe(), &horus.UpdateUserRequest{
-			Key:   horus.UserById(t.me.Actor.ID),
-			Alias: fx.Addr("django"),
+	for _, act := range t.UserPermissionActs() {
+		t.Run(fmt.Sprintf("user %s be updated by %s", act.Fail, act.Name), func() {
+			actor := frame.WithContext(t.ctx, *act.Actor)
+			target := (*act.Target).Actor
+
+			v, err := t.svc.User().Update(actor, &horus.UpdateUserRequest{
+				Key:   horus.UserById(target.ID),
+				Alias: fx.Addr("django"),
+			})
+			if act.Fail {
+				t.ErrCode(err, codes.PermissionDenied)
+				return
+			}
+			t.NoError(err)
+			t.Equal(target.ID[:], v.Id)
 		})
-		t.NoError(err)
-		t.Equal("django", v.Alias)
-	})
-	t.Run("user can be updated by its parent", func() {
-		v, err := t.svc.User().Update(t.CtxMe(), &horus.UpdateUserRequest{
-			Key:   horus.UserById(t.child.Actor.ID),
-			Alias: fx.Addr("django"),
-		})
-		t.NoError(err)
-		t.Equal("django", v.Alias)
-	})
-	t.Run("user cannot be updated by other", func() {
-		_, err := t.svc.User().Update(t.CtxMe(), &horus.UpdateUserRequest{
-			Key:   horus.UserById(t.other.Actor.ID),
-			Alias: fx.Addr("django"),
-		})
-		t.ErrCode(err, codes.PermissionDenied)
-	})
+	}
+
 	t.Run("user cannot be updated if the user does not exist", func() {
 		_, err := t.svc.User().Update(t.CtxMe(), &horus.UpdateUserRequest{
 			Key:   horus.UserByAlias("not exist"),
@@ -103,29 +107,29 @@ func (t *UserTestSuite) TestUpdate() {
 }
 
 func (t *UserTestSuite) TestDelete() {
-	t.Run("user cannot be deleted who is a root user", func() {
-		_, err := t.svc.User().Delete(t.CtxMe(), horus.UserById(t.me.Actor.ID))
+	for _, act := range t.UserPermissionActs() {
+		t.Run(fmt.Sprintf("user %s be deleted by %s", act.Fail, act.Name), func() {
+			actor := frame.WithContext(t.ctx, *act.Actor)
+			target := (*act.Target).Actor
+
+			_, err := t.svc.User().Delete(actor, horus.UserById(target.ID))
+			if act.Fail {
+				t.ErrCode(err, codes.PermissionDenied)
+				return
+			}
+			t.NoError(err)
+
+			_, err = t.svc.User().Get(actor, horus.UserById(target.ID))
+			t.ErrCode(err, codes.NotFound)
+		})
+	}
+
+	t.Run("user cannot be deleted if the user is root", func() {
+		_, err := t.svc.User().Delete(t.CtxRoot(), horus.UserById(t.root.Actor.ID))
 		t.ErrCode(err, codes.FailedPrecondition)
 	})
 	t.Run("user cannot be deleted if the user does not exist", func() {
 		_, err := t.svc.User().Delete(t.CtxMe(), horus.UserByAlias("not exists"))
-		t.ErrCode(err, codes.NotFound)
-	})
-	t.Run("user can be deleted by its parent", func() {
-		_, err := t.svc.User().Delete(t.CtxChild(), horus.UserById(t.child.Actor.ID))
-		t.NoError(err)
-
-		_, err = t.svc.User().Get(t.CtxMe(), horus.UserById(t.child.Actor.ID))
-		t.ErrCode(err, codes.NotFound)
-	})
-	t.Run("user can be deleted by its ancestor", func() {
-		grand_child, err := t.svc.User().Create(t.CtxChild(), nil)
-		t.NoError(err)
-
-		_, err = t.svc.User().Delete(t.CtxMe(), horus.UserByIdV(grand_child.Id))
-		t.NoError(err)
-
-		_, err = t.svc.User().Get(t.CtxMe(), horus.UserByIdV(grand_child.Id))
 		t.ErrCode(err, codes.NotFound)
 	})
 	t.Run("when a user is deleted, the parent of the deleted user becomes the parent of that user's child users", func() {
@@ -139,12 +143,49 @@ func (t *UserTestSuite) TestDelete() {
 		t.NoError(err)
 		t.Equal(t.me.Actor.ID[:], grand_child.Parent.Id)
 	})
-	t.Run("user cannot be deleted by the user who is not its ancestor", func() {
-		_, err := t.svc.User().Delete(t.CtxOther(), horus.UserById(t.child.Actor.ID))
-		t.ErrCode(err, codes.PermissionDenied)
-	})
-	t.Run("user cannot be delete by their children", func() {
-		_, err := t.svc.User().Delete(t.CtxChild(), horus.UserById(t.me.Actor.ID))
-		t.ErrCode(err, codes.PermissionDenied)
-	})
+}
+
+type UserPermissionAct struct {
+	Name   string
+	Actor  **frame.Frame
+	Target **frame.Frame
+	Fail   Fail
+}
+
+func (t *Suite) UserPermissionActs() []UserPermissionAct {
+	return []UserPermissionAct{
+		{
+			Name:   "its owner's ancestor",
+			Actor:  &t.parent,
+			Target: &t.child,
+		},
+		{
+			Name:   "its owner's parent",
+			Actor:  &t.parent,
+			Target: &t.me,
+		},
+		{
+			Name:   "its owner",
+			Actor:  &t.me,
+			Target: &t.me,
+		},
+		{
+			Name:   "its owner's child",
+			Actor:  &t.child,
+			Target: &t.me,
+			Fail:   true,
+		},
+		{
+			Name:   "its owner's descendant",
+			Actor:  &t.child,
+			Target: &t.parent,
+			Fail:   true,
+		},
+		{
+			Name:   "other user",
+			Actor:  &t.other,
+			Target: &t.me,
+			Fail:   true,
+		},
+	}
 }

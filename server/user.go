@@ -1,11 +1,9 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -39,85 +37,60 @@ func (s *UserServiceServer) Create(ctx context.Context, req *horus.CreateUserReq
 
 func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) (*horus.User, error) {
 	f := frame.Must(ctx)
-	if req.GetKey() == nil || req.GetAlias() == "_me" {
-		req = horus.UserById(f.Actor.ID)
-	}
 
-	v, err := s.bare.User().Get(ctx, req)
+	v, err := s.hasPermission(ctx, f.Actor, req)
 	if err != nil {
 		return nil, err
 	}
-	if bytes.Equal(f.Actor.ID[:], v.Id) {
-		return v, nil
-	}
-	if bytes.Equal(f.Actor.ID[:], v.GetParent().GetId()) {
-		return v, nil
-	}
 
-	return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
+	req = horus.UserById(v.ID)
+	return s.bare.User().Get(ctx, req)
 }
 
 func (s *UserServiceServer) Update(ctx context.Context, req *horus.UpdateUserRequest) (*horus.User, error) {
-	u, err := s.Get(ctx, req.GetKey())
-	if err != nil {
-		return nil, err
-	}
-	if req != nil {
+	f := frame.Must(ctx)
+
+	// TODO: Enable child transfer?
+	if req.GetParent() != nil {
 		req.Parent = nil
 	}
 
-	req.Key = horus.UserByIdV(u.Id)
+	v, err := s.hasPermission(ctx, f.Actor, req.GetKey())
+	if err != nil {
+		return nil, err
+	}
+
+	req.Key = horus.UserById(v.ID)
 	return s.bare.User().Update(ctx, req)
 }
 
 func (s *UserServiceServer) Delete(ctx context.Context, req *horus.GetUserRequest) (*emptypb.Empty, error) {
 	f := frame.Must(ctx)
 
-	u, err := s.bare.User().Get(ctx, req)
+	v, err := s.hasPermission(ctx, f.Actor, req)
 	if err != nil {
 		return nil, err
 	}
-
-	// Is the target user an actor or a descendant of the actor?
-	ok := false
-	cursor := u
-	for {
-		ok = bytes.Equal(cursor.Id, f.Actor.ID[:])
-		if ok {
-			break
-		}
-		if cursor.Parent == nil {
-			break
-		}
-
-		cursor, err = s.bare.User().Get(ctx, horus.UserByIdV(cursor.Parent.Id))
-		if err != nil {
-			return nil, err
-		}
-	}
-	if !ok {
-		return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
-	}
-	if u.Parent == nil {
+	if v.ParentID == nil {
 		return nil, status.Error(codes.FailedPrecondition, "root user cannot be deleted")
 	}
 
 	err = entutils.WithTx(ctx, s.db, func(tx *ent.Tx) error {
 		// Ensure the user still exist.
-		_, err := tx.User.Get(ctx, uuid.UUID(u.Id))
+		_, err := tx.User.Get(ctx, v.ID)
 		if err != nil {
 			return err
 		}
 
 		err = tx.User.Update().
-			Where(user.HasParentWith(user.IDEQ(uuid.UUID(u.Id)))).
-			SetParentID(uuid.UUID(u.Parent.Id)).
+			Where(user.HasParentWith(user.IDEQ(v.ID))).
+			SetParentID(*v.ParentID).
 			Exec(ctx)
 		if err != nil {
 			return fmt.Errorf("updates parent of children: %w", err)
 		}
 
-		err = tx.User.DeleteOneID(uuid.UUID(u.Id)).Exec(ctx)
+		err = tx.User.DeleteOneID(v.ID).Exec(ctx)
 		if err != nil {
 			return fmt.Errorf("delete: %w", err)
 		}
@@ -129,4 +102,16 @@ func (s *UserServiceServer) Delete(ctx context.Context, req *horus.GetUserReques
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+func (s *UserServiceServer) hasPermission(ctx context.Context, actor *ent.User, req *horus.GetUserRequest) (*ent.User, error) {
+	v, err := s.isAncestorOrMeQ(ctx, actor, req)
+	if err != nil {
+		return nil, err
+	}
+	if v == nil {
+		return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
+	}
+
+	return v, nil
 }

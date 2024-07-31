@@ -46,6 +46,26 @@ func (uu *UserUpdate) SetNillableAlias(s *string) *UserUpdate {
 	return uu
 }
 
+// SetParentID sets the "parent_id" field.
+func (uu *UserUpdate) SetParentID(u uuid.UUID) *UserUpdate {
+	uu.mutation.SetParentID(u)
+	return uu
+}
+
+// SetNillableParentID sets the "parent_id" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableParentID(u *uuid.UUID) *UserUpdate {
+	if u != nil {
+		uu.SetParentID(*u)
+	}
+	return uu
+}
+
+// ClearParentID clears the value of the "parent_id" field.
+func (uu *UserUpdate) ClearParentID() *UserUpdate {
+	uu.mutation.ClearParentID()
+	return uu
+}
+
 // SetSignInAttemptCount sets the "sign_in_attempt_count" field.
 func (uu *UserUpdate) SetSignInAttemptCount(u uint) *UserUpdate {
 	uu.mutation.ResetSignInAttemptCount()
@@ -84,20 +104,6 @@ func (uu *UserUpdate) SetNillableDateUnlocked(t *time.Time) *UserUpdate {
 // ClearDateUnlocked clears the value of the "date_unlocked" field.
 func (uu *UserUpdate) ClearDateUnlocked() *UserUpdate {
 	uu.mutation.ClearDateUnlocked()
-	return uu
-}
-
-// SetParentID sets the "parent" edge to the User entity by ID.
-func (uu *UserUpdate) SetParentID(id uuid.UUID) *UserUpdate {
-	uu.mutation.SetParentID(id)
-	return uu
-}
-
-// SetNillableParentID sets the "parent" edge to the User entity by ID if the given value is not nil.
-func (uu *UserUpdate) SetNillableParentID(id *uuid.UUID) *UserUpdate {
-	if id != nil {
-		uu = uu.SetParentID(*id)
-	}
 	return uu
 }
 
@@ -568,6 +574,26 @@ func (uuo *UserUpdateOne) SetNillableAlias(s *string) *UserUpdateOne {
 	return uuo
 }
 
+// SetParentID sets the "parent_id" field.
+func (uuo *UserUpdateOne) SetParentID(u uuid.UUID) *UserUpdateOne {
+	uuo.mutation.SetParentID(u)
+	return uuo
+}
+
+// SetNillableParentID sets the "parent_id" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableParentID(u *uuid.UUID) *UserUpdateOne {
+	if u != nil {
+		uuo.SetParentID(*u)
+	}
+	return uuo
+}
+
+// ClearParentID clears the value of the "parent_id" field.
+func (uuo *UserUpdateOne) ClearParentID() *UserUpdateOne {
+	uuo.mutation.ClearParentID()
+	return uuo
+}
+
 // SetSignInAttemptCount sets the "sign_in_attempt_count" field.
 func (uuo *UserUpdateOne) SetSignInAttemptCount(u uint) *UserUpdateOne {
 	uuo.mutation.ResetSignInAttemptCount()
@@ -606,20 +632,6 @@ func (uuo *UserUpdateOne) SetNillableDateUnlocked(t *time.Time) *UserUpdateOne {
 // ClearDateUnlocked clears the value of the "date_unlocked" field.
 func (uuo *UserUpdateOne) ClearDateUnlocked() *UserUpdateOne {
 	uuo.mutation.ClearDateUnlocked()
-	return uuo
-}
-
-// SetParentID sets the "parent" edge to the User entity by ID.
-func (uuo *UserUpdateOne) SetParentID(id uuid.UUID) *UserUpdateOne {
-	uuo.mutation.SetParentID(id)
-	return uuo
-}
-
-// SetNillableParentID sets the "parent" edge to the User entity by ID if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableParentID(id *uuid.UUID) *UserUpdateOne {
-	if id != nil {
-		uuo = uuo.SetParentID(*id)
-	}
 	return uuo
 }
 

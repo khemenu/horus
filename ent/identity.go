@@ -25,15 +25,18 @@ type Identity struct {
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// OwnerID holds the value of the "owner_id" field.
+	OwnerID uuid.UUID `json:"owner_id,omitempty"`
 	// Kind holds the value of the "kind" field.
 	Kind string `json:"kind,omitempty"`
+	// Value holds the value of the "value" field.
+	Value string `json:"value,omitempty"`
 	// Verifier holds the value of the "verifier" field.
-	Verifier string `json:"verifier,omitempty"`
+	Verifier *string `json:"verifier,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the IdentityQuery when eager-loading is set.
-	Edges           IdentityEdges `json:"edges"`
-	user_identities *uuid.UUID
-	selectValues    sql.SelectValues
+	Edges        IdentityEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // IdentityEdges holds the relations/edges for other nodes in the graph.
@@ -61,14 +64,12 @@ func (*Identity) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case identity.FieldName, identity.FieldDescription, identity.FieldKind, identity.FieldVerifier:
+		case identity.FieldName, identity.FieldDescription, identity.FieldKind, identity.FieldValue, identity.FieldVerifier:
 			values[i] = new(sql.NullString)
 		case identity.FieldDateCreated:
 			values[i] = new(sql.NullTime)
-		case identity.FieldID:
+		case identity.FieldID, identity.FieldOwnerID:
 			values[i] = new(uuid.UUID)
-		case identity.ForeignKeys[0]: // user_identities
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -108,24 +109,30 @@ func (i *Identity) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				i.Description = value.String
 			}
+		case identity.FieldOwnerID:
+			if value, ok := values[j].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field owner_id", values[j])
+			} else if value != nil {
+				i.OwnerID = *value
+			}
 		case identity.FieldKind:
 			if value, ok := values[j].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field kind", values[j])
 			} else if value.Valid {
 				i.Kind = value.String
 			}
+		case identity.FieldValue:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field value", values[j])
+			} else if value.Valid {
+				i.Value = value.String
+			}
 		case identity.FieldVerifier:
 			if value, ok := values[j].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field verifier", values[j])
 			} else if value.Valid {
-				i.Verifier = value.String
-			}
-		case identity.ForeignKeys[0]:
-			if value, ok := values[j].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field user_identities", values[j])
-			} else if value.Valid {
-				i.user_identities = new(uuid.UUID)
-				*i.user_identities = *value.S.(*uuid.UUID)
+				i.Verifier = new(string)
+				*i.Verifier = value.String
 			}
 		default:
 			i.selectValues.Set(columns[j], values[j])
@@ -134,9 +141,9 @@ func (i *Identity) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the Identity.
+// GetValue returns the ent.Value that was dynamically selected and assigned to the Identity.
 // This includes values selected through modifiers, order, etc.
-func (i *Identity) Value(name string) (ent.Value, error) {
+func (i *Identity) GetValue(name string) (ent.Value, error) {
 	return i.selectValues.Get(name)
 }
 
@@ -177,11 +184,19 @@ func (i *Identity) String() string {
 	builder.WriteString("description=")
 	builder.WriteString(i.Description)
 	builder.WriteString(", ")
+	builder.WriteString("owner_id=")
+	builder.WriteString(fmt.Sprintf("%v", i.OwnerID))
+	builder.WriteString(", ")
 	builder.WriteString("kind=")
 	builder.WriteString(i.Kind)
 	builder.WriteString(", ")
-	builder.WriteString("verifier=")
-	builder.WriteString(i.Verifier)
+	builder.WriteString("value=")
+	builder.WriteString(i.Value)
+	builder.WriteString(", ")
+	if v := i.Verifier; v != nil {
+		builder.WriteString("verifier=")
+		builder.WriteString(*v)
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

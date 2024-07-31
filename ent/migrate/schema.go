@@ -71,8 +71,9 @@ var (
 		{Name: "name", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "description", Type: field.TypeString, Size: 256, Default: ""},
 		{Name: "kind", Type: field.TypeString},
-		{Name: "verifier", Type: field.TypeString},
-		{Name: "user_identities", Type: field.TypeUUID},
+		{Name: "value", Type: field.TypeString},
+		{Name: "verifier", Type: field.TypeString, Nullable: true},
+		{Name: "owner_id", Type: field.TypeUUID},
 	}
 	// IdentitiesTable holds the schema information for the "identities" table.
 	IdentitiesTable = &schema.Table{
@@ -82,9 +83,16 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "identities_users_identities",
-				Columns:    []*schema.Column{IdentitiesColumns[6]},
+				Columns:    []*schema.Column{IdentitiesColumns[7]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "identity_owner_id_kind_value",
+				Unique:  true,
+				Columns: []*schema.Column{IdentitiesColumns[7], IdentitiesColumns[4], IdentitiesColumns[5]},
 			},
 		},
 	}
@@ -239,7 +247,7 @@ var (
 		{Name: "alias", Type: field.TypeString, Unique: true, Size: 32},
 		{Name: "sign_in_attempt_count", Type: field.TypeUint, Default: 0},
 		{Name: "date_unlocked", Type: field.TypeTime, Nullable: true},
-		{Name: "user_children", Type: field.TypeUUID, Nullable: true},
+		{Name: "parent_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{

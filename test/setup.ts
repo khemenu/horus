@@ -22,7 +22,7 @@ export default async function setup({ }: GlobalSetupContext) {
 	} catch (e) {
 		if (
 			![
-				'UND_ERR_SOCKET', // Ill-closed port?.
+				'UND_ERR_SOCKET', // Ill-closed port?
 				'ECONNREFUSED', // Closed port.
 			].includes(e.cause.code)) {
 			throw e
@@ -31,6 +31,7 @@ export default async function setup({ }: GlobalSetupContext) {
 
 	// `hr` must be installed.
 	await $`go install ./cmd/hr`
+	await $`hr init`
 	const p = await $`hr create user horus`.nothrow()
 	if (![0, ERR_ALREADY_EXIST].includes(p.exitCode)) {
 		throw new Error('hr create user horus', { cause: p })

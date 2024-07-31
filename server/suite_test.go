@@ -2,12 +2,12 @@ package server_test
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"khepri.dev/horus"
@@ -15,6 +15,7 @@ import (
 	"khepri.dev/horus/ent/account"
 	"khepri.dev/horus/ent/enttest"
 	"khepri.dev/horus/internal/fx"
+	"khepri.dev/horus/internal/suitehook"
 	"khepri.dev/horus/role"
 	"khepri.dev/horus/server"
 	"khepri.dev/horus/server/bare"
@@ -35,8 +36,7 @@ func NewSuiteWithSqliteStore() Suite {
 }
 
 type Suite struct {
-	suite.Suite
-	*require.Assertions
+	suitehook.Suite
 
 	driver_name string
 	source_name string
@@ -45,18 +45,13 @@ type Suite struct {
 	bare horus.Store
 	svc  horus.Server
 
-	me    *frame.Frame // Frame of actor.
-	child *frame.Frame // Frame of actor's child.
-	other *frame.Frame // User who does not have any relation with the actor.
+	root   *frame.Frame // Root user.
+	parent *frame.Frame // Frame of actor's parent. Equal to `root`.
+	me     *frame.Frame // Frame of actor.
+	child  *frame.Frame // Frame of actor's child.
+	other  *frame.Frame // User who does not have any relation with the actor.
 
 	ctx context.Context
-}
-
-func (s *Suite) Run(name string, subtest func()) bool {
-	return s.Suite.Run(name, func() {
-		s.Assertions = s.Require()
-		subtest()
-	})
 }
 
 func (s *Suite) ErrCode(err error, code codes.Code) {
@@ -66,9 +61,16 @@ func (s *Suite) ErrCode(err error, code codes.Code) {
 	s.Equal(code, st.Code())
 }
 
+func (s *Suite) CtxRoot() context.Context {
+	return frame.WithContext(s.ctx, s.root)
+}
+
+func (s *Suite) CtxParent() context.Context {
+	return frame.WithContext(s.ctx, s.parent)
+}
+
 func (s *Suite) CtxMe() context.Context {
 	return frame.WithContext(s.ctx, s.me)
-
 }
 
 func (s *Suite) CtxChild() context.Context {
@@ -79,11 +81,11 @@ func (s *Suite) CtxOther() context.Context {
 	return frame.WithContext(s.ctx, s.other)
 }
 
-func (s *Suite) initActor() *frame.Frame {
+func (s *Suite) initActor(alias string) *frame.Frame {
 	var err error
 	f := frame.New()
 
-	f.Actor, err = s.db.User.Create().Save(s.ctx)
+	f.Actor, err = s.db.User.Create().SetAlias(alias).Save(s.ctx)
 	s.NoError(err)
 
 	f.Token, err = s.db.Token.Create().
@@ -110,14 +112,19 @@ func (s *Suite) SetupSubTest() {
 	s.svc = server.NewServer(c)
 	s.ctx = context.Background()
 
-	s.me = s.initActor()
-	s.child = s.initActor()
-	s.other = s.initActor()
+	s.root = s.initActor("root")
+	s.parent = s.root
+	s.me = s.initActor("me")
+	s.child = s.initActor("child")
+	s.other = s.initActor("other")
 
-	_, err := s.child.Actor.Update().
-		SetParentID(s.me.Actor.ID).
-		Save(s.ctx)
+	var err error
+	s.me.Actor, err = s.me.Actor.Update().SetParentID(s.parent.Actor.ID).Save(s.ctx)
 	s.NoError(err)
+	s.child.Actor, err = s.child.Actor.Update().SetParentID(s.me.Actor.ID).Save(s.ctx)
+	s.NoError(err)
+
+	s.Suite.SetupSubTest()
 }
 
 func (s *Suite) TearDownSubTest() {
@@ -218,18 +225,18 @@ func (s *SuiteWithSilo) SetupSubTest() {
 
 	s.silo_owner = s.me
 
-	s.silo_admin = s.initActor()
+	s.silo_admin = s.initActor("silo-admin")
 	s.silo_admin.ActingAccount, err = s.db.Account.Create().SetSiloID(s.silo.ID).SetOwner(s.silo_admin.Actor).
 		SetAlias("admin").SetName("O-Ren Ishii").SetRole(role.Admin).Save(s.ctx)
 	s.NoError(err)
 
-	s.silo_member = s.initActor()
+	s.silo_member = s.initActor("silo-member")
 	s.silo_member.ActingAccount, err = s.db.Account.Create().SetSiloID(s.silo.ID).SetOwner(s.silo_member.Actor).
 		SetAlias("member").SetName("Budd").SetRole(role.Member).Save(s.ctx)
 	s.NoError(err)
 
 	s.other_silo_owner = s.other
-	s.other_silo_admin = s.initActor()
+	s.other_silo_admin = s.initActor("other-silo-admin")
 	s.other_silo_admin.ActingAccount, err = s.db.Account.Create().SetSiloID(s.other_silo.ID).SetOwner(s.other_silo_admin.Actor).
 		SetAlias("admin").SetName("Vernita").SetRole(role.Admin).Save(s.ctx)
 	s.NoError(err)
@@ -315,7 +322,7 @@ func (s *SuiteWithTeam) SetupSubTest() {
 			Role: role.Member,
 		},
 	} {
-		f := s.initActor()
+		f := s.initActor(fmt.Sprintf("team-%s", strings.ToLower(string(act.Role))))
 		f.ActingAccount, err = s.db.Account.Create().
 			SetSiloID(s.silo.ID).
 			SetOwner(f.Actor).

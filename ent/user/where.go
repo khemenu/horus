@@ -66,6 +66,11 @@ func Alias(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldAlias, v))
 }
 
+// ParentID applies equality check predicate on the "parent_id" field. It's identical to ParentIDEQ.
+func ParentID(v uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldParentID, v))
+}
+
 // SignInAttemptCount applies equality check predicate on the "sign_in_attempt_count" field. It's identical to SignInAttemptCountEQ.
 func SignInAttemptCount(v uint) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldSignInAttemptCount, v))
@@ -179,6 +184,36 @@ func AliasEqualFold(v string) predicate.User {
 // AliasContainsFold applies the ContainsFold predicate on the "alias" field.
 func AliasContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldAlias, v))
+}
+
+// ParentIDEQ applies the EQ predicate on the "parent_id" field.
+func ParentIDEQ(v uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldParentID, v))
+}
+
+// ParentIDNEQ applies the NEQ predicate on the "parent_id" field.
+func ParentIDNEQ(v uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldParentID, v))
+}
+
+// ParentIDIn applies the In predicate on the "parent_id" field.
+func ParentIDIn(vs ...uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldIn(FieldParentID, vs...))
+}
+
+// ParentIDNotIn applies the NotIn predicate on the "parent_id" field.
+func ParentIDNotIn(vs ...uuid.UUID) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldParentID, vs...))
+}
+
+// ParentIDIsNil applies the IsNil predicate on the "parent_id" field.
+func ParentIDIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldParentID))
+}
+
+// ParentIDNotNil applies the NotNil predicate on the "parent_id" field.
+func ParentIDNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldParentID))
 }
 
 // SignInAttemptCountEQ applies the EQ predicate on the "sign_in_attempt_count" field.

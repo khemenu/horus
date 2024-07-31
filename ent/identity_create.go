@@ -64,15 +64,35 @@ func (ic *IdentityCreate) SetNillableDescription(s *string) *IdentityCreate {
 	return ic
 }
 
+// SetOwnerID sets the "owner_id" field.
+func (ic *IdentityCreate) SetOwnerID(u uuid.UUID) *IdentityCreate {
+	ic.mutation.SetOwnerID(u)
+	return ic
+}
+
 // SetKind sets the "kind" field.
 func (ic *IdentityCreate) SetKind(s string) *IdentityCreate {
 	ic.mutation.SetKind(s)
 	return ic
 }
 
+// SetValue sets the "value" field.
+func (ic *IdentityCreate) SetValue(s string) *IdentityCreate {
+	ic.mutation.SetValue(s)
+	return ic
+}
+
 // SetVerifier sets the "verifier" field.
 func (ic *IdentityCreate) SetVerifier(s string) *IdentityCreate {
 	ic.mutation.SetVerifier(s)
+	return ic
+}
+
+// SetNillableVerifier sets the "verifier" field if the given value is not nil.
+func (ic *IdentityCreate) SetNillableVerifier(s *string) *IdentityCreate {
+	if s != nil {
+		ic.SetVerifier(*s)
+	}
 	return ic
 }
 
@@ -87,12 +107,6 @@ func (ic *IdentityCreate) SetNillableID(u *uuid.UUID) *IdentityCreate {
 	if u != nil {
 		ic.SetID(*u)
 	}
-	return ic
-}
-
-// SetOwnerID sets the "owner" edge to the User entity by ID.
-func (ic *IdentityCreate) SetOwnerID(id uuid.UUID) *IdentityCreate {
-	ic.mutation.SetOwnerID(id)
 	return ic
 }
 
@@ -175,6 +189,9 @@ func (ic *IdentityCreate) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Identity.description": %w`, err)}
 		}
 	}
+	if _, ok := ic.mutation.OwnerID(); !ok {
+		return &ValidationError{Name: "owner_id", err: errors.New(`ent: missing required field "Identity.owner_id"`)}
+	}
 	if _, ok := ic.mutation.Kind(); !ok {
 		return &ValidationError{Name: "kind", err: errors.New(`ent: missing required field "Identity.kind"`)}
 	}
@@ -183,13 +200,8 @@ func (ic *IdentityCreate) check() error {
 			return &ValidationError{Name: "kind", err: fmt.Errorf(`ent: validator failed for field "Identity.kind": %w`, err)}
 		}
 	}
-	if _, ok := ic.mutation.Verifier(); !ok {
-		return &ValidationError{Name: "verifier", err: errors.New(`ent: missing required field "Identity.verifier"`)}
-	}
-	if v, ok := ic.mutation.Verifier(); ok {
-		if err := identity.VerifierValidator(v); err != nil {
-			return &ValidationError{Name: "verifier", err: fmt.Errorf(`ent: validator failed for field "Identity.verifier": %w`, err)}
-		}
+	if _, ok := ic.mutation.Value(); !ok {
+		return &ValidationError{Name: "value", err: errors.New(`ent: missing required field "Identity.value"`)}
 	}
 	if _, ok := ic.mutation.OwnerID(); !ok {
 		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "Identity.owner"`)}
@@ -245,9 +257,13 @@ func (ic *IdentityCreate) createSpec() (*Identity, *sqlgraph.CreateSpec) {
 		_spec.SetField(identity.FieldKind, field.TypeString, value)
 		_node.Kind = value
 	}
+	if value, ok := ic.mutation.Value(); ok {
+		_spec.SetField(identity.FieldValue, field.TypeString, value)
+		_node.Value = value
+	}
 	if value, ok := ic.mutation.Verifier(); ok {
 		_spec.SetField(identity.FieldVerifier, field.TypeString, value)
-		_node.Verifier = value
+		_node.Verifier = &value
 	}
 	if nodes := ic.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -263,7 +279,7 @@ func (ic *IdentityCreate) createSpec() (*Identity, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.user_identities = &nodes[0]
+		_node.OwnerID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

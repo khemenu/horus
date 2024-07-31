@@ -38,7 +38,8 @@ message Identity {
 	bytes id = 1;
 	User owner = 2;
 	string kind = 3;
-	string verifier = 4;
+	string value = 4;
+	optional string verifier = 5;
 	string name = 7;
 	string description = 8;
 	google.protobuf.Timestamp date_created = 15;

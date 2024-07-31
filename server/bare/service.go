@@ -21,6 +21,10 @@ func (s *store) User() horus.UserServiceServer {
 	return NewUserServiceServer(s.db)
 }
 
+func (s *store) Identity() horus.IdentityServiceServer {
+	return NewIdentityServiceServer(s.db)
+}
+
 func (s *store) Account() horus.AccountServiceServer {
 	return NewAccountServiceServer(s.db)
 }

@@ -24,7 +24,6 @@ type IdentityQuery struct {
 	inters     []Interceptor
 	predicates []predicate.Identity
 	withOwner  *UserQuery
-	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -370,18 +369,11 @@ func (iq *IdentityQuery) prepareQuery(ctx context.Context) error {
 func (iq *IdentityQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Identity, error) {
 	var (
 		nodes       = []*Identity{}
-		withFKs     = iq.withFKs
 		_spec       = iq.querySpec()
 		loadedTypes = [1]bool{
 			iq.withOwner != nil,
 		}
 	)
-	if iq.withOwner != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, identity.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Identity).scanValues(nil, columns)
 	}
@@ -413,10 +405,7 @@ func (iq *IdentityQuery) loadOwner(ctx context.Context, query *UserQuery, nodes 
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*Identity)
 	for i := range nodes {
-		if nodes[i].user_identities == nil {
-			continue
-		}
-		fk := *nodes[i].user_identities
+		fk := nodes[i].OwnerID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -433,7 +422,7 @@ func (iq *IdentityQuery) loadOwner(ctx context.Context, query *UserQuery, nodes 
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_identities" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "owner_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -466,6 +455,9 @@ func (iq *IdentityQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != identity.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if iq.withOwner != nil {
+			_spec.Node.AddColumnOnce(identity.FieldOwnerID)
 		}
 	}
 	if ps := iq.predicates; len(ps) > 0 {

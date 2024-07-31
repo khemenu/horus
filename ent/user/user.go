@@ -19,6 +19,8 @@ const (
 	FieldDateCreated = "date_created"
 	// FieldAlias holds the string denoting the alias field in the database.
 	FieldAlias = "alias"
+	// FieldParentID holds the string denoting the parent_id field in the database.
+	FieldParentID = "parent_id"
 	// FieldSignInAttemptCount holds the string denoting the sign_in_attempt_count field in the database.
 	FieldSignInAttemptCount = "sign_in_attempt_count"
 	// FieldDateUnlocked holds the string denoting the date_unlocked field in the database.
@@ -38,18 +40,18 @@ const (
 	// ParentTable is the table that holds the parent relation/edge.
 	ParentTable = "users"
 	// ParentColumn is the table column denoting the parent relation/edge.
-	ParentColumn = "user_children"
+	ParentColumn = "parent_id"
 	// ChildrenTable is the table that holds the children relation/edge.
 	ChildrenTable = "users"
 	// ChildrenColumn is the table column denoting the children relation/edge.
-	ChildrenColumn = "user_children"
+	ChildrenColumn = "parent_id"
 	// IdentitiesTable is the table that holds the identities relation/edge.
 	IdentitiesTable = "identities"
 	// IdentitiesInverseTable is the table name for the Identity entity.
 	// It exists in this package in order to avoid circular dependency with the "identity" package.
 	IdentitiesInverseTable = "identities"
 	// IdentitiesColumn is the table column denoting the identities relation/edge.
-	IdentitiesColumn = "user_identities"
+	IdentitiesColumn = "owner_id"
 	// AccountsTable is the table that holds the accounts relation/edge.
 	AccountsTable = "accounts"
 	// AccountsInverseTable is the table name for the Account entity.
@@ -71,25 +73,15 @@ var Columns = []string{
 	FieldID,
 	FieldDateCreated,
 	FieldAlias,
+	FieldParentID,
 	FieldSignInAttemptCount,
 	FieldDateUnlocked,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "users"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"user_children",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -125,6 +117,11 @@ func ByDateCreated(opts ...sql.OrderTermOption) OrderOption {
 // ByAlias orders the results by the alias field.
 func ByAlias(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAlias, opts...).ToFunc()
+}
+
+// ByParentID orders the results by the parent_id field.
+func ByParentID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldParentID, opts...).ToFunc()
 }
 
 // BySignInAttemptCount orders the results by the sign_in_attempt_count field.

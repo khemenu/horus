@@ -115,13 +115,9 @@ func init() {
 	// identity.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	identity.DescriptionValidator = identityDescDescription.Validators[0].(func(string) error)
 	// identityDescKind is the schema descriptor for kind field.
-	identityDescKind := identityFields[0].Descriptor()
+	identityDescKind := identityFields[1].Descriptor()
 	// identity.KindValidator is a validator for the "kind" field. It is called by the builders before save.
 	identity.KindValidator = identityDescKind.Validators[0].(func(string) error)
-	// identityDescVerifier is the schema descriptor for verifier field.
-	identityDescVerifier := identityFields[1].Descriptor()
-	// identity.VerifierValidator is a validator for the "verifier" field. It is called by the builders before save.
-	identity.VerifierValidator = identityDescVerifier.Validators[0].(func(string) error)
 	// identityDescID is the schema descriptor for id field.
 	identityDescID := identityMixinFields0[0].Descriptor()
 	// identity.DefaultID holds the default value on creation for the id field.
@@ -322,7 +318,7 @@ func init() {
 		}
 	}()
 	// userDescSignInAttemptCount is the schema descriptor for sign_in_attempt_count field.
-	userDescSignInAttemptCount := userFields[0].Descriptor()
+	userDescSignInAttemptCount := userFields[1].Descriptor()
 	// user.DefaultSignInAttemptCount holds the default value on creation for the sign_in_attempt_count field.
 	user.DefaultSignInAttemptCount = userDescSignInAttemptCount.Default.(uint)
 	// userDescID is the schema descriptor for id field.

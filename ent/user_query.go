@@ -31,7 +31,6 @@ type UserQuery struct {
 	withIdentities *IdentityQuery
 	withAccounts   *AccountQuery
 	withTokens     *TokenQuery
-	withFKs        bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -513,7 +512,6 @@ func (uq *UserQuery) prepareQuery(ctx context.Context) error {
 func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, error) {
 	var (
 		nodes       = []*User{}
-		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
 		loadedTypes = [5]bool{
 			uq.withParent != nil,
@@ -523,12 +521,6 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			uq.withTokens != nil,
 		}
 	)
-	if uq.withParent != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, user.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*User).scanValues(nil, columns)
 	}
@@ -588,10 +580,10 @@ func (uq *UserQuery) loadParent(ctx context.Context, query *UserQuery, nodes []*
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*User)
 	for i := range nodes {
-		if nodes[i].user_children == nil {
+		if nodes[i].ParentID == nil {
 			continue
 		}
-		fk := *nodes[i].user_children
+		fk := *nodes[i].ParentID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -608,7 +600,7 @@ func (uq *UserQuery) loadParent(ctx context.Context, query *UserQuery, nodes []*
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_children" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "parent_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -626,7 +618,9 @@ func (uq *UserQuery) loadChildren(ctx context.Context, query *UserQuery, nodes [
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(user.FieldParentID)
+	}
 	query.Where(predicate.User(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(user.ChildrenColumn), fks...))
 	}))
@@ -635,13 +629,13 @@ func (uq *UserQuery) loadChildren(ctx context.Context, query *UserQuery, nodes [
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.user_children
+		fk := n.ParentID
 		if fk == nil {
-			return fmt.Errorf(`foreign-key "user_children" is nil for node %v`, n.ID)
+			return fmt.Errorf(`foreign-key "parent_id" is nil for node %v`, n.ID)
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_children" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "parent_id" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -657,7 +651,9 @@ func (uq *UserQuery) loadIdentities(ctx context.Context, query *IdentityQuery, n
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(identity.FieldOwnerID)
+	}
 	query.Where(predicate.Identity(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(user.IdentitiesColumn), fks...))
 	}))
@@ -666,13 +662,10 @@ func (uq *UserQuery) loadIdentities(ctx context.Context, query *IdentityQuery, n
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.user_identities
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "user_identities" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.OwnerID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_identities" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "owner_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -764,6 +757,9 @@ func (uq *UserQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != user.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if uq.withParent != nil {
+			_spec.Node.AddColumnOnce(user.FieldParentID)
 		}
 	}
 	if ps := uq.predicates; len(ps) > 0 {

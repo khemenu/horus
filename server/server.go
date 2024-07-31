@@ -1,12 +1,15 @@
 package server
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"strings"
 
 	"google.golang.org/grpc"
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
+	"khepri.dev/horus/ent/user"
 	"khepri.dev/horus/server/bare"
 	"khepri.dev/horus/tokens"
 )
@@ -23,6 +26,7 @@ func (s *server) Auth() horus.AuthServiceServer {
 type store struct {
 	conf       horus.ConfServiceServer
 	user       horus.UserServiceServer
+	identity   horus.IdentityServiceServer
 	account    horus.AccountServiceServer
 	invitation horus.InvitationServiceServer
 	membership horus.MembershipServiceServer
@@ -37,6 +41,10 @@ func (s *store) Conf() horus.ConfServiceServer {
 
 func (s *store) User() horus.UserServiceServer {
 	return s.user
+}
+
+func (s *store) Identity() horus.IdentityServiceServer {
+	return s.identity
 }
 
 func (s *store) Account() horus.AccountServiceServer {
@@ -78,6 +86,84 @@ func (b *base) withClient(client *ent.Client) *base {
 	return &b_
 }
 
+func (b *base) isAncestor(ctx context.Context, actor *ent.User, target *ent.User) (bool, error) {
+	if target.ParentID == nil {
+		return false, nil
+	}
+
+	parent_id := target.ParentID
+	for {
+		if parent_id == nil || *parent_id == actor.ID {
+			return true, nil
+		}
+
+		u, err := b.db.User.Query().
+			Select(user.FieldParentID).
+			Where(user.ID(*parent_id)).
+			Only(ctx)
+		if err != nil {
+			return false, bare.ToStatus(fmt.Errorf("query: %w", err))
+		}
+		if u.ParentID == nil {
+			return false, nil
+		}
+
+		parent_id = u.ParentID
+	}
+}
+
+func (b *base) isAncestorOrMe(ctx context.Context, actor *ent.User, target *ent.User) (bool, error) {
+	if actor.ID == target.ID || actor.Alias == target.Alias {
+		return true, nil
+	}
+
+	return b.isAncestor(ctx, actor, target)
+}
+
+func (b *base) isAncestorQ(ctx context.Context, actor *ent.User, req *horus.GetUserRequest) (*ent.User, error) {
+	p, err := bare.GetUserSpecifier(req)
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := b.db.User.Query().
+		Select(user.FieldParentID).
+		Where(p).
+		Only(ctx)
+	if err != nil {
+		return nil, bare.ToStatus(err)
+	}
+
+	ok, err := b.isAncestor(ctx, actor, u)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, nil
+	}
+
+	return u, nil
+}
+
+func (b *base) isAncestorOrMeQ(ctx context.Context, actor *ent.User, req *horus.GetUserRequest) (*ent.User, error) {
+	if req == nil || req.GetKey() == nil {
+		return actor, nil
+	}
+
+	switch k := req.Key.(type) {
+	case *horus.GetUserRequest_Id:
+		if bytes.Equal(actor.ID[:], k.Id) {
+			return actor, nil
+		}
+	case *horus.GetUserRequest_Alias:
+		if k.Alias == actor.Alias || k.Alias == horus.Me {
+			return actor, nil
+		}
+	}
+
+	return b.isAncestorQ(ctx, actor, req)
+}
+
 func NewServer(client *ent.Client) horus.Server {
 	b := &base{
 		db:   client,
@@ -96,6 +182,7 @@ func NewServer(client *ent.Client) horus.Server {
 		store: store{
 			conf:       &ConfServiceServer{base: b},
 			user:       &UserServiceServer{base: b},
+			identity:   &IdentityServiceServer{base: b},
 			account:    &AccountServiceServer{base: b},
 			invitation: &InvitationServiceServer{base: b},
 			membership: &MembershipServiceServer{base: b},

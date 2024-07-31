@@ -71,9 +71,19 @@ func Description(v string) predicate.Identity {
 	return predicate.Identity(sql.FieldEQ(FieldDescription, v))
 }
 
+// OwnerID applies equality check predicate on the "owner_id" field. It's identical to OwnerIDEQ.
+func OwnerID(v uuid.UUID) predicate.Identity {
+	return predicate.Identity(sql.FieldEQ(FieldOwnerID, v))
+}
+
 // Kind applies equality check predicate on the "kind" field. It's identical to KindEQ.
 func Kind(v string) predicate.Identity {
 	return predicate.Identity(sql.FieldEQ(FieldKind, v))
+}
+
+// Value applies equality check predicate on the "value" field. It's identical to ValueEQ.
+func Value(v string) predicate.Identity {
+	return predicate.Identity(sql.FieldEQ(FieldValue, v))
 }
 
 // Verifier applies equality check predicate on the "verifier" field. It's identical to VerifierEQ.
@@ -251,6 +261,26 @@ func DescriptionContainsFold(v string) predicate.Identity {
 	return predicate.Identity(sql.FieldContainsFold(FieldDescription, v))
 }
 
+// OwnerIDEQ applies the EQ predicate on the "owner_id" field.
+func OwnerIDEQ(v uuid.UUID) predicate.Identity {
+	return predicate.Identity(sql.FieldEQ(FieldOwnerID, v))
+}
+
+// OwnerIDNEQ applies the NEQ predicate on the "owner_id" field.
+func OwnerIDNEQ(v uuid.UUID) predicate.Identity {
+	return predicate.Identity(sql.FieldNEQ(FieldOwnerID, v))
+}
+
+// OwnerIDIn applies the In predicate on the "owner_id" field.
+func OwnerIDIn(vs ...uuid.UUID) predicate.Identity {
+	return predicate.Identity(sql.FieldIn(FieldOwnerID, vs...))
+}
+
+// OwnerIDNotIn applies the NotIn predicate on the "owner_id" field.
+func OwnerIDNotIn(vs ...uuid.UUID) predicate.Identity {
+	return predicate.Identity(sql.FieldNotIn(FieldOwnerID, vs...))
+}
+
 // KindEQ applies the EQ predicate on the "kind" field.
 func KindEQ(v string) predicate.Identity {
 	return predicate.Identity(sql.FieldEQ(FieldKind, v))
@@ -316,6 +346,71 @@ func KindContainsFold(v string) predicate.Identity {
 	return predicate.Identity(sql.FieldContainsFold(FieldKind, v))
 }
 
+// ValueEQ applies the EQ predicate on the "value" field.
+func ValueEQ(v string) predicate.Identity {
+	return predicate.Identity(sql.FieldEQ(FieldValue, v))
+}
+
+// ValueNEQ applies the NEQ predicate on the "value" field.
+func ValueNEQ(v string) predicate.Identity {
+	return predicate.Identity(sql.FieldNEQ(FieldValue, v))
+}
+
+// ValueIn applies the In predicate on the "value" field.
+func ValueIn(vs ...string) predicate.Identity {
+	return predicate.Identity(sql.FieldIn(FieldValue, vs...))
+}
+
+// ValueNotIn applies the NotIn predicate on the "value" field.
+func ValueNotIn(vs ...string) predicate.Identity {
+	return predicate.Identity(sql.FieldNotIn(FieldValue, vs...))
+}
+
+// ValueGT applies the GT predicate on the "value" field.
+func ValueGT(v string) predicate.Identity {
+	return predicate.Identity(sql.FieldGT(FieldValue, v))
+}
+
+// ValueGTE applies the GTE predicate on the "value" field.
+func ValueGTE(v string) predicate.Identity {
+	return predicate.Identity(sql.FieldGTE(FieldValue, v))
+}
+
+// ValueLT applies the LT predicate on the "value" field.
+func ValueLT(v string) predicate.Identity {
+	return predicate.Identity(sql.FieldLT(FieldValue, v))
+}
+
+// ValueLTE applies the LTE predicate on the "value" field.
+func ValueLTE(v string) predicate.Identity {
+	return predicate.Identity(sql.FieldLTE(FieldValue, v))
+}
+
+// ValueContains applies the Contains predicate on the "value" field.
+func ValueContains(v string) predicate.Identity {
+	return predicate.Identity(sql.FieldContains(FieldValue, v))
+}
+
+// ValueHasPrefix applies the HasPrefix predicate on the "value" field.
+func ValueHasPrefix(v string) predicate.Identity {
+	return predicate.Identity(sql.FieldHasPrefix(FieldValue, v))
+}
+
+// ValueHasSuffix applies the HasSuffix predicate on the "value" field.
+func ValueHasSuffix(v string) predicate.Identity {
+	return predicate.Identity(sql.FieldHasSuffix(FieldValue, v))
+}
+
+// ValueEqualFold applies the EqualFold predicate on the "value" field.
+func ValueEqualFold(v string) predicate.Identity {
+	return predicate.Identity(sql.FieldEqualFold(FieldValue, v))
+}
+
+// ValueContainsFold applies the ContainsFold predicate on the "value" field.
+func ValueContainsFold(v string) predicate.Identity {
+	return predicate.Identity(sql.FieldContainsFold(FieldValue, v))
+}
+
 // VerifierEQ applies the EQ predicate on the "verifier" field.
 func VerifierEQ(v string) predicate.Identity {
 	return predicate.Identity(sql.FieldEQ(FieldVerifier, v))
@@ -369,6 +464,16 @@ func VerifierHasPrefix(v string) predicate.Identity {
 // VerifierHasSuffix applies the HasSuffix predicate on the "verifier" field.
 func VerifierHasSuffix(v string) predicate.Identity {
 	return predicate.Identity(sql.FieldHasSuffix(FieldVerifier, v))
+}
+
+// VerifierIsNil applies the IsNil predicate on the "verifier" field.
+func VerifierIsNil() predicate.Identity {
+	return predicate.Identity(sql.FieldIsNull(FieldVerifier))
+}
+
+// VerifierNotNil applies the NotNil predicate on the "verifier" field.
+func VerifierNotNil() predicate.Identity {
+	return predicate.Identity(sql.FieldNotNull(FieldVerifier))
 }
 
 // VerifierEqualFold applies the EqualFold predicate on the "verifier" field.

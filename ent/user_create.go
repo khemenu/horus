@@ -52,6 +52,20 @@ func (uc *UserCreate) SetNillableAlias(s *string) *UserCreate {
 	return uc
 }
 
+// SetParentID sets the "parent_id" field.
+func (uc *UserCreate) SetParentID(u uuid.UUID) *UserCreate {
+	uc.mutation.SetParentID(u)
+	return uc
+}
+
+// SetNillableParentID sets the "parent_id" field if the given value is not nil.
+func (uc *UserCreate) SetNillableParentID(u *uuid.UUID) *UserCreate {
+	if u != nil {
+		uc.SetParentID(*u)
+	}
+	return uc
+}
+
 // SetSignInAttemptCount sets the "sign_in_attempt_count" field.
 func (uc *UserCreate) SetSignInAttemptCount(u uint) *UserCreate {
 	uc.mutation.SetSignInAttemptCount(u)
@@ -90,20 +104,6 @@ func (uc *UserCreate) SetID(u uuid.UUID) *UserCreate {
 func (uc *UserCreate) SetNillableID(u *uuid.UUID) *UserCreate {
 	if u != nil {
 		uc.SetID(*u)
-	}
-	return uc
-}
-
-// SetParentID sets the "parent" edge to the User entity by ID.
-func (uc *UserCreate) SetParentID(id uuid.UUID) *UserCreate {
-	uc.mutation.SetParentID(id)
-	return uc
-}
-
-// SetNillableParentID sets the "parent" edge to the User entity by ID if the given value is not nil.
-func (uc *UserCreate) SetNillableParentID(id *uuid.UUID) *UserCreate {
-	if id != nil {
-		uc = uc.SetParentID(*id)
 	}
 	return uc
 }
@@ -307,7 +307,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.user_children = &nodes[0]
+		_node.ParentID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := uc.mutation.ChildrenIDs(); len(nodes) > 0 {

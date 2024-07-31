@@ -33,7 +33,7 @@ func (s *IdentityServiceServer) Create(ctx context.Context, req *horus.CreateIde
 		q.SetDescription(*v)
 	}
 	q.SetKind(req.GetKind())
-	q.SetVerifier(req.GetVerifier())
+	q.SetValue(req.GetValue())
 	if id, err := GetUserId(ctx, s.db, req.GetOwner()); err != nil {
 		return nil, err
 	} else {
@@ -91,9 +91,6 @@ func (s *IdentityServiceServer) Update(ctx context.Context, req *horus.UpdateIde
 	if v := req.Description; v != nil {
 		q.SetDescription(*v)
 	}
-	if v := req.Verifier; v != nil {
-		q.SetVerifier(*v)
-	}
 
 	res, err := q.Save(ctx)
 	if err != nil {
@@ -109,6 +106,7 @@ func ToProtoIdentity(v *ent.Identity) *horus.Identity {
 	m.Name = v.Name
 	m.Description = v.Description
 	m.Kind = v.Kind
+	m.Value = v.Value
 	m.Verifier = v.Verifier
 	if v := v.Edges.Owner; v != nil {
 		m.Owner = ToProtoUser(v)

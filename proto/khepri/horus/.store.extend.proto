@@ -14,6 +14,18 @@ message ListTokenResponse {
 	repeated Token items = 1;
 }
 
+message ListIdentityRequest {
+	uint32                    limit = 1;
+	google.protobuf.Timestamp token = 2;
+
+	oneof key {
+		GetUserRequest owner = 3;
+	}
+}
+message ListIdentityResponse {
+	repeated Identity items = 1;
+}
+
 message ListAccountRequest {
 	uint32                    limit = 1;
 	google.protobuf.Timestamp token = 2;

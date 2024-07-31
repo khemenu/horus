@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"github.com/lesomnus/entpb"
 )
 
@@ -21,6 +22,10 @@ func (User) Mixin() []ent.Mixin {
 
 func (User) Fields() []ent.Field {
 	return []ent.Field{
+		field.UUID("parent_id", uuid.UUID{}).
+			Optional().
+			Nillable(),
+
 		field.Uint("sign_in_attempt_count").
 			Default(0),
 
@@ -38,6 +43,7 @@ func (User) Edges() []ent.Edge {
 			Annotations(entpb.Field(4)).
 			From("parent").
 			Annotations(entpb.Field(3, entpb.WithWritable())).
+			Field("parent_id").
 			Unique(),
 		edge.To("identities", Identity.Type).
 			Annotations(entpb.Field(5)),

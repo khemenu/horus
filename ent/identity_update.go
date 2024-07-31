@@ -69,6 +69,12 @@ func (iu *IdentityUpdate) SetNillableVerifier(s *string) *IdentityUpdate {
 	return iu
 }
 
+// ClearVerifier clears the value of the "verifier" field.
+func (iu *IdentityUpdate) ClearVerifier() *IdentityUpdate {
+	iu.mutation.ClearVerifier()
+	return iu
+}
+
 // Mutation returns the IdentityMutation object of the builder.
 func (iu *IdentityUpdate) Mutation() *IdentityMutation {
 	return iu.mutation
@@ -113,11 +119,6 @@ func (iu *IdentityUpdate) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Identity.description": %w`, err)}
 		}
 	}
-	if v, ok := iu.mutation.Verifier(); ok {
-		if err := identity.VerifierValidator(v); err != nil {
-			return &ValidationError{Name: "verifier", err: fmt.Errorf(`ent: validator failed for field "Identity.verifier": %w`, err)}
-		}
-	}
 	if _, ok := iu.mutation.OwnerID(); iu.mutation.OwnerCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Identity.owner"`)
 	}
@@ -144,6 +145,9 @@ func (iu *IdentityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := iu.mutation.Verifier(); ok {
 		_spec.SetField(identity.FieldVerifier, field.TypeString, value)
+	}
+	if iu.mutation.VerifierCleared() {
+		_spec.ClearField(identity.FieldVerifier, field.TypeString)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -207,6 +211,12 @@ func (iuo *IdentityUpdateOne) SetNillableVerifier(s *string) *IdentityUpdateOne 
 	return iuo
 }
 
+// ClearVerifier clears the value of the "verifier" field.
+func (iuo *IdentityUpdateOne) ClearVerifier() *IdentityUpdateOne {
+	iuo.mutation.ClearVerifier()
+	return iuo
+}
+
 // Mutation returns the IdentityMutation object of the builder.
 func (iuo *IdentityUpdateOne) Mutation() *IdentityMutation {
 	return iuo.mutation
@@ -264,11 +274,6 @@ func (iuo *IdentityUpdateOne) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Identity.description": %w`, err)}
 		}
 	}
-	if v, ok := iuo.mutation.Verifier(); ok {
-		if err := identity.VerifierValidator(v); err != nil {
-			return &ValidationError{Name: "verifier", err: fmt.Errorf(`ent: validator failed for field "Identity.verifier": %w`, err)}
-		}
-	}
 	if _, ok := iuo.mutation.OwnerID(); iuo.mutation.OwnerCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Identity.owner"`)
 	}
@@ -312,6 +317,9 @@ func (iuo *IdentityUpdateOne) sqlSave(ctx context.Context) (_node *Identity, err
 	}
 	if value, ok := iuo.mutation.Verifier(); ok {
 		_spec.SetField(identity.FieldVerifier, field.TypeString, value)
+	}
+	if iuo.mutation.VerifierCleared() {
+		_spec.ClearField(identity.FieldVerifier, field.TypeString)
 	}
 	_node = &Identity{config: iuo.config}
 	_spec.Assign = _node.assignValues

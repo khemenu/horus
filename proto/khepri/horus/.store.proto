@@ -29,6 +29,7 @@ service IdentityService {
 	rpc Create (CreateIdentityRequest) returns (Identity);
 	rpc Delete (GetIdentityRequest) returns (google.protobuf.Empty);
 	rpc Get (GetIdentityRequest) returns (Identity);
+	rpc List (ListIdentityRequest) returns (ListIdentityResponse);
 	rpc Update (UpdateIdentityRequest) returns (Identity);
 }
 
@@ -94,7 +95,7 @@ message CreateConfRequest {
 message CreateIdentityRequest {
 	GetUserRequest owner = 2;
 	string kind = 3;
-	string verifier = 4;
+	string value = 4;
 	optional string name = 7;
 	optional string description = 8;
 }
@@ -234,7 +235,6 @@ message UpdateConfRequest {
 
 message UpdateIdentityRequest {
 	GetIdentityRequest key = 1;
-	optional string verifier = 4;
 	optional string name = 7;
 	optional string description = 8;
 }
