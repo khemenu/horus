@@ -81,10 +81,10 @@ func (mu *MembershipUpdate) check() error {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "Membership.role": %w`, err)}
 		}
 	}
-	if _, ok := mu.mutation.AccountID(); mu.mutation.AccountCleared() && !ok {
+	if mu.mutation.AccountCleared() && len(mu.mutation.AccountIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Membership.account"`)
 	}
-	if _, ok := mu.mutation.TeamID(); mu.mutation.TeamCleared() && !ok {
+	if mu.mutation.TeamCleared() && len(mu.mutation.TeamIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Membership.team"`)
 	}
 	return nil
@@ -191,10 +191,10 @@ func (muo *MembershipUpdateOne) check() error {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "Membership.role": %w`, err)}
 		}
 	}
-	if _, ok := muo.mutation.AccountID(); muo.mutation.AccountCleared() && !ok {
+	if muo.mutation.AccountCleared() && len(muo.mutation.AccountIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Membership.account"`)
 	}
-	if _, ok := muo.mutation.TeamID(); muo.mutation.TeamCleared() && !ok {
+	if muo.mutation.TeamCleared() && len(muo.mutation.TeamIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Membership.team"`)
 	}
 	return nil

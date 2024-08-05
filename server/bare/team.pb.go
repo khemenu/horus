@@ -138,6 +138,7 @@ func GetTeamId(ctx context.Context, db *ent.Client, req *horus.GetTeamRequest) (
 
 	return v, nil
 }
+
 func GetTeamSpecifier(req *horus.GetTeamRequest) (predicate.Team, error) {
 	switch t := req.GetKey().(type) {
 	case *horus.GetTeamRequest_Id:
@@ -156,9 +157,30 @@ func GetTeamSpecifier(req *horus.GetTeamRequest) (predicate.Team, error) {
 			ps = append(ps, team.HasSiloWith(p))
 		}
 		return team.And(ps...), nil
+	case *horus.GetTeamRequest_Query:
+		if req, err := ResolveGetTeamQuery(req); err != nil {
+			return nil, err
+		} else {
+			return GetTeamSpecifier(req)
+		}
 	case nil:
 		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
 	default:
 		return nil, status.Errorf(codes.Unimplemented, "unknown type of key")
 	}
+}
+
+func ResolveGetTeamQuery(req *horus.GetTeamRequest) (*horus.GetTeamRequest, error) {
+	t, ok := req.Key.(*horus.GetTeamRequest_Query)
+	if !ok {
+		return req, nil
+	}
+
+	q := t.Query
+
+	v, err := uuid.Parse(q)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid query string: %s", err)
+	}
+	return horus.TeamById(v), nil
 }

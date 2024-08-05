@@ -13,6 +13,7 @@ import (
 	ent "khepri.dev/horus/ent"
 	predicate "khepri.dev/horus/ent/predicate"
 	silo "khepri.dev/horus/ent/silo"
+	strings "strings"
 )
 
 type SiloServiceServer struct {
@@ -128,6 +129,7 @@ func GetSiloId(ctx context.Context, db *ent.Client, req *horus.GetSiloRequest) (
 
 	return v, nil
 }
+
 func GetSiloSpecifier(req *horus.GetSiloRequest) (predicate.Silo, error) {
 	switch t := req.GetKey().(type) {
 	case *horus.GetSiloRequest_Id:
@@ -138,9 +140,33 @@ func GetSiloSpecifier(req *horus.GetSiloRequest) (predicate.Silo, error) {
 		}
 	case *horus.GetSiloRequest_Alias:
 		return silo.AliasEQ(t.Alias), nil
+	case *horus.GetSiloRequest_Query:
+		if req, err := ResolveGetSiloQuery(req); err != nil {
+			return nil, err
+		} else {
+			return GetSiloSpecifier(req)
+		}
 	case nil:
 		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
 	default:
 		return nil, status.Errorf(codes.Unimplemented, "unknown type of key")
 	}
+}
+
+func ResolveGetSiloQuery(req *horus.GetSiloRequest) (*horus.GetSiloRequest, error) {
+	t, ok := req.Key.(*horus.GetSiloRequest_Query)
+	if !ok {
+		return req, nil
+	}
+
+	q := t.Query
+
+	if v, ok := strings.CutPrefix(q, "@"); ok {
+		return horus.SiloByAlias(v), nil
+	}
+	v, err := uuid.Parse(q)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid query string: %s", err)
+	}
+	return horus.SiloById(v), nil
 }

@@ -45,15 +45,15 @@ func (s *InvitationServiceServer) Create(ctx context.Context, req *horus.CreateI
 		w := v.AsTime()
 		q.SetDateCanceled(w)
 	}
-	if id, err := GetSiloId(ctx, s.db, req.GetSilo()); err != nil {
-		return nil, err
-	} else {
-		q.SetSiloID(id)
-	}
 	if id, err := GetAccountId(ctx, s.db, req.GetInviter()); err != nil {
 		return nil, err
 	} else {
 		q.SetInviterID(id)
+	}
+	if id, err := GetSiloId(ctx, s.db, req.GetSilo()); err != nil {
+		return nil, err
+	} else {
+		q.SetSiloID(id)
 	}
 
 	res, err := q.Save(ctx)
@@ -90,8 +90,8 @@ func (s *InvitationServiceServer) Get(ctx context.Context, req *horus.GetInvitat
 	return ToProtoInvitation(res), nil
 }
 func QueryInvitationWithEdgeIds(q *ent.InvitationQuery) *ent.InvitationQuery {
-	q.WithSilo(func(q *ent.SiloQuery) { q.Select(silo.FieldID) })
 	q.WithInviter(func(q *ent.AccountQuery) { q.Select(account.FieldID) })
+	q.WithSilo(func(q *ent.SiloQuery) { q.Select(silo.FieldID) })
 
 	return q
 }
@@ -142,27 +142,70 @@ func ToProtoInvitation(v *ent.Invitation) *horus.Invitation {
 	if v.DateCanceled != nil {
 		m.DateCanceled = timestamppb.New(*v.DateCanceled)
 	}
-	if v := v.Edges.Silo; v != nil {
-		m.Silo = ToProtoSilo(v)
-	}
 	if v := v.Edges.Inviter; v != nil {
 		m.Inviter = ToProtoAccount(v)
+	}
+	if v := v.Edges.Silo; v != nil {
+		m.Silo = ToProtoSilo(v)
 	}
 	return m
 }
 func GetInvitationId(ctx context.Context, db *ent.Client, req *horus.GetInvitationRequest) (uuid.UUID, error) {
 	var r uuid.UUID
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		r = v
-		return r, nil
+	k := req.GetKey()
+	if t, ok := k.(*horus.GetInvitationRequest_Id); ok {
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return v, nil
+		}
+	}
+
+	p, err := GetInvitationSpecifier(req)
+	if err != nil {
+		return r, err
+	}
+
+	v, err := db.Invitation.Query().Where(p).OnlyID(ctx)
+	if err != nil {
+		return r, ToStatus(err)
+	}
+
+	return v, nil
+}
+
+func GetInvitationSpecifier(req *horus.GetInvitationRequest) (predicate.Invitation, error) {
+	switch t := req.GetKey().(type) {
+	case *horus.GetInvitationRequest_Id:
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return invitation.IDEQ(v), nil
+		}
+	case *horus.GetInvitationRequest_Query:
+		if req, err := ResolveGetInvitationQuery(req); err != nil {
+			return nil, err
+		} else {
+			return GetInvitationSpecifier(req)
+		}
+	case nil:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
+	default:
+		return nil, status.Errorf(codes.Unimplemented, "unknown type of key")
 	}
 }
-func GetInvitationSpecifier(req *horus.GetInvitationRequest) (predicate.Invitation, error) {
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		return invitation.IDEQ(v), nil
+
+func ResolveGetInvitationQuery(req *horus.GetInvitationRequest) (*horus.GetInvitationRequest, error) {
+	t, ok := req.Key.(*horus.GetInvitationRequest_Query)
+	if !ok {
+		return req, nil
 	}
+
+	q := t.Query
+
+	v, err := uuid.Parse(q)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid query string: %s", err)
+	}
+	return horus.InvitationById(v), nil
 }

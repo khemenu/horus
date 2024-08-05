@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -158,7 +159,7 @@ func (aq *AccountQuery) QueryInvitations() *InvitationQuery {
 // First returns the first Account entity from the query.
 // Returns a *NotFoundError when no Account was found.
 func (aq *AccountQuery) First(ctx context.Context) (*Account, error) {
-	nodes, err := aq.Limit(1).All(setContextOp(ctx, aq.ctx, "First"))
+	nodes, err := aq.Limit(1).All(setContextOp(ctx, aq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +182,7 @@ func (aq *AccountQuery) FirstX(ctx context.Context) *Account {
 // Returns a *NotFoundError when no Account ID was found.
 func (aq *AccountQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = aq.Limit(1).IDs(setContextOp(ctx, aq.ctx, "FirstID")); err != nil {
+	if ids, err = aq.Limit(1).IDs(setContextOp(ctx, aq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -204,7 +205,7 @@ func (aq *AccountQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Returns a *NotSingularError when more than one Account entity is found.
 // Returns a *NotFoundError when no Account entities are found.
 func (aq *AccountQuery) Only(ctx context.Context) (*Account, error) {
-	nodes, err := aq.Limit(2).All(setContextOp(ctx, aq.ctx, "Only"))
+	nodes, err := aq.Limit(2).All(setContextOp(ctx, aq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +233,7 @@ func (aq *AccountQuery) OnlyX(ctx context.Context) *Account {
 // Returns a *NotFoundError when no entities are found.
 func (aq *AccountQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = aq.Limit(2).IDs(setContextOp(ctx, aq.ctx, "OnlyID")); err != nil {
+	if ids, err = aq.Limit(2).IDs(setContextOp(ctx, aq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -257,7 +258,7 @@ func (aq *AccountQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 
 // All executes the query and returns a list of Accounts.
 func (aq *AccountQuery) All(ctx context.Context) ([]*Account, error) {
-	ctx = setContextOp(ctx, aq.ctx, "All")
+	ctx = setContextOp(ctx, aq.ctx, ent.OpQueryAll)
 	if err := aq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -279,7 +280,7 @@ func (aq *AccountQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if aq.ctx.Unique == nil && aq.path != nil {
 		aq.Unique(true)
 	}
-	ctx = setContextOp(ctx, aq.ctx, "IDs")
+	ctx = setContextOp(ctx, aq.ctx, ent.OpQueryIDs)
 	if err = aq.Select(account.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -297,7 +298,7 @@ func (aq *AccountQuery) IDsX(ctx context.Context) []uuid.UUID {
 
 // Count returns the count of the given query.
 func (aq *AccountQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, aq.ctx, "Count")
+	ctx = setContextOp(ctx, aq.ctx, ent.OpQueryCount)
 	if err := aq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -315,7 +316,7 @@ func (aq *AccountQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (aq *AccountQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, aq.ctx, "Exist")
+	ctx = setContextOp(ctx, aq.ctx, ent.OpQueryExist)
 	switch _, err := aq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -754,7 +755,7 @@ func (agb *AccountGroupBy) Aggregate(fns ...AggregateFunc) *AccountGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (agb *AccountGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, agb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, agb.build.ctx, ent.OpQueryGroupBy)
 	if err := agb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -802,7 +803,7 @@ func (as *AccountSelect) Aggregate(fns ...AggregateFunc) *AccountSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (as *AccountSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, as.ctx, "Select")
+	ctx = setContextOp(ctx, as.ctx, ent.OpQuerySelect)
 	if err := as.prepareQuery(ctx); err != nil {
 		return err
 	}

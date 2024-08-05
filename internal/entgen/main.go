@@ -54,7 +54,7 @@ func main() {
 	}
 
 	proto_file_init := entpb.ProtoFileInit{
-		PbPackage: ident.Full{"khepri", "horus"},
+		PbPackage: ident.Must("khepri", "horus"),
 		GoPackage: "khepri.dev/horus",
 	}
 	err = entc.Generate(

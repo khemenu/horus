@@ -44,24 +44,13 @@ type Invitation struct {
 
 // InvitationEdges holds the relations/edges for other nodes in the graph.
 type InvitationEdges struct {
-	// Silo holds the value of the silo edge.
-	Silo *Silo `json:"silo,omitempty"`
 	// Inviter holds the value of the inviter edge.
 	Inviter *Account `json:"inviter,omitempty"`
+	// Silo holds the value of the silo edge.
+	Silo *Silo `json:"silo,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [2]bool
-}
-
-// SiloOrErr returns the Silo value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e InvitationEdges) SiloOrErr() (*Silo, error) {
-	if e.Silo != nil {
-		return e.Silo, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: silo.Label}
-	}
-	return nil, &NotLoadedError{edge: "silo"}
 }
 
 // InviterOrErr returns the Inviter value or an error if the edge
@@ -69,10 +58,21 @@ func (e InvitationEdges) SiloOrErr() (*Silo, error) {
 func (e InvitationEdges) InviterOrErr() (*Account, error) {
 	if e.Inviter != nil {
 		return e.Inviter, nil
-	} else if e.loadedTypes[1] {
+	} else if e.loadedTypes[0] {
 		return nil, &NotFoundError{label: account.Label}
 	}
 	return nil, &NotLoadedError{edge: "inviter"}
+}
+
+// SiloOrErr returns the Silo value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e InvitationEdges) SiloOrErr() (*Silo, error) {
+	if e.Silo != nil {
+		return e.Silo, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: silo.Label}
+	}
+	return nil, &NotLoadedError{edge: "silo"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -183,14 +183,14 @@ func (i *Invitation) Value(name string) (ent.Value, error) {
 	return i.selectValues.Get(name)
 }
 
-// QuerySilo queries the "silo" edge of the Invitation entity.
-func (i *Invitation) QuerySilo() *SiloQuery {
-	return NewInvitationClient(i.config).QuerySilo(i)
-}
-
 // QueryInviter queries the "inviter" edge of the Invitation entity.
 func (i *Invitation) QueryInviter() *AccountQuery {
 	return NewInvitationClient(i.config).QueryInviter(i)
+}
+
+// QuerySilo queries the "silo" edge of the Invitation entity.
+func (i *Invitation) QuerySilo() *SiloQuery {
+	return NewInvitationClient(i.config).QuerySilo(i)
 }
 
 // Update returns a builder for updating this Invitation.

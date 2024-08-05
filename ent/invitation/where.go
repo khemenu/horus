@@ -451,29 +451,6 @@ func DateCanceledNotNil() predicate.Invitation {
 	return predicate.Invitation(sql.FieldNotNull(FieldDateCanceled))
 }
 
-// HasSilo applies the HasEdge predicate on the "silo" edge.
-func HasSilo() predicate.Invitation {
-	return predicate.Invitation(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, SiloTable, SiloColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasSiloWith applies the HasEdge predicate on the "silo" edge with a given conditions (other predicates).
-func HasSiloWith(preds ...predicate.Silo) predicate.Invitation {
-	return predicate.Invitation(func(s *sql.Selector) {
-		step := newSiloStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // HasInviter applies the HasEdge predicate on the "inviter" edge.
 func HasInviter() predicate.Invitation {
 	return predicate.Invitation(func(s *sql.Selector) {
@@ -489,6 +466,29 @@ func HasInviter() predicate.Invitation {
 func HasInviterWith(preds ...predicate.Account) predicate.Invitation {
 	return predicate.Invitation(func(s *sql.Selector) {
 		step := newInviterStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasSilo applies the HasEdge predicate on the "silo" edge.
+func HasSilo() predicate.Invitation {
+	return predicate.Invitation(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, SiloTable, SiloColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSiloWith applies the HasEdge predicate on the "silo" edge with a given conditions (other predicates).
+func HasSiloWith(preds ...predicate.Silo) predicate.Invitation {
+	return predicate.Invitation(func(s *sql.Selector) {
+		step := newSiloStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

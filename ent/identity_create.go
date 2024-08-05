@@ -203,7 +203,7 @@ func (ic *IdentityCreate) check() error {
 	if _, ok := ic.mutation.Value(); !ok {
 		return &ValidationError{Name: "value", err: errors.New(`ent: missing required field "Identity.value"`)}
 	}
-	if _, ok := ic.mutation.OwnerID(); !ok {
+	if len(ic.mutation.OwnerIDs()) == 0 {
 		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "Identity.owner"`)}
 	}
 	return nil

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -134,7 +135,7 @@ func (sq *SiloQuery) QueryInvitations() *InvitationQuery {
 // First returns the first Silo entity from the query.
 // Returns a *NotFoundError when no Silo was found.
 func (sq *SiloQuery) First(ctx context.Context) (*Silo, error) {
-	nodes, err := sq.Limit(1).All(setContextOp(ctx, sq.ctx, "First"))
+	nodes, err := sq.Limit(1).All(setContextOp(ctx, sq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +158,7 @@ func (sq *SiloQuery) FirstX(ctx context.Context) *Silo {
 // Returns a *NotFoundError when no Silo ID was found.
 func (sq *SiloQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = sq.Limit(1).IDs(setContextOp(ctx, sq.ctx, "FirstID")); err != nil {
+	if ids, err = sq.Limit(1).IDs(setContextOp(ctx, sq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -180,7 +181,7 @@ func (sq *SiloQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Returns a *NotSingularError when more than one Silo entity is found.
 // Returns a *NotFoundError when no Silo entities are found.
 func (sq *SiloQuery) Only(ctx context.Context) (*Silo, error) {
-	nodes, err := sq.Limit(2).All(setContextOp(ctx, sq.ctx, "Only"))
+	nodes, err := sq.Limit(2).All(setContextOp(ctx, sq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +209,7 @@ func (sq *SiloQuery) OnlyX(ctx context.Context) *Silo {
 // Returns a *NotFoundError when no entities are found.
 func (sq *SiloQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = sq.Limit(2).IDs(setContextOp(ctx, sq.ctx, "OnlyID")); err != nil {
+	if ids, err = sq.Limit(2).IDs(setContextOp(ctx, sq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -233,7 +234,7 @@ func (sq *SiloQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 
 // All executes the query and returns a list of Silos.
 func (sq *SiloQuery) All(ctx context.Context) ([]*Silo, error) {
-	ctx = setContextOp(ctx, sq.ctx, "All")
+	ctx = setContextOp(ctx, sq.ctx, ent.OpQueryAll)
 	if err := sq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -255,7 +256,7 @@ func (sq *SiloQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if sq.ctx.Unique == nil && sq.path != nil {
 		sq.Unique(true)
 	}
-	ctx = setContextOp(ctx, sq.ctx, "IDs")
+	ctx = setContextOp(ctx, sq.ctx, ent.OpQueryIDs)
 	if err = sq.Select(silo.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -273,7 +274,7 @@ func (sq *SiloQuery) IDsX(ctx context.Context) []uuid.UUID {
 
 // Count returns the count of the given query.
 func (sq *SiloQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, sq.ctx, "Count")
+	ctx = setContextOp(ctx, sq.ctx, ent.OpQueryCount)
 	if err := sq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -291,7 +292,7 @@ func (sq *SiloQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (sq *SiloQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, sq.ctx, "Exist")
+	ctx = setContextOp(ctx, sq.ctx, ent.OpQueryExist)
 	switch _, err := sq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -678,7 +679,7 @@ func (sgb *SiloGroupBy) Aggregate(fns ...AggregateFunc) *SiloGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (sgb *SiloGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, sgb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, sgb.build.ctx, ent.OpQueryGroupBy)
 	if err := sgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -726,7 +727,7 @@ func (ss *SiloSelect) Aggregate(fns ...AggregateFunc) *SiloSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (ss *SiloSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ss.ctx, "Select")
+	ctx = setContextOp(ctx, ss.ctx, ent.OpQuerySelect)
 	if err := ss.prepareQuery(ctx); err != nil {
 		return err
 	}

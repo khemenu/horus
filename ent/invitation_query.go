@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -24,8 +25,8 @@ type InvitationQuery struct {
 	order       []invitation.OrderOption
 	inters      []Interceptor
 	predicates  []predicate.Invitation
-	withSilo    *SiloQuery
 	withInviter *AccountQuery
+	withSilo    *SiloQuery
 	withFKs     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -63,28 +64,6 @@ func (iq *InvitationQuery) Order(o ...invitation.OrderOption) *InvitationQuery {
 	return iq
 }
 
-// QuerySilo chains the current query on the "silo" edge.
-func (iq *InvitationQuery) QuerySilo() *SiloQuery {
-	query := (&SiloClient{config: iq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := iq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := iq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(invitation.Table, invitation.FieldID, selector),
-			sqlgraph.To(silo.Table, silo.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, invitation.SiloTable, invitation.SiloColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // QueryInviter chains the current query on the "inviter" edge.
 func (iq *InvitationQuery) QueryInviter() *AccountQuery {
 	query := (&AccountClient{config: iq.config}).Query()
@@ -107,10 +86,32 @@ func (iq *InvitationQuery) QueryInviter() *AccountQuery {
 	return query
 }
 
+// QuerySilo chains the current query on the "silo" edge.
+func (iq *InvitationQuery) QuerySilo() *SiloQuery {
+	query := (&SiloClient{config: iq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := iq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := iq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(invitation.Table, invitation.FieldID, selector),
+			sqlgraph.To(silo.Table, silo.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, invitation.SiloTable, invitation.SiloColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Invitation entity from the query.
 // Returns a *NotFoundError when no Invitation was found.
 func (iq *InvitationQuery) First(ctx context.Context) (*Invitation, error) {
-	nodes, err := iq.Limit(1).All(setContextOp(ctx, iq.ctx, "First"))
+	nodes, err := iq.Limit(1).All(setContextOp(ctx, iq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +134,7 @@ func (iq *InvitationQuery) FirstX(ctx context.Context) *Invitation {
 // Returns a *NotFoundError when no Invitation ID was found.
 func (iq *InvitationQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = iq.Limit(1).IDs(setContextOp(ctx, iq.ctx, "FirstID")); err != nil {
+	if ids, err = iq.Limit(1).IDs(setContextOp(ctx, iq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -156,7 +157,7 @@ func (iq *InvitationQuery) FirstIDX(ctx context.Context) uuid.UUID {
 // Returns a *NotSingularError when more than one Invitation entity is found.
 // Returns a *NotFoundError when no Invitation entities are found.
 func (iq *InvitationQuery) Only(ctx context.Context) (*Invitation, error) {
-	nodes, err := iq.Limit(2).All(setContextOp(ctx, iq.ctx, "Only"))
+	nodes, err := iq.Limit(2).All(setContextOp(ctx, iq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +185,7 @@ func (iq *InvitationQuery) OnlyX(ctx context.Context) *Invitation {
 // Returns a *NotFoundError when no entities are found.
 func (iq *InvitationQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
-	if ids, err = iq.Limit(2).IDs(setContextOp(ctx, iq.ctx, "OnlyID")); err != nil {
+	if ids, err = iq.Limit(2).IDs(setContextOp(ctx, iq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -209,7 +210,7 @@ func (iq *InvitationQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 
 // All executes the query and returns a list of Invitations.
 func (iq *InvitationQuery) All(ctx context.Context) ([]*Invitation, error) {
-	ctx = setContextOp(ctx, iq.ctx, "All")
+	ctx = setContextOp(ctx, iq.ctx, ent.OpQueryAll)
 	if err := iq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -231,7 +232,7 @@ func (iq *InvitationQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error)
 	if iq.ctx.Unique == nil && iq.path != nil {
 		iq.Unique(true)
 	}
-	ctx = setContextOp(ctx, iq.ctx, "IDs")
+	ctx = setContextOp(ctx, iq.ctx, ent.OpQueryIDs)
 	if err = iq.Select(invitation.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -249,7 +250,7 @@ func (iq *InvitationQuery) IDsX(ctx context.Context) []uuid.UUID {
 
 // Count returns the count of the given query.
 func (iq *InvitationQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, iq.ctx, "Count")
+	ctx = setContextOp(ctx, iq.ctx, ent.OpQueryCount)
 	if err := iq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -267,7 +268,7 @@ func (iq *InvitationQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (iq *InvitationQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, iq.ctx, "Exist")
+	ctx = setContextOp(ctx, iq.ctx, ent.OpQueryExist)
 	switch _, err := iq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -299,23 +300,12 @@ func (iq *InvitationQuery) Clone() *InvitationQuery {
 		order:       append([]invitation.OrderOption{}, iq.order...),
 		inters:      append([]Interceptor{}, iq.inters...),
 		predicates:  append([]predicate.Invitation{}, iq.predicates...),
-		withSilo:    iq.withSilo.Clone(),
 		withInviter: iq.withInviter.Clone(),
+		withSilo:    iq.withSilo.Clone(),
 		// clone intermediate query.
 		sql:  iq.sql.Clone(),
 		path: iq.path,
 	}
-}
-
-// WithSilo tells the query-builder to eager-load the nodes that are connected to
-// the "silo" edge. The optional arguments are used to configure the query builder of the edge.
-func (iq *InvitationQuery) WithSilo(opts ...func(*SiloQuery)) *InvitationQuery {
-	query := (&SiloClient{config: iq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	iq.withSilo = query
-	return iq
 }
 
 // WithInviter tells the query-builder to eager-load the nodes that are connected to
@@ -326,6 +316,17 @@ func (iq *InvitationQuery) WithInviter(opts ...func(*AccountQuery)) *InvitationQ
 		opt(query)
 	}
 	iq.withInviter = query
+	return iq
+}
+
+// WithSilo tells the query-builder to eager-load the nodes that are connected to
+// the "silo" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *InvitationQuery) WithSilo(opts ...func(*SiloQuery)) *InvitationQuery {
+	query := (&SiloClient{config: iq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	iq.withSilo = query
 	return iq
 }
 
@@ -409,11 +410,11 @@ func (iq *InvitationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*I
 		withFKs     = iq.withFKs
 		_spec       = iq.querySpec()
 		loadedTypes = [2]bool{
-			iq.withSilo != nil,
 			iq.withInviter != nil,
+			iq.withSilo != nil,
 		}
 	)
-	if iq.withSilo != nil || iq.withInviter != nil {
+	if iq.withInviter != nil || iq.withSilo != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -437,53 +438,21 @@ func (iq *InvitationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*I
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := iq.withSilo; query != nil {
-		if err := iq.loadSilo(ctx, query, nodes, nil,
-			func(n *Invitation, e *Silo) { n.Edges.Silo = e }); err != nil {
-			return nil, err
-		}
-	}
 	if query := iq.withInviter; query != nil {
 		if err := iq.loadInviter(ctx, query, nodes, nil,
 			func(n *Invitation, e *Account) { n.Edges.Inviter = e }); err != nil {
 			return nil, err
 		}
 	}
+	if query := iq.withSilo; query != nil {
+		if err := iq.loadSilo(ctx, query, nodes, nil,
+			func(n *Invitation, e *Silo) { n.Edges.Silo = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
-func (iq *InvitationQuery) loadSilo(ctx context.Context, query *SiloQuery, nodes []*Invitation, init func(*Invitation), assign func(*Invitation, *Silo)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Invitation)
-	for i := range nodes {
-		if nodes[i].silo_invitations == nil {
-			continue
-		}
-		fk := *nodes[i].silo_invitations
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(silo.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "silo_invitations" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
 func (iq *InvitationQuery) loadInviter(ctx context.Context, query *AccountQuery, nodes []*Invitation, init func(*Invitation), assign func(*Invitation, *Account)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*Invitation)
@@ -509,6 +478,38 @@ func (iq *InvitationQuery) loadInviter(ctx context.Context, query *AccountQuery,
 		nodes, ok := nodeids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "account_invitations" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (iq *InvitationQuery) loadSilo(ctx context.Context, query *SiloQuery, nodes []*Invitation, init func(*Invitation), assign func(*Invitation, *Silo)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Invitation)
+	for i := range nodes {
+		if nodes[i].silo_invitations == nil {
+			continue
+		}
+		fk := *nodes[i].silo_invitations
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(silo.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "silo_invitations" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -612,7 +613,7 @@ func (igb *InvitationGroupBy) Aggregate(fns ...AggregateFunc) *InvitationGroupBy
 
 // Scan applies the selector query and scans the result into the given value.
 func (igb *InvitationGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, igb.build.ctx, "GroupBy")
+	ctx = setContextOp(ctx, igb.build.ctx, ent.OpQueryGroupBy)
 	if err := igb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -660,7 +661,7 @@ func (is *InvitationSelect) Aggregate(fns ...AggregateFunc) *InvitationSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (is *InvitationSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, is.ctx, "Select")
+	ctx = setContextOp(ctx, is.ctx, ent.OpQuerySelect)
 	if err := is.prepareQuery(ctx); err != nil {
 		return err
 	}

@@ -51,7 +51,7 @@ type aliasMixin struct {
 
 func (m aliasMixin) Fields() []ent.Field {
 	f := field.String("alias").
-		Annotations(entpb.Field(2)).
+		Annotations(entpb.Field(2, entpb.WithQueryPrefix("@"))).
 		NotEmpty().
 		MaxLen(32).
 		DefaultFunc(alias.New).

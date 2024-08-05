@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
@@ -22,6 +23,7 @@ import (
 	"khepri.dev/horus/log"
 	"khepri.dev/horus/server"
 	"khepri.dev/horus/server/frame"
+	gw "khepri.dev/horus/server/gw"
 )
 
 func Run(ctx context.Context, c *Config) error {
@@ -86,6 +88,13 @@ func Run(ctx context.Context, c *Config) error {
 	}
 	defer http_listener.Close()
 
+	gw_addr := fmt.Sprintf("%s:%d", c.Grpc.Gateway.Host, c.Grpc.Gateway.Port)
+	gw_listener, err := net.Listen("tcp", gw_addr)
+	if err != nil {
+		return fmt.Errorf("listen for HTTP: %w", err)
+	}
+	defer gw_listener.Close()
+
 	grpc_server := grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
 		grpc.ChainUnaryInterceptor(
@@ -118,9 +127,33 @@ func Run(ctx context.Context, c *Config) error {
 	HandleRabbitMqHttpAuth(http_mux, horus_server)
 	http_server.Handler = log.HttpLogger(l, slog.LevelInfo, http_mux)
 
+	var gw_server *http.Server
+	if c.Grpc.Gateway.Enabled {
+		l.Info("gRPC gateway is enabled")
+		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+
+		gw_mux := runtime.NewServeMux()
+		gw.RegisterConfServiceHandlerFromEndpoint(ctx, gw_mux, grpc_addr, opts)
+		gw.RegisterUserServiceHandlerFromEndpoint(ctx, gw_mux, grpc_addr, opts)
+		gw.RegisterIdentityServiceHandlerFromEndpoint(ctx, gw_mux, grpc_addr, opts)
+		gw.RegisterAccountServiceHandlerFromEndpoint(ctx, gw_mux, grpc_addr, opts)
+		gw.RegisterInvitationServiceHandlerFromEndpoint(ctx, gw_mux, grpc_addr, opts)
+		gw.RegisterMembershipServiceHandlerFromEndpoint(ctx, gw_mux, grpc_addr, opts)
+		gw.RegisterSiloServiceHandlerFromEndpoint(ctx, gw_mux, grpc_addr, opts)
+		gw.RegisterTeamServiceHandlerFromEndpoint(ctx, gw_mux, grpc_addr, opts)
+		gw.RegisterTokenServiceHandlerFromEndpoint(ctx, gw_mux, grpc_addr, opts)
+
+		gw_server = &http.Server{Addr: gw_addr}
+		gw_server.Handler = log.HttpLogger(l, slog.LevelInfo, gw_mux)
+	}
+
+	// TODO: Can I generalize the interface?
 	shutdown := func() {
 		grpc_server.GracefulStop()
 		http_server.Shutdown(ctx)
+		if gw_server != nil {
+			gw_server.Shutdown(ctx)
+		}
 	}
 
 	interrupt := make(chan os.Signal, 1)
@@ -132,6 +165,7 @@ func Run(ctx context.Context, c *Config) error {
 
 		err_grpc error
 		err_http error
+		err_gw   error
 	)
 
 	wg.Add(2)
@@ -149,6 +183,16 @@ func Run(ctx context.Context, c *Config) error {
 		l.Info("serve HTTP", slog.String("addr", http_addr))
 		err_http = http_server.Serve(http_listener)
 	}()
+	if gw_server != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			defer once.Do(shutdown)
+
+			l.Info("serve gRPC Gateway", slog.String("addr", gw_addr))
+			err_gw = gw_server.Serve(gw_listener)
+		}()
+	}
 
 	graceful := make(chan struct{}, 1)
 	go func() {
@@ -200,6 +244,9 @@ func Run(ctx context.Context, c *Config) error {
 	}
 	if err_http != nil && !errors.Is(err_http, http.ErrServerClosed) {
 		errs = append(errs, fmt.Errorf("unexpected HTTP server stop: %w", err_http))
+	}
+	if err_gw != nil && !errors.Is(err_gw, http.ErrServerClosed) {
+		errs = append(errs, fmt.Errorf("unexpected gRPC gateway stop: %w", err_gw))
 	}
 
 	close(graceful)

@@ -8,14 +8,14 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 RUN TEMP=$(mktemp -d) \
 	&& cd "${TEMP}" \
-	&& curl -o ./protoc.zip -L https://github.com/protocolbuffers/protobuf/releases/download/v24.0/protoc-24.0-linux-x86_64.zip \
+	&& curl -o ./protoc.zip -sSL "https://github.com/protocolbuffers/protobuf/releases/download/v24.0/protoc-24.0-linux-x86_64.zip" \
 	&& unzip ./protoc.zip -d /usr/local \
 	&& chmod 755 /usr/local/bin/protoc \
 	&& rm -rf "${TEMP}"
 
 RUN TEMP=$(mktemp -d) \
 	&& cd "${TEMP}" \
-	&& curl -o ./a.tar.gz -L "https://github.com/ktr0731/evans/releases/download/v0.10.11/evans_linux_$(dpkg --print-architecture).tar.gz" \
+	&& curl -o ./a.tar.gz -sSL "https://github.com/ktr0731/evans/releases/download/v0.10.11/evans_linux_$(dpkg --print-architecture).tar.gz" \
 	&& tar -xf ./a.tar.gz \
 	&& mv ./evans /usr/local/bin/. \
 	&& rm -rf "${TEMP}" \
@@ -23,7 +23,7 @@ RUN TEMP=$(mktemp -d) \
 
 RUN TEMP=$(mktemp -d) \
 	&& cd "${TEMP}" \
-	&& curl -o ./a -L "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+	&& curl -o ./a -L "https://dl.k8s.io/release/$(curl -sSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
 	&& chmod +x ./a \
 	&& mv ./a /usr/local/bin/kubectl \
 	&& rm -rf "${TEMP}" \
@@ -42,6 +42,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 		docker-ce-cli \
 	&& docker --version
 
+RUN mkdir -p /usr/local/include/google/api/ \
+	&& cd /usr/local/include/google/api/ \
+	&& curl -sSLO "https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/{annotations,http}.proto"
+
 
 
 USER hypnos
@@ -53,6 +57,8 @@ RUN  echo \
 		google.golang.org/protobuf/cmd/protoc-gen-go@v1.31 \
 		google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3 \
 		entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc@master \
+		github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.21.0 \
+		github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.21.0 \
 		github.com/yoheimuta/protolint/cmd/protolint@latest \
 	| xargs -n1 go install
 

@@ -31,6 +31,7 @@ func (t *UserTestSuite) TestCreate() {
 		t.NoError(err)
 		t.Equal(t.me.Actor.ID[:], v.GetParent().GetId())
 	})
+
 	t.Run("user cannot be created if the alias is used by another user", func() {
 		_, err := t.svc.User().Create(t.CtxMe(), &horus.CreateUserRequest{
 			Alias: &t.me.Actor.Alias,
@@ -38,7 +39,7 @@ func (t *UserTestSuite) TestCreate() {
 		t.ErrCode(err, codes.AlreadyExists)
 		t.ErrorContains(err, "alias")
 	})
-	t.Run("user cannot be create with explicit parent", func() {
+	t.Run("user cannot be created with explicit parent", func() {
 		_, err := t.svc.User().Create(t.CtxMe(), &horus.CreateUserRequest{
 			Parent: horus.UserById(t.other.Actor.ID),
 		})

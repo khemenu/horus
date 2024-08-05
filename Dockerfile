@@ -23,3 +23,8 @@ FROM library/alpine:3.19
 
 COPY --from=builder /app/horus /usr/local/bin/.
 COPY --from=builder /app/hr    /usr/local/bin/.
+
+COPY ./scripts/docker-entrypoint.sh /entrypoint.sh
+COPY ./horus.yaml /horus.yaml
+
+ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]

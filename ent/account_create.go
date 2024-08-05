@@ -266,10 +266,10 @@ func (ac *AccountCreate) check() error {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "Account.role": %w`, err)}
 		}
 	}
-	if _, ok := ac.mutation.OwnerID(); !ok {
+	if len(ac.mutation.OwnerIDs()) == 0 {
 		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "Account.owner"`)}
 	}
-	if _, ok := ac.mutation.SiloID(); !ok {
+	if len(ac.mutation.SiloIDs()) == 0 {
 		return &ValidationError{Name: "silo", err: errors.New(`ent: missing required edge "Account.silo"`)}
 	}
 	return nil

@@ -47,10 +47,10 @@ message Identity {
 
 message Invitation {
 	bytes id = 1;
-	Silo silo = 2;
 	Account inviter = 3;
-	string invitee = 4;
-	string type = 5;
+	Silo silo = 4;
+	string invitee = 5;
+	string type = 6;
 	optional google.protobuf.Timestamp date_canceled = 11;
 	optional google.protobuf.Timestamp date_declined = 12;
 	optional google.protobuf.Timestamp date_accepted = 13;

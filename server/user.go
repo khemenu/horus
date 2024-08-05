@@ -37,7 +37,7 @@ func (s *UserServiceServer) Create(ctx context.Context, req *horus.CreateUserReq
 
 func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) (*horus.User, error) {
 	f := frame.Must(ctx)
-
+	fmt.Printf("req: %v\n", req)
 	v, err := s.hasPermission(ctx, f.Actor, req)
 	if err != nil {
 		return nil, err
@@ -102,16 +102,4 @@ func (s *UserServiceServer) Delete(ctx context.Context, req *horus.GetUserReques
 	}
 
 	return &emptypb.Empty{}, nil
-}
-
-func (s *UserServiceServer) hasPermission(ctx context.Context, actor *ent.User, req *horus.GetUserRequest) (*ent.User, error) {
-	v, err := s.isAncestorOrMeQ(ctx, actor, req)
-	if err != nil {
-		return nil, err
-	}
-	if v == nil {
-		return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
-	}
-
-	return v, nil
 }

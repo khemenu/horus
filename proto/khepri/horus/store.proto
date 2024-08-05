@@ -4,6 +4,7 @@ syntax = "proto3";
 
 package khepri.horus;
 
+import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "khepri/horus/common.proto";
@@ -11,71 +12,311 @@ import "khepri/horus/common.proto";
 option go_package = "khepri.dev/horus";
 
 service AccountService {
-	rpc Create (CreateAccountRequest) returns (Account);
-	rpc Delete (GetAccountRequest) returns (google.protobuf.Empty);
-	rpc Get (GetAccountRequest) returns (Account);
+	rpc Create (CreateAccountRequest) returns (Account) {
+		option (google.api.http) = {
+			post: "/account"
+			body: "*"
+			additional_bindings: [
+				{
+					post: "/silo/{silo.query}/user/{owner.query}/account"
+					body: "*"
+				}
+			]
+		};
+	}
+	rpc Delete (GetAccountRequest) returns (google.protobuf.Empty) {
+		option (google.api.http) = {
+			delete: "/account/{query}"
+			additional_bindings: [
+				{
+					delete: "/silo/{by_alias_in_silo.silo.query}/account/{by_alias_in_silo.alias}"
+				},
+				{
+					delete: "/silo/{by_owner_in_silo.silo.query}/user/{by_owner_in_silo.owner.query}/account"
+				}
+			]
+		};
+	}
+	rpc Get (GetAccountRequest) returns (Account) {
+		option (google.api.http) = {
+			get: "/account/{query}"
+			additional_bindings: [
+				{
+					get: "/silo/{by_alias_in_silo.silo.query}/account/{by_alias_in_silo.alias}"
+				},
+				{
+					get: "/silo/{by_owner_in_silo.silo.query}/user/{by_owner_in_silo.owner.query}/account"
+				}
+			]
+		};
+	}
 	rpc List (ListAccountRequest) returns (ListAccountResponse);
-	rpc Update (UpdateAccountRequest) returns (Account);
+	rpc Update (UpdateAccountRequest) returns (Account) {
+		option (google.api.http) = {
+			patch: "/account/{key.query}"
+			body: "*"
+			additional_bindings: [
+				{
+					patch: "/silo/{key.by_alias_in_silo.silo.query}/account/{key.by_alias_in_silo.alias}"
+					body: "*"
+				},
+				{
+					patch: "/silo/{key.by_owner_in_silo.silo.query}/user/{key.by_owner_in_silo.owner.query}/account"
+					body: "*"
+				}
+			]
+		};
+	}
 }
 
 service ConfService {
-	rpc Create (CreateConfRequest) returns (Conf);
-	rpc Delete (GetConfRequest) returns (google.protobuf.Empty);
-	rpc Get (GetConfRequest) returns (Conf);
-	rpc Update (UpdateConfRequest) returns (Conf);
+	rpc Create (CreateConfRequest) returns (Conf) {
+		option (google.api.http) = {
+			post: "/conf"
+			body: "*"
+		};
+	}
+	rpc Delete (GetConfRequest) returns (google.protobuf.Empty) {
+		option (google.api.http) = {
+			delete: "/conf/{query}"
+		};
+	}
+	rpc Get (GetConfRequest) returns (Conf) {
+		option (google.api.http) = {
+			get: "/conf/{query}"
+		};
+	}
+	rpc Update (UpdateConfRequest) returns (Conf) {
+		option (google.api.http) = {
+			patch: "/conf/{key.query}"
+			body: "*"
+		};
+	}
 }
 
 service IdentityService {
-	rpc Create (CreateIdentityRequest) returns (Identity);
-	rpc Delete (GetIdentityRequest) returns (google.protobuf.Empty);
-	rpc Get (GetIdentityRequest) returns (Identity);
+	rpc Create (CreateIdentityRequest) returns (Identity) {
+		option (google.api.http) = {
+			post: "/identity"
+			body: "*"
+			additional_bindings: [
+				{
+					post: "/user/{owner.query}/identity"
+					body: "*"
+				}
+			]
+		};
+	}
+	rpc Delete (GetIdentityRequest) returns (google.protobuf.Empty) {
+		option (google.api.http) = {
+			delete: "/identity/{query}"
+		};
+	}
+	rpc Get (GetIdentityRequest) returns (Identity) {
+		option (google.api.http) = {
+			get: "/identity/{query}"
+		};
+	}
 	rpc List (ListIdentityRequest) returns (ListIdentityResponse);
-	rpc Update (UpdateIdentityRequest) returns (Identity);
+	rpc Update (UpdateIdentityRequest) returns (Identity) {
+		option (google.api.http) = {
+			patch: "/identity/{key.query}"
+			body: "*"
+		};
+	}
 }
 
 service InvitationService {
 	rpc Accept (AcceptInvitationRequest) returns (google.protobuf.Empty);
-	rpc Create (CreateInvitationRequest) returns (Invitation);
-	rpc Delete (GetInvitationRequest) returns (google.protobuf.Empty);
-	rpc Get (GetInvitationRequest) returns (Invitation);
-	rpc Update (UpdateInvitationRequest) returns (Invitation);
+	rpc Create (CreateInvitationRequest) returns (Invitation) {
+		option (google.api.http) = {
+			post: "/invitation"
+			body: "*"
+			additional_bindings: [
+				{
+					post: "/silo/{silo.query}/account/{inviter.query}/invitation"
+					body: "*"
+				}
+			]
+		};
+	}
+	rpc Delete (GetInvitationRequest) returns (google.protobuf.Empty) {
+		option (google.api.http) = {
+			delete: "/invitation/{query}"
+		};
+	}
+	rpc Get (GetInvitationRequest) returns (Invitation) {
+		option (google.api.http) = {
+			get: "/invitation/{query}"
+		};
+	}
+	rpc Update (UpdateInvitationRequest) returns (Invitation) {
+		option (google.api.http) = {
+			patch: "/invitation/{key.query}"
+			body: "*"
+		};
+	}
 }
 
 service MembershipService {
-	rpc Create (CreateMembershipRequest) returns (Membership);
-	rpc Delete (GetMembershipRequest) returns (google.protobuf.Empty);
-	rpc Get (GetMembershipRequest) returns (Membership);
+	rpc Create (CreateMembershipRequest) returns (Membership) {
+		option (google.api.http) = {
+			post: "/membership"
+			body: "*"
+			additional_bindings: [
+				{
+					post: "/team/{team.query}/account/{account.query}/membership"
+					body: "*"
+				}
+			]
+		};
+	}
+	rpc Delete (GetMembershipRequest) returns (google.protobuf.Empty) {
+		option (google.api.http) = {
+			delete: "/membership/{query}"
+		};
+	}
+	rpc Get (GetMembershipRequest) returns (Membership) {
+		option (google.api.http) = {
+			get: "/membership/{query}"
+		};
+	}
 	rpc List (ListMembershipRequest) returns (ListMembershipResponse);
-	rpc Update (UpdateMembershipRequest) returns (Membership);
+	rpc Update (UpdateMembershipRequest) returns (Membership) {
+		option (google.api.http) = {
+			patch: "/membership/{key.query}"
+			body: "*"
+		};
+	}
 }
 
 service SiloService {
-	rpc Create (CreateSiloRequest) returns (Silo);
-	rpc Delete (GetSiloRequest) returns (google.protobuf.Empty);
-	rpc Get (GetSiloRequest) returns (Silo);
-	rpc Update (UpdateSiloRequest) returns (Silo);
+	rpc Create (CreateSiloRequest) returns (Silo) {
+		option (google.api.http) = {
+			post: "/silo"
+			body: "*"
+		};
+	}
+	rpc Delete (GetSiloRequest) returns (google.protobuf.Empty) {
+		option (google.api.http) = {
+			delete: "/silo/{query}"
+		};
+	}
+	rpc Get (GetSiloRequest) returns (Silo) {
+		option (google.api.http) = {
+			get: "/silo/{query}"
+		};
+	}
+	rpc Update (UpdateSiloRequest) returns (Silo) {
+		option (google.api.http) = {
+			patch: "/silo/{key.query}"
+			body: "*"
+		};
+	}
 }
 
 service TeamService {
-	rpc Create (CreateTeamRequest) returns (Team);
-	rpc Delete (GetTeamRequest) returns (google.protobuf.Empty);
-	rpc Get (GetTeamRequest) returns (Team);
-	rpc Update (UpdateTeamRequest) returns (Team);
+	rpc Create (CreateTeamRequest) returns (Team) {
+		option (google.api.http) = {
+			post: "/team"
+			body: "*"
+			additional_bindings: [
+				{
+					post: "/silo/{silo.query}/team"
+					body: "*"
+				}
+			]
+		};
+	}
+	rpc Delete (GetTeamRequest) returns (google.protobuf.Empty) {
+		option (google.api.http) = {
+			delete: "/team/{query}"
+			additional_bindings: [
+				{
+					delete: "/silo/{by_alias_in_silo.silo.query}/team/{by_alias_in_silo.alias}"
+				}
+			]
+		};
+	}
+	rpc Get (GetTeamRequest) returns (Team) {
+		option (google.api.http) = {
+			get: "/team/{query}"
+			additional_bindings: [
+				{
+					get: "/silo/{by_alias_in_silo.silo.query}/team/{by_alias_in_silo.alias}"
+				}
+			]
+		};
+	}
+	rpc Update (UpdateTeamRequest) returns (Team) {
+		option (google.api.http) = {
+			patch: "/team/{key.query}"
+			body: "*"
+			additional_bindings: [
+				{
+					patch: "/silo/{key.by_alias_in_silo.silo.query}/team/{key.by_alias_in_silo.alias}"
+					body: "*"
+				}
+			]
+		};
+	}
 }
 
 service TokenService {
-	rpc Create (CreateTokenRequest) returns (Token);
-	rpc Delete (GetTokenRequest) returns (google.protobuf.Empty);
-	rpc Get (GetTokenRequest) returns (Token);
+	rpc Create (CreateTokenRequest) returns (Token) {
+		option (google.api.http) = {
+			post: "/token"
+			body: "*"
+			additional_bindings: [
+				{
+					post: "/user/{owner.query}/token"
+					body: "*"
+				}
+			]
+		};
+	}
+	rpc Delete (GetTokenRequest) returns (google.protobuf.Empty) {
+		option (google.api.http) = {
+			delete: "/token/{query}"
+		};
+	}
+	rpc Get (GetTokenRequest) returns (Token) {
+		option (google.api.http) = {
+			get: "/token/{query}"
+		};
+	}
 	rpc List (ListTokenRequest) returns (ListTokenResponse);
-	rpc Update (UpdateTokenRequest) returns (Token);
+	rpc Update (UpdateTokenRequest) returns (Token) {
+		option (google.api.http) = {
+			patch: "/token/{key.query}"
+			body: "*"
+		};
+	}
 }
 
 service UserService {
-	rpc Create (CreateUserRequest) returns (User);
-	rpc Delete (GetUserRequest) returns (google.protobuf.Empty);
-	rpc Get (GetUserRequest) returns (User);
-	rpc Update (UpdateUserRequest) returns (User);
+	rpc Create (CreateUserRequest) returns (User) {
+		option (google.api.http) = {
+			post: "/user"
+			body: "*"
+		};
+	}
+	rpc Delete (GetUserRequest) returns (google.protobuf.Empty) {
+		option (google.api.http) = {
+			delete: "/user/{query}"
+		};
+	}
+	rpc Get (GetUserRequest) returns (User) {
+		option (google.api.http) = {
+			get: "/user/{query}"
+		};
+	}
+	rpc Update (UpdateUserRequest) returns (User) {
+		option (google.api.http) = {
+			patch: "/user/{key.query}"
+			body: "*"
+		};
+	}
 }
 
 message CreateAccountRequest {
@@ -101,10 +342,10 @@ message CreateIdentityRequest {
 }
 
 message CreateInvitationRequest {
-	GetSiloRequest silo = 2;
 	GetAccountRequest inviter = 3;
-	string invitee = 4;
-	string type = 5;
+	GetSiloRequest silo = 4;
+	string invitee = 5;
+	string type = 6;
 	optional google.protobuf.Timestamp date_canceled = 11;
 	optional google.protobuf.Timestamp date_declined = 12;
 	optional google.protobuf.Timestamp date_accepted = 13;
@@ -160,19 +401,29 @@ message GetAccountRequest {
 		bytes id = 1;
 		GetAccountByAliasInSilo by_alias_in_silo = 2;
 		GetAccountByOwnerInSilo by_owner_in_silo = 3;
+		string query = 14;
 	}
 }
 
 message GetConfRequest {
-	string id = 1;
+	oneof key {
+		string id = 1;
+		string query = 14;
+	}
 }
 
 message GetIdentityRequest {
-	bytes id = 1;
+	oneof key {
+		bytes id = 1;
+		string query = 14;
+	}
 }
 
 message GetInvitationRequest {
-	bytes id = 1;
+	oneof key {
+		bytes id = 1;
+		string query = 14;
+	}
 }
 
 message GetMembershipByAccountInTeam {
@@ -184,6 +435,7 @@ message GetMembershipRequest {
 	oneof key {
 		bytes id = 1;
 		GetMembershipByAccountInTeam by_account_in_team = 3;
+		string query = 14;
 	}
 }
 
@@ -191,6 +443,7 @@ message GetSiloRequest {
 	oneof key {
 		bytes id = 1;
 		string alias = 2;
+		string query = 14;
 	}
 }
 
@@ -203,6 +456,7 @@ message GetTeamRequest {
 	oneof key {
 		bytes id = 1;
 		GetTeamByAliasInSilo by_alias_in_silo = 2;
+		string query = 14;
 	}
 }
 
@@ -210,6 +464,7 @@ message GetTokenRequest {
 	oneof key {
 		bytes id = 1;
 		string value = 2;
+		string query = 14;
 	}
 }
 
@@ -217,6 +472,7 @@ message GetUserRequest {
 	oneof key {
 		bytes id = 1;
 		string alias = 2;
+		string query = 14;
 	}
 }
 

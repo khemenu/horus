@@ -2155,10 +2155,10 @@ type InvitationMutation struct {
 	date_declined  *time.Time
 	date_canceled  *time.Time
 	clearedFields  map[string]struct{}
-	silo           *uuid.UUID
-	clearedsilo    bool
 	inviter        *uuid.UUID
 	clearedinviter bool
+	silo           *uuid.UUID
+	clearedsilo    bool
 	done           bool
 	oldValue       func(context.Context) (*Invitation, error)
 	predicates     []predicate.Invitation
@@ -2559,45 +2559,6 @@ func (m *InvitationMutation) ResetDateCanceled() {
 	delete(m.clearedFields, invitation.FieldDateCanceled)
 }
 
-// SetSiloID sets the "silo" edge to the Silo entity by id.
-func (m *InvitationMutation) SetSiloID(id uuid.UUID) {
-	m.silo = &id
-}
-
-// ClearSilo clears the "silo" edge to the Silo entity.
-func (m *InvitationMutation) ClearSilo() {
-	m.clearedsilo = true
-}
-
-// SiloCleared reports if the "silo" edge to the Silo entity was cleared.
-func (m *InvitationMutation) SiloCleared() bool {
-	return m.clearedsilo
-}
-
-// SiloID returns the "silo" edge ID in the mutation.
-func (m *InvitationMutation) SiloID() (id uuid.UUID, exists bool) {
-	if m.silo != nil {
-		return *m.silo, true
-	}
-	return
-}
-
-// SiloIDs returns the "silo" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// SiloID instead. It exists only for internal usage by the builders.
-func (m *InvitationMutation) SiloIDs() (ids []uuid.UUID) {
-	if id := m.silo; id != nil {
-		ids = append(ids, *id)
-	}
-	return
-}
-
-// ResetSilo resets all changes to the "silo" edge.
-func (m *InvitationMutation) ResetSilo() {
-	m.silo = nil
-	m.clearedsilo = false
-}
-
 // SetInviterID sets the "inviter" edge to the Account entity by id.
 func (m *InvitationMutation) SetInviterID(id uuid.UUID) {
 	m.inviter = &id
@@ -2635,6 +2596,45 @@ func (m *InvitationMutation) InviterIDs() (ids []uuid.UUID) {
 func (m *InvitationMutation) ResetInviter() {
 	m.inviter = nil
 	m.clearedinviter = false
+}
+
+// SetSiloID sets the "silo" edge to the Silo entity by id.
+func (m *InvitationMutation) SetSiloID(id uuid.UUID) {
+	m.silo = &id
+}
+
+// ClearSilo clears the "silo" edge to the Silo entity.
+func (m *InvitationMutation) ClearSilo() {
+	m.clearedsilo = true
+}
+
+// SiloCleared reports if the "silo" edge to the Silo entity was cleared.
+func (m *InvitationMutation) SiloCleared() bool {
+	return m.clearedsilo
+}
+
+// SiloID returns the "silo" edge ID in the mutation.
+func (m *InvitationMutation) SiloID() (id uuid.UUID, exists bool) {
+	if m.silo != nil {
+		return *m.silo, true
+	}
+	return
+}
+
+// SiloIDs returns the "silo" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// SiloID instead. It exists only for internal usage by the builders.
+func (m *InvitationMutation) SiloIDs() (ids []uuid.UUID) {
+	if id := m.silo; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetSilo resets all changes to the "silo" edge.
+func (m *InvitationMutation) ResetSilo() {
+	m.silo = nil
+	m.clearedsilo = false
 }
 
 // Where appends a list predicates to the InvitationMutation builder.
@@ -2894,11 +2894,11 @@ func (m *InvitationMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *InvitationMutation) AddedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.silo != nil {
-		edges = append(edges, invitation.EdgeSilo)
-	}
 	if m.inviter != nil {
 		edges = append(edges, invitation.EdgeInviter)
+	}
+	if m.silo != nil {
+		edges = append(edges, invitation.EdgeSilo)
 	}
 	return edges
 }
@@ -2907,12 +2907,12 @@ func (m *InvitationMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *InvitationMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case invitation.EdgeSilo:
-		if id := m.silo; id != nil {
-			return []ent.Value{*id}
-		}
 	case invitation.EdgeInviter:
 		if id := m.inviter; id != nil {
+			return []ent.Value{*id}
+		}
+	case invitation.EdgeSilo:
+		if id := m.silo; id != nil {
 			return []ent.Value{*id}
 		}
 	}
@@ -2934,11 +2934,11 @@ func (m *InvitationMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *InvitationMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.clearedsilo {
-		edges = append(edges, invitation.EdgeSilo)
-	}
 	if m.clearedinviter {
 		edges = append(edges, invitation.EdgeInviter)
+	}
+	if m.clearedsilo {
+		edges = append(edges, invitation.EdgeSilo)
 	}
 	return edges
 }
@@ -2947,10 +2947,10 @@ func (m *InvitationMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *InvitationMutation) EdgeCleared(name string) bool {
 	switch name {
-	case invitation.EdgeSilo:
-		return m.clearedsilo
 	case invitation.EdgeInviter:
 		return m.clearedinviter
+	case invitation.EdgeSilo:
+		return m.clearedsilo
 	}
 	return false
 }
@@ -2959,11 +2959,11 @@ func (m *InvitationMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *InvitationMutation) ClearEdge(name string) error {
 	switch name {
-	case invitation.EdgeSilo:
-		m.ClearSilo()
-		return nil
 	case invitation.EdgeInviter:
 		m.ClearInviter()
+		return nil
+	case invitation.EdgeSilo:
+		m.ClearSilo()
 		return nil
 	}
 	return fmt.Errorf("unknown Invitation unique edge %s", name)
@@ -2973,11 +2973,11 @@ func (m *InvitationMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *InvitationMutation) ResetEdge(name string) error {
 	switch name {
-	case invitation.EdgeSilo:
-		m.ResetSilo()
-		return nil
 	case invitation.EdgeInviter:
 		m.ResetInviter()
+		return nil
+	case invitation.EdgeSilo:
+		m.ResetSilo()
 		return nil
 	}
 	return fmt.Errorf("unknown Invitation edge %s", name)

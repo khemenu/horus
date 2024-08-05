@@ -213,10 +213,10 @@ func (au *AccountUpdate) check() error {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "Account.role": %w`, err)}
 		}
 	}
-	if _, ok := au.mutation.OwnerID(); au.mutation.OwnerCleared() && !ok {
+	if au.mutation.OwnerCleared() && len(au.mutation.OwnerIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Account.owner"`)
 	}
-	if _, ok := au.mutation.SiloID(); au.mutation.SiloCleared() && !ok {
+	if au.mutation.SiloCleared() && len(au.mutation.SiloIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Account.silo"`)
 	}
 	return nil
@@ -551,10 +551,10 @@ func (auo *AccountUpdateOne) check() error {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "Account.role": %w`, err)}
 		}
 	}
-	if _, ok := auo.mutation.OwnerID(); auo.mutation.OwnerCleared() && !ok {
+	if auo.mutation.OwnerCleared() && len(auo.mutation.OwnerIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Account.owner"`)
 	}
-	if _, ok := auo.mutation.SiloID(); auo.mutation.SiloCleared() && !ok {
+	if auo.mutation.SiloCleared() && len(auo.mutation.SiloIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Account.silo"`)
 	}
 	return nil

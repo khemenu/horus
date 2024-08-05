@@ -132,6 +132,7 @@ func GetMembershipId(ctx context.Context, db *ent.Client, req *horus.GetMembersh
 
 	return v, nil
 }
+
 func GetMembershipSpecifier(req *horus.GetMembershipRequest) (predicate.Membership, error) {
 	switch t := req.GetKey().(type) {
 	case *horus.GetMembershipRequest_Id:
@@ -155,9 +156,30 @@ func GetMembershipSpecifier(req *horus.GetMembershipRequest) (predicate.Membersh
 			ps = append(ps, membership.HasTeamWith(p))
 		}
 		return membership.And(ps...), nil
+	case *horus.GetMembershipRequest_Query:
+		if req, err := ResolveGetMembershipQuery(req); err != nil {
+			return nil, err
+		} else {
+			return GetMembershipSpecifier(req)
+		}
 	case nil:
 		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
 	default:
 		return nil, status.Errorf(codes.Unimplemented, "unknown type of key")
 	}
+}
+
+func ResolveGetMembershipQuery(req *horus.GetMembershipRequest) (*horus.GetMembershipRequest, error) {
+	t, ok := req.Key.(*horus.GetMembershipRequest_Query)
+	if !ok {
+		return req, nil
+	}
+
+	q := t.Query
+
+	v, err := uuid.Parse(q)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid query string: %s", err)
+	}
+	return horus.MembershipById(v), nil
 }

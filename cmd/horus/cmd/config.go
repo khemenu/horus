@@ -27,6 +27,13 @@ type Config struct {
 type GrpcConfig struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
+
+	Gateway GrpcGwConfig `yaml:"gateway"`
+}
+
+type GrpcGwConfig struct {
+	Enabled    bool `yaml:"enabled"`
+	HttpConfig `yaml:",inline"`
 }
 
 type HttpConfig struct {

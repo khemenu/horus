@@ -111,17 +111,6 @@ func (ic *InvitationCreate) SetNillableID(u *uuid.UUID) *InvitationCreate {
 	return ic
 }
 
-// SetSiloID sets the "silo" edge to the Silo entity by ID.
-func (ic *InvitationCreate) SetSiloID(id uuid.UUID) *InvitationCreate {
-	ic.mutation.SetSiloID(id)
-	return ic
-}
-
-// SetSilo sets the "silo" edge to the Silo entity.
-func (ic *InvitationCreate) SetSilo(s *Silo) *InvitationCreate {
-	return ic.SetSiloID(s.ID)
-}
-
 // SetInviterID sets the "inviter" edge to the Account entity by ID.
 func (ic *InvitationCreate) SetInviterID(id uuid.UUID) *InvitationCreate {
 	ic.mutation.SetInviterID(id)
@@ -131,6 +120,17 @@ func (ic *InvitationCreate) SetInviterID(id uuid.UUID) *InvitationCreate {
 // SetInviter sets the "inviter" edge to the Account entity.
 func (ic *InvitationCreate) SetInviter(a *Account) *InvitationCreate {
 	return ic.SetInviterID(a.ID)
+}
+
+// SetSiloID sets the "silo" edge to the Silo entity by ID.
+func (ic *InvitationCreate) SetSiloID(id uuid.UUID) *InvitationCreate {
+	ic.mutation.SetSiloID(id)
+	return ic
+}
+
+// SetSilo sets the "silo" edge to the Silo entity.
+func (ic *InvitationCreate) SetSilo(s *Silo) *InvitationCreate {
+	return ic.SetSiloID(s.ID)
 }
 
 // Mutation returns the InvitationMutation object of the builder.
@@ -202,11 +202,11 @@ func (ic *InvitationCreate) check() error {
 	if _, ok := ic.mutation.DateExpired(); !ok {
 		return &ValidationError{Name: "date_expired", err: errors.New(`ent: missing required field "Invitation.date_expired"`)}
 	}
-	if _, ok := ic.mutation.SiloID(); !ok {
-		return &ValidationError{Name: "silo", err: errors.New(`ent: missing required edge "Invitation.silo"`)}
-	}
-	if _, ok := ic.mutation.InviterID(); !ok {
+	if len(ic.mutation.InviterIDs()) == 0 {
 		return &ValidationError{Name: "inviter", err: errors.New(`ent: missing required edge "Invitation.inviter"`)}
+	}
+	if len(ic.mutation.SiloIDs()) == 0 {
+		return &ValidationError{Name: "silo", err: errors.New(`ent: missing required edge "Invitation.silo"`)}
 	}
 	return nil
 }
@@ -271,23 +271,6 @@ func (ic *InvitationCreate) createSpec() (*Invitation, *sqlgraph.CreateSpec) {
 		_spec.SetField(invitation.FieldDateCanceled, field.TypeTime, value)
 		_node.DateCanceled = &value
 	}
-	if nodes := ic.mutation.SiloIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   invitation.SiloTable,
-			Columns: []string{invitation.SiloColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(silo.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.silo_invitations = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
 	if nodes := ic.mutation.InviterIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -303,6 +286,23 @@ func (ic *InvitationCreate) createSpec() (*Invitation, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.account_invitations = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ic.mutation.SiloIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invitation.SiloTable,
+			Columns: []string{invitation.SiloColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(silo.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.silo_invitations = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

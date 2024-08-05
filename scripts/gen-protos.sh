@@ -36,4 +36,8 @@ protoc \
 	--entpb_opt=ent_package="${MODULE_NAME}/ent" \
 	--entpb_opt=package="${MODULE_NAME}/server/bare" \
 	\
+	--grpc-gateway_out="${__root}/server/gw" \
+	--grpc-gateway_opt=module="${MODULE_NAME}" \
+    --grpc-gateway_opt="standalone=true" \
+	\
 	"${PROTO_ROOT}"/**/*.proto

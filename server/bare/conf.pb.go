@@ -4,6 +4,8 @@ package bare
 
 import (
 	context "context"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	horus "khepri.dev/horus"
@@ -90,9 +92,48 @@ func ToProtoConf(v *ent.Conf) *horus.Conf {
 }
 func GetConfId(ctx context.Context, db *ent.Client, req *horus.GetConfRequest) (string, error) {
 	var r string
-	r = req.GetId()
-	return r, nil
+	k := req.GetKey()
+	if t, ok := k.(*horus.GetConfRequest_Id); ok {
+		return t.Id, nil
+	}
+
+	p, err := GetConfSpecifier(req)
+	if err != nil {
+		return r, err
+	}
+
+	v, err := db.Conf.Query().Where(p).OnlyID(ctx)
+	if err != nil {
+		return r, ToStatus(err)
+	}
+
+	return v, nil
 }
+
 func GetConfSpecifier(req *horus.GetConfRequest) (predicate.Conf, error) {
-	return conf.IDEQ(req.GetId()), nil
+	switch t := req.GetKey().(type) {
+	case *horus.GetConfRequest_Id:
+		return conf.IDEQ(t.Id), nil
+	case *horus.GetConfRequest_Query:
+		if req, err := ResolveGetConfQuery(req); err != nil {
+			return nil, err
+		} else {
+			return GetConfSpecifier(req)
+		}
+	case nil:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
+	default:
+		return nil, status.Errorf(codes.Unimplemented, "unknown type of key")
+	}
+}
+
+func ResolveGetConfQuery(req *horus.GetConfRequest) (*horus.GetConfRequest, error) {
+	t, ok := req.Key.(*horus.GetConfRequest_Query)
+	if !ok {
+		return req, nil
+	}
+
+	q := t.Query
+
+	return horus.ConfById(q), nil
 }

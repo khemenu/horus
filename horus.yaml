@@ -1,6 +1,10 @@
 grpc:
   host: 0.0.0.0
   port: 35122
+  gateway:
+    enabled: false
+    host: 0.0.0.0
+    port: 35124
 
 http:
   host: 0.0.0.0

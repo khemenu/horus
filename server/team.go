@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -72,6 +73,7 @@ func (s *TeamServiceServer) Create(ctx context.Context, req *horus.CreateTeamReq
 }
 
 func (s *TeamServiceServer) Get(ctx context.Context, req *horus.GetTeamRequest) (*horus.Team, error) {
+	fmt.Printf("=======req: %v\n", req)
 	v, err := s.bare.Team().Get(ctx, req)
 	if err != nil {
 		return nil, err

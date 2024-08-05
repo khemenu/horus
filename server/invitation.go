@@ -124,7 +124,7 @@ func (s *InvitationServiceServer) Update(ctx context.Context, req *horus.UpdateI
 func (s *InvitationServiceServer) Accept(ctx context.Context, req *horus.AcceptInvitationRequest) (*emptypb.Empty, error) {
 	f := frame.Must(ctx)
 
-	v, err := s.Get(ctx, &horus.GetInvitationRequest{Id: req.GetId()})
+	v, err := s.Get(ctx, horus.InvitationByIdV(req.GetId()))
 	if err != nil {
 		return nil, err
 	}

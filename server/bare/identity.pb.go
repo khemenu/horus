@@ -115,17 +115,60 @@ func ToProtoIdentity(v *ent.Identity) *horus.Identity {
 }
 func GetIdentityId(ctx context.Context, db *ent.Client, req *horus.GetIdentityRequest) (uuid.UUID, error) {
 	var r uuid.UUID
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		r = v
-		return r, nil
+	k := req.GetKey()
+	if t, ok := k.(*horus.GetIdentityRequest_Id); ok {
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return r, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return v, nil
+		}
+	}
+
+	p, err := GetIdentitySpecifier(req)
+	if err != nil {
+		return r, err
+	}
+
+	v, err := db.Identity.Query().Where(p).OnlyID(ctx)
+	if err != nil {
+		return r, ToStatus(err)
+	}
+
+	return v, nil
+}
+
+func GetIdentitySpecifier(req *horus.GetIdentityRequest) (predicate.Identity, error) {
+	switch t := req.GetKey().(type) {
+	case *horus.GetIdentityRequest_Id:
+		if v, err := uuid.FromBytes(t.Id); err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
+		} else {
+			return identity.IDEQ(v), nil
+		}
+	case *horus.GetIdentityRequest_Query:
+		if req, err := ResolveGetIdentityQuery(req); err != nil {
+			return nil, err
+		} else {
+			return GetIdentitySpecifier(req)
+		}
+	case nil:
+		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
+	default:
+		return nil, status.Errorf(codes.Unimplemented, "unknown type of key")
 	}
 }
-func GetIdentitySpecifier(req *horus.GetIdentityRequest) (predicate.Identity, error) {
-	if v, err := uuid.FromBytes(req.GetId()); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "id: %s", err)
-	} else {
-		return identity.IDEQ(v), nil
+
+func ResolveGetIdentityQuery(req *horus.GetIdentityRequest) (*horus.GetIdentityRequest, error) {
+	t, ok := req.Key.(*horus.GetIdentityRequest_Query)
+	if !ok {
+		return req, nil
 	}
+
+	q := t.Query
+
+	v, err := uuid.Parse(q)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid query string: %s", err)
+	}
+	return horus.IdentityById(v), nil
 }

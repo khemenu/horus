@@ -29,19 +29,12 @@ const (
 	FieldDateDeclined = "date_declined"
 	// FieldDateCanceled holds the string denoting the date_canceled field in the database.
 	FieldDateCanceled = "date_canceled"
-	// EdgeSilo holds the string denoting the silo edge name in mutations.
-	EdgeSilo = "silo"
 	// EdgeInviter holds the string denoting the inviter edge name in mutations.
 	EdgeInviter = "inviter"
+	// EdgeSilo holds the string denoting the silo edge name in mutations.
+	EdgeSilo = "silo"
 	// Table holds the table name of the invitation in the database.
 	Table = "invitations"
-	// SiloTable is the table that holds the silo relation/edge.
-	SiloTable = "invitations"
-	// SiloInverseTable is the table name for the Silo entity.
-	// It exists in this package in order to avoid circular dependency with the "silo" package.
-	SiloInverseTable = "silos"
-	// SiloColumn is the table column denoting the silo relation/edge.
-	SiloColumn = "silo_invitations"
 	// InviterTable is the table that holds the inviter relation/edge.
 	InviterTable = "invitations"
 	// InviterInverseTable is the table name for the Account entity.
@@ -49,6 +42,13 @@ const (
 	InviterInverseTable = "accounts"
 	// InviterColumn is the table column denoting the inviter relation/edge.
 	InviterColumn = "account_invitations"
+	// SiloTable is the table that holds the silo relation/edge.
+	SiloTable = "invitations"
+	// SiloInverseTable is the table name for the Silo entity.
+	// It exists in this package in order to avoid circular dependency with the "silo" package.
+	SiloInverseTable = "silos"
+	// SiloColumn is the table column denoting the silo relation/edge.
+	SiloColumn = "silo_invitations"
 )
 
 // Columns holds all SQL columns for invitation fields.
@@ -139,30 +139,30 @@ func ByDateCanceled(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDateCanceled, opts...).ToFunc()
 }
 
-// BySiloField orders the results by silo field.
-func BySiloField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSiloStep(), sql.OrderByField(field, opts...))
-	}
-}
-
 // ByInviterField orders the results by inviter field.
 func ByInviterField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newInviterStep(), sql.OrderByField(field, opts...))
 	}
 }
-func newSiloStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SiloInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, SiloTable, SiloColumn),
-	)
+
+// BySiloField orders the results by silo field.
+func BySiloField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSiloStep(), sql.OrderByField(field, opts...))
+	}
 }
 func newInviterStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(InviterInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, InviterTable, InviterColumn),
+	)
+}
+func newSiloStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SiloInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, SiloTable, SiloColumn),
 	)
 }

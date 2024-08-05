@@ -156,7 +156,7 @@ func (tu *TeamUpdate) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Team.description": %w`, err)}
 		}
 	}
-	if _, ok := tu.mutation.SiloID(); tu.mutation.SiloCleared() && !ok {
+	if tu.mutation.SiloCleared() && len(tu.mutation.SiloIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Team.silo"`)
 	}
 	return nil
@@ -388,7 +388,7 @@ func (tuo *TeamUpdateOne) check() error {
 			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Team.description": %w`, err)}
 		}
 	}
-	if _, ok := tuo.mutation.SiloID(); tuo.mutation.SiloCleared() && !ok {
+	if tuo.mutation.SiloCleared() && len(tuo.mutation.SiloIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Team.silo"`)
 	}
 	return nil

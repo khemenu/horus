@@ -15,6 +15,7 @@ import (
 	identity "khepri.dev/horus/ent/identity"
 	predicate "khepri.dev/horus/ent/predicate"
 	user "khepri.dev/horus/ent/user"
+	strings "strings"
 )
 
 type UserServiceServer struct {
@@ -149,6 +150,7 @@ func GetUserId(ctx context.Context, db *ent.Client, req *horus.GetUserRequest) (
 
 	return v, nil
 }
+
 func GetUserSpecifier(req *horus.GetUserRequest) (predicate.User, error) {
 	switch t := req.GetKey().(type) {
 	case *horus.GetUserRequest_Id:
@@ -159,9 +161,33 @@ func GetUserSpecifier(req *horus.GetUserRequest) (predicate.User, error) {
 		}
 	case *horus.GetUserRequest_Alias:
 		return user.AliasEQ(t.Alias), nil
+	case *horus.GetUserRequest_Query:
+		if req, err := ResolveGetUserQuery(req); err != nil {
+			return nil, err
+		} else {
+			return GetUserSpecifier(req)
+		}
 	case nil:
 		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
 	default:
 		return nil, status.Errorf(codes.Unimplemented, "unknown type of key")
 	}
+}
+
+func ResolveGetUserQuery(req *horus.GetUserRequest) (*horus.GetUserRequest, error) {
+	t, ok := req.Key.(*horus.GetUserRequest_Query)
+	if !ok {
+		return req, nil
+	}
+
+	q := t.Query
+
+	if v, ok := strings.CutPrefix(q, "@"); ok {
+		return horus.UserByAlias(v), nil
+	}
+	v, err := uuid.Parse(q)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid query string: %s", err)
+	}
+	return horus.UserById(v), nil
 }

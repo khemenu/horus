@@ -16,6 +16,8 @@ func AuthUnaryInterceptor(signIn func(ctx context.Context, in *TokenSignInReques
 		token := ""
 		if md, ok := metadata.FromIncomingContext(ctx); !ok {
 			return nil, status.Error(codes.InvalidArgument, "missing metadata")
+		} else if entries := md.Get("authorization"); len(entries) > 0 && strings.HasPrefix(entries[0], "Bearer ") {
+			token, _ = strings.CutPrefix(entries[0], "Bearer ")
 		} else if entries := md.Get(TokenKeyName); len(entries) > 0 {
 			token = entries[0]
 		} else if entries := md.Get("cookie"); len(entries) > 0 {

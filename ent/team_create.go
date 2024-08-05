@@ -208,7 +208,7 @@ func (tc *TeamCreate) check() error {
 	if _, ok := tc.mutation.SiloID(); !ok {
 		return &ValidationError{Name: "silo_id", err: errors.New(`ent: missing required field "Team.silo_id"`)}
 	}
-	if _, ok := tc.mutation.SiloID(); !ok {
+	if len(tc.mutation.SiloIDs()) == 0 {
 		return &ValidationError{Name: "silo", err: errors.New(`ent: missing required edge "Team.silo"`)}
 	}
 	return nil

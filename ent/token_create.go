@@ -224,7 +224,7 @@ func (tc *TokenCreate) check() error {
 	if _, ok := tc.mutation.DateExpired(); !ok {
 		return &ValidationError{Name: "date_expired", err: errors.New(`ent: missing required field "Token.date_expired"`)}
 	}
-	if _, ok := tc.mutation.OwnerID(); !ok {
+	if len(tc.mutation.OwnerIDs()) == 0 {
 		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "Token.owner"`)}
 	}
 	return nil

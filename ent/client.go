@@ -859,22 +859,6 @@ func (c *InvitationClient) GetX(ctx context.Context, id uuid.UUID) *Invitation {
 	return obj
 }
 
-// QuerySilo queries the silo edge of a Invitation.
-func (c *InvitationClient) QuerySilo(i *Invitation) *SiloQuery {
-	query := (&SiloClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(invitation.Table, invitation.FieldID, id),
-			sqlgraph.To(silo.Table, silo.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, invitation.SiloTable, invitation.SiloColumn),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryInviter queries the inviter edge of a Invitation.
 func (c *InvitationClient) QueryInviter(i *Invitation) *AccountQuery {
 	query := (&AccountClient{config: c.config}).Query()
@@ -884,6 +868,22 @@ func (c *InvitationClient) QueryInviter(i *Invitation) *AccountQuery {
 			sqlgraph.From(invitation.Table, invitation.FieldID, id),
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, invitation.InviterTable, invitation.InviterColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySilo queries the silo edge of a Invitation.
+func (c *InvitationClient) QuerySilo(i *Invitation) *SiloQuery {
+	query := (&SiloClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(invitation.Table, invitation.FieldID, id),
+			sqlgraph.To(silo.Table, silo.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, invitation.SiloTable, invitation.SiloColumn),
 		)
 		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
 		return fromV, nil

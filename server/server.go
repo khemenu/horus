@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"khepri.dev/horus"
 	"khepri.dev/horus/ent"
 	"khepri.dev/horus/ent/user"
@@ -159,9 +162,33 @@ func (b *base) isAncestorOrMeQ(ctx context.Context, actor *ent.User, req *horus.
 		if k.Alias == actor.Alias || k.Alias == horus.Me {
 			return actor, nil
 		}
+	case *horus.GetUserRequest_Query:
+		q := k.Query
+
+		if v, ok := strings.CutPrefix(q, "@"); ok {
+			return b.isAncestorOrMeQ(ctx, actor, horus.UserByAlias(v))
+
+		}
+		v, err := uuid.Parse(q)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid query string: %s", err)
+		}
+		return b.isAncestorOrMeQ(ctx, actor, horus.UserById(v))
 	}
 
 	return b.isAncestorQ(ctx, actor, req)
+}
+
+func (s *base) hasPermission(ctx context.Context, actor *ent.User, req *horus.GetUserRequest) (*ent.User, error) {
+	v, err := s.isAncestorOrMeQ(ctx, actor, req)
+	if err != nil {
+		return nil, err
+	}
+	if v == nil {
+		return nil, status.Error(codes.PermissionDenied, codes.PermissionDenied.String())
+	}
+
+	return v, nil
 }
 
 func NewServer(client *ent.Client) horus.Server {

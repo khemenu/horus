@@ -21,12 +21,12 @@ func (Invitation) Mixin() []ent.Mixin {
 func (Invitation) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("invitee").
-			Annotations(entpb.Field(4)).
+			Annotations(entpb.Field(5)).
 			Immutable().
 			NotEmpty(),
 
 		field.String("type").
-			Annotations(entpb.Field(5)).
+			Annotations(entpb.Field(6)).
 			Immutable().
 			NotEmpty(),
 
@@ -49,14 +49,14 @@ func (Invitation) Fields() []ent.Field {
 
 func (Invitation) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("silo", Silo.Type).
-			Annotations(entpb.Field(2)).
+		edge.From("inviter", Account.Type).
+			Annotations(entpb.Field(3)).
 			Ref("invitations").
 			Immutable().
 			Unique().
 			Required(),
-		edge.From("inviter", Account.Type).
-			Annotations(entpb.Field(3)).
+		edge.From("silo", Silo.Type).
+			Annotations(entpb.Field(4)).
 			Ref("invitations").
 			Immutable().
 			Unique().

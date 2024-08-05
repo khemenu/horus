@@ -136,11 +136,11 @@ func (iu *InvitationUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (iu *InvitationUpdate) check() error {
-	if _, ok := iu.mutation.SiloID(); iu.mutation.SiloCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Invitation.silo"`)
-	}
-	if _, ok := iu.mutation.InviterID(); iu.mutation.InviterCleared() && !ok {
+	if iu.mutation.InviterCleared() && len(iu.mutation.InviterIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Invitation.inviter"`)
+	}
+	if iu.mutation.SiloCleared() && len(iu.mutation.SiloIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Invitation.silo"`)
 	}
 	return nil
 }
@@ -319,11 +319,11 @@ func (iuo *InvitationUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (iuo *InvitationUpdateOne) check() error {
-	if _, ok := iuo.mutation.SiloID(); iuo.mutation.SiloCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Invitation.silo"`)
-	}
-	if _, ok := iuo.mutation.InviterID(); iuo.mutation.InviterCleared() && !ok {
+	if iuo.mutation.InviterCleared() && len(iuo.mutation.InviterIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Invitation.inviter"`)
+	}
+	if iuo.mutation.SiloCleared() && len(iuo.mutation.SiloIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Invitation.silo"`)
 	}
 	return nil
 }

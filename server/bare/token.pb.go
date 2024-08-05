@@ -14,6 +14,7 @@ import (
 	predicate "khepri.dev/horus/ent/predicate"
 	token "khepri.dev/horus/ent/token"
 	user "khepri.dev/horus/ent/user"
+	strings "strings"
 )
 
 type TokenServiceServer struct {
@@ -159,6 +160,7 @@ func GetTokenId(ctx context.Context, db *ent.Client, req *horus.GetTokenRequest)
 
 	return v, nil
 }
+
 func GetTokenSpecifier(req *horus.GetTokenRequest) (predicate.Token, error) {
 	switch t := req.GetKey().(type) {
 	case *horus.GetTokenRequest_Id:
@@ -169,9 +171,33 @@ func GetTokenSpecifier(req *horus.GetTokenRequest) (predicate.Token, error) {
 		}
 	case *horus.GetTokenRequest_Value:
 		return token.ValueEQ(t.Value), nil
+	case *horus.GetTokenRequest_Query:
+		if req, err := ResolveGetTokenQuery(req); err != nil {
+			return nil, err
+		} else {
+			return GetTokenSpecifier(req)
+		}
 	case nil:
 		return nil, status.Errorf(codes.InvalidArgument, "key not provided")
 	default:
 		return nil, status.Errorf(codes.Unimplemented, "unknown type of key")
 	}
+}
+
+func ResolveGetTokenQuery(req *horus.GetTokenRequest) (*horus.GetTokenRequest, error) {
+	t, ok := req.Key.(*horus.GetTokenRequest_Query)
+	if !ok {
+		return req, nil
+	}
+
+	q := t.Query
+
+	if v, ok := strings.CutPrefix(q, ""); ok {
+		return horus.TokenByValue(v), nil
+	}
+	v, err := uuid.Parse(q)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid query string: %s", err)
+	}
+	return horus.TokenById(v), nil
 }
