@@ -16,22 +16,47 @@ jobs:
       packages: write
 
     steps:
+      - name: Login GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 
-      - name: Login GHCR
-        uses: docker/login-action@v2
+      - uses: docker/metadata-action@v5
+        id: meta
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          images: ghcr.io/khemenu/horus
+          tags: |
+            type=edge
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: go-build-cache
+          key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
+
+      - name: Inject cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.0
+        with:
+          cache-map: |
+            {
+              "go-build-cache": "/root/.cache/go-build"
+            }
+          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: .
-          platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/khemenu/horus:edge
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          platforms: linux/amd64,linux/arm64
           build-args: VCS_REF=${{ github.sha }}

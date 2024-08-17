@@ -7,8 +7,7 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-COPY go.mod ./
-COPY go.sum ./
+COPY go.mod go.sum ./
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
 	go mod download
