@@ -1,5 +1,7 @@
 package fx
 
+import "slices"
+
 func FilterV[V any](collection []V, predicate func(item V) bool) []V {
 	result := make([]V, 0, len(collection))
 
@@ -42,5 +44,13 @@ func Associate[T any, K comparable, V any](collection []T, transform func(item T
 		result[k] = v
 	}
 
+	return result
+}
+
+func Reversed[S ~[]E, E any](s S) S {
+	result := make(S, len(s))
+	copy(result, s)
+
+	slices.Reverse(result)
 	return result
 }

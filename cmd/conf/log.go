@@ -27,6 +27,10 @@ func (c *LogConfig) NewLogger() *slog.Logger {
 
 	var logger *slog.Logger
 	switch c.Format {
+	case "":
+		logger = slog.New(slog.NewJSONHandler(os.Stderr, nil))
+		logger.Info("using logger with default format")
+
 	case "text":
 		logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
 
@@ -34,7 +38,8 @@ func (c *LogConfig) NewLogger() *slog.Logger {
 		logger = slog.New(slog.NewJSONHandler(os.Stderr, nil))
 
 	default:
-		panic("unreachable")
+		logger = slog.New(slog.NewJSONHandler(os.Stderr, nil))
+		logger.Warn("fallback logger format to \"json\" since configured format is unknown", slog.String("given", c.Format))
 	}
 
 	return logger

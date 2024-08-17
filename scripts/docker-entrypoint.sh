@@ -1,6 +1,11 @@
-hr init
-hr create user admin \
-	&& printf "admin\n" | hr --as admin set password \
-	|| true
+#!/usr/bin/env sh
+set -e
 
-exec "$@"
+case "$1" in
+    horus|hr)
+        exec "$@"
+        ;;
+    *)
+        exec horus "$@"
+        ;;
+esac

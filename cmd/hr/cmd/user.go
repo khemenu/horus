@@ -6,34 +6,44 @@ import (
 	"github.com/google/uuid"
 	"github.com/urfave/cli/v2"
 	"khepri.dev/horus"
-	"khepri.dev/horus/ent/user"
+	"khepri.dev/horus/cmd/hr/env"
 )
 
 var CmdCreateUser = &cli.Command{
 	Name:      "user",
 	Args:      true,
 	ArgsUsage: " [USER_ALIAS]",
-	Action: func(ctx *cli.Context) error {
-		conf := ConfFrom(ctx.Context)
-		c, err := conf.Client.connect(ctx.Context)
+	Action: func(ctx_ *cli.Context) error {
+		ctx := ctx_.Context
+		args := ctx_.Args()
+		switch args.Len() {
+		case 0:
+		case 1:
+
+		default:
+			return fmt.Errorf("requires either no arguments or exactly 1 argument")
+		}
+
+		e := env.From(ctx)
+		h, err := e.Connect(ctx)
 		if err != nil {
 			return err
 		}
 
-		var alias string
-		if ctx.Args().Len() > 0 {
-			alias = ctx.Args().Get(0)
+		user_alias := args.Get(0)
+
+		req := &horus.CreateUserRequest{}
+		if args.Len() > 0 {
+			req.Alias = &user_alias
 		}
 
-		v, err := c.User().Create(ctx.Context, &horus.CreateUserRequest{
-			Alias: &alias,
-		})
+		v, err := h.User().Create(ctx, req)
 		if err != nil {
-			return err
+			return fmt.Errorf("execute: %w", err)
 		}
 
 		o := uuid.UUID(v.Id).String()
-		return conf.Reporter.Report(v, o)
+		return e.Report(v, o)
 	},
 }
 
@@ -41,40 +51,28 @@ var CmdGetUser = &cli.Command{
 	Name:      "user",
 	Args:      true,
 	ArgsUsage: " <USER_ID>",
-	Action: func(ctx *cli.Context) error {
-		if ctx.Args().Len() == 0 {
-			return fmt.Errorf("<USER_ID> is required")
+	Action: func(ctx_ *cli.Context) error {
+		ctx := ctx_.Context
+		args := ctx_.Args()
+		switch args.Len() {
+		case 1:
+
+		default:
+			return fmt.Errorf("requires exactly 1 argument")
 		}
 
-		conf := ConfFrom(ctx.Context)
-		c, err := conf.Client.connectDbServer(ctx.Context)
+		e := env.From(ctx)
+		h, err := e.Connect(ctx)
 		if err != nil {
 			return err
 		}
 
-		user_id := ctx.Args().Get(0)
-		user_uuid, err := uuid.Parse(ctx.Args().Get(0))
-		if err == nil {
-			goto Q
-		}
-		if !conf.Client.isBareServer() {
-			return fmt.Errorf("USER_ID must be valid UUID: %w", err)
-		} else if user_uuid, err = conf.Client.db.
-			User.Query().
-			Where(user.AliasEQ(user_id)).
-			OnlyID(ctx.Context); err != nil {
-			return fmt.Errorf("query user by alias: %w", err)
-		}
-
-	Q:
-		v, err := c.User().Get(ctx.Context, &horus.GetUserRequest{Key: &horus.GetUserRequest_Id{
-			Id: user_uuid[:],
-		}})
+		v, err := h.User().Get(ctx, horus.UserByQuery(args.Get(0)))
 		if err != nil {
-			return err
+			return fmt.Errorf("execute: %w", err)
 		}
 
 		o := fmt.Sprintf("%s %s", uuid.UUID(v.Id), v.Alias)
-		return conf.Reporter.Report(v, o)
+		return e.Report(v, o)
 	},
 }

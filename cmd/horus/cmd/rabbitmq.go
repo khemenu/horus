@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -28,7 +27,6 @@ func HandleRabbitMqHttpAuth(mux *http.ServeMux, svr horus.Server) {
 		})
 		if err != nil {
 			st, _ := status.FromError(err)
-			fmt.Printf("st: %v\n", st)
 			switch st.Code() {
 			case codes.Unauthenticated:
 				fallthrough

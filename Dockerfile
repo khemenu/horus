@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM library/golang:alpine3.19 AS builder
 
 RUN apk add --no-cache \
@@ -9,13 +10,18 @@ WORKDIR /app
 COPY go.mod ./
 COPY go.sum ./
 
-RUN go mod download
+RUN --mount=type=cache,target=/root/.cache/go-build \
+	go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=1 \
-	&& go build -o horus ./cmd/horus \
-	&& go build -o hr ./cmd/hr
+ARG VCS_REF=unknown
+
+RUN --mount=type=cache,target=/root/.cache/go-build \
+	CGO_ENABLED=1 \
+	BUILD_OPTS="-ldflags=-X khepri.dev/horus/cmd/conf.VcsRef=${VCS_REF}" \
+	&& go build "${BUILD_OPTS}" -o horus ./cmd/horus \
+	&& go build "${BUILD_OPTS}" -o hr ./cmd/hr
 
 
 
@@ -27,4 +33,8 @@ COPY --from=builder /app/hr    /usr/local/bin/.
 COPY ./scripts/docker-entrypoint.sh /entrypoint.sh
 COPY ./horus.yaml /horus.yaml
 
+RUN horus version \
+	&& hr version
+
 ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
+CMD ["serve"]

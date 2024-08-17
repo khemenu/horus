@@ -5,6 +5,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 	"khepri.dev/horus"
+	"khepri.dev/horus/cmd/hr/env"
 )
 
 var CmdSetConfig = &cli.Command{
@@ -15,34 +16,29 @@ var CmdSetConfig = &cli.Command{
 	ArgsUsage: "<KEY> <VALUE>",
 	// ArgsUsage: "<KEY> <TYPE:VALUE> [at <PATH>]",
 
-	Action: func(ctx *cli.Context) error {
-		switch ctx.Args().Len() {
+	Action: func(ctx_ *cli.Context) error {
+		ctx := ctx_.Context
+		args := ctx_.Args()
+		switch args.Len() {
 		case 2:
-		case 4:
-			if p := ctx.Args().Get(3); p != "at" {
-				return fmt.Errorf(`expected a preposition "at" but found %s`, p)
-			}
 
 		default:
-			return fmt.Errorf("requires exactly 2 or 4 arguments")
+			return fmt.Errorf("requires exactly 2 arguments")
 		}
 
 		var (
-			key  = ctx.Args().Get(0)
-			data = ctx.Args().Get(1)
-			// path = ctx.Args().Get(3)
+			key = args.Get(0)
+			val = args.Get(1)
 		)
 
-		conf := ConfFrom(ctx.Context)
-		c, err := conf.Client.connect(ctx.Context)
+		e := env.From(ctx)
+		h, err := e.Connect(ctx)
 		if err != nil {
 			return err
 		}
 
-		_, err = c.Conf().Create(ctx.Context, &horus.CreateConfRequest{
-			Id:    key,
-			Value: data,
-		})
+		req := &horus.CreateConfRequest{Id: key, Value: val}
+		_, err = h.Conf().Create(ctx, req)
 		if err != nil {
 			return err
 		}

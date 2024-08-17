@@ -6,68 +6,59 @@ import (
 	"github.com/google/uuid"
 	"github.com/urfave/cli/v2"
 	"khepri.dev/horus"
-	"khepri.dev/horus/internal/fx"
+	"khepri.dev/horus/cmd/hr/env"
 )
 
 var CmdCreateAccount = &cli.Command{
 	Name:      "account",
 	Args:      true,
 	ArgsUsage: " [ACCOUNT_ALIAS] for <USER_ID> in <SILO_ID>",
-	Action: func(ctx *cli.Context) error {
-		var (
-			acct_alias string
-			user_id    string
-			silo_id    string
-		)
-		if ctx.Args().Len() < 4 {
-			return fmt.Errorf(`requires at least 4 arguments, e.g. "for", <USER_ID>, "in", and <SILO_ID>`)
-		}
-		if ctx.Args().Len() > 5 {
-			return fmt.Errorf(`accepts up to 5 arguments`)
-		}
+	Action: func(ctx_ *cli.Context) error {
+		ctx := ctx_.Context
+		args := ctx_.Args()
 
-		n := 0
-		if ctx.Args().Len() == 5 {
-			n++
-			acct_alias = ctx.Args().Get(0)
+		off := 0
+		switch args.Len() {
+		case 4:
+			off++
+		case 5:
+
+		default:
+			return fmt.Errorf("requires exactly 4 or 5 arguments")
 		}
-		if p := ctx.Args().Get(n); p != "for" {
+		if p := args.Get(off + 1); p != "for" {
 			return fmt.Errorf(`expected a preposition "for" but found %s`, p)
 		}
-		if p := ctx.Args().Get(n + 2); p != "in" {
+		if p := args.Get(off + 3); p != "in" {
 			return fmt.Errorf(`expected a preposition "in" but found %s`, p)
 		}
 
-		user_id = ctx.Args().Get(n + 1)
-		silo_id = ctx.Args().Get(n + 3)
+		var (
+			acct_alias = args.Get(off + 0)
+			user_id    = args.Get(off + 2)
+			silo_id    = args.Get(off + 4)
+		)
 
-		conf := ConfFrom(ctx.Context)
-		c, err := conf.Client.connect(ctx.Context)
+		e := env.From(ctx)
+		h, err := e.Connect(ctx)
 		if err != nil {
 			return err
 		}
 
-		user_by := horus.UserByAlias(user_id)
-		if id, err := uuid.Parse(user_id); err == nil {
-			user_by = horus.UserById(id)
+		req := &horus.CreateAccountRequest{
+			Owner: horus.UserByQuery(user_id),
+			Silo:  horus.SiloByQuery(silo_id),
+		}
+		if acct_alias != "" {
+			req.Alias = &acct_alias
 		}
 
-		silo_by := horus.SiloByAlias(silo_id)
-		if id, err := uuid.Parse(silo_id); err == nil {
-			silo_by = horus.SiloById(id)
-		}
-
-		v, err := c.Account().Create(ctx.Context, &horus.CreateAccountRequest{
-			Alias: &acct_alias,
-			Role:  fx.Addr(horus.Role_ROLE_MEMBER),
-			Owner: user_by,
-			Silo:  silo_by,
-		})
+		v, err := h.Account().Create(ctx, req)
 		if err != nil {
-			return err
+			return fmt.Errorf("execute: %w", err)
 		}
 
 		o := uuid.UUID(v.Id).String()
-		return conf.Reporter.Report(v, o)
+		return e.Report(v, o)
 	},
 }

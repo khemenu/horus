@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/urfave/cli/v2"
 	"khepri.dev/horus"
+	"khepri.dev/horus/cmd/hr/env"
 )
 
 var CmdCreateTeam = &cli.Command{
@@ -13,52 +14,47 @@ var CmdCreateTeam = &cli.Command{
 	Args:      true,
 	ArgsUsage: " [TEAM_ALIAS] in <SILO_ID>",
 
-	Action: func(ctx *cli.Context) error {
-		var (
-			team_alias string
-			silo_id    string
-		)
-		if ctx.Args().Len() < 2 {
-			return fmt.Errorf(`requires at least 2 arguments, e.g. "in" and <SILO_ID>`)
-		}
-		if ctx.Args().Len() > 3 {
-			return fmt.Errorf(`accepts up to 3 arguments`)
-		}
+	Action: func(ctx_ *cli.Context) error {
+		ctx := ctx_.Context
+		args := ctx_.Args()
 
-		n := 0
-		if ctx.Args().Len() == 3 {
-			n++
-			team_alias = ctx.Args().Get(0)
+		off := 0
+		switch args.Len() {
+		case 2:
+			off++
+		case 3:
+
+		default:
+			return fmt.Errorf("requires exactly 2 or 3 arguments")
 		}
-		if p := ctx.Args().Get(n); p != "in" {
+		if p := args.Get(off + 1); p != "in" {
 			return fmt.Errorf(`expected a preposition "in" but found %s`, p)
 		}
-		silo_id = ctx.Args().Get(n + 1)
 
-		conf := ConfFrom(ctx.Context)
-		if err := conf.Client.notToBeBareServe(); err != nil {
-			return err
-		}
+		var (
+			team_alias = args.Get(off + 0)
+			silo_id    = args.Get(off + 2)
+		)
 
-		c, err := conf.Client.connect(ctx.Context)
+		e := env.From(ctx)
+		h, err := e.Connect(ctx)
 		if err != nil {
 			return err
 		}
 
-		silo_by := horus.SiloByAlias(silo_id)
-		if silo_uuid, err := uuid.Parse(silo_id); err == nil {
-			silo_by = horus.SiloById(silo_uuid)
+		req := &horus.CreateTeamRequest{
+			Silo: horus.SiloByQuery(silo_id),
+		}
+		if team_alias != "" {
+			req.Alias = &team_alias
 		}
 
-		v, err := c.Team().Create(ctx.Context, &horus.CreateTeamRequest{
-			Alias: &team_alias,
-			Silo:  silo_by,
-		})
+		v, err := h.Team().Create(ctx, req)
 		if err != nil {
-			return err
+			return fmt.Errorf("execute: %w", err)
 		}
 
-		o := fmt.Sprintf("%s %s", uuid.UUID(v.Id), v.Alias)
-		return conf.Reporter.Report(v, o)
+		o := uuid.UUID(v.Id).String()
+		return e.Report(v, o)
 	},
 }

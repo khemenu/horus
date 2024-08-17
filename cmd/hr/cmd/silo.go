@@ -1,35 +1,50 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/urfave/cli/v2"
 	"khepri.dev/horus"
+	"khepri.dev/horus/cmd/hr/env"
 )
 
 var CmdCreateSilo = &cli.Command{
 	Name:      "silo",
 	Args:      true,
 	ArgsUsage: " [SILO_ALIAS]",
-	Action: func(ctx *cli.Context) error {
-		var alias string
-		if ctx.Args().Len() > 0 {
-			alias = ctx.Args().Get(0)
+	Action: func(ctx_ *cli.Context) error {
+		ctx := ctx_.Context
+		args := ctx_.Args()
+		switch args.Len() {
+		case 0:
+		case 1:
+
+		default:
+			return fmt.Errorf("requires either no arguments or exactly 1 argument")
 		}
 
-		conf := ConfFrom(ctx.Context)
-		c, err := conf.Client.connect(ctx.Context)
+		var (
+			sil_alias = args.Get(0)
+		)
+
+		e := env.From(ctx)
+		h, err := e.Connect(ctx)
 		if err != nil {
 			return err
 		}
 
-		v, err := c.Silo().Create(ctx.Context, &horus.CreateSiloRequest{
-			Alias: &alias,
-		})
+		req := &horus.CreateSiloRequest{}
+		if sil_alias != "" {
+			req.Alias = &sil_alias
+		}
+
+		v, err := h.Silo().Create(ctx, req)
 		if err != nil {
-			return err
+			return fmt.Errorf("execute: %w", err)
 		}
 
 		o := uuid.UUID(v.Id).String()
-		return conf.Reporter.Report(v, o)
+		return e.Report(v, o)
 	},
 }

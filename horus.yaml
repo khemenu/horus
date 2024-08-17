@@ -14,11 +14,16 @@ db:
   driver: sqlite3
   source: file:horus.db?cache=shared&_fk=1
 
-client:
-  connect_with: db
-  db:
-    driver: sqlite3
-    source: file:horus.db?cache=shared&_fk=1
+hr:
+  connect:
+    with: db
+    db:
+      driver: sqlite3
+      source: file:horus.db?cache=shared&_fk=1
+
+log:
+  enabled: true
+  format: text
 
 debug:
   enabled: true

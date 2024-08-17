@@ -1,4 +1,4 @@
-package cmd
+package conf
 
 import (
 	"bytes"
@@ -7,7 +7,42 @@ import (
 	"text/template"
 
 	"github.com/google/uuid"
+	"github.com/urfave/cli/v2"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"khepri.dev/horus/ent"
 )
+
+type ReporterConfig struct {
+	Format   string `yaml:"format"` // <"plain"> | "template" | "json"
+	Template string `yaml:"template"`
+
+	reporter Reporter
+}
+
+func (c *ReporterConfig) Report(v any, plain string) (err error) {
+	o := plain
+	if c.reporter != nil {
+		o, err = c.reporter.Report(v)
+		if err != nil {
+			return err
+		}
+	}
+
+	fmt.Println(o)
+	return nil
+}
+
+func (c *ReporterConfig) ExitWithErr(err error) cli.ExitCoder {
+	if s, ok := status.FromError(err); ok {
+		return cli.Exit(err.Error(), int(s.Code()))
+	}
+	if ent.IsNotFound(err) {
+		return cli.Exit(err.Error(), int(codes.NotFound))
+	}
+
+	return cli.Exit(err.Error(), 1)
+}
 
 type Reporter interface {
 	Report(raw any) (string, error)

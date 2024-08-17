@@ -1,46 +1,49 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/urfave/cli/v2"
 	"khepri.dev/horus"
+	"khepri.dev/horus/cmd/hr/env"
 )
 
-func actCreateBearerToken(ctx *cli.Context, token_type string) error {
-	conf := ConfFrom(ctx.Context)
-	if err := conf.Client.notToBeBareServe(); err != nil {
+func actCreateBearerToken(ctx context.Context, token_type string) error {
+	e := env.From(ctx)
+	if err := e.NotToBeBareServe(); err != nil {
+		// Token value should be encrypted.
 		return err
 	}
 
-	c, err := conf.Client.connect(ctx.Context)
+	h, err := e.Connect(ctx)
 	if err != nil {
 		return err
 	}
 
-	v, err := c.Token().Create(ctx.Context, &horus.CreateTokenRequest{
+	v, err := h.Token().Create(ctx, &horus.CreateTokenRequest{
 		Type: token_type,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("execute: %w", err)
 	}
 
 	o := v.Value
-	return conf.Reporter.Report(v, o)
+	return e.Report(v, o)
 }
 
 var CmdCreateRefreshToken = &cli.Command{
 	Name: "refresh-token",
 	Action: func(ctx *cli.Context) error {
-		return actCreateBearerToken(ctx, horus.TokenTypeRefresh)
+		return actCreateBearerToken(ctx.Context, horus.TokenTypeRefresh)
 	},
 }
 
 var CmdCreateAccessToken = &cli.Command{
 	Name: "access-token",
 	Action: func(ctx *cli.Context) error {
-		return actCreateBearerToken(ctx, horus.TokenTypeAccess)
+		return actCreateBearerToken(ctx.Context, horus.TokenTypeAccess)
 	},
 }
 
@@ -48,30 +51,37 @@ var CmdGetToken = &cli.Command{
 	Name:      "token",
 	Args:      true,
 	ArgsUsage: " TOKEN_UUID",
-	Action: func(ctx *cli.Context) error {
-		conf := ConfFrom(ctx.Context)
-		c, err := conf.Client.connect(ctx.Context)
-		if err != nil {
-			return err
+	Action: func(ctx_ *cli.Context) error {
+		ctx := ctx_.Context
+		args := ctx_.Args()
+		switch args.Len() {
+		case 1:
+
+		default:
+			return fmt.Errorf("requires exactly 1 argument")
 		}
 
-		if ctx.Args().Len() == 0 {
-			return fmt.Errorf("TOKEN_UUID must be provided")
-		}
-
-		token_uuid, err := uuid.Parse(ctx.Args().Get(0))
-		if err != nil {
+		var (
+			token_uuid uuid.UUID
+			err        error
+		)
+		if token_uuid, err = uuid.Parse(args.Get(0)); err != nil {
 			return fmt.Errorf("invalid UUID")
 		}
 
-		v, err := c.Token().Get(ctx.Context, &horus.GetTokenRequest{Key: &horus.GetTokenRequest_Id{
-			Id: token_uuid[:],
-		}})
+		e := env.From(ctx)
+		h, err := e.Connect(ctx)
 		if err != nil {
 			return err
 		}
 
-		o := fmt.Sprintf("%s valid until %s", v.Type, v.DateExpired.AsTime().String())
-		return conf.Reporter.Report(v, o)
+		req := horus.TokenById(token_uuid)
+		v, err := h.Token().Get(ctx, req)
+		if err != nil {
+			return fmt.Errorf("execute: %w", err)
+		}
+
+		o := fmt.Sprintf("%s %s", uuid.UUID(v.Id), v.DateExpired)
+		return e.Report(v, o)
 	},
 }

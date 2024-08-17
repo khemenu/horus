@@ -1,18 +1,30 @@
 package cmd
 
-import "github.com/urfave/cli/v2"
+import (
+	"fmt"
+
+	"github.com/urfave/cli/v2"
+	"khepri.dev/horus/cmd/conf"
+)
 
 var Commands = []*cli.Command{
 	{
 		Name:        "init",
 		Description: "initialize DB",
-		Action: func(ctx *cli.Context) error {
-			c := ConfFrom(ctx.Context)
-			c.Client.Db.WithInit = true
+		Action: func(ctx_ *cli.Context) error {
+			ctx := ctx_.Context
+			c := conf.From(ctx)
 
-			_, err := c.Client.connect(ctx.Context)
+			if c.Hr.Connect.With != "db" {
+				return fmt.Errorf(`client does not connected to DB; use the "--force" to temporarily override the config to connect to the DB`)
+			}
+
+			db, err := c.Hr.Connect.Db.Open()
 			if err != nil {
-				return err
+				return fmt.Errorf("open DB: %w", err)
+			}
+			if err := db.Schema.Create(ctx); err != nil {
+				return fmt.Errorf("init DB: %w", err)
 			}
 
 			return nil
@@ -22,6 +34,5 @@ var Commands = []*cli.Command{
 	CmdSet,
 	CmdCreate,
 	// CmdDelete,
-	CmdInvite,
-	CmdAccept,
+	conf.CmdVersion,
 }

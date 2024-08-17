@@ -10,6 +10,7 @@ import (
 	"github.com/urfave/cli/v2"
 	"golang.org/x/term"
 	"khepri.dev/horus"
+	"khepri.dev/horus/cmd/hr/env"
 )
 
 var CmdSet = &cli.Command{
@@ -23,18 +24,21 @@ var CmdSetPassword = &cli.Command{
 	Name:    "password",
 	Aliases: []string{"pw"},
 
-	Action: func(ctx *cli.Context) error {
-		conf := ConfFrom(ctx.Context)
-		if err := conf.Client.notToBeBareServe(); err != nil {
+	Action: func(ctx_ *cli.Context) error {
+		ctx := ctx_.Context
+		if ctx_.Args().Len() > 0 {
+			return fmt.Errorf("no arguments are required")
+		}
+
+		e := env.From(ctx)
+		if err := e.NotToBeBareServe(); err != nil {
 			return err
 		}
 
-		c, err := conf.Client.connect(ctx.Context)
-		if err != nil {
-			return err
-		}
-
-		var pw string
+		var (
+			pw  string
+			err error
+		)
 		if !term.IsTerminal(syscall.Stdin) {
 			pw, err = bufio.NewReader(os.Stdin).ReadString('\n')
 		} else {
@@ -46,12 +50,18 @@ var CmdSetPassword = &cli.Command{
 		if err != nil {
 			return fmt.Errorf("read password from stdin: %w", err)
 		}
-
 		pw = strings.TrimSpace(pw)
-		_, err = c.Token().Create(ctx.Context, &horus.CreateTokenRequest{
-			Value: string(pw),
+
+		h, err := e.Connect(ctx)
+		if err != nil {
+			return err
+		}
+
+		req := &horus.CreateTokenRequest{
+			Value: pw,
 			Type:  horus.TokenTypePassword,
-		})
+		}
+		_, err = h.Token().Create(ctx, req)
 		if err != nil {
 			return err
 		}

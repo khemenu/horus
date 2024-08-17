@@ -37,7 +37,6 @@ func (s *UserServiceServer) Create(ctx context.Context, req *horus.CreateUserReq
 
 func (s *UserServiceServer) Get(ctx context.Context, req *horus.GetUserRequest) (*horus.User, error) {
 	f := frame.Must(ctx)
-	fmt.Printf("req: %v\n", req)
 	v, err := s.hasPermission(ctx, f.Actor, req)
 	if err != nil {
 		return nil, err
