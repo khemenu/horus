@@ -24,6 +24,7 @@ hr:
 log:
   enabled: true
   format: text
+  level: warn
 
 debug:
   enabled: true

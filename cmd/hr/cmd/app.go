@@ -29,15 +29,18 @@ var App = &cli.App{
 			Aliases: []string{"o"},
 			Usage:   "formatting output",
 		},
+		&cli.StringFlag{
+			Name:  "log-level",
+			Usage: "set log level",
+		},
 		&cli.BoolFlag{
-			Name:  "no-log",
-			Value: false,
-			Usage: "disable logging",
+			Name:    "verbose",
+			Aliases: []string{"v"},
+			Usage:   `set log level to "debug"`,
 		},
 		&cli.StringFlag{
 			Name:  "as",
 			Usage: "act as a given user",
-
 			Action: func(ctx_ *cli.Context, s string) error {
 				if s == "" {
 					return nil
@@ -60,7 +63,18 @@ var App = &cli.App{
 		},
 	},
 	Before: func(ctx *cli.Context) error {
-		_, err := conf.InitCmd(ctx, func(c *conf.Config) {})
+		_, err := conf.InitCmd(ctx, func(c *conf.Config) error {
+			if level := ctx.String("log-level"); level != "" {
+				if err := c.Log.Level.UnmarshalText([]byte(level)); err != nil {
+					return fmt.Errorf("invalid error level: %w", err)
+				}
+			}
+			if ctx.IsSet("verbose") && c.Log.Level > slog.LevelDebug {
+				c.Log.Level = slog.LevelDebug
+			}
+
+			return nil
+		})
 		if err != nil {
 			return err
 		}

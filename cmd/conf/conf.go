@@ -105,6 +105,7 @@ func (c *Config) Evaluate() error {
 
 	fx.Default(&c.Log.Enabled, fx.Addr(true))
 	fx.Default(&c.Log.Format, "text")
+	fx.Default(&c.Log.Level, slog.LevelInfo)
 
 	errs := []error{}
 	if !slices.Contains([]string{"db", "horus"}, c.Hr.Connect.With) {
@@ -152,14 +153,16 @@ func FromFile(path string) (*Config, error) {
 	return c, nil
 }
 
-func InitCmd(ctx *cli.Context, transform func(c *Config)) (*Config, error) {
+func InitCmd(ctx *cli.Context, transform func(c *Config) error) (*Config, error) {
 	p := ctx.String("conf")
 	c, err := FromFile(p)
 	if err != nil {
 		return nil, fmt.Errorf("read config at %s: %w", p, err)
 	}
 
-	transform(c)
+	if err := transform(c); err != nil {
+		return nil, err
+	}
 	if err := c.Evaluate(); err != nil {
 		return nil, fmt.Errorf("invalid config: %w", err)
 	}

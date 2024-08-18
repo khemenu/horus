@@ -23,7 +23,9 @@ var App = &cli.App{
 		},
 	},
 	Before: func(ctx *cli.Context) error {
-		_, err := conf.InitCmd(ctx, func(c *conf.Config) {})
+		_, err := conf.InitCmd(ctx, func(c *conf.Config) error {
+			return nil
+		})
 		if err != nil {
 			return err
 		}
